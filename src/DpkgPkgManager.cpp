@@ -207,7 +207,6 @@ PkgFileListCache * DpkgPkgManager::createFileListCache( PkgFileListCache::Lookup
     //	   zip: /usr/bin/zip
     //	   zlib1g-dev:amd64: /usr/include/zlib.h
     //	   zlib1g:i386, zlib1g:amd64: /usr/share/doc/zlib1g
-
     foreach ( const QString & line, lines )
     {
 	if ( line.isEmpty() || line.startsWith( "diversion" ) )
@@ -226,15 +225,16 @@ PkgFileListCache * DpkgPkgManager::createFileListCache( PkgFileListCache::Lookup
 
 	    if ( pathname != "/." && ! pathname.isEmpty() )
 	    {
+		// Resolve directories that include a symlink on this file system
 		const QFileInfo fileInfo( pathname );
-		const QFileInfo pathInfo = fileInfo.path();
-		const QString realpath = pathInfo.canonicalFilePath();
-		    const QString filename = fileInfo.fileName();
-		    if ( !realpath.isEmpty() && !filename.isNull() )
-		    {
+		const QString pathInfo = fileInfo.path();
+		const QString realpath = QFileInfo( pathInfo ).canonicalFilePath();
+		const QString filename = fileInfo.fileName();
+		if ( realpath != pathInfo && !realpath.isEmpty() && !filename.isNull() )
+		{
 //			logDebug() << pathname << " " << realpath << " " << realpath << " " << filename << endl;
-			pathname = realpath + "/" + filename;
-		    }
+		    pathname = realpath + "/" + filename;
+		}
 
 		foreach ( const QString & pkgName, packages.split( ", " ) )
 		{
