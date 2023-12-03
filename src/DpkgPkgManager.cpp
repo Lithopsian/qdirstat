@@ -42,8 +42,36 @@ QString DpkgPkgManager::owningPkg( const QString & path )
     int exitCode = -1;
     QString output = runCommand( "/usr/bin/dpkg", QStringList() << "-S" << path, &exitCode );
 
-    if ( exitCode != 0 || output.contains( "no path found matching pattern" ) )
+    if ( exitCode != 0 )
+    {
+	if ( output.contains( "no path found matching pattern" ) )
+	{
+	    // resolve any symlinks in the package path on this file system
+	    const QFileInfo fileInfo( path );
+	    const QString filename = fileInfo.fileName();
+	    QString output = runCommand( "/usr/bin/dpkg", QStringList() << "-S" << filename, &exitCode );
+
+	    QStringList lines;
+	    foreach ( const QString & line, output.trimmed().split( "\n" ) )
+	    {
+		if ( ! line.startsWith( "diversion by" ) && ! line.isEmpty() )
+		{
+		    const QFileInfo pkgFileInfo( line.split( ": " ).last() );
+		    const QString pkgPathInfo = pkgFileInfo.path();
+		    const QString pkgRealpath = QFileInfo( pkgPathInfo ).canonicalFilePath();
+		    const QString pkgFilename = pkgFileInfo.fileName();
+		    if ( pkgRealpath != pkgPathInfo && !pkgRealpath.isEmpty() && !pkgFilename.isNull() )
+		    {
+	//			logDebug() << pathname << " " << realpath << " " << realpath << " " << filename << endl;
+			if ( pkgRealpath + "/" + pkgFilename == path )
+			    return line.split( ": " ).first();
+		    }
+		}
+	    }
+	}
+
 	return "";
+    }
 
     // Normal output: One line
     // dpkg -S /usr/bin/gdb  -->
