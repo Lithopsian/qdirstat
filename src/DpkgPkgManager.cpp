@@ -6,6 +6,7 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <QFileInfo>
 
 #include "DpkgPkgManager.h"
 #include "PkgFileListCache.h"
@@ -221,14 +222,24 @@ PkgFileListCache * DpkgPkgManager::createFileListCache( PkgFileListCache::Lookup
 	else
 	{
 	    QString packages = fields.takeFirst();
-	    QString path     = fields.takeFirst();
+	    QString pathname = fields.takeFirst();
 
-	    if ( path != "/." && ! path.isEmpty() )
+	    if ( pathname != "/." && ! pathname.isEmpty() )
 	    {
+		const QFileInfo fileInfo( pathname );
+		const QFileInfo pathInfo = fileInfo.path();
+		const QString realpath = pathInfo.canonicalFilePath();
+		    const QString filename = fileInfo.fileName();
+		    if ( !realpath.isEmpty() && !filename.isNull() )
+		    {
+//			logDebug() << pathname << " " << realpath << " " << realpath << " " << filename << endl;
+			pathname = realpath + "/" + filename;
+		    }
+
 		foreach ( const QString & pkgName, packages.split( ", " ) )
 		{
 		    if ( ! pkgName.isEmpty() )
-			cache->add( pkgName, path );
+			cache->add( pkgName, pathname );
 		}
 	    }
 	}
