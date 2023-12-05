@@ -491,16 +491,6 @@ struct stat * PkgReadJob::lstat( const QString & path )
         _statCache.insert( path, statInfo );
     }
 
-    // chase symlinks to see if we can find a real directory
-    if ( S_ISLNK( statInfo.st_mode ) )	// symlink?
-    {
-	struct stat linkInfo;
-        int result = ::stat( path.toUtf8(), &linkInfo );
-
-        if ( result == 0 && S_ISDIR( linkInfo.st_mode ) )
-	    statInfo = linkInfo;
-    }
-
     if ( S_ISDIR( statInfo.st_mode ) )	// directory?
     {
 	// Zero the directory's own size fields to prevent them from
