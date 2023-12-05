@@ -22,6 +22,79 @@ namespace QDirStat
      * Remember that 'apt' is based on 'dpkg' and 'dpkg' already does the
      * simple things needed here, so there is no need to create a specialized
      * version for 'apt' or any higher-level dpkg-based package managers.
+     *
+     * The commands used are:
+     * dpkg-query --show to return a list of all packages
+     * dpkg -S * to return all files in all packages
+     * dpkg-query --listfiles to return a list of files in a given package
+     *
+     * The normal output from dpkg-query --listfiles is one pathname per line.
+     *
+     * The normal output from dpkg -S is a package, colon, space, file pathname
+     *
+     * gdb: /usr/bin/gdb
+     *
+     * There may be more than one package per line, separated by commas:
+     *
+     * libc6:amd64, libc6:i386: /usr/share/doc/libc6
+     *
+     * The path portion of the pathname (may be the whole pathname for a directory entry) can be
+     * a symbolic link on any given file system and these are resolved to the real path on this
+     * file system. The file portion of the pathname (when it isn't a directory) may be a symbolic
+     * link and this won't be resolved.
+     *
+     * Pathological cases: File diversion (See man dpkg-divert).
+     *
+     * File diversions in dpkg -S are shown by either 2 or 3 lines per file.
+     * File diversion for the file that is diverted away from has 3 lines
+     * dpkg -S /bin/sh	-->
+     *
+     * diversion by dash from: /bin/sh
+     * diversion by dash to: /bin/sh.distrib
+     * dash: /bin/sh
+     *
+     * The package shown in the first line is the owner of the file,
+     * although it often does not appear in the file list for that package
+     * (eg. a symlink is created by script or the package is just "making room" for an
+     * external provider.  The package shown in the third line is only the owner if
+     * it is the same package shown in the first line.
+     *
+     * For example:
+     * diversion by glx-diversions from: /usr/lib/x86_64-linux-gnu/libGL.so
+     * diversion by glx-diversions to: /usr/lib/mesa-diverted/x86_64-linux-gnu/libGL.so
+     * libgl-dev:amd64: /usr/lib/x86_64-linux-gnu/libGL.so
+     *
+     * Here, the file libGL.so provided by the package libgl-dev is located at
+     * /usr/lib/mesa-diverted/x86_64-linux-gnu/libGL.so and the file now at
+     * /usr/lib/x86_64-linux-gnu/libGL.so is provided by glx-diversions although in this
+     * case only a synlink is provided to /etc/alternatives.
+     *
+     * The last case is a local diversion, where the file is not provided by a package:
+     * local diversion from: /usr/share/doc/lm-sensors/vid
+     * local diversion to: /usr/share/doc/lm-sensors/vid.distrib
+     * lm-sensors: /usr/share/doc/lm-sensors/vid
+     *
+     * Here, the file vid provided by the package lm-sensors is now located at
+     * /usr/share/doc/lm-sensors/vid.distrib and the one at /usr/share/doc/lm-sensors/vid
+     * is provided by means other than a package.
+     *
+     * File diversion for a file that was the result of a diversion has 2 lines
+     * dpkg -S /bin/sh.distrib	-->
+     *
+     * diversion by dash from: /bin/sh
+     * diversion by dash to: /bin/sh.distrib
+     *
+     * The file /bin/sh belongs to the package dash.  The file /bin/sh.distrib belongs
+     * to some other package, which can pnly be found by further querying against /bin/sh.
+     *
+     * The text returned by dpkg-query --listfiles or dpkg -L is different:
+     * diverted by ...
+     * package diverts pthers to: ...
+     * locally diverted to: ...
+     *
+     * These strings are all localised and may be different in non-English locales.
+     * The locale must be set to C-UTF-8 for reliable results.
+     *
      **/
     class DpkgPkgManager: public PkgManager
     {
@@ -61,6 +134,10 @@ namespace QDirStat
 	 * This basically executes this command:
 	 *
 	 *   /usr/bin/dpkg -S ${path}
+	 *
+	 * The command is run against the full path, hopeing for an exact match.
+	 * If that fails, it is run against only the filename in case there
+	 * are symlinks in the direct path.
 	 **/
 	virtual QString owningPkg( const QString & path ) Q_DECL_OVERRIDE;
 
@@ -98,11 +175,14 @@ namespace QDirStat
 
 	/**
 	 * Return the command for getting the list of files and directories
-	 * owned by a package.
+	 * owned by an individual package, or querying a sequence of up to
+	 * about 200 packages one by one.
 	 *
+	 * Re
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual QString fileListCommand( PkgInfo * pkg ) Q_DECL_OVERRIDE;
+	virtual QString fileListCommand( PkgInfo * pkg ) Q_DECL_OVERRIDE
+		{ return QString( "/usr/bin/dpkg-query --listfiles %1" ).arg( queryName( pkg ) ); }
 
 	/**
 	 * Parse the output of the file list command.
@@ -147,6 +227,43 @@ namespace QDirStat
 
 
     protected:
+
+	/**
+	 * Resolves symlinks in the directory path of a file string.  If the file itself
+	 * is a symlink, this is kept unresolved.
+	*/
+	QString resolvePath( const QString & pathname );
+
+	/**
+	 * Return whether a given dpkg query line represents a diversion
+	 *
+	 * For dpkg -S, lines may begin "diversion by ... " or "local diversion ..."
+	 *
+	 * For dpkg -L, lines may begin "locally diverted to", package diverts others to",
+	 * or "diverted by".
+	*/
+	bool isDiversion( const QString & line )
+		{ return line.startsWith( "diversion by" ) || line.startsWith( "local diversion" ); }
+	bool isLocalDiversion( const QString & line )
+		{ return line.startsWith( "local diversion" ); }
+	bool isDiversionFrom( const QString & line )
+		{ return line.startsWith( "diversion by" ) || line.contains( "from: " ); }
+	bool isDiversionTo( const QString & line )
+		{ return line.startsWith( "diversion by" ) || line.contains( "to: " ); }
+	bool isDivertedBy( const QString & line )
+		{ return line.startsWith( "diverted by" ) || line.startsWith( "locally diverted" ); }
+	bool isPackageDivert( const QString & line )
+		{ return line.startsWith( "package diverts" ); }
+
+	/**
+	 * This search the lines produced by a dpkg -S query
+	 **/
+	QString searchOwningPkg( const QString & path, const QString & output );
+
+	/**
+	 * Sub-query to find the original owning package of a renamed diverted file.
+	 **/
+	QString originalOwningPkg( const QString & path );
 
 	/**
 	 * Parse a package list as output by "dpkg-query --show --showformat".
