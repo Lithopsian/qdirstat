@@ -53,11 +53,22 @@ namespace QDirStat
      * diversion by dash to: /bin/sh.distrib
      * dash: /bin/sh
      *
-     * The package shown in the first line is the owner of the file,
-     * although it often does not appear in the file list for that package
-     * (eg. a symlink is created by script or the package is just "making room" for an
-     * external provider.  The package shown in the third line is only the owner if
+     * The package shown in the first line is the "owner" of the file, but it often does not
+     * appear in the file list for that package (eg. a symlink is created by script or the
+     * package is just "making room" for an external provider), and it will then not appear on
+     * the third line.  The package shown in the third line is only the owner if
      * it is the same package shown in the first line.
+     *
+     * Query output for the file that is the result of a diversion has only 2 lines
+     * dpkg -S /bin/sh.distrib	-->
+     * diversion by dash from: /bin/sh
+     * diversion by dash to: /bin/sh.distrib
+     *
+     * The file /bin/sh belongs to the package dash.  The file /bin/sh.distrib belongs
+     * to some other package, which can pnly be found by further querying against /bin/sh, although
+     * in this case there is no original owner and the file sh.distrib does not (yet) exist.
+     * diversion by dash from: /bin/sh
+     * diversion by dash to: /bin/sh.distrib
      *
      * For example:
      * diversion by glx-diversions from: /usr/lib/x86_64-linux-gnu/libGL.so
@@ -67,9 +78,18 @@ namespace QDirStat
      * Here, the file libGL.so provided by the package libgl-dev is located at
      * /usr/lib/mesa-diverted/x86_64-linux-gnu/libGL.so and the file now at
      * /usr/lib/x86_64-linux-gnu/libGL.so is provided by glx-diversions although in this
-     * case only a synlink is provided to /etc/alternatives.
+     * case only a symlink is provided to /etc/alternatives.
      *
-     * The last case is a local diversion, where the file is not provided by a package:
+     * Both the original owning package (possibly more than one) and the diverting package may
+     * appear on the third line.  Here the package on all three lines is the current owner
+     * of /usr/bin/firefox and has renamed any file previously at that location (or even
+     * installed later) to firefox.real.  The other package on the third line (possibly more than
+     * one) is the original owner of /usr/bin/firefox, now at firefox.real.
+     * diversion by firefox-esr from: /usr/bin/firefox
+     * diversion by firefox-esr to: /usr/bin/firefox.real
+     * firefox, firefox-esr: /usr/bin/firefox
+     *
+     * The last case is a local diversion, where the file is not diverted by a package:
      * local diversion from: /usr/share/doc/lm-sensors/vid
      * local diversion to: /usr/share/doc/lm-sensors/vid.distrib
      * lm-sensors: /usr/share/doc/lm-sensors/vid
@@ -77,15 +97,6 @@ namespace QDirStat
      * Here, the file vid provided by the package lm-sensors is now located at
      * /usr/share/doc/lm-sensors/vid.distrib and the one at /usr/share/doc/lm-sensors/vid
      * is provided by means other than a package.
-     *
-     * File diversion for a file that was the result of a diversion has 2 lines
-     * dpkg -S /bin/sh.distrib	-->
-     *
-     * diversion by dash from: /bin/sh
-     * diversion by dash to: /bin/sh.distrib
-     *
-     * The file /bin/sh belongs to the package dash.  The file /bin/sh.distrib belongs
-     * to some other package, which can pnly be found by further querying against /bin/sh.
      *
      * The text returned by dpkg-query --listfiles or dpkg -L is different:
      * diverted by ...
@@ -95,6 +106,10 @@ namespace QDirStat
      * These strings are all localised and may be different in non-English locales.
      * The locale must be set to C-UTF-8 for reliable results.
      *
+     * A more efficient solution might be to read the file /var/lib/dpkg/diversions which has
+     * plain lines showing just the original and renamed file paths and the diverting package.
+     * However, the location of that file is configurable and there will typically be only a handful
+     * of diversions on a computer (although some rename multiple files, such as glx-diversions).
      **/
     class DpkgPkgManager: public PkgManager
     {
@@ -247,9 +262,9 @@ namespace QDirStat
 	bool isLocalDiversion( const QString & line )
 		{ return line.startsWith( "local diversion" ); }
 	bool isDiversionFrom( const QString & line )
-		{ return line.startsWith( "diversion by" ) || line.contains( "from: " ); }
+		{ return isDiversion( line ) && line.contains( "from: " ); }
 	bool isDiversionTo( const QString & line )
-		{ return line.startsWith( "diversion by" ) || line.contains( "to: " ); }
+		{ return isDiversion( line ) && line.contains( "to: " ); }
 	bool isDivertedBy( const QString & line )
 		{ return line.startsWith( "diverted by" ) || line.startsWith( "locally diverted" ); }
 	bool isPackageDivert( const QString & line )

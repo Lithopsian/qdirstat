@@ -44,7 +44,13 @@ QString DpkgPkgManager::owningPkg( const QString & path )
    // Try first with the full (possibly symlinked) path
     const QFileInfo fileInfo( path );
     int exitCode = -1;
-    QString output = runCommand( "/usr/bin/dpkg", QStringList() << "-S" << path, &exitCode );
+    QString output = runCommand( "/usr/bin/dpkg",
+                                 QStringList() << "-S" << path,
+				 &exitCode,
+				 1,		// better not to lock the whole program for 15 seconds
+				 false,		// don't log command
+				 false,		// don't log output
+				 true );	// ignore likely error code
     if ( exitCode == 0 )
     {
 	const QString package = searchOwningPkg( path, output );
@@ -56,7 +62,13 @@ QString DpkgPkgManager::owningPkg( const QString & path )
     // (this may produce a lot of rows)
     const QString filename = fileInfo.fileName();
     exitCode = -1;
-    output = runCommand( "/usr/bin/dpkg", QStringList() << "-S" << filename, &exitCode );
+    output = runCommand( "/usr/bin/dpkg",
+                         QStringList() << "-S" << filename,
+			 &exitCode,
+			 1,		// better not to lock the whole program for 15 seconds
+			 false,		// don't log command
+			 false,		// don't log output
+			 true );	// ignore likely error code
     if ( exitCode != 0 )
 	return "";
 
@@ -84,14 +96,14 @@ QString DpkgPkgManager::searchOwningPkg( const QString & path, const QString & o
 		// something wrong, just skip it and hope
 		continue;
 
-	    // Need to take this first path and package to compare with the third one
+	    // Need to remember this first path and package to compare with the third one
 	    // to see if the file really belongs to that package
 	    QStringList fields = line->split( ": " );
 	    if ( fields.size() != 2 )
 		continue;
 
 	    const QString path1 = fields.last();
-	    const QString divertPkg = fields.first().split( " " ).at( 2 );
+	    const QString divertPkg = isLocalDiversion( *line ) ? "" : fields.first().split( " " ).at( 2 );
 
 	    // the next line should contain the path where this file now resides
 	    // (or would reside if it hasn't been diverted yet)
@@ -112,12 +124,14 @@ QString DpkgPkgManager::searchOwningPkg( const QString & path, const QString & o
 		// dpkg -S against the pathname from the diversion by ... from line
 		return originalOwningPkg( path1 );
 
-	    const bool localDiversion = isLocalDiversion( *line );
+	    // if this is a local diversion, give up at this point because there is no owning package
+	    if ( isLocalDiversion( *line ) )
+		continue;
 
-	    // and the line after that might give the package and the original file path
 	    if ( ++line == lines.end() )
 		return "";
 
+	    // and the line after that might give the package and the original file path
 	    fields = line->split( ": " );
 	    if ( fields.size() != 2 )
 		continue;
@@ -134,21 +148,17 @@ QString DpkgPkgManager::searchOwningPkg( const QString & path, const QString & o
 		continue;
 	    }
 
-	    // if this is a local diversion, give up at this point because there is no owning package
-	    if ( localDiversion )
-		continue;
-
 	    // if the package from the diversion by ... from line is also in the third line
-	    if ( packages.contains( divertPkg ) )
+	    if ( !divertPkg.isEmpty() && packages.split( ", " ).contains( divertPkg ) )
 	    {
-		// ... and the resolved path matches the input
+		// ... and the resolved path matches the original file
 		if ( path == path1Resolved )
 		    // ... then return the diverting package from the first line
 		    return divertPkg;
 	    }
 	    else
 	    {
-		// ... and the resolved path matches the input
+		// ... and the resolved path matches the renamed file
 		if ( path == path2Resolved )
 		    // ... then return the package that owned this file pre-divert
 		    return packages.split( ": " ).first();
@@ -187,12 +197,16 @@ QString DpkgPkgManager::originalOwningPkg( const QString & path )
     // ... looking for exactly three lines matching:
     // diversion by other-package from: path
     // diversion by other-package to: renamed-path
-    // package: path
+    // package list: path
+    // The package list may contain either the original package, or a list including
+    // both the original and the diverting package (and possibly others).  The
+    // diverting package may include the file explicitly, but often creates a symlink
+    // (eg. to /etc/alternatives) on install.
 
     int exitCode = -1;
     const QFileInfo fileInfo( path );
     const QString filename = fileInfo.fileName();
-    QString output = runCommand( "/usr/bin/dpkg", QStringList() << "-S" << path, &exitCode );
+    QString output = runCommand( "/usr/bin/dpkg", QStringList() << "-S" << path, &exitCode, 1, false, false );
     if ( exitCode != 0 )
 	return "";
 
@@ -202,16 +216,31 @@ QString DpkgPkgManager::originalOwningPkg( const QString & path )
     QStringList::const_iterator line = lines.begin();
     while ( line != lines.end() )
     {
+	// Fast-forward to a diversion line
 	while ( line != lines.end() && !isDiversionFrom( *line ) )
 	    ++line;
 
+	logDebug() << *line << endl;
+
+	// The next line should be a diversion to line
 	if ( ++line != lines.end() && isDiversionTo( *line ) )
 	{
+	    const QString divertingPkg = (*line).split(" ").at( 2 );
+	    logDebug() << *line << endl;
+
 	    if ( ++line != lines.end() )
 	    {
+		// Might now have the (third) line with the list of packages for the original file
 		const QStringList fields = (*line).split( ": " );
 		if ( fields.size() == 2 && resolvePath( fields.last() ) == pathResolved )
-		    return fields.first().split( ", " ).first();
+		{
+		    // Pick any one which isn't the diverting package
+		    const QStringList packages = fields.first().split( ", " );
+		    logDebug() << " diverted file owned by " << packages << endl;
+		    foreach ( const QString package, packages )
+			if ( package != divertingPkg )
+			    return package;
+		}
 	    }
 	}
 
@@ -294,6 +323,7 @@ QStringList DpkgPkgManager::parseFileList( const QString & output )
 	    // this line contains the new location for the file from this package
 	    const QStringList fields = line.split( ": " );
 	    QString divertedFile = fields.last();
+	    logDebug() << " previous file " << line << endl;
 	    if ( fields.size() == 2 && !divertedFile.isEmpty() )
 		fileList << resolvePath(divertedFile);
 	}
@@ -388,11 +418,11 @@ PkgFileListCache * DpkgPkgManager::createFileListCache( PkgFileListCache::Lookup
 		// something wrong, just skip it and hope
 		continue;
 
-	    // Need to take this first path and package to compare with the last one
+	    // need to take this first path and package to compare with the last one
 	    // to see if the file really belongs to that package
 	    QStringList fields = line->split( ": " );
 	    QString path1 = fields.last();
-	    QString divertPkg = fields.first().split( " " ).at( 2 );
+	    QString divertingPkg = isLocalDiversion( *line ) ? "" : fields.first().split( " " ).at( 2 );
 
 	    // the next line should contain the path where this file now resides
 	    ++line;
@@ -403,16 +433,16 @@ PkgFileListCache * DpkgPkgManager::createFileListCache( PkgFileListCache::Lookup
 	    if ( fields.size() != 2 )
 		continue;
 
+	    // if the renamed file is the one
 	    QString path2 = resolvePath( fields.last() );
 
-	    // and the one after that might give the package and the original file path
+	    // ... and the one after that might give the package and the original file path
 	    ++line;
 	    fields = line->split( ": " );
 	    if ( fields.size() != 2 )
 		continue;
 
 	    packages = fields.first();
-
 	    // the from/to pair for the renamed file is followed by an unrelated entry
 	    QString path3 = fields.last();
 	    if ( path1 != path3 )
@@ -421,16 +451,25 @@ PkgFileListCache * DpkgPkgManager::createFileListCache( PkgFileListCache::Lookup
 		--line;
 		continue;
 	    }
-	    else if ( packages.contains( divertPkg ) )
-	    {
-		// associate original file with diverting package
-		packages = divertPkg;
-		pathname = resolvePath( path1 );
-	    }
 	    else
 	    {
-		// associate renamed file with its original package
+		QStringList packagesList = packages.split( ", " );
+
+		// immediately add the diverting package with this path if it is in the third line
+		if ( !divertingPkg.isEmpty() && packagesList.contains( divertingPkg ) )
+		{
+		    cache->add( divertingPkg, resolvePath( path3 ) );
+		    logDebug() << divertingPkg << " diverted " << resolvePath(path3) << endl;
+
+		    // remove the diverting package from list, which might now be empty
+		    packagesList.removeAt( packagesList.indexOf( divertingPkg ) );
+		    packages = packagesList.join( ", " );
+		}
+
+		// associate renamed file only with its original packages
 		pathname = resolvePath( path2 );
+		if ( !packagesList.isEmpty() )
+		    logDebug() << path1 << " from " << packages << " diverted by " << divertingPkg << " to " << pathname << endl;
 	    }
 	}
 	else
