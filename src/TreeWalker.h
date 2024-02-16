@@ -38,7 +38,7 @@ namespace QDirStat
     public:
 
         TreeWalker():
-            _overflow( false )
+            _overflow { false }
             {}
 
         virtual ~TreeWalker() {}
@@ -203,12 +203,12 @@ namespace QDirStat
     public:
 
         FilesFromYearTreeWalker( short year ):
-            TreeWalker(),
-            _year( year )
+            TreeWalker (),
+            _year { year }
             {}
 
         virtual bool check( FileInfo * item )
-            { return item && item->isFile() && item->mtimeYear() == _year; }
+            { return item && item->isFile() && item->yearAndMonth().first == _year; }
 
     protected:
 
@@ -224,17 +224,12 @@ namespace QDirStat
     public:
 
         FilesFromMonthTreeWalker( short year, short month ):
-            TreeWalker(),
-            _year( year ),
-            _month( month )
+            TreeWalker (),
+            _year { year },
+            _month { month }
             {}
 
-        virtual bool check( FileInfo * item )
-            {
-                return item && item->isFile()
-                    && item->mtimeYear()  == _year
-                    && item->mtimeMonth() == _month;
-            }
+        virtual bool check( FileInfo * item );
 
     protected:
 
@@ -250,12 +245,12 @@ namespace QDirStat
     {
     public:
         FindFilesTreeWalker( const FileSearchFilter & filter ):
-            TreeWalker(),
-            _filter( filter ),
-            _count( 0 )
+            TreeWalker (),
+            _filter { filter },
+            _count { 0 }
             {}
 
-        virtual void prepare( FileInfo * subtree );
+	virtual void prepare( FileInfo * subtree );
 
         virtual bool check( FileInfo * item );
 

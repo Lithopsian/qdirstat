@@ -8,9 +8,12 @@
 
 
 #include "GeneralConfigPage.h"
+#include "DirTreeModel.h"
+#include "MainWindow.h"
 #include "Settings.h"
 #include "Logger.h"
 #include "Exception.h"
+#include "QDirStatApp.h"
 
 
 using namespace QDirStat;
@@ -23,7 +26,6 @@ GeneralConfigPage::GeneralConfigPage( QWidget * parent ):
     CHECK_NEW( _ui );
 
     _ui->setupUi( this );
-    readSettings();
 }
 
 
@@ -35,82 +37,57 @@ GeneralConfigPage::~GeneralConfigPage()
 
 void GeneralConfigPage::setup()
 {
-    // NOP
+    // All the values on this page are held in variables in MainWindow and
+    // DirTreeModel (or DirTree).
+    const MainWindow *mainWindow = (MainWindow *)app()->findMainWindow();
+    if ( !mainWindow )
+        return;
+
+    const DirTreeModel *dirTreeModel = app()->dirTreeModel();
+    if ( dirTreeModel )
+    {
+        _ui->crossFilesystemsCheckBox->setChecked   ( dirTreeModel->crossFilesystems() );
+        _ui->useBoldForDominantCheckBox->setChecked ( dirTreeModel->useBoldForDominantItems() );
+        _ui->treeUpdateIntervalSpinBox->setValue    ( dirTreeModel->updateTimerMillisec() );
+        const QString treeIconDir = dirTreeModel->treeIconDir();
+        _ui->treeIconThemeComboBox->setCurrentIndex( treeIconDir.contains( "/tree-small" ) ? 1 : 0 );
+    }
+
+    _ui->urlInWindowTitleCheckBox->setChecked( mainWindow->urlInWindowTitle() );
+    _ui->useTreemapHoverCheckBox->setChecked ( mainWindow->treemapView()->useTreemapHover() );
+    _ui->statusBarShortTimeoutSpinBox->setValue( mainWindow->statusBarTimeout() / 1000.0 );
+    _ui->statusBarLongTimeoutSpinBox->setValue( mainWindow->longStatusBarTimeout() / 1000.0 );
 }
 
 
 void GeneralConfigPage::applyChanges()
 {
-    // logDebug() << endl;
+    //logDebug() << Qt::endl;
 
-    writeSettings();
+    MainWindow *mainWindow = (MainWindow *)app()->findMainWindow();
+    if ( !mainWindow )
+        return;
+
+    DirTreeModel *dirTreeModel = app()->dirTreeModel();
+    if ( dirTreeModel )
+    {
+        const QString treeIconDir = _ui->treeIconThemeComboBox->currentIndex() == 1 ?
+                                    ":/icons/tree-small/" :
+                                    ":/icons/tree-medium/";
+        dirTreeModel->updateSettings( _ui->crossFilesystemsCheckBox->isChecked(),
+                                      _ui->useBoldForDominantCheckBox->isChecked(),
+                                      treeIconDir,
+                                      _ui->treeUpdateIntervalSpinBox->value() );
+    }
+
+    mainWindow->updateSettings( _ui->urlInWindowTitleCheckBox->isChecked(),
+                                _ui->useTreemapHoverCheckBox->isChecked(),
+                                1000 * _ui->statusBarShortTimeoutSpinBox->value(),
+                                1000 * _ui->statusBarLongTimeoutSpinBox->value() );
 }
 
 
 void GeneralConfigPage::discardChanges()
 {
-    // logDebug() << endl;
-
-    readSettings();
-}
-
-
-void GeneralConfigPage::readSettings()
-{
-    // logDebug() << endl;
-
-    QDirStat::Settings settings;
-    settings.beginGroup( "MainWindow" );
-
-    _ui->urlInWindowTitleCheckBox->setChecked( settings.value( "UrlInWindowTitle" , false ).toBool() );
-    _ui->useTreemapHoverCheckBox->setChecked ( settings.value( "UseTreemapHover"  , false ).toBool() );
-
-    int statusBarTimeoutMillisec = settings.value( "StatusBarTimeoutMillisec" , 3000 ).toInt();
-    _ui->statusBarTimeoutSpinBox->setValue( statusBarTimeoutMillisec / 1000.0 );
-
-    settings.endGroup();
-
-
-    settings.beginGroup( "DirectoryTree" );
-
-    _ui->crossFilesystemsCheckBox->setChecked   ( settings.value( "CrossFilesystems"    , false ).toBool() );
-    _ui->useBoldForDominantCheckBox->setChecked ( settings.value( "UseBoldForDominant"  , true  ).toBool() );
-    _ui->treeUpdateIntervalSpinBox->setValue    ( settings.value( "UpdateTimerMillisec" ,   333 ).toInt()  );
-    QString treeIconDir = settings.value( "TreeIconDir", ":/icons/tree-medium/" ).toString();
-
-    int index = treeIconDir.contains( "/tree-small" ) ? 1 : 0;
-    _ui->treeIconThemeComboBox->setCurrentIndex( index );
-
-    settings.endGroup();
-}
-
-
-void GeneralConfigPage::writeSettings()
-{
-    // logDebug() << endl;
-
-    QDirStat::Settings settings;
-    settings.beginGroup( "MainWindow" );
-
-    settings.setValue( "UrlInWindowTitle"        , _ui->urlInWindowTitleCheckBox->isChecked() );
-    settings.setValue( "UseTreemapHover"         , _ui->useTreemapHoverCheckBox->isChecked()  );
-    settings.setValue( "StatusBarTimeoutMillisec", (int) ( 1000 * _ui->statusBarTimeoutSpinBox->value() ) );
-
-    settings.endGroup();
-
-
-    settings.beginGroup( "DirectoryTree" );
-
-    settings.setValue( "CrossFilesystems"    , _ui->crossFilesystemsCheckBox->isChecked()   );
-    settings.setValue( "UseBoldForDominant"  , _ui->useBoldForDominantCheckBox->isChecked() );
-    settings.setValue( "UpdateTimerMillisec" , _ui->treeUpdateIntervalSpinBox->value()      );
-
-    switch ( _ui->treeIconThemeComboBox->currentIndex() )
-    {
-        default:
-        case 0:  settings.setValue( "TreeIconDir", ":/icons/tree-medium/" ); break;
-        case 1:  settings.setValue( "TreeIconDir", ":/icons/tree-small/"  ); break;
-    }
-
-    settings.endGroup();
+    //logDebug() << Qt::endl;
 }

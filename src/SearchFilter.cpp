@@ -7,8 +7,8 @@
  */
 
 #include "SearchFilter.h"
+#include "Wildcard.h"
 #include "Logger.h"
-#include "Exception.h"
 
 
 using namespace QDirStat;
@@ -16,19 +16,31 @@ using namespace QDirStat;
 
 SearchFilter::SearchFilter( const QString & pattern,
                             FilterMode      filterMode,
-                            FilterMode      defaultFilterMode ):
-    _pattern( pattern ),
-    _regexp( pattern ),
-    _filterMode( filterMode ),
-    _defaultFilterMode( defaultFilterMode )
+                            FilterMode      defaultFilterMode,
+                            bool            caseSensitive ):
+    _pattern { pattern },
+    _filterMode { filterMode },
+    _defaultFilterMode { defaultFilterMode },
+    _caseSensitive { caseSensitive }
 {
     if ( _filterMode == Auto )
         guessFilterMode();
 
-    if ( _filterMode == Wildcard )
-        _regexp.setPatternSyntax( QRegExp::Wildcard );
+    QRegularExpression::PatternOptions patternOptions;
+    if ( !caseSensitive )
+        patternOptions = QRegularExpression::CaseInsensitiveOption;
 
-    _regexp.setCaseSensitivity( Qt::CaseInsensitive );
+    if ( _filterMode == Wildcard )
+        _regexp = Wildcard::wildcardRegularExpression( pattern, patternOptions );
+    else if ( _filterMode == RegExp )
+        _regexp = QRegularExpression( pattern, patternOptions );
+
+    // Make an attempt to recover from guessing an invalid regexp
+    if ( filterMode == Auto && _filterMode == RegExp && !_regexp.isValid() )
+    {
+        _filterMode = StartsWith;
+        logDebug() << _regexp.errorString() << Qt::endl;
+    }
 }
 
 
@@ -41,10 +53,10 @@ void SearchFilter::guessFilterMode()
     else if ( _pattern.startsWith( "=" ) )
     {
         _filterMode = ExactMatch;
-        _pattern.remove( QRegExp( "^=" ) );
-        _regexp.setPattern( _pattern );
+        _pattern.remove( 0, 1 );
     }
-    else if ( _pattern.contains( "*.*" ) )
+    else if ( _pattern.startsWith( '*' ) ||
+              _pattern.contains( "*.*" )   )
     {
         _filterMode = Wildcard;
     }
@@ -62,50 +74,56 @@ void SearchFilter::guessFilterMode()
     {
         _filterMode = Wildcard;
     }
+    else if ( _defaultFilterMode == Auto )
+    {
+        _filterMode = StartsWith;
+    }
     else
     {
-        if ( _defaultFilterMode == Auto )
-            _filterMode = StartsWith;
-        else
-            _filterMode = _defaultFilterMode;
+        _filterMode = _defaultFilterMode;
     }
 
 #if 0
     logDebug() << "using filter mode " << toString( _filterMode )
                << " from \"" << _pattern << "\""
-               << endl;
+               << Qt::endl;
 #endif
 }
 
 
 bool SearchFilter::matches( const QString & str ) const
 {
-    Qt::CaseSensitivity caseSensitivity = _regexp.caseSensitivity();
+    const Qt::CaseSensitivity caseSensitivity = isCaseSensitive() ? Qt::CaseSensitive : Qt::CaseInsensitive;
 
     switch ( _filterMode )
     {
         case Contains:   return str.contains  ( _pattern, caseSensitivity );
         case StartsWith: return str.startsWith( _pattern, caseSensitivity );
         case ExactMatch: return QString::compare( str, _pattern, caseSensitivity ) == 0;
-        case Wildcard:   return _regexp.exactMatch( str );
-        case RegExp:     return str.contains( _regexp );
+        case Wildcard:   return _regexp.match( str ).hasMatch();
+        case RegExp:     return _regexp.isValid() && _regexp.match( str ).hasMatch();
         case SelectAll:  return true;
         case Auto:
-            logWarning() << "Unexpected filter mode 'Auto' - assuming 'Contains'" << endl;
-            return str.contains( _pattern );
+            logWarning() << "Unexpected filter mode 'Auto' - assuming 'Contains'" << Qt::endl;
+            return str.contains( _pattern, caseSensitivity );
     }
 
-    logError() << "Undefined filter mode " << (int) _filterMode << endl;
+    logError() << "Undefined filter mode " << ( int )_filterMode << Qt::endl;
     return false;
 }
 
-
+/*
 void SearchFilter::setCaseSensitive( bool sensitive )
 {
-    _regexp.setCaseSensitivity( sensitive ?
-                                Qt::CaseSensitive : Qt::CaseInsensitive );
-}
+    _caseSensitive = sensitive;
 
+    if ( _regexp.isValid() )
+    {
+        QRegularExpression::PatternOptions options = _regexp.patternOptions();
+        _regexp.setPatternOptions( options.setFlag( QRegularExpression::CaseInsensitiveOption, !sensitive ) );
+    }
+}
+*/
 
 QString SearchFilter::toString( FilterMode filterMode )
 {
@@ -120,5 +138,5 @@ QString SearchFilter::toString( FilterMode filterMode )
         case Auto:       return "Auto";
     }
 
-    return QString( "<Unknown FilterMode %1" ).arg( (int) filterMode );
+    return QString( "<Unknown FilterMode %1" ).arg( ( int )filterMode );
 }

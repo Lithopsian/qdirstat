@@ -14,7 +14,7 @@
 #include <QTreeWidgetItem>
 
 #include "ui_locate-files-window.h"
-#include "FileInfo.h"
+#include "FileSize.h"
 #include "Subtree.h"
 
 
@@ -221,8 +221,8 @@ namespace QDirStat
 	//
 
 	QString	 path()         const { return _path;  }
-	FileSize size()         const { return _size;  }
-	time_t   mtime()        const { return _mtime; }
+//	FileSize size()         const { return _size;  }
+//	time_t   mtime()        const { return _mtime; }
 
 	/**
 	 * Less-than operator for sorting.

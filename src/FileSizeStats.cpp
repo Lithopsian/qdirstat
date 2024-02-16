@@ -11,6 +11,8 @@
 #include "FileInfoIterator.h"
 #include "FormatUtil.h"
 #include "Exception.h"
+#include "Logger.h"
+
 
 #define VERBOSE_SORT_THRESHOLD  50000
 
@@ -20,11 +22,10 @@ using namespace QDirStat;
 FileSizeStats::FileSizeStats( FileInfo * subtree ):
     PercentileStats()
 {
-    if ( subtree )
-    {
-        collect( subtree );
-        sort();
-    }
+    CHECK_PTR ( subtree );
+
+    collect( subtree );
+    sort();
 }
 
 
@@ -38,23 +39,14 @@ void FileSizeStats::collect( FileInfo * subtree )
     if ( subtree->isFile() )
         _data << subtree->size();
 
-    FileInfoIterator it( subtree );
-
-    while ( *it )
+    for ( FileInfoIterator it( subtree ); *it; ++it )
     {
-	FileInfo * item = *it;
-
-	if ( item->hasChildren() )
-	{
-	    collect( item );
-	}
-	else if ( item->isFile() )
-	{
-            _data << item->size();
-	}
 	// Disregard symlinks, block devices and other special files
-
-	++it;
+	FileInfo * item = *it;
+	if ( item->hasChildren() )
+	    collect( item );
+	else if ( item->isFile() )
+            _data << item->size();
     }
 }
 
@@ -69,24 +61,14 @@ void FileSizeStats::collect( FileInfo * subtree, const QString & suffix )
     if ( subtree->isFile() && subtree->name().toLower().endsWith( suffix ) )
         _data << subtree->size();
 
-    FileInfoIterator it( subtree );
-
-    while ( *it )
+    for ( FileInfoIterator it( subtree ); *it; ++it )
     {
-	FileInfo * item = *it;
-
-	if ( item->hasChildren() )
-	{
-	    collect( item, suffix );
-	}
-	else if ( item->isFile() )
-	{
-            if ( item->name().toLower().endsWith( suffix ) )
-                _data << item->size();
-	}
 	// Disregard symlinks, block devices and other special files
-
-	++it;
+	FileInfo * item = *it;
+	if ( item->hasChildren() )
+	    collect( item, suffix );
+	else if ( item->isFile() && item->name().toLower().endsWith( suffix ) )
+            _data << item->size();
     }
 }
 
@@ -106,13 +88,11 @@ QRealList FileSizeStats::fillBuckets( int bucketCount,
 
     QRealList buckets;
     buckets.reserve( bucketCount );
-
     for ( int i=0; i < bucketCount; ++i )
         buckets << 0.0;
 
     if ( _data.isEmpty() )
         return buckets;
-
 
     // The first call to percentile() or quantile() will cause the data to be
     // sorted, so there is no need to sort them again here.
@@ -127,25 +107,23 @@ QRealList FileSizeStats::fillBuckets( int bucketCount,
                << " startVal: " << formatSize( startVal )
                << " endVal: " << formatSize( endVal )
                << " bucketWidth: " << formatSize( bucketWidth )
-               << endl;
+               << Qt::endl;
 #endif
 
-    for ( int i=0; i < _data.size(); ++i )
+    auto it = _data.cbegin();
+    while ( it != _data.cend() && *it < startVal )
+	++it;
+
+    while ( it != _data.cend() && *it <= endVal )
     {
-        qreal val = _data.at( i );
-
-        if ( val < startVal )
-            continue;
-
-        if ( val > endVal )
-            break;
-
         // TO DO: Optimize this by taking into account that the data are sorted
         // already. We don't really need that many divisions; just when leaving
         // the current bucket would be sufficient.
 
-        int index = qMin( ( val - startVal ) / bucketWidth, bucketCount - 1.0 );
+        const int index = qMin( ( *it - startVal ) / bucketWidth, bucketCount - 1.0 );
         ++buckets[ index ];
+
+	++it;
     }
 
     return buckets;

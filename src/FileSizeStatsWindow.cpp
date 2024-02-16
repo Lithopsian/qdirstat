@@ -13,13 +13,14 @@
 #include <QProcess>
 
 #include "FileSizeStatsWindow.h"
-#include "HistogramView.h"
+#include "FileSizeStats.h"
 #include "BucketsTableModel.h"
 #include "DirTree.h"
+#include "HeaderTweaker.h"
+#include "HistogramView.h"
 #include "MainWindow.h"
 #include "SettingsHelpers.h"
-#include "HeaderTweaker.h"
-#include "QDirStatApp.h"
+//#include "QDirStatApp.h"
 #include "FormatUtil.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -31,51 +32,50 @@ QPointer<FileSizeStatsWindow> FileSizeStatsWindow::_sharedInstance = 0;
 
 
 FileSizeStatsWindow::FileSizeStatsWindow( QWidget * parent ):
-    QDialog( parent ),
-    _ui( new Ui::FileSizeStatsWindow ),
-    _subtree( 0 ),
-    _suffix( "" ),
-    _stats( 0 )
+    QDialog ( parent ),
+    _ui { new Ui::FileSizeStatsWindow },
+    _subtree { 0 },
+    _stats { new FileSizeStats() }
 {
-    // logDebug() << "init" << endl;
+    logDebug() << "init" << Qt::endl;
 
+    CHECK_NEW( _stats );
     CHECK_NEW( _ui );
+
     _ui->setupUi( this );
     initWidgets();
     readWindowSettings( this, "FileSizeStatsWindow" );
 
-    _stats = new FileSizeStats();
-    CHECK_NEW( _stats );
-
     _bucketsTableModel = new BucketsTableModel( this, _ui->histogramView );
     CHECK_NEW( _bucketsTableModel );
-
     _ui->bucketsTable->setModel( _bucketsTableModel );
 
     QList<QCommandLinkButton *> helpButtons = _ui->helpPage->findChildren<QCommandLinkButton *>();
-
-    foreach ( QCommandLinkButton * helpButton, helpButtons )
+    foreach ( const QCommandLinkButton * helpButton, helpButtons )
     {
-	connect( helpButton, SIGNAL( clicked()	),
-		 this,	     SLOT  ( showHelp() ) );
+	connect( helpButton, &QAbstractButton::clicked,
+		 this,	     &FileSizeStatsWindow::showHelp );
     }
 }
 
 
 FileSizeStatsWindow::~FileSizeStatsWindow()
 {
-    // logDebug() << "destroying" << endl;
+    //logDebug() << "destroying" << Qt::endl;
+
     writeWindowSettings( this, "FileSizeStatsWindow" );
     delete _stats;
     delete _ui;
 }
 
 
-FileSizeStatsWindow * FileSizeStatsWindow::sharedInstance()
+FileSizeStatsWindow * FileSizeStatsWindow::sharedInstance( QWidget * mainWindow )
 {
+    //logDebug() << _sharedInstance << Qt::endl;
+
     if ( ! _sharedInstance )
     {
-	_sharedInstance = new FileSizeStatsWindow( app()->findMainWindow() );
+	_sharedInstance = new FileSizeStatsWindow( mainWindow );
 	CHECK_NEW( _sharedInstance );
     }
 
@@ -96,7 +96,7 @@ void FileSizeStatsWindow::initWidgets()
     _ui->heading->setFont( font );
     _ui->optionsPanel->hide();
 
-    connect( _ui->percentileFilterComboBox, SIGNAL( currentIndexChanged( int ) ),
+    connect( _ui->percentileFilterCheckBox, SIGNAL( stateChanged( int ) ),
 	     this,			    SLOT  ( fillPercentileTable()      ) );
 
     connect( _ui->optionsButton, SIGNAL( clicked()	 ),
@@ -132,14 +132,15 @@ void FileSizeStatsWindow::calc()
 }
 
 
-void FileSizeStatsWindow::populateSharedInstance( FileInfo *	  subtree,
+void FileSizeStatsWindow::populateSharedInstance( QWidget	* mainWindow,
+						  FileInfo	* subtree,
 						  const QString & suffix  )
 {
     if ( ! subtree )
 	return;
 
-    sharedInstance()->populate( subtree, suffix );
-    sharedInstance()->show();
+    sharedInstance( mainWindow )->populate( subtree, suffix );
+    sharedInstance( mainWindow )->show();
 }
 
 
@@ -153,19 +154,18 @@ void FileSizeStatsWindow::populate( FileInfo * subtree, const QString & suffix )
 
     if ( ! _subtree )
     {
-	logWarning() << "No tree" << endl;
+	logWarning() << "No tree" << Qt::endl;
 	return;
     }
 
     QString url = subtree->debugUrl();
-
     if ( url == "<root>" )
 	url = subtree->tree()->url();
 
     if ( _suffix.isEmpty() )
-	_ui->heading->setText( tr( "File Size Statistics for %1" ).arg( url ) );
+	_ui->heading->setText( tr( "File size statistics for %1" ).arg( url ) );
     else
-	_ui->heading->setText( tr( "File Size Statistics for %1 in %2" )
+	_ui->heading->setText( tr( "File size statistics for %1 in %2" )
 			       .arg( suffix ).arg( url ) );
     calc();
 
@@ -176,7 +176,7 @@ void FileSizeStatsWindow::populate( FileInfo * subtree, const QString & suffix )
 
 void FileSizeStatsWindow::fillPercentileTable()
 {
-    int step = _ui->percentileFilterComboBox->currentIndex() == 0 ? 5 : 1;
+    int step = _ui->percentileFilterCheckBox->isChecked() ? 1 : 5;
     fillQuantileTable( _ui->percentileTable, 100, "P",
 		       _stats->percentileSums(),
 		       step, 2 );
@@ -390,7 +390,7 @@ void FileSizeStatsWindow::fillHistogram()
     updateOptions();
     fillBuckets();
     histogram->autoLogHeightScale();
-    histogram->rebuild();
+    histogram->build();
 }
 
 
@@ -398,13 +398,13 @@ void FileSizeStatsWindow::fillBuckets()
 {
     HistogramView * histogram = _ui->histogramView;
 
-    int startPercentile = histogram->startPercentile();
-    int endPercentile	= histogram->endPercentile();
+    const int startPercentile = histogram->startPercentile();
+    const int endPercentile   = histogram->endPercentile();
+    const int percentileCount = endPercentile - startPercentile;
 
-    int percentileCount = endPercentile - startPercentile;
-    int dataCount	= _stats->dataSize() * ( percentileCount / 100.0 );
-    int bucketCount	= histogram->bestBucketCount( dataCount );
-    QRealList buckets	= _stats->fillBuckets( bucketCount, startPercentile, endPercentile );
+    const int dataCount       = qRound( _stats->dataSize() * percentileCount / 100.0 );
+    const int bucketCount     = histogram->bestBucketCount( dataCount );
+    const QRealList buckets   = _stats->fillBuckets( bucketCount, startPercentile, endPercentile );
 
     histogram->setBuckets( buckets );
     fillBucketsTable();
@@ -444,13 +444,12 @@ void FileSizeStatsWindow::applyOptions()
 {
     HistogramView * histogram = _ui->histogramView;
 
-    int newStart = _ui->startPercentileSlider->value();
-    int newEnd	 = _ui->endPercentileSlider->value();
+    const int newStart = _ui->startPercentileSlider->value();
+    const int newEnd   = _ui->endPercentileSlider->value();
 
-    if ( newStart != histogram->startPercentile() ||
-	 newEnd	  != histogram->endPercentile()	    )
+    if ( newStart != histogram->startPercentile() || newEnd != histogram->endPercentile() )
     {
-	logDebug() << "New start: " << newStart << " new end: " << newEnd << endl;
+	//logDebug() << "New start: " << newStart << " new end: " << newEnd << Qt::endl;
 
 	histogram->setStartPercentile( newStart );
 	histogram->setEndPercentile  ( newEnd	);
@@ -474,7 +473,7 @@ void FileSizeStatsWindow::autoPercentiles()
 
 void FileSizeStatsWindow::updateOptions()
 {
-    HistogramView * histogram = _ui->histogramView;
+    const HistogramView * histogram = _ui->histogramView;
 
     _ui->startPercentileSlider->setValue ( histogram->startPercentile() );
     _ui->startPercentileSpinBox->setValue( histogram->startPercentile() );
@@ -487,7 +486,7 @@ void FileSizeStatsWindow::updateOptions()
 void FileSizeStatsWindow::showHelp()
 {
     QString topic = "Statistics.md";
-    QObject * button = sender();
+    const QObject * button = sender();
 
     if	    ( button == _ui->medianPercentilesHelpButton   )  topic = "Median-Percentiles.md";
     else if ( button == _ui->histogramsInGeneralHelpButton )  topic = "Histograms-in-General.md";
@@ -497,10 +496,10 @@ void FileSizeStatsWindow::showHelp()
     else if ( button == _ui->percentilesTableHelpButton	   )  topic = "Percentiles-Table.md";
     else if ( button == _ui->bucketsTableHelpButton	   )  topic = "Buckets-Table.md";
 
-    logInfo() << "Help topic: " << topic << endl;
+    // logInfo() << "Help topic: " << topic << Qt::endl;
     QString helpUrl = "https://github.com/shundhammer/qdirstat/blob/master/doc/stats/" + topic;
     QString program = "/usr/bin/xdg-open";
 
-    logInfo() << "Starting  " << program << " " << helpUrl << endl;
+    // logInfo() << "Starting  " << program << " " << helpUrl << Qt::endl;
     QProcess::startDetached( program, QStringList() << helpUrl );
 }

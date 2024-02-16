@@ -17,25 +17,13 @@
 using namespace QDirStat;
 
 
-FileSizeLabel::FileSizeLabel( QWidget * parent ):
-    PopupLabel( parent ),
-    _value( -1 )
-{
-
-}
-
-
-FileSizeLabel::~FileSizeLabel()
-{
-    // NOP
-}
-
-
 void FileSizeLabel::clear()
 {
     _value = -1;
     _prefix.clear();
-    PopupLabel::clear();
+    setToolTip( QString() );
+    QLabel::clear();
+//    PopupLabel::clear();
 }
 
 
@@ -43,12 +31,19 @@ void FileSizeLabel::setValue( FileSize val, const QString & prefix )
 {
     _value  = val;
     _prefix = prefix;
-    setContextText( "" );
+    setToolTip( "" );
 
     if ( _value < 0 )
+    {
 	QLabel::setText( "" );
+    }
     else
+    {
 	QLabel::setText( _prefix + formatSize( _value ) );
+
+	if ( _value > 1024 )
+	    setToolTip( _prefix + formatByteSize( _value ) );
+    }
 }
 
 
@@ -58,12 +53,14 @@ void FileSizeLabel::setText( const QString & newText,
 {
     _value  = newValue;
     _prefix = newPrefix;
-    setContextText( "" );
+    setToolTip( "" );
 
     QLabel::setText( newText );
+    if ( _value > 1024 )
+        setToolTip( _prefix + formatByteSize( _value ) );
 }
 
-
+/*
 bool FileSizeLabel::haveContextMenu() const
 {
     if ( ! _contextText.isEmpty() )
@@ -77,4 +74,13 @@ QString FileSizeLabel::contextText() const
 {
     return _contextText.isEmpty() ?
 	_prefix + formatByteSize( _value ) : _contextText;
+}
+*/
+
+
+void FileSizeLabel::setBold( bool bold )
+{
+    QFont textFont = font();
+    textFont.setBold( bold );
+    setFont( textFont );
 }

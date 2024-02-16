@@ -13,7 +13,6 @@
 #include <QGraphicsRectItem>
 #include <QGraphicsLineItem>
 
-#include "HistogramItems.h"
 #include "HistogramView.h"
 
 
@@ -49,7 +48,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void mousePressEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
+//	virtual void mousePressEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
 
 	HistogramView * _parentView;
 	int		_number;
@@ -64,11 +63,11 @@ namespace QDirStat
     class PercentileMarker: public QGraphicsLineItem
     {
     public:
-	PercentileMarker( HistogramView * parent,
+	PercentileMarker( HistogramView	* parent,
 			  int		  percentileIndex,
-			  const QString & name,
-			  const QLineF &  zeroLine,
-			  const QPen &	  pen );
+			  const QString	& name,
+			  const QLineF	& zeroLine,
+			  const QPen	& pen );
 
 	/**
 	 * Return the name of this marker; something like "P1", "Min", "Max",
@@ -88,7 +87,7 @@ namespace QDirStat
 
     protected:
 
-	QLineF translatedLine( const QLineF &  zeroLine,
+	QLineF translatedLine( const QLineF  & zeroLine,
 			       int	       percentileIndex,
 			       HistogramView * parent ) const;
 
@@ -97,7 +96,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void mousePressEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
+//	virtual void mousePressEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
 
 	HistogramView * _parentView;
 	QString		_name;

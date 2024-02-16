@@ -16,6 +16,7 @@
 #include <QPointer>
 
 #include "ui_file-type-stats-window.h"
+#include "FileSize.h"
 #include "Subtree.h"
 
 
@@ -51,7 +52,7 @@ namespace QDirStat
 	 * of this class. The QPointer will keep track of this window
 	 * auto-deleting itself when closed.
 	 **/
-	FileTypeStatsWindow( QWidget * parent = 0 );
+	FileTypeStatsWindow( QWidget * parent );
 
 	/**
 	 * Destructor.
@@ -72,7 +73,7 @@ namespace QDirStat
          * Convenience function for creating, populating and showing the shared
          * instance.
          **/
-        static void populateSharedInstance( FileInfo * subtree );
+        static void populateSharedInstance( QWidget * mainWindow, FileInfo * subtree );
 
         /**
          * Static method for using one shared instance of this class between
@@ -84,7 +85,7 @@ namespace QDirStat
          *
          * After getting this shared instance, call populate() and show().
          **/
-        static FileTypeStatsWindow * sharedInstance();
+        static FileTypeStatsWindow * sharedInstance( QWidget * mainWindow );
 
 
     public slots:
@@ -135,22 +136,18 @@ namespace QDirStat
 	 **/
 	void initWidgets();
 
-        //
-        // Add items of various types in the TreeWidget
-        //
-
         /**
          * Create a tree item for a category and add it to the tree.
          **/
-        CategoryFileTypeItem * addCategoryItem( MimeCategory * category,
-                                                int            count,
-                                                FileSize       sum      );
+        CategoryFileTypeItem * addCategoryItem( const QString & name,
+                                                int             count,
+                                                FileSize        sum    );
 
         /**
          * Create a file type item for files matching a non-suffix rule of a
          * category. This does not yet add it to the category parent item.
          **/
-        SuffixFileTypeItem * addNonSuffixRuleItem( MimeCategory * category );
+        SuffixFileTypeItem * addNonSuffixRuleItem( const MimeCategory * category );
 
         /**
          * Create a file type item. This does not yet add it to a category
@@ -171,12 +168,23 @@ namespace QDirStat
         void addTopXOtherItems( CategoryFileTypeItem  * otherCategoryItem,
                                 QList<FileTypeItem *> & otherItems        );
 
-        /**
+	/**
          * Return the suffix of the currently selected file type or an empty
          * string if no suffix is selected.
          **/
         QString currentSuffix() const;
 
+	/**
+	 * Custom context menu signalled.
+	 **/
+	virtual void contextMenu( const QPoint & pos );
+
+	/**
+	 * Key press event for detecting evnter/return.
+	 *
+	 * Reimplemented from QWidget.
+	 **/
+	virtual void keyPressEvent( QKeyEvent * event ) Q_DECL_OVERRIDE;
 
 	//
 	// Data members
@@ -259,19 +267,25 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	CategoryFileTypeItem( MimeCategory * category,
-			      int	     count,
-			      FileSize	     totalSize,
-			      float	     percentage );
+	CategoryFileTypeItem( const QString & name,
+			      int	      count,
+			      FileSize	      totalSize,
+			      float	      percentage ):
+	    FileTypeItem( name,
+			  count,
+			  totalSize,
+			  percentage )
+//	    _category( category )
+	{}
 
 	/**
 	 * Return the MIME category of this item.
 	 **/
-	MimeCategory * category() const { return _category; }
+//	const MimeCategory * category() const { return _category; }
 
     protected:
 
-	MimeCategory * _category;
+//	const MimeCategory * _category;
     };
 
 

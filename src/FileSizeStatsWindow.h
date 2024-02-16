@@ -14,18 +14,18 @@
 #include <QPointer>
 
 #include "ui_file-size-stats-window.h"
-#include "FileInfo.h"
-#include "FileSizeStats.h"
+
 
 class QTableWidget;
 
 
 namespace QDirStat
 {
-    class DirTree;
-    class FileSizeStats;
     class BucketsTableModel;
-
+    class DirTree;
+    class FileInfo;
+    class FileSizeStats;
+	class PercentileSums;
 
     /**
      * Modeless dialog to display file size statistics:
@@ -71,20 +71,21 @@ namespace QDirStat
 	/**
 	 * Static method for using one shared instance of this class between
 	 * multiple parts of the application. This will create a new instance
-	 * if there is none yet (or anymore).
+	 * if there is none yet (or any more).
 	 *
 	 * Do not hold on to this pointer; the instance destroys itself when
 	 * the user closes the window, and then the pointer becomes invalid.
 	 *
 	 * After getting this shared instance, call populate() and show().
 	 **/
-	static FileSizeStatsWindow * sharedInstance();
+	static FileSizeStatsWindow * sharedInstance( QWidget * mainWindow );
 
 	/**
 	 * Convenience function for creating, populating and showing the shared
 	 * instance.
 	 **/
-	static void populateSharedInstance( FileInfo *	    subtree,
+	static void populateSharedInstance( QWidget	  * mainWindow,
+					    FileInfo	  * subtree,
 					    const QString & suffix = "" );
 
 
@@ -169,10 +170,10 @@ namespace QDirStat
 	 **/
 	void fillQuantileTable( QTableWidget *	       table,
 				int		       order,
-				const QString &	       namePrefix = "",
-				const PercentileSums & sums = PercentileSums(),
-				int		       step = 1,
-				int		       extremesMargin = 1 );
+				const QString &	       namePrefix,
+				const PercentileSums & sums,
+				int		       step,
+				int		       extremesMargin );
 
 	/**
 	 * Add an item to a table.

@@ -6,10 +6,11 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <errno.h>
+
+#include <QObject>
 
 #include "Exception.h"
-
-#include <errno.h>
 
 
 void Exception::setSrcLocation( const QString &srcFile,

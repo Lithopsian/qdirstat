@@ -17,12 +17,6 @@
 #include <QPointer>
 
 #include "ui_main-window.h"
-#include "FileAgeStatsWindow.h"
-#include "FilesystemsWindow.h"
-#include "HistoryButtons.h"
-#include "DiscoverActions.h"
-#include "PanelMessage.h"
-#include "PkgFilter.h"
 #include "Subtree.h"
 
 
@@ -37,9 +31,14 @@ class QMenu;
 namespace QDirStat
 {
     class ConfigDialog;
-    class FileInfo;
     class DiscoverActions;
+    class FileAgeStatsWindow;
+    class FileInfo;
+    class FilesystemsWindow;
+    class HistoryButtons;
+    class PkgFilter;
     class PkgManager;
+    class TreemapView;
     class UnpkgSettings;
 }
 
@@ -47,7 +46,9 @@ using QDirStat::FileAgeStatsWindow;
 using QDirStat::FileInfo;
 using QDirStat::FilesystemsWindow;
 using QDirStat::PanelMessage;
+using QDirStat::PkgFilter;
 using QDirStat::PkgManager;
+using QDirStat::TreemapView;
 using QDirStat::UnpkgSettings;
 
 
@@ -57,9 +58,14 @@ class MainWindow: public QMainWindow
 
 public:
 
-    MainWindow();
+    MainWindow( bool slowUpdate );
     virtual ~MainWindow();
 
+    /**
+     * Clear the current tree and replace it with the content of the specified
+     * cache file.
+     **/
+    void readCache( const QString & cacheFileName );
 
 public slots:
 
@@ -69,25 +75,22 @@ public slots:
     void openUrl( const QString & url );
 
     /**
-     * Open a directory URL (start reading that directory).
-     **/
-    void openDir( const QString & url );
-
-    /**
      * Open a directory selection dialog and open the selected URL.
      **/
     void askOpenDir();
 
-    /**
-     * Open a package selection dialog and open the selected URL.
-     **/
-    void askOpenPkg();
+protected:
 
     /**
-     * Open a "show unpackaged files" dialog and start reading the selected
-     * starting dir with the selected exclude dirs.
+     * Quit the application.
      **/
-    void askShowUnpkgFiles();
+    void quit();
+
+    /**
+     * Replace the current tree with the list of installed
+     * packages from the system's package manager that match 'pkgUrl'.
+     **/
+    void readPkg( const QDirStat::PkgFilter & pkgFilter );
 
     /**
      * Show unpackaged files with the specified 'unpkgSettings' parameters
@@ -106,7 +109,85 @@ public slots:
     /**
      * Return 'true' if the URL starts with "unpkg:/".
      **/
-    static bool isUnpkgUrl( const QString & url );
+    static bool isUnpkgUrl( const QString & url ) { return url.startsWith( "unpkg:/", Qt::CaseInsensitive ); }
+
+    /**
+     * Disable the treemap, reset the permissions warning, breadcrumbs,
+     * and trees, then display a BusyPopup to prepare for a packaged or
+     * unpackaged files read.
+     **/
+    void pkgQuerySetup();
+
+    /**
+     * Update the window title: Show "[root]" if running as root and add the
+     * URL if that is configured.
+     **/
+    void updateWindowTitle( const QString & url );
+
+    /**
+     * Show progress text in the status bar for a few seconds.
+     **/
+    void showProgress( const QString & text );
+
+    /**
+     * Show details about the current selection in the details view.
+     **/
+    void updateFileDetailsView();
+
+public: // for the config dialog
+
+    /**
+     * Return the treemapView for this window
+     **/
+    TreemapView * treemapView() const { return _ui->treemapView; }
+
+    /**
+     * Return the setting for UrlInWindowTitle
+     **/
+    bool urlInWindowTitle() const { return _urlInWindowTitle; }
+
+    /**
+     * Return the setting for UseTreemapHover
+     **/
+//    bool useTreemapHover() const { return _useTreemapHover; }
+
+    /**
+     * Return the setting for sStatusBarTimeoutMillisec
+     **/
+    int statusBarTimeout() const { return _statusBarTimeout; }
+
+    /**
+     * Return the setting for Long StatusBarTimeout
+     **/
+    int longStatusBarTimeout() const { return _longStatusBarTimeout; }
+
+    /**
+     * Update internal settings from the general configuration page.
+     * Any changes will be saved to the conf file in the destructor.
+     **/
+    void updateSettings( bool urlInWindowTitle,
+                         bool useTreemapHover,
+                         int statusBarTimeout,
+                         int longStatusBarTimeout );
+
+protected slots:
+
+    /**
+     * Open a directory URL (start reading that directory).
+     **/
+    void openDir( const QString & url );
+
+    /**
+     * Open a file selection dialog to ask for a cache file, clear the
+     * current tree and replace it with the content of the cache file.
+     **/
+    void askReadCache();
+
+    /**
+     * Open a file selection dialog and save the current tree to the selected
+     * file.
+     **/
+    void askWriteCache();
 
     /**
      * Re-read the complete directory tree.
@@ -124,80 +205,10 @@ public slots:
     void stopReading();
 
     /**
-     * Clear the current tree and replace it with the list of installed
-     * packages from the system's package manager that match 'pkgUrl'.
+     * Show the directories that could not be read in a separate non-modal
+     * window.
      **/
-    void readPkg( const QDirStat::PkgFilter & pkgFilter );
-
-    /**
-     * Clear the current tree and replace it with the content of the specified
-     * cache file.
-     **/
-    void readCache( const QString & cacheFileName );
-
-    /**
-     * Open a file selection dialog to ask for a cache file, clear the
-     * current tree and replace it with the content of the cache file.
-     **/
-    void askReadCache();
-
-    /**
-     * Open a file selection dialog and save the current tree to the selected
-     * file.
-     **/
-    void askWriteCache();
-
-    /**
-     * Update the window title: Show "[root]" if running as root and add the
-     * URL if that is configured.
-     **/
-    void updateWindowTitle( const QString & url );
-
-    /**
-     * Expand the directory tree's branches to depth 'level'.
-     **/
-    void expandTreeToLevel( int level );
-
-    /**
-     * Show progress text in the status bar for a few seconds.
-     **/
-    void showProgress( const QString & text );
-
-    /**
-     * Show the URL of 'item' and its total size in the status line.
-     **/
-    void showCurrent( FileInfo * item );
-
-    /**
-     * Show a summary of the current selection in the status line.
-     **/
-    void showSummary();
-
-    /**
-     * Show details about the current selection in the details view.
-     **/
-    void updateFileDetailsView();
-
-    /**
-     * Show or hide the details view.
-     **/
-    void setDetailsPanelVisible( bool visible );
-
-    /**
-     * Copy the path of the current item (if there is one) to the system
-     * clipboard for use in other applications.
-     **/
-    void copyCurrentPathToClipboard();
-
-    /**
-     * Move the selected items to the trash bin.
-     **/
-    void moveToTrash();
-
-    /**
-     * Open the "Find Files" dialog and display the results.
-     **/
-    void askFindFiles();
+    void showUnreadableDirs();
 
     /**
      * Navigate one directory level up.
@@ -210,18 +221,14 @@ public slots:
     void navigateToToplevel();
 
     /**
-     * Open the URL stored in an action's statusTip property with an external
-     * browser.
-     *
-     * For the "Help" menu, those URLs are defined in the Qt Designer UI file
-     * for the main window (main-window.ui). See actionHelp for an example.
-     **/
-    void openActionUrl();
-
-    /**
      * Show the "about" dialog.
      **/
     void showAboutDialog();
+
+    /**
+     * Show the "about Qt" dialog.
+     **/
+    void showAboutQtDialog();
 
     /**
      * Show the "Donate" dialog.
@@ -229,17 +236,15 @@ public slots:
     void showDonateDialog();
 
     /**
-     * Read parameters from the settings file.
+     * Open a package selection dialog and open the selected URL.
      **/
-    void readSettings();
+    void askOpenPkg();
 
     /**
-     * Write parameters to the settings file.
+     * Open a "show unpackaged files" dialog and start reading the selected
+     * starting dir with the selected exclude dirs.
      **/
-    void writeSettings();
-
-
-protected slots:
+    void askOpenUnpkg();
 
     /**
      * Switch display to "busy display" after reading was started and restart
@@ -279,13 +284,13 @@ protected slots:
      * Enable or disable the treemap view, depending on the value of
      * the corresponding action.
      **/
-    void showTreemapView();
+    void showTreemapView( bool show );
 
     /**
      * Switch between showing the treemap view beside the file directory
      * or below it, depending on the corresponding action.
      **/
-    void treemapAsSidePanel();
+    void treemapAsSidePanel( bool asSidePanel );
 
     /**
      * Notification that a cleanup action was started.
@@ -306,18 +311,6 @@ protected slots:
      * visible.
      **/
     void navigateToUrl( const QString & url );
-
-    /**
-     * Notification that the current item changed: Find out the new current
-     * directory, check if that is in the bookmarks collection, and change the
-     * on/off status (i.e. the icon) of the bookmarksButton accordingly.
-     **/
-    void updateBookmarkButton( FileInfo * newCurrent );
-
-    /**
-     * Bookmark or un-bookmark the current directory.
-     **/
-    void bookmarkCurrentPath( bool isChecked );
 
     /**
      * Open the config dialog.
@@ -345,27 +338,15 @@ protected slots:
     void showFilesystems();
 
     /**
-     * Change the main window layout. If no name is passed, the function tries
-     * to check if the sender is a QAction and use its data().
+     * Change the main window layout when triggered by an action.  The layout name
+     * is found from the QAction data.
      **/
-    void changeLayout( const QString & name = QString() );
+    void changeLayoutSlot();
 
     /**
      * Show the elapsed time while reading.
      **/
     void showElapsedTime();
-
-    /**
-     * Show a warning (as a panel message) about insufficient permissions when
-     * reading directories.
-     **/
-    void showDirPermissionsWarning();
-
-    /**
-     * Show the directories that could not be read in a separate non-modal
-     * window.
-     **/
-    void showUnreadableDirs();
 
     /**
      * Switch verbose logging for selection changes on or off.
@@ -375,35 +356,95 @@ protected slots:
      *
      * The hotkey for this is Shift-F7.
      **/
-    void toggleVerboseSelection();
+    void toggleVerboseSelection( bool verboseSelection );
 
     /**
-     * Apply the future selection: Select the URL that was stored in
-     * _futureSelection, open that branch and clear _futureSelection.
+     * Handle the config dialog closing.  It is configured to delete on close,
+     * so this resets the dangling pointer.
      **/
-    void applyFutureSelection();
+    void configDialogFinished( int result );
 
     /**
-     * Open a popup dialog with a message that this feature is not implemented.
+     * Show or hide the details view.
      **/
-    void notImplemented();
+    void setDetailsPanelVisible( bool visible );
 
-#if 1
-    //
-    // Debugging slots
-    //
+    /**
+     * Copy the path of the current item (if there is one) to the system
+     * clipboard for use in other applications.
+     **/
+    void copyCurrentPathToClipboard();
 
+    /**
+     * Move the selected items to the trash bin.
+     **/
+    void moveToTrash();
+
+    /**
+     * Open the "Find Files" dialog and display the results.
+     **/
+    void askFindFiles();
+
+    /**
+     * Open the URL stored in an action's statusTip property with an external
+     * browser.
+     *
+     * For the "Help" menu, those URLs are defined in the Qt Designer UI file
+     * for the main window (main-window.ui). See actionHelp for an example.
+     **/
+    void openActionUrl();
+
+    /**
+     * Expand the directory tree's branches to depth 'level'.
+     **/
+    void expandTreeToLevel( int level );
+
+    /**
+     * Show the URL of 'item' and its total size in the status line.
+     **/
+    void showCurrent( FileInfo * item );
+
+    /**
+     * Show a summary of the current selection in the status line.
+     **/
+    void showSummary();
+
+#if 0
     /**
      * Debug: Item clicked in the tree widget.
      **/
     void itemClicked( const QModelIndex & index );
-
-    void selectionChanged();
-    void currentItemChanged( FileInfo * newCurrent, FileInfo * oldCurrent );
 #endif
+    /**
+     * Update the status bar and file details panel when the selection has
+     * been changed.
+     **/
+    void selectionChanged();
+
+    /**
+     * Update the status bar and file details panel when the current item has
+     * been changed.
+     **/
+    void currentItemChanged( FileInfo * newCurrent, FileInfo * oldCurrent );
 
 
 protected:
+
+    /**
+     * Show a warning (as a panel message) about insufficient permissions when
+     * reading directories.
+     **/
+    void showDirPermissionsWarning();
+
+    /**
+     * Read parameters from the settings file.
+     **/
+    void readSettings();
+
+    /**
+     * Write parameters to the settings file.
+     **/
+    void writeSettings();
 
     /**
      * Set up QObject connections (all except from QActions)
@@ -414,18 +455,12 @@ protected:
      * Connect menu QActions from the .ui file to actions of this class
      **/
     void connectMenuActions();
-
-    void connectFileMenu();
-    void connectEditMenu();
-    void connectViewMenu();
-    void connectViewExpandMenu();
-    void connectViewTreemapMenu();
-    void connectGoMenu();
-    void connectDiscoverMenu();
-    void connectHelpMenu();
-    void connectHelpSolutionsMenu();
-
-    void connectDebugActions();
+    void connectTriggerActions();
+    void connectToggleActions();
+    void connectTreemapActions();
+    void connectHistoryButtons();
+    void connectDiscoverActions();
+    void connectSelectionModelActions();
 
     /**
      * Set up the _treeLevelMapper to map an "expand tree to level x" action to
@@ -434,14 +469,25 @@ protected:
     void mapTreeExpandAction( QAction * action, int level );
 
     /**
-     * Initialize the layout actions.
+     * Return the name string (eg. "L2") of the current layout.
      **/
-    void initLayoutActions();
+    QString currentLayoutName() const
+	{ return _currentLayout ? _layouts.key( _currentLayout ) : ""; }
+
+    /**
+     * Change the main window layout.
+     **/
+    void changeLayout( const QString & layoutName );
 
     /**
      * Create the different top layouts.
      **/
-    void createLayouts();
+    void initLayouts();
+
+    /**
+     * Create one layout action.
+     **/
+    void initLayout( const QString & layoutName, QAction * action );
 
     /**
      * Save the current settings in 'layout'.
@@ -451,7 +497,7 @@ protected:
     /**
      * Apply a layout to the current settings.
      **/
-    void applyLayout( TreeLayout * layout );
+    void applyLayout( const TreeLayout * layout );
 
     /**
      * Read settings for one layout.
@@ -461,7 +507,13 @@ protected:
     /**
      * Write settings for one layout.
      **/
-    void writeLayoutSettings( TreeLayout * layout );
+    void writeLayoutSettings( const TreeLayout * layout );
+
+    /**
+     * Apply the future selection: Select the URL that was stored in
+     * _futureSelection, open that branch and clear _futureSelection.
+     **/
+    void applyFutureSelection();
 
     /**
      * Check for package manager support and enable or disable some of the
@@ -480,7 +532,12 @@ protected:
      * - Ignore all file patterns ("*.pyc" etc.) the user wishes to ignore
      **/
     void setUnpkgFilters( const UnpkgSettings & unpkgSettings,
-                          PkgManager          * pkgManager );
+                          const PkgManager    * pkgManager );
+
+    /**
+     * Apply the cross-filesystem settings to the tree.
+     **/
+    void setUnpkgCrossFilesystems( const UnpkgSettings & unpkgSettings );
 
     /**
      * Parse the starting directory in the 'unpkgSettings' and remove the
@@ -493,18 +550,9 @@ protected:
      * Show an error popup that a directory could not be opened and wait until
      * the user confirmed it.
      *
-     * The relevant information is all in the exception.
+     * The relevant informatoin is all in the exception.
      **/
     void showOpenDirErrorPopup( const SysCallFailedException & ex );
-
-    /**
-     * Handle a symlink as an argument to reading a new directory tree
-     * e.g. in openDir(): Follow the symlink and return the target URL.
-     *
-     * If it is a valid symlink, post a PanelMessage to inform the user about
-     * it. If it's a broken symlink, post an error as a PanelMessage.
-     **/
-    QString handleSymLink( const QString & origUrl ) const;
 
     /**
      * Handle mouse buttons: Activate history actions actionGoBack and
@@ -514,7 +562,6 @@ protected:
 
 
 private:
-
     Ui::MainWindow		 * _ui;
     QDirStat::ConfigDialog	 * _configDialog;
     QDirStat::HistoryButtons     * _historyButtons;
@@ -523,17 +570,17 @@ private:
     QPointer<FileAgeStatsWindow>   _fileAgeStatsWindow;
     QPointer<FilesystemsWindow>    _filesystemsWindow;
     QPointer<PanelMessage>	   _dirPermissionsWarning;
-    QString			   _dUrl;
     QElapsedTimer		   _stopWatch;
     bool			   _enableDirPermissionsWarning;
     bool			   _verboseSelection;
     bool			   _urlInWindowTitle;
-    bool			   _useTreemapHover;
-    QString			   _layoutName;
+//    bool			   _useTreemapHover; // now in treemapView
+//    QString			   _layoutName;
     int				   _statusBarTimeout; // millisec
-    QSignalMapper	       *   _treeLevelMapper;
+    int				   _longStatusBarTimeout; // millisec
+    QSignalMapper		 * _treeLevelMapper;
+    TreeLayout			 * _currentLayout;
     QMap<QString, TreeLayout *>	   _layouts;
-    TreeLayout *		   _currentLayout;
     QTimer			   _updateTimer;
     QTimer                         _treeExpandTimer;
     QDirStat::Subtree              _futureSelection;
@@ -553,16 +600,14 @@ private:
 class TreeLayout
 {
 public:
-
     TreeLayout( const QString & name ):
-	name( name ),
-	showDetailsPanel( true )
+	_name( name ),
+	_showDetailsPanel( true )
 	{}
 
-    QString name;
-    bool    showDetailsPanel;
+    QString _name;
+    bool    _showDetailsPanel;
 
 }; // class TreeLayout
-
 
 #endif // MainWindow_H

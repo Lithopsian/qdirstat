@@ -7,11 +7,15 @@
  */
 
 
-#include "Qt4Compat.h" // qHtmlEscape()
+//#include "Qt4Compat.h" // qHtmlEscape()
 
 #include "BreadcrumbNavigator.h"
 #include "DirInfo.h"
+#include "DirTree.h"
+#include "FileInfo.h"
 #include "Logger.h"
+
+#define VERBOSE_BREADCRUMBS     0
 
 #define MAX_TOTAL_LEN           150
 #define SHORTENED_LEN            12
@@ -21,13 +25,15 @@ using namespace QDirStat;
 
 
 BreadcrumbNavigator::BreadcrumbNavigator( QWidget * parent ):
-    QLabel( parent )
+    QLabel( "", parent )
 {
     clear();
     setTextFormat( Qt::RichText );
 
+#if VERBOSE_BREADCRUMBS
     connect( this, SIGNAL( linkActivated ( QString ) ),
              this, SLOT  ( logPathClicked( QString ) ) );
+#endif
 
     connect( this, SIGNAL( linkActivated ( QString ) ),
              this, SIGNAL( pathClicked   ( QString ) ) );
@@ -42,6 +48,7 @@ BreadcrumbNavigator::~BreadcrumbNavigator()
 
 void BreadcrumbNavigator::setPath( FileInfo * item )
 {
+    //logDebug() << Qt::endl;
     fillBreadcrumbs( item );
     shortenBreadcrumbs();
     setText( html() );
@@ -58,14 +65,14 @@ void BreadcrumbNavigator::fillBreadcrumbs( FileInfo * item )
     if ( ! item || ! item->tree() )
         return;
 
-    // logDebug() << item->debugUrl() << endl;
+    // logDebug() << item->debugUrl() << Qt::endl;
     int depth = item->treeLevel();
     _breadcrumbs = QVector<Breadcrumb>( depth + 1, Breadcrumb() );
 
     QString name;
     QString basePath;
 
-    FileInfo * toplevel = item->tree()->firstToplevel();
+    const FileInfo * toplevel = item->tree()->firstToplevel();
     splitBasePath( toplevel->name(), basePath, name );
 
     if ( ! basePath.isEmpty() )
@@ -92,7 +99,9 @@ void BreadcrumbNavigator::fillBreadcrumbs( FileInfo * item )
     if ( _breadcrumbs[ 0 ].pathComponent.isEmpty() )
         _breadcrumbs.removeFirst();
 
-    // logBreadcrumbs();
+#if VERBOSE_BREADCRUMBS
+    logBreadcrumbs();
+#endif
 }
 
 
@@ -113,13 +122,13 @@ QString BreadcrumbNavigator::html() const
         {
             if ( crumb.url.isEmpty() )
             {
-                html += qHtmlEscape( name );
+                html += name.toHtmlEscaped();
             }
             else
             {
                 html += QString( "<a href=\"%1\">%2</a>" )
                     .arg( crumb.url )
-                    .arg( qHtmlEscape( name ) );
+                    .arg( name.toHtmlEscaped() );
             }
 
             if ( ! name.endsWith( "/" ) )
@@ -135,7 +144,7 @@ void BreadcrumbNavigator::shortenBreadcrumbs()
 {
     while ( breadcrumbsLen() > MAX_TOTAL_LEN )
     {
-        int index = pickLongBreadcrumb();
+        const int index = pickLongBreadcrumb();
 
         if ( index < 0 )
             return;
@@ -148,7 +157,7 @@ void BreadcrumbNavigator::shortenBreadcrumbs()
                    << " from " << crumb.pathComponent.length()
                    << " to " <<  crumb.displayName.length()
                    << ": " << crumb.pathComponent
-                   << endl;
+                   << Qt::endl;
 #endif
     }
 }
@@ -198,7 +207,7 @@ int BreadcrumbNavigator::breadcrumbsLen() const
 QString BreadcrumbNavigator::ellideMiddle( const QString & longText, int maxLen ) const
 {
     if ( maxLen < 1 || longText.size() < maxLen )
-	return longText;
+        return longText;
 
     QString ellided = longText.left( maxLen / 2 - 2 );
     ellided += "...";
@@ -217,7 +226,7 @@ void BreadcrumbNavigator::splitBasePath( const QString & path,
 
     if ( path != "/" && path.contains( "/" ) )
     {
-        QStringList components = path.split( "/", QString::SkipEmptyParts );
+        QStringList components = path.split( "/", Qt::SkipEmptyParts );
 
         if ( ! components.empty() )
             name_ret = components.takeLast();
@@ -230,13 +239,13 @@ void BreadcrumbNavigator::splitBasePath( const QString & path,
     }
 }
 
-
 void BreadcrumbNavigator::logPathClicked( const QString & path )
 {
-    logInfo() << "Clicked path " << path << endl;
+    logInfo() << "Clicked path " << path << Qt::endl;
 }
 
 
+#if VERBOSE_BREADCRUMBS
 void BreadcrumbNavigator::logBreadcrumbs() const
 {
     logNewline();
@@ -249,9 +258,9 @@ void BreadcrumbNavigator::logBreadcrumbs() const
                    << " pathComponent: \"" << crumb.pathComponent
                    << "\" displayName: \"" << crumb.displayName
                    << "\" url: " << crumb.url << "\""
-                   << endl;
+                   << Qt::endl;
     }
 
     logNewline();
 }
-
+#endif

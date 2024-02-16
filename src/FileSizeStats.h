@@ -11,11 +11,12 @@
 #define FileSizeStats_h
 
 #include "PercentileStats.h"
-#include "FileInfo.h"
 
 
 namespace QDirStat
 {
+    class FileInfo;
+
     /**
      * Helper class for extended file size statistics.
      *
@@ -36,7 +37,15 @@ namespace QDirStat
 	 * Constructor. If 'subtree' is non-null, immediately collect data from
 	 * that subtree.
 	 **/
-	FileSizeStats( FileInfo * subtree = 0 );
+	FileSizeStats():
+	    PercentileStats()
+	{}
+
+	/**
+	 * Constructor. If 'subtree' is non-null, immediately collect data from
+	 * that subtree.
+	 **/
+	FileSizeStats( FileInfo * subtree );
 
 	/**
 	 * Recurse through all file elements in the subtree and append the own

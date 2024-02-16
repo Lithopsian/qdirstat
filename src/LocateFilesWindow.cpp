@@ -29,13 +29,13 @@ using namespace QDirStat;
 
 LocateFilesWindow::LocateFilesWindow( TreeWalker * treeWalker,
                                       QWidget    * parent ):
-    QDialog( parent ),
-    _ui( new Ui::LocateFilesWindow ),
-    _treeWalker( treeWalker ),
-    _sortCol( LocateListPathCol ),
-    _sortOrder( Qt::AscendingOrder )
+    QDialog ( parent ),
+    _ui { new Ui::LocateFilesWindow },
+    _treeWalker { treeWalker },
+    _sortCol { LocateListPathCol },
+    _sortOrder { Qt::AscendingOrder }
 {
-    // logDebug() << "init" << endl;
+    // logDebug() << "init" << Qt::endl;;
 
     CHECK_PTR( _treeWalker );
     CHECK_NEW( _ui );
@@ -57,7 +57,7 @@ LocateFilesWindow::LocateFilesWindow( TreeWalker * treeWalker,
 
 LocateFilesWindow::~LocateFilesWindow()
 {
-    // logDebug() << "destroying" << endl;
+    // logDebug() << "destroying" << Qt::endl;;
 
     writeWindowSettings( this, "LocateFilesWindow" );
     delete _treeWalker;
@@ -93,12 +93,8 @@ void LocateFilesWindow::initWidgets()
     font.setBold( true );
     _ui->heading->setFont( font );
 
-    _ui->treeWidget->setContextMenuPolicy( Qt::CustomContextMenu );
     _ui->treeWidget->setColumnCount( LocateListColumnCount );
-    _ui->treeWidget->setHeaderLabels( QStringList()
-				      << tr( "Size" )
-				      << tr( "Last Modified" )
-				      << tr( "Path" )  );
+    _ui->treeWidget->setHeaderLabels( { tr( "Size" ), tr( "Last Modified" ), tr( "Path" ) } );
     _ui->treeWidget->header()->setStretchLastSection( false );
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
     _ui->resultsLabel->setText( "" );
@@ -114,7 +110,7 @@ void LocateFilesWindow::reject()
 
 void LocateFilesWindow::populate( FileInfo * newSubtree )
 {
-    // logDebug() << "populating with " << newSubtree << endl;
+    // logDebug() << "populating with " << newSubtree << Qt::endl;;
 
     clear();
     _subtree = newSubtree;
@@ -162,20 +158,9 @@ void LocateFilesWindow::populateRecursive( FileInfo * dir )
 
 void LocateFilesWindow::showResultsCount()
 {
-    QString text;
-    int     count = _ui->treeWidget->topLevelItemCount();
-
-    if ( _treeWalker->overflow() )
-    {
-        text = tr( "Limited to %1 Results" ).arg( count );
-    }
-    else
-    {
-        text = tr( "%1 Results" ).arg( count );
-    }
-
+    QString text = _treeWalker->overflow() ? tr( "Limited to %1 results" ) : tr( "%1 results" );
+    text = text.arg( _ui->treeWidget->topLevelItemCount() );
     _ui->resultsLabel->setText( text );
-
 }
 
 
@@ -197,7 +182,7 @@ void LocateFilesWindow::locateInMainWindow( QTreeWidgetItem * item )
     CHECK_DYNAMIC_CAST( searchResult, "LocateListItem" );
     CHECK_PTR( _subtree.tree() );
 
-    // logDebug() << "Locating " << searchResult->path() << " in tree" << endl;
+    // logDebug() << "Locating " << searchResult->path() << " in tree" << Qt::endl;;
     app()->selectionModel()->setCurrentItem( searchResult->path() );
 }
 
@@ -205,9 +190,7 @@ void LocateFilesWindow::locateInMainWindow( QTreeWidgetItem * item )
 void LocateFilesWindow::itemContextMenu( const QPoint & pos )
 {
     QMenu menu;
-    QStringList actions;
-    actions << "actionMoveToTrash";
-
+    const QStringList actions = { "actionCopyPathToClipboard", "actionMoveToTrash", "---" };
     ActionManager::instance()->addEnabledActions( &menu, actions );
 
     if ( app()->cleanupCollection() )
@@ -219,18 +202,15 @@ void LocateFilesWindow::itemContextMenu( const QPoint & pos )
 
 void LocateFilesWindow::addCleanupHotkeys()
 {
-    ActionManager::instance()->addActions( this,
-                                           QStringList()
-                                           << "actionMoveToTrash"
-                                           << "actionFindFiles"   );
+    if ( !app()->cleanupCollection() )
+        return;
 
-    if ( app()->cleanupCollection() )
+    ActionManager::instance()->addActions( this, { "actionMoveToTrash", "actionFindFiles" } );
+
+    foreach ( Cleanup * cleanup, app()->cleanupCollection()->cleanupList() )
     {
-        foreach ( Cleanup * cleanup, app()->cleanupCollection()->cleanupList() )
-        {
-            if ( cleanup->worksForFile() && ! cleanup->shortcut().isEmpty() )
-                addAction( cleanup );
-        }
+        if ( cleanup->worksForFile() && ! cleanup->shortcut().isEmpty() )
+            addAction( cleanup );
     }
 }
 
@@ -254,7 +234,7 @@ void LocateFilesWindow::sortByColumn( int col, Qt::SortOrder order )
 
 
 LocateListItem::LocateListItem( FileInfo * item ):
-    QTreeWidgetItem( QTreeWidgetItem::UserType )
+    QTreeWidgetItem ( QTreeWidgetItem::UserType )
 {
     CHECK_PTR( item );
 
@@ -262,7 +242,7 @@ LocateListItem::LocateListItem( FileInfo * item ):
     _size  = item->totalSize();
     _mtime = item->mtime();
 
-    QIcon icon = app()->dirTreeModel()->itemTypeIcon( item );
+    const QIcon icon = app()->dirTreeModel()->itemTypeIcon( item );
 
     setText( LocateListSizeCol,	 formatSize( _size )  + " " );
     setText( LocateListMTimeCol, formatTime( _mtime ) + " " );
@@ -282,13 +262,13 @@ bool LocateListItem::operator<( const QTreeWidgetItem & rawOther ) const
     // error which should not be silently ignored.
     const LocateListItem & other = dynamic_cast<const LocateListItem &>( rawOther );
 
-    int col = treeWidget() ? treeWidget()->sortColumn() : LocateListPathCol;
+    const int col = treeWidget() ? treeWidget()->sortColumn() : LocateListPathCol;
 
     switch ( col )
     {
-	case LocateListPathCol:  return path()  < other.path();
-	case LocateListSizeCol:  return size()  < other.size();
-	case LocateListMTimeCol: return mtime() < other.mtime();
+	case LocateListPathCol:  return _path  < other._path;
+	case LocateListSizeCol:  return _size  < other._size;
+	case LocateListMTimeCol: return _mtime < other._mtime;
 	default:	         return QTreeWidgetItem::operator<( rawOther );
     }
 }

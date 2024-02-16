@@ -18,9 +18,8 @@ using namespace QDirStat;
 
 Attic::Attic( DirTree * tree,
 	      DirInfo * parent )
-    : DirInfo( tree, parent )
+    : DirInfo( parent, tree, atticName() )
 {
-    _name      = atticName();
     _isIgnored = true;
 
     if ( parent )
@@ -35,27 +34,6 @@ Attic::Attic( DirTree * tree,
 
 
 Attic::~Attic()
-{
-    // NOP
-}
-
-
-DirReadState Attic::readState() const
-{
-    if ( _parent )
-	return _parent->readState();
-    else // This should never happen
-	return _readState;
-}
-
-
-bool Attic::hasChildren() const
-{
-    return firstChild();
-}
-
-
-void Attic::checkIgnored()
 {
     // NOP
 }

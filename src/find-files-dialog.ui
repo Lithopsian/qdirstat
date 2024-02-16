@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>FindFilesDialog</class>
  <widget class="QDialog" name="FindFilesDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>412</width>
-    <height>594</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Find</string>
   </property>
@@ -17,30 +9,20 @@
    <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <spacer name="verticalSpacer_0">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::MinimumExpanding</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>3</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
+   <property name="spacing">
+    <number>12</number>
+   </property>
+   <property name="leftMargin">
+    <number>16</number>
+   </property>
+   <property name="topMargin">
+    <number>16</number>
+   </property>
+   <property name="rightMargin">
+    <number>16</number>
+   </property>
    <item>
     <widget class="QLabel" name="dialogHeading">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
      <property name="font">
       <font>
        <weight>75</weight>
@@ -53,40 +35,9 @@
     </widget>
    </item>
    <item>
-    <spacer name="verticalSpacer_1">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::MinimumExpanding</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>5</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
-    <layout class="QGridLayout" name="gridLayout" columnstretch="1,100">
-     <property name="topMargin">
-      <number>5</number>
-     </property>
-     <property name="bottomMargin">
-      <number>5</number>
-     </property>
-     <property name="verticalSpacing">
-      <number>8</number>
-     </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,1">
      <item row="0" column="0">
       <widget class="QLabel" name="patternCaption">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="text">
         <string>&amp;Name:</string>
        </property>
@@ -98,20 +49,8 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
+     <item row="0" column="1" colspan="2">
       <widget class="QLineEdit" name="patternField">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>200</width>
-         <height>0</height>
-        </size>
-       </property>
        <property name="placeholderText">
         <string>search text or pattern</string>
        </property>
@@ -119,12 +58,6 @@
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="filterModeCaption">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-         <horstretch>100</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="text">
         <string>Match &amp;Mode:</string>
        </property>
@@ -138,21 +71,6 @@
      </item>
      <item row="1" column="1">
       <widget class="QComboBox" name="filterModeComboBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="currentIndex">
-        <number>0</number>
-       </property>
        <item>
         <property name="text">
          <string>Auto</string>
@@ -185,20 +103,7 @@
        </item>
       </widget>
      </item>
-     <item row="2" column="0">
-      <spacer name="emptyCellSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>28</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="2" column="1">
+     <item row="1" column="2">
       <widget class="QCheckBox" name="caseSensitiveCheckBox">
        <property name="text">
         <string>Case Sensiti&amp;ve</string>
@@ -211,28 +116,12 @@
     </layout>
    </item>
    <item>
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::MinimumExpanding</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>8</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
     <widget class="QFrame" name="frame">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Plain</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
@@ -240,18 +129,12 @@
         <property name="text">
          <string>Find &amp;Files</string>
         </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
        </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="findDirectoriesRadioButton">
         <property name="text">
          <string>Find &amp;Directories</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -278,7 +161,7 @@
       <item>
        <widget class="QCheckBox" name="findSymLinksCheckBox">
         <property name="text">
-         <string>Find Symbolic &amp;Links</string>
+         <string>Find &amp;Symbolic Links</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -287,22 +170,6 @@
       </item>
      </layout>
     </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::MinimumExpanding</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>2</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <widget class="QFrame" name="frame_2">
@@ -323,7 +190,7 @@
       <item>
        <widget class="QRadioButton" name="currentSubtreeRadioButton">
         <property name="text">
-         <string>In the Current S&amp;ubtree</string>
+         <string>In the &amp;Current Subtree</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -332,34 +199,15 @@
       </item>
       <item>
        <layout class="QHBoxLayout" name="pathHBox">
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>18</width>
-            <height>6</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
+        <property name="leftMargin">
+         <number>20</number>
+        </property>
         <item>
          <widget class="QLabel" name="currentSubtreePathLabel">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
-            <horstretch>1</horstretch>
-            <verstretch>1</verstretch>
-           </sizepolicy>
-          </property>
           <property name="minimumSize">
            <size>
-            <width>200</width>
-            <height>0</height>
+            <width>0</width>
+            <height>24</height>
            </size>
           </property>
           <property name="frameShape">
@@ -389,13 +237,10 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::MinimumExpanding</enum>
-     </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>20</width>
-       <height>8</height>
+       <width>0</width>
+       <height>0</height>
       </size>
      </property>
     </spacer>

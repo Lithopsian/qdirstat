@@ -12,25 +12,9 @@
 #include "DelayedRebuilder.h"
 #include "Logger.h"
 
-#define DefaultRebuildDelayMillisec 200
 
 using namespace QDirStat;
 
-
-DelayedRebuilder::DelayedRebuilder( QObject * parent ):
-    QObject( parent ),
-    _firstRebuild( true ),
-    _pendingRebuildCount(0),
-    _delayMillisec( DefaultRebuildDelayMillisec )
-{
-
-}
-
-
-DelayedRebuilder::~DelayedRebuilder()
-{
-
-}
 
 
 void DelayedRebuilder::scheduleRebuild()

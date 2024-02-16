@@ -10,13 +10,16 @@
 #define FileDetailsView_h
 
 #include <QStackedWidget>
-#include "FileInfoSet.h"
+
 #include "ui_file-details-view.h"
 
 
 namespace QDirStat
 {
     class AdaptiveTimer;
+    class DirInfo;
+    class FileInfo;
+    class FileInfoSet;
     class PkgInfo;
 
     /**
@@ -43,46 +46,38 @@ namespace QDirStat
 	virtual ~FileDetailsView();
 
 	/**
-	 * Return the label limit, i.e. the maximum number of characters for
-	 * certain fields that can otherwise grow out of bounds.
-	 **/
-	int labelLimit() const { return _labelLimit; }
-
-	/**
-	 * Set the label limit. Notice that if a label needs to be limited, it
-	 * will get three characters less than this value to compensate for the
-	 * "..." ellipsis that indicates that it was cut off.
-	 **/
-	void setLabelLimit( int newLimit ) { _labelLimit = newLimit; }
-
-	/**
-	 * Activate a page of this widget stack. This is similar to
-	 * setCurrentWidget(), but it also hides all the other pages to
-	 * minimize the screen space requirements: No extra space is reserved
-	 * for any of the other pages which might be larger than this one.
-	 **/
-	void setCurrentPage( QWidget *page );
-
-    public slots:
-
-	/**
 	 * Show an empty page.
 	 **/
 	void clear();
 
 	/**
-	 * Show the details of the currently selected items as appropriate:
-	 * - File details if exactly one file is selected
-	 * - Directory details if exactly one directory is selected
-	 * - An empty page is nothing is selected
-	 * - A selection summary if more than one item is selected
+	 * Show a summary of multiple selected items.
 	 **/
 	void showDetails( const FileInfoSet & selectedItems );
 
 	/**
-	 * Show details about a file
+	 * Show details about a "file": either a package, a
+	 * directory, a pseudo-directory, an actual file, or a
+	 * summary for the top level of the package view.
 	 **/
 	void showDetails( FileInfo * fileInfo );
+
+
+    protected slots:
+
+	/**
+	 * Notification that the categories have changed in some way
+	 * and we may need to update the panel.
+	 **/
+	void categoriesChanged();
+
+
+    protected:
+
+	/**
+	 * Update package information via the AdaptiveTimer.
+	 **/
+	void updatePkgInfo( const QString & path );
 
 	/**
 	 * Show details about a directory.
@@ -105,47 +100,63 @@ namespace QDirStat
 	void showPkgSummary( PkgInfo * pkgInfo );
 
 	/**
-	 * Return the MIME category of a file.
+	 * Return the label limit, i.e. the maximum number of characters for
+	 * certain fields that can otherwise grow out of bounds.
 	 **/
-	QString mimeCategory( FileInfo * fileInfo );
+	int labelLimit() const { return _labelLimit; }
+
+	/**
+	 * Set the label limit. Notice that if a label needs to be limited, it
+	 * will get three characters less than this value to compensate for the
+	 * "..." ellipsis that indicates that it was cut off.
+	 **/
+	void setLabelLimit( int newLimit ) { _labelLimit = newLimit; }
+
+	/**
+	 * Activate a page of this widget stack. This is similar to
+	 * setCurrentWidget(), but it also hides all the other pages to
+	 * minimize the screen space requirements: No extra space is reserved
+	 * for any of the other pages which might be larger than this one.
+	 **/
+	void setCurrentPage( QWidget *page );
 
 	/**
 	 * Read parameters from settings file.
 	 **/
-	void readSettings();
+//	void readSettings();
 
 	/**
 	 * Write parameters to settings file.
 	 **/
-	void writeSettings();
-
-
-    protected slots:
+//	void writeSettings();
 
 	/**
-	 * Update package information via the AdaptiveTimer.
+	 * Return the MIME category of a file.
 	 **/
-	void updatePkgInfo( const QVariant & path );
+	static QString mimeCategory( const FileInfo * fileInfo );
 
-
-    protected:
+	/**
+	 * Sets the label to the category for this file, and enables
+	 * the caption if a category is found.
+	 **/
+	void setMimeCategory( const FileInfo * fileInfo );
 
 	/**
 	 * Return the path of a fileInfo's parent directory.
 	 **/
-	QString parentPath( FileInfo * fileInfo );
+//	static QString parentPath( const FileInfo * fileInfo );
 
 	/**
 	 * Set a label with a number and an optional prefix.
 	 **/
-	void setLabel( QLabel * label, int number, const QString & prefix = "" );
+	static void setLabel( QLabel * label, int number, const QString & prefix = "" );
 
 	/**
 	 * Set a file size label with a file size and an optional prefix.
 	 **/
-	void setLabel( FileSizeLabel *	label,
-		       FileSize		size,
-		       const QString &	prefix = "" );
+	static void setLabel( FileSizeLabel *	label,
+			      FileSize		size,
+			      const QString &	prefix = "" );
 
 	/**
 	 * Set a label with a text of limited size.
@@ -155,7 +166,7 @@ namespace QDirStat
 	/**
 	 * Return 'longText' limited to a predefined maximum size.
 	 **/
-	QString limitText( const QString & longText );
+	QString limitText( const QString & longText ) const;
 
 	/**
 	 * Set the text of a file size label including special handling for
@@ -164,17 +175,17 @@ namespace QDirStat
 	 * Notice that this is only useful for plain files, not for
 	 * directories, packages or multiple selected files.
 	 **/
-	void setFileSizeLabel( FileSizeLabel * label,
-			       FileInfo	     * file );
+	static void setFileSizeLabel( FileSizeLabel  * label,
+				      const FileInfo * file );
 
         /**
          * Suppress the content of FileSizeLabel 'cloneLabel' if it has the
          * same content as 'origLabel': Clear its text and disable its caption
          * 'caption'.
          **/
-        void suppressIfSameContent( FileSizeLabel * origLabel,
-                                    FileSizeLabel * cloneLabel,
-                                    QLabel        * caption );
+        static void suppressIfSameContent( const FileSizeLabel * origLabel,
+					   FileSizeLabel       * cloneLabel,
+					   QLabel              * caption );
 
 	/**
 	 * Set the text of an allocated size label including special handling
@@ -183,24 +194,26 @@ namespace QDirStat
 	 * Notice that this is only useful for plain files, not for
 	 * directories, packages or multiple selected files.
 	 **/
-	void setFileAllocatedLabel( FileSizeLabel * label,
-				    FileInfo *	    file );
+	void setFileAllocatedLabel( FileSizeLabel  * label,
+				    const FileInfo * file );
 
 	/**
-	 * Set the text color for a label.
+	 * Return a stylesheet string to set the color of the directory permissions label.
 	 **/
-	void setLabelColor( QLabel * label, const QColor & color );
-
+	QString dirColorStyle( const DirInfo * dir ) const;
 
 	// Boilerplate widget setting methods
 
+	static QString subtreeMsg( const DirInfo * dir );
+	static QString pkgMsg( const PkgInfo * pkg );
+
 	void showFileInfo( FileInfo * file );
-	void showFilePkgInfo( FileInfo * file );
+	void showFilePkgInfo( const FileInfo * file );
+	void showSubtreeInfo( DirInfo * dir );
+	void showDirNodeInfo( const DirInfo * dir );
+
 	void setSystemFileWarningVisibility( bool visible );
 	void setFilePkgBlockVisibility( bool visible );
-
-	void showSubtreeInfo( DirInfo * dir );
-	void showDirNodeInfo( DirInfo * dir );
 	void setDirBlockVisibility( bool visible );
 
 
@@ -209,8 +222,7 @@ namespace QDirStat
 	Ui::FileDetailsView * _ui;
 	AdaptiveTimer *	      _pkgUpdateTimer;
 	int		      _labelLimit;
-	QColor		      _dirReadErrColor;
-	QColor		      _normalTextColor;
+//	QColor		      _dirReadErrColor; // now using the theme-dependant value from the tree model
 
     };	// class FileDetailsView
 }	// namespace QDirStat

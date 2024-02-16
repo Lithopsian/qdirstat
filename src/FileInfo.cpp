@@ -7,9 +7,12 @@
  */
 
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <pwd.h>	// getpwuid()
 #include <grp.h>	// getgrgid()
 #include <time.h>       // gmtime()
+#include <unistd.h>
 
 #include <QDateTime>
 
@@ -38,54 +41,24 @@ using namespace QDirStat;
 bool FileInfo::_ignoreHardLinks = false;
 
 
-FileInfo::FileInfo( DirTree    * tree,
-		    DirInfo    * parent,
-		    const char * name )
-    : _parent( parent )
-    , _next( 0 )
-    , _tree( tree )
-{
-    /**
-     * Default constructor: All fields are initialized empty.
-     **/
-
-    _isLocalFile   = true;
-    _isSparseFile  = false;
-    _isIgnored	   = false;
-    _name	   = name ? name : "";
-    _device	   = 0;
-    _mode	   = 0;
-    _links	   = 0;
-    _uid	   = 0;
-    _gid	   = 0;
-    _size	   = 0;
-    _blocks	   = 0;
-    _mtime	   = 0;
-    _mtimeYear     = -1;
-    _mtimeMonth    = -1;
-    _allocatedSize = 0;
-    _magic	   = FileInfoMagic;
-}
-
-
-FileInfo::FileInfo( const QString & filenameWithoutPath,
-		    struct stat	  * statInfo,
+FileInfo::FileInfo( DirInfo	  * parent,
 		    DirTree	  * tree,
-		    DirInfo	  * parent )
-    : _parent( parent )
-    , _next( 0 )
-    , _tree( tree )
-{
+		    const QString & filenameWithoutPath,
+		    struct stat	  * statInfo )
     /**
      * Constructor from a stat buffer (i.e. based on an lstat() call).
      * This is the standard case.
      **/
-
+    : _parent { parent }
+    , _next { 0 }
+    , _tree { tree }
+    , _magic { FileInfoMagic }
+    , _name { filenameWithoutPath }
+    , _isLocalFile { true }
+    , _isIgnored { false }
+    , _allocatedSize { 0 }
+{
     CHECK_PTR( statInfo );
-
-    _isLocalFile   = true;
-    _isIgnored	   = false;
-    _name	   = filenameWithoutPath;
 
     _device	   = statInfo->st_dev;
     _mode	   = statInfo->st_mode;
@@ -93,10 +66,6 @@ FileInfo::FileInfo( const QString & filenameWithoutPath,
     _uid	   = statInfo->st_uid;
     _gid	   = statInfo->st_gid;
     _mtime	   = statInfo->st_mtime;
-    _mtimeYear     = -1;
-    _mtimeMonth    = -1;
-    _magic	   = FileInfoMagic;
-    _allocatedSize = 0;
 
     if ( isSpecial() )
     {
@@ -133,86 +102,18 @@ FileInfo::FileInfo( const QString & filenameWithoutPath,
 
 #if 0
 	if ( _isSparseFile )
-	{
 	    logDebug() << "Found sparse file: " << this
 		       << "    Byte size: "     << formatSize( _size )
 		       << "  Allocated: "       << formatSize( _allocatedSize )
 		       << " (" << (int) _blocks << " blocks)"
-		       << endl;
-	}
+		       << Qt::endl;
 #endif
 
 #if 0
 	if ( isFile() && _links > 1 )
-	{
-	    logDebug() << _links << " hard links: " << this << endl;
-	}
+	    logDebug() << _links << " hard links: " << this << Qt::endl;
 #endif
     }
-}
-
-
-
-FileInfo::FileInfo( DirTree *	    tree,
-		    DirInfo *	    parent,
-		    const QString & filenameWithoutPath,
-		    mode_t	    mode,
-		    FileSize	    size,
-		    time_t	    mtime,
-		    FileSize	    blocks,
-		    nlink_t	    links )
-    : _parent( parent )
-    , _next( 0 )
-    , _tree( tree )
-{
-    /**
-     * Constructor from the bare necessary fields
-     * for use from a cache file reader
-     **/
-
-    _name	   = filenameWithoutPath;
-    _isLocalFile   = true;
-    _isIgnored	   = false;
-    _device	   = 0;
-    _mode	   = mode;
-    _size	   = size;
-    _mtime	   = mtime;
-    _mtimeYear     = -1;
-    _mtimeMonth    = -1;
-    _allocatedSize = 0;
-    _links	   = links;
-    _uid	   = 0;
-    _gid	   = 0;
-    _magic	   = FileInfoMagic;
-
-    if ( blocks < 0 )
-    {
-	_isSparseFile	= false;
-	_blocks		= _size / STD_BLOCK_SIZE;
-
-	if ( ( _size % STD_BLOCK_SIZE ) > 0 )
-	    _blocks++;
-
-	// Don't make any assumptions about the file's tail. We might use
-	//
-	//   _allocatedSize = _blocks * STD_BLOCK_SIZE;
-	//
-	// but that might be wrong if the filesystem has intelligent fragment
-	// handling. Simply use the byte size instead.
-
-	_allocatedSize = _size;
-    }
-    else // blocks >= 0
-    {
-        // The "blocks" field is optional in the cache file for use for sparse
-        // files only.
-
-	_isSparseFile	= true;
-	_blocks		= blocks;
-        _allocatedSize  = blocks * STD_BLOCK_SIZE;
-    }
-
-    // logDebug() << "Created FileInfo " << this << endl;
 }
 
 
@@ -230,12 +131,6 @@ FileInfo::~FileInfo()
      *
      * This sucks, but it's the C++ standard.
      **/
-}
-
-
-bool FileInfo::checkMagicNumber() const
-{
-    return _magic == FileInfoMagic;
 }
 
 
@@ -266,9 +161,7 @@ int FileInfo::usedPercent() const
     int percent = 100;
 
     if ( _allocatedSize > 0 && _size > 0 )
-    {
         percent = qRound( ( 100.0 * size() ) / allocatedSize() );
-    }
 
     return percent;
 }
@@ -453,7 +346,7 @@ FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
 	if ( dotEntry() &&
 	     ! url.contains( "/" ) )	   // No (more) "/" in this URL
 	{
-            // logDebug() << "Searching DotEntry for " << url << " in " << this << endl;
+            // logDebug() << "Searching DotEntry for " << url << " in " << this << Qt::endl;
 
             child = dotEntry()->firstChild();
 
@@ -461,14 +354,14 @@ FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
             {
                 if ( child->name() == url )
                 {
-                    // logDebug() << "Found " << url << " in " << dotEntry() << endl;
+                    // logDebug() << "Found " << url << " in " << dotEntry() << Qt::endl;
                     return child;
                 }
 
                 child = child->next();
             }
 
-            // logDebug() << "Cannot find " << url << " in DotEntry" << endl;
+            // logDebug() << "Cant find " << url << " in DotEntry" << Qt::endl;
 	}
 
 	if ( ! result && attic() )
@@ -545,7 +438,7 @@ QString FileInfo::userName() const
     if ( ! hasUid() )
 	return QString();
 
-    struct passwd * pw = getpwuid( uid() );
+    const struct passwd * pw = getpwuid( uid() );
 
     if ( pw )
 	return pw->pw_name;
@@ -559,7 +452,7 @@ QString FileInfo::groupName() const
     if ( ! hasGid() )
 	return QString();
 
-    struct group * grp = getgrgid( gid() );
+    const struct group * grp = getgrgid( gid() );
 
     if ( grp )
 	return grp->gr_name;
@@ -590,7 +483,7 @@ QString FileInfo::baseName() const
 void FileInfo::setIgnoreHardLinks( bool ignore )
 {
     if ( ignore )
-	logInfo() << "Ignoring hard links" << endl;
+	logInfo() << "Ignoring hard links" << Qt::endl;
 
     _ignoreHardLinks = ignore;
 }
@@ -659,7 +552,7 @@ bool FileInfo::filesystemCanReportBlocks() const
 	    return false;
     }
 
-    // logDebug() << "Checking block size of " << dir << ": " << (int) dir->blocks() << endl;
+    // logDebug() << "Checking block size of " << dir << ": " << (int) dir->blocks() << Qt::endl;
 
     // A real directory never has a size == 0, so we can skip this check.
 
@@ -684,7 +577,7 @@ QString FileInfo::symLinkTarget()
     return SysUtil::symLinkTarget( path() );
 }
 
-
+/*
 short FileInfo::mtimeYear()
 {
     if ( _mtimeYear == -1 )
@@ -715,14 +608,27 @@ void  FileInfo::processMtime()
     _mtimeYear  = mtime_tm->tm_year + 1900;
     _mtimeMonth = mtime_tm->tm_mon  + 1;
 }
+*/
+
+QPair<short, short> FileInfo::yearAndMonth()
+{
+    if ( isPseudoDir() || isPkgInfo() )
+        return { 0, 0 };
+
+    // Using gmtime() which is standard C/C++
+    // unlike gmtime_r() which is not
+    struct tm * mtime_tm = gmtime( &_mtime );
+
+    const short year = mtime_tm->tm_year + 1900;
+    const short month = mtime_tm->tm_mon  + 1;
+    return { year, month };
+}
 
 
 bool FileInfo::isDominant()
 {
     return _parent ? _parent->isDominantChild( this ) : false;
 }
-
-
 
 
 //---------------------------------------------------------------------------
@@ -732,7 +638,8 @@ bool FileInfo::isDominant()
 
 QString QDirStat::baseName( const QString & fileName )
 {
-    QStringList segments = fileName.split( '/', QString::SkipEmptyParts );
+    //logDebug() << fileName << Qt::endl;
+    QStringList segments = fileName.split( '/', Qt::SkipEmptyParts );
     return segments.isEmpty() ? "" : segments.last();
 }
 

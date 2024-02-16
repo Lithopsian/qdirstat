@@ -8,34 +8,36 @@
 
 
 #include <QApplication>
-#include <QClipboard>
 #include <QCloseEvent>
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QMessageBox>
 #include <QMouseEvent>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QClipboard>
 
 #include "MainWindow.h"
 #include "ActionManager.h"
-#include "BookmarksManager.h"
 #include "BusyPopup.h"
 #include "CleanupCollection.h"
 #include "CleanupConfigPage.h"
 #include "ConfigDialog.h"
 #include "DataColumns.h"
-#include "DebugHelpers.h"
+//#include "DebugHelpers.h"
 #include "DirTree.h"
 #include "DirTreeCache.h"
 #include "DirTreeModel.h"
+#include "DiscoverActions.h"
 #include "Exception.h"
-#include "ExcludeRules.h"
+#include "FormatUtil.h"
+#include "FileAgeStatsWindow.h"
 #include "FileDetailsView.h"
 #include "FileSearchFilter.h"
 #include "FileSizeStatsWindow.h"
+#include "FilesystemsWindow.h"
 #include "FileTypeStatsWindow.h"
 #include "FindFilesDialog.h"
+#include "GeneralConfigPage.h"
+#include "HistoryButtons.h"
 #include "Logger.h"
-#include "MimeCategorizer.h"
 #include "OpenDirDialog.h"
 #include "OpenPkgDialog.h"
 #include "OutputWindow.h"
@@ -47,13 +49,11 @@
 #include "SelectionModel.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
-#include "SignalBlocker.h"
 #include "SysUtil.h"
 #include "Trash.h"
 #include "UnreadableDirsWindow.h"
 #include "Version.h"
 
-#define LONG_MESSAGE		25*1000
 #define UPDATE_MILLISEC		200
 
 #define USE_CUSTOM_OPEN_DIR_DIALOG 1
@@ -61,35 +61,43 @@
 using namespace QDirStat;
 
 
-MainWindow::MainWindow():
+MainWindow::MainWindow( bool slowUpdate ):
     QMainWindow(),
-    _ui( new Ui::MainWindow ),
-    _configDialog( 0 ),
-    _enableDirPermissionsWarning( false ),
-    _verboseSelection( false ),
-    _urlInWindowTitle( false ),
-    _useTreemapHover( false ),
-    _statusBarTimeout( 3000 ), // millisec
-    _treeLevelMapper(0),
-    _currentLayout( 0 )
+    _ui { new Ui::MainWindow },
+    _configDialog { 0 },
+    _discoverActions { new DiscoverActions( this ) },
+    _enableDirPermissionsWarning { false },
+    _verboseSelection { false },
+    _urlInWindowTitle { false },
+    _statusBarTimeout { 3000 }, // millisec
+    _longStatusBarTimeout { 30000 }, // millisec
+    _treeLevelMapper { 0 },
+    _currentLayout { 0 }
 {
-    CHECK_PTR( _ui );
-
+    CHECK_NEW( _ui );
     _ui->setupUi( this );
+    _ui->menubar->setCornerWidget( new QLabel( MENUBAR_VERSION ) );
+
+    CHECK_NEW( _discoverActions );
+
+    _historyButtons = new HistoryButtons( _ui->actionGoBack, _ui->actionGoForward );
+    CHECK_NEW( _historyButtons );
+
     ActionManager::instance()->addWidgetTree( this );
-    initLayoutActions();
-    createLayouts();    // see MainWindowLayout.cpp
+
     readSettings();
+
     _updateTimer.setInterval( UPDATE_MILLISEC );
     _treeExpandTimer.setSingleShot( true );
-    _dUrl = _ui->actionDonate->iconText();
-    _ui->menubar->setCornerWidget( new QLabel( MENUBAR_VERSION ) );
 
     // The first call to app() creates the QDirStatApp and with it
     // - the DirTreeModel
     // - the DirTree (owned and managed by the DirTreeModel)
     // - the SelectionModel
     // - the CleanupCollection.
+
+    if ( slowUpdate )
+        app()->dirTreeModel()->setSlowUpdate();
 
     _ui->dirTreeView->setModel( app()->dirTreeModel() );
     _ui->dirTreeView->setSelectionModel( app()->selectionModel() );
@@ -98,43 +106,27 @@ MainWindow::MainWindow():
     _ui->treemapView->setSelectionModel( app()->selectionModel() );
 
     _futureSelection.setTree( app()->dirTree() );
+    _futureSelection.setUseRootFallback( false );
     _futureSelection.setUseParentFallback( true );
-
-    app()->bookmarksManager()->setBookmarksMenu( _ui->menuBookmarks );
-    app()->bookmarksManager()->read();
-    app()->bookmarksManager()->rebuildBookmarksMenu();
-
 
     // Set the boldItemFont for the DirTreeModel.
     //
     // It can't fetch that by itself from the DirTreeView;
     // we'd get an initialization sequence problem.
     // So this has to be done from the outside when both are created.
-
     QFont boldItemFont = _ui->dirTreeView->font();
     boldItemFont.setWeight( QFont::Bold );
     app()->dirTreeModel()->setBoldItemFont( boldItemFont );
 
-
     // Initialize cleanups
-
     app()->cleanupCollection()->addToMenu   ( _ui->menuCleanup,
                                               true ); // keepUpdated
     app()->cleanupCollection()->addToToolBar( _ui->toolBar,
                                               true ); // keepUpdated
 
-
     _ui->dirTreeView->setCleanupCollection( app()->cleanupCollection() );
     _ui->treemapView->setCleanupCollection( app()->cleanupCollection() );
-
-    _ui->breadcrumbNavigator->clear();
-
-    _historyButtons = new HistoryButtons( _ui->actionGoBack,
-                                          _ui->actionGoForward );
-    CHECK_NEW( _historyButtons );
-
-    _discoverActions = new DiscoverActions( this );
-    CHECK_NEW( _discoverActions );
+    _ui->treemapView->hideTreemap();
 
 #ifdef Q_OS_MACX
     // This makes the application to look like more "native" on macOS
@@ -144,29 +136,22 @@ MainWindow::MainWindow():
 
     connectSignals();
     connectMenuActions();               // see MainWindowMenus.cpp
-    changeLayout( _layoutName );        // see MainWindowLayout.cpp
 
     checkPkgManagerSupport();
 
-    if ( ! _ui->actionShowTreemap->isChecked() )
-	_ui->treemapView->disable();
-
-    toggleVerboseSelection();
+    toggleVerboseSelection( _ui->actionVerboseSelection->isChecked() );
     updateActions();
 }
 
 
 MainWindow::~MainWindow()
 {
-    // logDebug() << "Destroying main window" << endl;
+    // logDebug() << "Destroying main window" << Qt::endl;
 
     if ( _currentLayout )
 	saveLayout( _currentLayout );   // see MainWindowLayout.cpp
 
     writeSettings();
-    ExcludeRules::instance()->writeSettings();
-    MimeCategorizer::instance()->writeSettings();
-    app()->bookmarksManager()->write();
 
     // Relying on the QObject hierarchy to properly clean this up resulted in a
     //	segfault; there was probably a problem in the deletion order.
@@ -180,9 +165,9 @@ MainWindow::~MainWindow()
 
     qDeleteAll( _layouts );
 
-    QDirStatApp::deleteInstance();
+//    QDirStatApp::deleteInstance(); // static now
 
-    // logDebug() << "Main window destroyed" << endl;
+    // logDebug() << "Main window destroyed" << Qt::endl;
 }
 
 
@@ -193,88 +178,69 @@ void MainWindow::checkPkgManagerSupport()
     {
 	logInfo() << "No package manager support "
 		  << "for getting installed packages or file lists"
-		  << endl;
+		  << Qt::endl;
 
 	_ui->actionOpenPkg->setEnabled( false );
     }
 
-    PkgManager * pkgManager = PkgQuery::primaryPkgManager();
-
+    const PkgManager * pkgManager = PkgQuery::primaryPkgManager();
     if ( ! pkgManager || ! pkgManager->supportsFileListCache() )
     {
 	logInfo() << "No package manager support "
 		  << "for getting a file lists cache"
-		  << endl;
+		  << Qt::endl;
 
-	_ui->actionShowUnpkgFiles->setEnabled( false );
+	_ui->actionOpenUnpkg->setEnabled( false );
     }
 }
 
 
 void MainWindow::connectSignals()
 {
-    connect( app()->selectionModel(),	 SIGNAL( currentBranchChanged( QModelIndex ) ),
-	     _ui->dirTreeView,		 SLOT  ( closeAllExcept	     ( QModelIndex ) ) );
+    connect( app()->selectionModel(),	  SIGNAL( currentBranchChanged( QModelIndex ) ),
+	     _ui->dirTreeView,		  SLOT  ( closeAllExcept      ( QModelIndex ) ) );
 
-    connect( app()->dirTree(),		 SIGNAL( startingReading() ),
-	     this,			 SLOT  ( startingReading() ) );
+    connect( app()->dirTree(),		  SIGNAL( startingReading() ),
+	     this,			  SLOT  ( startingReading() ) );
 
-    connect( app()->dirTree(),		 SIGNAL( finished()	   ),
-	     this,			 SLOT  ( readingFinished() ) );
+    connect( app()->dirTree(),		  SIGNAL( finished()	    ),
+	     this,			  SLOT  ( readingFinished() ) );
 
-    connect( app()->dirTree(),		 SIGNAL( aborted()	   ),
-	     this,			 SLOT  ( readingAborted()  ) );
+    connect( app()->dirTree(),		  SIGNAL( aborted()	   ),
+	     this,			  SLOT  ( readingAborted() ) );
 
-    connect( app()->selectionModel(),	 SIGNAL( selectionChanged() ),
-	     this,			 SLOT  ( updateActions()    ) );
+    connect( app()->selectionModel(),	  SIGNAL( currentItemChanged( FileInfo *, FileInfo * ) ),
+	     _ui->breadcrumbNavigator,	  SLOT  ( setPath	    ( FileInfo *	     ) ) );
 
-    connect( app()->selectionModel(),	 SIGNAL( currentItemChanged( FileInfo *, FileInfo * ) ),
-	     this,			 SLOT  ( updateActions()			    ) );
+    connect( app()->selectionModel(),	  SIGNAL( currentItemChanged( FileInfo *, FileInfo * ) ),
+	     _historyButtons,		  SLOT  ( addToHistory	    ( FileInfo *		    ) ) );
 
-    connect( app()->selectionModel(),	 SIGNAL( currentItemChanged( FileInfo *, FileInfo * ) ),
-	     _ui->breadcrumbNavigator,	 SLOT  ( setPath	   ( FileInfo *		    ) ) );
+    connect( _historyButtons,		  SIGNAL( navigateToUrl( QString ) ),
+	     this,			  SLOT  ( navigateToUrl( QString ) ) );
 
-    connect( app()->selectionModel(),	 SIGNAL( currentItemChanged( FileInfo *, FileInfo * ) ),
-	     _historyButtons,		 SLOT  ( addToHistory	   ( FileInfo *		    ) ) );
+    connect( _ui->breadcrumbNavigator,	  SIGNAL( pathClicked   ( QString ) ),
+	     app()->selectionModel(),	  SLOT  ( setCurrentItem( QString ) ) );
 
-    connect( app()->selectionModel(),	 SIGNAL( currentItemChanged  ( FileInfo *, FileInfo * ) ),
-	     this,      		 SLOT  ( updateBookmarkButton( FileInfo *             ) ) );
+    connect( _ui->treemapView,		  SIGNAL( treemapChanged() ),
+	     this,			  SLOT  ( updateActions()  ) );
 
-    connect( _historyButtons,		 SIGNAL( navigateToUrl( QString ) ),
-	     this,			 SLOT  ( navigateToUrl( QString ) ) );
+    connect( app()->cleanupCollection(),  SIGNAL( startingCleanup( QString ) ),
+	     this,			  SLOT  ( startingCleanup( QString ) ) );
 
-    connect( app()->bookmarksManager(),  SIGNAL( navigateToUrl( QString ) ),
-             this,                       SLOT  ( navigateToUrl( QString ) ) );
+    connect( app()->cleanupCollection(),  SIGNAL( cleanupFinished( int ) ),
+	     this,			  SLOT  ( cleanupFinished( int ) ) );
 
-    connect( _ui->bookmarkButton,        SIGNAL( toggled            ( bool ) ),
-             this,                       SLOT  ( bookmarkCurrentPath( bool ) ) );
-
-    connect( _ui->breadcrumbNavigator,	 SIGNAL( pathClicked   ( QString ) ),
-	     app()->selectionModel(),	 SLOT  ( setCurrentItem( QString ) ) );
-
-    connect( _ui->treemapView,		 SIGNAL( treemapChanged() ),
-	     this,			 SLOT  ( updateActions()  ) );
-
-    connect( app()->cleanupCollection(), SIGNAL( startingCleanup( QString ) ),
-	     this,			 SLOT  ( startingCleanup( QString ) ) );
-
-    connect( app()->cleanupCollection(), SIGNAL( cleanupFinished( int ) ),
-	     this,			 SLOT  ( cleanupFinished( int ) ) );
-
-    connect( &_updateTimer,		 SIGNAL( timeout()	   ),
-	     this,			 SLOT  ( showElapsedTime() ) );
+    connect( &_updateTimer,		  SIGNAL( timeout()	    ),
+	     this,			  SLOT  ( showElapsedTime() ) );
 
     connect( &_treeExpandTimer,		  SIGNAL( timeout() ),
-	     _ui->actionExpandTreeLevel1, SLOT  ( trigger()   ) );
+	     _ui->actionExpandTreeLevel1, SLOT	( trigger() ) );
 
-    if ( _useTreemapHover )
-    {
-	connect( _ui->treemapView,	  SIGNAL( hoverEnter ( FileInfo * ) ),
-		 this,			  SLOT	( showCurrent( FileInfo * ) ) );
+    connect( _ui->treemapView,		  SIGNAL( hoverEnter ( FileInfo * ) ),
+	     this,			  SLOT	( showCurrent( FileInfo * ) ) );
 
-	connect( _ui->treemapView,	  SIGNAL( hoverLeave ( FileInfo * ) ),
-		 this,			  SLOT	( showSummary()		  ) );
-    }
+    connect( _ui->treemapView,		  SIGNAL( hoverLeave ( FileInfo * ) ),
+	     this,			  SLOT	( showSummary()		  ) );
 
     connect( app()->selectionModel(),	  SIGNAL( selectionChanged() ),
 	     this,			  SLOT	( selectionChanged() ) );
@@ -286,10 +252,10 @@ void MainWindow::connectSignals()
 
 void MainWindow::updateActions()
 {
-    bool reading	     = app()->dirTree()->isBusy();
-    FileInfo * currentItem   = app()->selectionModel()->currentItem();
-    FileInfo * firstToplevel = app()->dirTree()->firstToplevel();
-    bool pkgView	     = firstToplevel && firstToplevel->isPkgInfo();
+    const bool reading	     = app()->dirTree()->isBusy();
+    FileInfo * currentItem   = app()->currentItem();
+    FileInfo * firstToplevel = app()->root();
+    const bool pkgView	     = firstToplevel && firstToplevel->isPkgInfo();
 
     _ui->actionStopReading->setEnabled( reading );
     _ui->actionRefreshAll->setEnabled	( ! reading );
@@ -300,29 +266,28 @@ void MainWindow::updateActions()
     _ui->actionGoUp->setEnabled( currentItem && currentItem->treeLevel() > 1 );
     _ui->actionGoToToplevel->setEnabled( firstToplevel );
 
-    FileInfoSet selectedItems = app()->selectionModel()->selectedItems();
-    FileInfo * sel	      = selectedItems.first();
-    int selSize		      = selectedItems.size();
+    const FileInfoSet selectedItems = app()->selectionModel()->selectedItems();
+    const FileInfo * sel	      = selectedItems.first();
+    const bool selSizeOne	      = selectedItems.size() == 1;
 
-    bool oneDirSelected	   = selSize == 1 && sel && sel->isDir() && ! sel->isPkgInfo();
-    bool pseudoDirSelected = selectedItems.containsPseudoDir();
-    bool pkgSelected	   = selectedItems.containsPkg();
+    const bool oneDirSelected	   = selSizeOne && sel && sel->isDir() && ! sel->isPkgInfo();
+    const bool pseudoDirSelected = selectedItems.containsPseudoDir();
+    const bool pkgSelected	   = selectedItems.containsPkg();
 
     _ui->actionMoveToTrash->setEnabled( sel && ! pseudoDirSelected && ! pkgSelected && ! reading );
-    _ui->actionRefreshSelected->setEnabled( selSize == 1 && ! sel->isExcluded() && ! sel->isMountPoint() && ! pkgView );
+    _ui->actionRefreshSelected->setEnabled( selSizeOne && ! sel->isExcluded() && ! sel->isMountPoint() && ! pkgView );
     _ui->actionContinueReadingAtMountPoint->setEnabled( oneDirSelected && sel->isMountPoint() );
     _ui->actionReadExcludedDirectory->setEnabled      ( oneDirSelected && sel->isExcluded()   );
 
-    bool nothingOrOneDirInfo = selectedItems.isEmpty() || ( selSize == 1 && sel->isDirInfo() );
+    const bool nothingOrOneDirInfo = selectedItems.isEmpty() || ( selSizeOne && sel->isDirInfo() );
     // Notice that DotEntry, PkgInfo, Attic also inherit DirInfo
-
     _ui->actionFileSizeStats->setEnabled( ! reading && nothingOrOneDirInfo );
     _ui->actionFileTypeStats->setEnabled( ! reading && nothingOrOneDirInfo );
     _ui->actionFileAgeStats->setEnabled ( ! reading && nothingOrOneDirInfo );
 
-    bool showingTreemap = _ui->treemapView->isVisible();
-
+    const bool showingTreemap = _ui->treemapView->isVisible();
     _ui->actionTreemapAsSidePanel->setEnabled( showingTreemap );
+    _ui->actionTreemapZoomTo->setEnabled   ( showingTreemap && _ui->treemapView->canZoomIn() );
     _ui->actionTreemapZoomIn->setEnabled   ( showingTreemap && _ui->treemapView->canZoomIn() );
     _ui->actionTreemapZoomOut->setEnabled  ( showingTreemap && _ui->treemapView->canZoomOut() );
     _ui->actionResetTreemapZoom->setEnabled( showingTreemap && _ui->treemapView->canZoomOut() );
@@ -332,60 +297,72 @@ void MainWindow::updateActions()
 }
 
 
+void MainWindow::updateSettings( bool urlInWindowTitle,
+                                 bool useTreemapHover,
+                                 int statusBarTimeout,
+                                 int longStatusBarTimeout )
+{
+    _urlInWindowTitle = urlInWindowTitle;
+    _ui->treemapView->setUseTreemapHover( useTreemapHover );
+    _statusBarTimeout = statusBarTimeout;
+    _longStatusBarTimeout = longStatusBarTimeout;
+    updateWindowTitle( app()->dirTree()->url() );
+}
+
+
 void MainWindow::readSettings()
 {
     QDirStat::Settings settings;
     settings.beginGroup( "MainWindow" );
 
-    _statusBarTimeout	  = settings.value( "StatusBarTimeoutMillisec", 3000  ).toInt();
-    bool showTreemap	  = settings.value( "ShowTreemap"	      , true  ).toBool();
-    bool treemapOnSide	  = settings.value( "TreemapOnSide"	      , false ).toBool();
+    _statusBarTimeout		= settings.value( "StatusBarTimeoutMillisec",  3000 ).toInt();
+    _longStatusBarTimeout	= settings.value( "LongStatusBarTimeout"    , 30000 ).toInt();
 
-    _verboseSelection	  = settings.value( "VerboseSelection"	      , false ).toBool();
-    _urlInWindowTitle	  = settings.value( "UrlInWindowTitle"	      , false ).toBool();
-    _useTreemapHover	  = settings.value( "UseTreemapHover"	      , false ).toBool();
-    _layoutName		  = settings.value( "Layout"		      , "L2"  ).toString();
+    const bool showTreemap	= settings.value( "ShowTreemap"		      , true  ).toBool();
+    const bool treemapOnSide	= settings.value( "TreemapOnSide"	      , false ).toBool();
+
+    _verboseSelection		= settings.value( "VerboseSelection"	      , false ).toBool();
+    _urlInWindowTitle		= settings.value( "UrlInWindowTitle"	      , false ).toBool();
+    const bool useTreemapHover  = settings.value( "UseTreemapHover"	      , false ).toBool();
+    const QString layoutName	= settings.value( "Layout"		      , "L2"  ).toString();
 
     settings.endGroup();
 
     settings.beginGroup( "MainWindow-Subwindows" );
-    QByteArray mainSplitterState = settings.value( "MainSplitter" , QByteArray() ).toByteArray();
-    QByteArray topSplitterState	 = settings.value( "TopSplitter"  , QByteArray() ).toByteArray();
+    const QByteArray mainSplitterState = settings.value( "MainSplitter" , QByteArray() ).toByteArray();
+    const QByteArray topSplitterState	 = settings.value( "TopSplitter"  , QByteArray() ).toByteArray();
     settings.endGroup();
 
+    _ui->treemapView->setUseTreemapHover( useTreemapHover );
     _ui->actionShowTreemap->setChecked( showTreemap );
     _ui->actionTreemapAsSidePanel->setChecked( treemapOnSide );
-    treemapAsSidePanel();
 
     _ui->actionVerboseSelection->setChecked( _verboseSelection );
-
-    foreach ( QAction * action, _layoutActionGroup->actions() )
-    {
-	if ( action->data().toString() == _layoutName )
-	    action->setChecked( true );
-    }
 
     readWindowSettings( this, "MainWindow" );
 
     if ( ! mainSplitterState.isNull() )
 	_ui->mainWinSplitter->restoreState( mainSplitterState );
 
+    treemapAsSidePanel( _ui->actionTreemapAsSidePanel->isChecked() );
+
     if ( ! topSplitterState.isNull() )
 	_ui->topViewsSplitter->restoreState( topSplitterState );
-    else
-    {
+//    else
+//    {
 	// The Qt designer refuses to let me set a reasonable size for that
 	// widget, so let's set one here. Yes, that's not really how this is
 	// supposed to be, but I am fed up with that stuff.
 
-	_ui->fileDetailsPanel->resize( QSize( 300, 300 ) );
-    }
+//	_ui->fileDetailsPanel->resize( QSize( 300, 300 ) ); // seems fine in 5.15
+//    }
+
+    initLayouts();
 
     foreach ( TreeLayout * layout, _layouts )
 	readLayoutSettings( layout );   // see MainWindowLayout.cpp
 
-    ExcludeRules::instance()->readSettings();
-    Debug::dumpExcludeRules();
+    changeLayout( layoutName );        // see MainWindowLayout.cpp
 }
 
 
@@ -397,13 +374,12 @@ void MainWindow::writeSettings()
     settings.setValue( "ShowTreemap"	 , _ui->actionShowTreemap->isChecked() );
     settings.setValue( "TreemapOnSide"	 , _ui->actionTreemapAsSidePanel->isChecked() );
     settings.setValue( "VerboseSelection", _verboseSelection );
-    settings.setValue( "Layout"		 , _layoutName );
+    settings.setValue( "Layout"		 , currentLayoutName() );
 
-    // Those are only set if not already in the settings (they might have been
-    // set from a config dialog).
-    settings.setDefaultValue( "StatusBarTimeoutMillisec", _statusBarTimeout );
-    settings.setDefaultValue( "UrlInWindowTitle"	, _urlInWindowTitle );
-    settings.setDefaultValue( "UseTreemapHover"		, _useTreemapHover );
+    settings.setValue( "StatusBarTimeoutMillisec", _statusBarTimeout );
+    settings.setValue( "LongStatusBarTimeout"    , _longStatusBarTimeout );
+    settings.setValue( "UrlInWindowTitle"	 , _urlInWindowTitle );
+    settings.setValue( "UseTreemapHover"	 , _ui->treemapView->useTreemapHover() );
 
     settings.endGroup();
 
@@ -414,23 +390,28 @@ void MainWindow::writeSettings()
     settings.setValue( "TopSplitter"		 , _ui->topViewsSplitter->saveState() );
     settings.endGroup();
 
-    foreach ( TreeLayout * layout, _layouts )
-	writeLayoutSettings( layout );  // see MainWindowLayout.cpp
+    foreach ( const TreeLayout * layout, _layouts )
+	    writeLayoutSettings( layout );  // see MainWindowLayout.cpp
 }
 
 
-void MainWindow::showTreemapView()
+void MainWindow::showTreemapView( bool show )
 {
-    if ( _ui->actionShowTreemap->isChecked() )
-	_ui->treemapView->enable();
+    if ( show )
+    {
+	if ( !_updateTimer.isActive() )
+	    _ui->treemapView->showTreemap();
+    }
     else
-	_ui->treemapView->disable();
+    {
+	_ui->treemapView->hideTreemap();
+    }
 }
 
 
-void MainWindow::treemapAsSidePanel()
+void MainWindow::treemapAsSidePanel( bool asSidePanel )
 {
-    if ( _ui->actionTreemapAsSidePanel->isChecked() )
+    if ( asSidePanel )
 	_ui->mainWinSplitter->setOrientation( Qt::Horizontal );
     else
 	_ui->mainWinSplitter->setOrientation( Qt::Vertical );
@@ -439,13 +420,13 @@ void MainWindow::treemapAsSidePanel()
 
 void MainWindow::busyDisplay()
 {
+    //logDebug() << Qt::endl;
     _ui->treemapView->disable();
     updateActions();
 
     // If it is open, close the window that lists unreadable directories:
     // With the next directory read, things might have changed; the user may
     // have fixed permissions or ownership of those directories.
-
     UnreadableDirsWindow::closeSharedInstance();
 
     if ( _dirPermissionsWarning )
@@ -456,14 +437,13 @@ void MainWindow::busyDisplay()
     // It would be nice to sort by read jobs during reading, but this confuses
     // the hell out of the Qt side of the data model; so let's sort by name
     // instead.
-
-    int sortCol = QDirStat::DataColumns::toViewCol( QDirStat::NameCol );
+    const int sortCol = QDirStat::DataColumns::toViewCol( QDirStat::NameCol );
     _ui->dirTreeView->sortByColumn( sortCol, Qt::AscendingOrder );
 
-    if ( ! PkgFilter::isPkgUrl( app()->dirTree()->url() ) &&
-	 ! app()->selectionModel()->currentBranch() )
+//    if ( ! PkgFilter::isPkgUrl( app()->dirTree()->url() ) &&
+//	 ! app()->selectionModel()->currentBranch() )
     {
-        _treeExpandTimer.start( 200 );
+//        _treeExpandTimer.start( 2000 );
         // This will trigger actionExpandTreeLevel1. Hopefully after those 200
         // millisec there will be some items in the tree to expand.
     }
@@ -472,27 +452,30 @@ void MainWindow::busyDisplay()
 
 void MainWindow::idleDisplay()
 {
-    logInfo() << endl;
+    //logInfo() << Qt::endl;
+
+    // Safe for the treemap to start work now
+    _updateTimer.stop();
+    showTreemapView( _ui->actionShowTreemap->isChecked() );
 
     updateActions();
-    _updateTimer.stop();
-    int sortCol = QDirStat::DataColumns::toViewCol( QDirStat::PercentNumCol );
+
+    const int sortCol = QDirStat::DataColumns::toViewCol( QDirStat::PercentNumCol );
     _ui->dirTreeView->sortByColumn( sortCol, Qt::DescendingOrder );
 
     if ( _futureSelection.subtree() )
     {
-        // logDebug() << "Using future selection " << _futureSelection.subtree() << endl;
+	logDebug() << "Using future selection " << _futureSelection.subtree() << Qt::endl;
         _treeExpandTimer.stop();
         applyFutureSelection();
     }
     else if ( ! app()->selectionModel()->currentBranch() )
     {
-	logDebug() << "No current branch - expanding tree to level 1" << endl;
+	//logDebug() << "No current branch - expanding tree to level 1" << Qt::endl;
 	expandTreeToLevel( 1 );
     }
 
     updateFileDetailsView();
-    showTreemapView();
 }
 
 
@@ -500,7 +483,7 @@ void MainWindow::updateFileDetailsView()
 {
     if ( _ui->fileDetailsView->isVisible() )
     {
-	FileInfoSet sel = app()->selectionModel()->selectedItems();
+	const FileInfoSet sel = app()->selectionModel()->selectedItems();
 
 	if ( sel.isEmpty() )
 	    _ui->fileDetailsView->showDetails( app()->selectionModel()->currentItem() );
@@ -533,16 +516,14 @@ void MainWindow::startingReading()
 
 void MainWindow::readingFinished()
 {
-    logInfo() << endl;
-
     idleDisplay();
 
-    QString elapsedTime = formatMillisec( _stopWatch.elapsed() );
-    _ui->statusBar->showMessage( tr( "Finished. Elapsed time: %1").arg( elapsedTime ), LONG_MESSAGE );
-    logInfo() << "Reading finished after " << elapsedTime << endl;
+    const QString elapsedTime = formatMillisec( _stopWatch.elapsed() );
+    _ui->statusBar->showMessage( tr( "Finished. Elapsed time: %1").arg( elapsedTime ), _longStatusBarTimeout );
+    logInfo() << "Reading finished after " << elapsedTime << Qt::endl;
 
-    if ( app()->dirTree()->firstToplevel() &&
-	 app()->dirTree()->firstToplevel()->errSubDirCount() > 0 )
+    if ( app()->root() &&
+	 app()->root()->errSubDirCount() > 0 )
     {
 	showDirPermissionsWarning();
     }
@@ -553,43 +534,39 @@ void MainWindow::readingFinished()
 
 void MainWindow::readingAborted()
 {
-    logInfo() << endl;
-
     idleDisplay();
-    QString elapsedTime = formatMillisec( _stopWatch.elapsed() );
-    _ui->statusBar->showMessage( tr( "Aborted. Elapsed time: %1").arg( elapsedTime ), LONG_MESSAGE );
-    logInfo() << "Reading aborted after " << elapsedTime << endl;
+
+    const QString elapsedTime = formatMillisec( _stopWatch.elapsed() );
+    _ui->statusBar->showMessage( tr( "Aborted. Elapsed time: %1").arg( elapsedTime ), _longStatusBarTimeout );
+    logInfo() << "Reading aborted after " << elapsedTime << Qt::endl;
 }
 
 
 void MainWindow::openUrl( const QString & url )
 {
-    _enableDirPermissionsWarning = true;
     _historyButtons->clearHistory();
 
     if ( PkgFilter::isPkgUrl( url ) )
 	readPkg( url );
     else if ( isUnpkgUrl( url ) )
-	showUnpkgFiles( url );  // see MainWinUnpkg.cpp
+	showUnpkgFiles( url );
     else
 	openDir( url );
 }
 
 
-void MainWindow::openDir( const QString & origUrl )
+void MainWindow::openDir( const QString & url )
 {
-    QString url = handleSymLink( origUrl );
-
+    _enableDirPermissionsWarning = true;
     try
     {
-        if ( url.startsWith( "/" ) )
+	if ( url.startsWith( "/" ) )
             _futureSelection.setUrl( url );
         else
             _futureSelection.clear();
 
 	app()->dirTreeModel()->openUrl( url );
 	updateWindowTitle( app()->dirTree()->url() );
-        app()->bookmarksManager()->setBaseUrl( app()->dirTree()->url() );
     }
     catch ( const SysCallFailedException & ex )
     {
@@ -610,79 +587,29 @@ void MainWindow::showOpenDirErrorPopup( const SysCallFailedException & ex )
 
     QMessageBox errorPopup( QMessageBox::Warning,	// icon
                             tr( "Error" ),		// title
-                            tr( "Could not open directory %1" ).arg( ex.resourceName() ), // text
-                            QMessageBox::Ok,            // buttons
-                            this );			// parent
+                            tr( "Could not open directory %1" ).arg( ex.resourceName() ).leftJustified( 50, 0x00A0 ) );
     errorPopup.setDetailedText( ex.what() );
     errorPopup.exec();
 }
 
 
-QString MainWindow::handleSymLink( const QString & origUrl ) const
-{
-    QString   url( origUrl );
-    QFileInfo urlInfo( url );
-
-    if ( urlInfo.isSymLink() )
-    {
-        PanelMessage * msg = 0;
-
-        if ( urlInfo.exists() )
-        {
-            QString target = urlInfo.canonicalFilePath();
-
-            logInfo() << "Following symlink \"" << url
-                      <<"\" to target \"" << target << "\"" << endl;
-
-            msg = new PanelMessage( _ui->messagePanel );
-            CHECK_NEW( msg );
-
-            msg->setHeading( tr( "Following symbolic link" ) );
-            msg->setText( tr( "%1 is a symbolic link to %2" )
-                          .arg( url ).arg( target ) );
-            _ui->messagePanel->add( msg );
-
-            url = target;
-        }
-        else
-        {
-            logError() << "Broken symlink";
-
-            msg = new PanelMessage( _ui->messagePanel );
-            CHECK_NEW( msg );
-
-            msg->setHeading( tr( "Broken symbolic link" ) );
-            msg->setText( tr( "%1 is a broken symbolic link to %2" )
-                          .arg( url ).arg( urlInfo.symLinkTarget() ) );
-            msg->setIcon( QPixmap( ":/icons/dialog-warning.png" ) );
-        }
-
-        if ( msg )
-            _ui->messagePanel->add( msg );
-    }
-
-    return url;
-}
-
-
 void MainWindow::askOpenDir()
 {
-    QString path;
     DirTree * tree = app()->dirTree();
+
     bool crossFilesystems = tree->crossFilesystems();
 
 #if USE_CUSTOM_OPEN_DIR_DIALOG
-    path = QDirStat::OpenDirDialog::askOpenDir( &crossFilesystems, this );
+    const QString path = QDirStat::OpenDirDialog::askOpenDir( this, &crossFilesystems );
 #else
-    path = QFileDialog::getExistingDirectory( this, // parent
-                                              tr("Select directory to scan") );
+    const QString path = QFileDialog::getExistingDirectory( this, tr("Select directory to scan") );
 #endif
 
     if ( ! path.isEmpty() )
     {
 	tree->reset();
 	tree->setCrossFilesystems( crossFilesystems );
-	openUrl( path );
+	openDir( path );
     }
 }
 
@@ -700,45 +627,53 @@ void MainWindow::askOpenPkg()
 }
 
 
-void MainWindow::askFindFiles()
-{
-    bool canceled;
-    FileSearchFilter filter = FindFilesDialog::askFindFiles( &canceled );
-
-    if ( ! canceled )
-    {
-	_discoverActions->findFiles( filter );
-    }
-}
-
-
 void MainWindow::readPkg( const PkgFilter & pkgFilter )
 {
-    logInfo() << "URL: " << pkgFilter.url() << endl;
+    // logInfo() << "URL: " << pkgFilter.url() << Qt::endl;
 
     _futureSelection.setUrl( "Pkg:/" );
     updateWindowTitle( pkgFilter.url() );
+    pkgQuerySetup();
+    BusyPopup msg( tr( "Reading package database..." ), this );
+
+//    expandTreeToLevel( 0 );   // Performance boost: Down from 25 to 6 sec.
+    app()->dirTreeModel()->readPkg( pkgFilter );
+    app()->selectionModel()->setCurrentItem( app()->root() );
+}
+
+
+void MainWindow::askFindFiles()
+{
+    bool canceled;
+    const FileSearchFilter filter = FindFilesDialog::askFindFiles( &canceled );
+
+    if ( ! canceled )
+	_discoverActions->findFiles( filter );
+}
+
+
+void MainWindow::pkgQuerySetup()
+{
+    if ( _dirPermissionsWarning )
+        delete _dirPermissionsWarning;
+
+//    _ui->treemapView->disable();
+
     _ui->breadcrumbNavigator->clear();
     _ui->fileDetailsView->clear();
     app()->dirTreeModel()->clear();
-
-    BusyPopup msg( tr( "Reading package database..." ), this );
-
-    app()->dirTreeModel()->readPkg( pkgFilter );
-    app()->bookmarksManager()->setBaseUrl( app()->dirTree()->url() );
-    app()->selectionModel()->setCurrentItem( app()->dirTree()->firstToplevel() );
 }
 
 
 void MainWindow::refreshAll()
 {
     _enableDirPermissionsWarning = true;
-    QString url = app()->dirTree()->url();
+    const QString url = app()->dirTree()->url();
+    _futureSelection.set( app()->selectionModel()->selectedItems().first() );
 
     if ( ! url.isEmpty() )
     {
-	logDebug() << "Refreshing " << url << endl;
-        _futureSelection.setUrl( url );
+	logDebug() << "Refreshing " << url << Qt::endl;
 
 	if ( PkgFilter::isPkgUrl( url ) )
 	    app()->dirTreeModel()->readPkg( url );
@@ -763,9 +698,10 @@ void MainWindow::refreshAll()
 
 void MainWindow::refreshSelected()
 {
-    busyDisplay();
+    // logDebug() << "Setting future selection: " << _futureSelection.subtree() << Qt::endl;
     _futureSelection.set( app()->selectionModel()->selectedItems().first() );
-    // logDebug() << "Setting future selection: " << _futureSelection.url() << endl;
+    _ui->treemapView->saveTreemapRoot();
+    busyDisplay();
     app()->dirTreeModel()->refreshSelected();
     updateActions();
 }
@@ -773,14 +709,11 @@ void MainWindow::refreshSelected()
 
 void MainWindow::applyFutureSelection()
 {
-    FileInfo * sel    = _futureSelection.subtree();
+    FileInfo * sel = _futureSelection.subtree();
     DirInfo  * branch = _futureSelection.dir();
     _futureSelection.clear();
 
-#if 0
-    logDebug() << "Using future selection: " << sel << endl;
-    logDebug() << "Branch: " << branch << endl;
-#endif
+    // logDebug() << "Using future selection: " << sel << Qt::endl;
 
     if ( sel )
     {
@@ -792,8 +725,10 @@ void MainWindow::applyFutureSelection()
         app()->selectionModel()->setCurrentItem( sel,
                                                  true);  // select
 
-        if ( sel->isMountPoint() || sel->isDirInfo() )  // || app()->dirTree()->isToplevel( sel ) )
+        if ( sel->isMountPoint() || sel->isDirInfo() ) // || app()->dirTree()->isToplevel( sel ) )
             _ui->dirTreeView->setExpanded( sel, true );
+
+	// _ui->treemapView->applyFutureTreemapDepth();
     }
 }
 
@@ -803,7 +738,7 @@ void MainWindow::stopReading()
     if ( app()->dirTree()->isBusy() )
     {
 	app()->dirTree()->abortReading();
-	_ui->statusBar->showMessage( tr( "Reading aborted." ), LONG_MESSAGE );
+	_ui->statusBar->showMessage( tr( "Reading aborted." ), _longStatusBarTimeout );
     }
 }
 
@@ -813,16 +748,24 @@ void MainWindow::readCache( const QString & cacheFileName )
     app()->dirTreeModel()->clear();
     _historyButtons->clearHistory();
 
-    if ( ! cacheFileName.isEmpty() )
-	app()->dirTree()->readCache( cacheFileName );
+    if ( cacheFileName.isEmpty() )
+	return;
+
+    if ( !app()->dirTree()->readCache( cacheFileName ) )
+    {
+	idleDisplay();
+	QMessageBox::warning( this,
+                              tr( "Error" ), // Title
+                              tr( "Can't read cache file \"%1\"").arg( cacheFileName ).leftJustified( 50, 0x00A0 ) );
+    }
 }
 
 
 void MainWindow::askReadCache()
 {
-    QString fileName = QFileDialog::getOpenFileName( this, // parent
-						     tr( "Select QDirStat cache file" ),
-						     DEFAULT_CACHE_NAME );
+    const QString fileName = QFileDialog::getOpenFileName( this, // parent
+							   tr( "Select QDirStat cache file" ),
+							   DEFAULT_CACHE_NAME );
     if ( ! fileName.isEmpty() )
 	readCache( fileName );
 
@@ -832,23 +775,22 @@ void MainWindow::askReadCache()
 
 void MainWindow::askWriteCache()
 {
-    QString fileName = QFileDialog::getSaveFileName( this, // parent
-						     tr( "Enter name for QDirStat cache file"),
-						     DEFAULT_CACHE_NAME );
-    if ( ! fileName.isEmpty() )
-    {
-	bool ok = app()->dirTree()->writeCache( fileName );
+    const QString fileName = QFileDialog::getSaveFileName( this, // parent
+							   tr( "Enter name for QDirStat cache file"),
+							   DEFAULT_CACHE_NAME );
+    if ( fileName.isEmpty() )
+	return;
 
-	if ( ok )
-	{
-	    showProgress( tr( "Directory tree written to file %1" ).arg( fileName ) );
-	}
-	else
-	{
-	    QMessageBox::critical( this,
-				   tr( "Error" ), // Title
-				   tr( "ERROR writing cache file %1").arg( fileName ) );
-	}
+    const bool ok = app()->dirTree()->writeCache( fileName );
+    if ( ok )
+    {
+	showProgress( tr( "Directory tree written to file %1" ).arg( fileName ) );
+    }
+    else
+    {
+	QMessageBox::warning( this,
+			      tr( "Error" ), // Title
+			      tr( "ERROR writing cache file \"%1\"").arg( fileName ) );
     }
 }
 
@@ -875,8 +817,7 @@ void MainWindow::showProgress( const QString & text )
 
 void MainWindow::showElapsedTime()
 {
-    showProgress( tr( "Reading... %1" )
-		  .arg( formatMillisec( _stopWatch.elapsed(), false ) ) );
+    showProgress( tr( "Reading... %1" ).arg( formatMillisec( _stopWatch.elapsed(), false ) ) );
 }
 
 
@@ -906,10 +847,10 @@ void MainWindow::showCurrent( FileInfo * item )
 void MainWindow::showSummary()
 {
     FileInfoSet sel = app()->selectionModel()->selectedItems();
-    int count = sel.size();
+    const int count = sel.size();
 
     if ( count <= 1 )
-	showCurrent( app()->selectionModel()->currentItem() );
+	showCurrent( app()->currentItem() );
     else
     {
 	sel = sel.normalized();
@@ -928,7 +869,8 @@ void MainWindow::startingCleanup( const QString & cleanupName )
 
     FileInfo * sel = app()->selectionModel()->selectedItems().first();
     _futureSelection.set( sel );
-    logDebug() << "Storing future selection " << sel << endl;
+    logDebug() << "Storing future selection " << sel << Qt::endl;
+
     showProgress( tr( "Starting cleanup action %1" ).arg( cleanupName ) );
 }
 
@@ -938,7 +880,7 @@ void MainWindow::cleanupFinished( int errorCount )
     // Notice that this is not called for actions that are not owned by the
     // CleanupCollection such as _ui->actionMoveToTrash().
 
-    logDebug() << "Error count: " << errorCount << endl;
+    //logDebug() << "Error count: " << errorCount << Qt::endl;
 
     if ( errorCount == 0 )
 	showProgress( tr( "Cleanup action finished successfully." ) );
@@ -947,20 +889,14 @@ void MainWindow::cleanupFinished( int errorCount )
 }
 
 
-void MainWindow::notImplemented()
-{
-    QMessageBox::warning( this, tr( "Error" ), tr( "Not implemented!" ) );
-}
-
-
 void MainWindow::copyCurrentPathToClipboard()
 {
-    FileInfo * currentItem = app()->selectionModel()->currentItem();
+    const FileInfo * currentItem = app()->currentItem();
 
     if ( currentItem )
     {
 	QClipboard * clipboard = QApplication::clipboard();
-	QString path = currentItem->path();
+	const QString path = currentItem->path();
 	clipboard->setText( path );
 	showProgress( tr( "Copied to system clipboard: %1" ).arg( path ) );
     }
@@ -973,7 +909,7 @@ void MainWindow::copyCurrentPathToClipboard()
 
 void MainWindow::expandTreeToLevel( int level )
 {
-    logDebug() << "Expanding tree to level " << level << endl;
+    //logDebug() << "Expanding tree to level " << level << Qt::endl;
 
     if ( level < 1 )
 	_ui->dirTreeView->collapseAll();
@@ -984,15 +920,14 @@ void MainWindow::expandTreeToLevel( int level )
 
 void MainWindow::navigateUp()
 {
-    FileInfo * currentItem = app()->selectionModel()->currentItem();
+    const FileInfo * currentItem = app()->currentItem();
 
     if ( currentItem )
     {
-        FileInfo * parent = currentItem->parent();
+	FileInfo * parent = currentItem->parent();
 
         if ( parent && parent != app()->dirTree()->root() )
         {
-
             // Close and re-open the parent to enforce a screen update:
             // Sometimes the bold font is not taken into account when moving
             // upwards, and so every column is cut off (probably a Qt bug)
@@ -1009,7 +944,7 @@ void MainWindow::navigateUp()
 
 void MainWindow::navigateToToplevel()
 {
-    FileInfo * toplevel = app()->dirTree()->firstToplevel();
+    FileInfo * toplevel = app()->root();
 
     if ( toplevel )
     {
@@ -1022,7 +957,7 @@ void MainWindow::navigateToToplevel()
 
 void MainWindow::navigateToUrl( const QString & url )
 {
-    // logDebug() << "Navigating to " << url << endl;
+    // logDebug() << "Navigating to " << url << Qt::endl;
 
     if ( ! url.isEmpty() )
     {
@@ -1040,100 +975,25 @@ void MainWindow::navigateToUrl( const QString & url )
 }
 
 
-void MainWindow::updateBookmarkButton( FileInfo * newCurrent )
-{
-    SignalBlocker sigBlocker( _ui->bookmarkButton );  // Prevent signal ping-pong
-
-    if ( ! newCurrent )  // No selection / no current item
-    {
-        // logDebug() << "No current item" << endl;
-        _ui->bookmarkButton->setChecked( false );
-    }
-    else
-    {
-        DirInfo * currentDir = newCurrent->toDirInfo();
-
-        if ( ! currentDir && newCurrent->parent() )
-            currentDir = newCurrent->parent();
-
-        if ( currentDir )
-        {
-            QString url = currentDir->debugUrl();
-            bool isBookmarked = app()->bookmarksManager()->contains( url );
-            _ui->bookmarkButton->setChecked( isBookmarked );
-#if 0
-            if ( isBookmarked )
-                logDebug() << url << " is bookmarked" << endl;
-#endif
-        }
-    }
-}
-
-
-void MainWindow::bookmarkCurrentPath( bool isChecked )
-{
-    //
-    // Find out the current item and directory
-    //
-
-    FileInfo * currentItem = app()->selectionModel()->currentItem();
-
-    if ( ! currentItem )
-        return;
-
-    DirInfo * currentDir = currentItem->toDirInfo();
-
-    if ( ! currentDir && currentItem->parent() )  // Not a directory?
-        currentDir = currentItem-> parent();      // Move up one level
-
-    if ( currentDir )
-    {
-        //
-        // Add or remove it from the bookmarks
-        //
-
-        // debugUrl() because we want the <Files> DotEntry if there is one
-        QString url = currentDir->debugUrl();
-
-        if ( isChecked )
-        {
-            app()->bookmarksManager()->add( url );
-            // The BookmarksManager is already logging this
-            showProgress( tr( "Bookmarked %1" ).arg( url ) );
-        }
-        else
-        {
-            app()->bookmarksManager()->remove( url );
-            // The BookmarksManager is already logging this
-            showProgress( tr( "Un-bookmarked %1" ).arg( url ) );
-        }
-    }
-}
-
-
 void MainWindow::moveToTrash()
 {
     // _ui->actionMoveToTrash() is not a subclass of Cleanup and not owned by
     // CleanupCollection, so this has to replicate some of its functionality.
-
-    FileInfoSet selectedItems = app()->selectionModel()->selectedItems().normalized();
+    const FileInfoSet selectedItems = app()->selectionModel()->selectedItems().normalized();
 
     // Save the selection - at least the first selected item
-
     FileInfo * sel = selectedItems.first();
     _futureSelection.set( sel );
-    logDebug() << "Storing future selection " << sel << endl;
+    logDebug() << "Storing future selection " << sel << Qt::endl;
 
     // Prepare output window
-
     OutputWindow * outputWindow = new OutputWindow( qApp->activeWindow() );
     CHECK_NEW( outputWindow );
 
     // Prepare refresher
-
-    FileInfoSet refreshSet = Refresher::parents( selectedItems );
+    const FileInfoSet refreshSet = Refresher::parents( selectedItems );
     app()->selectionModel()->prepareRefresh( refreshSet );
-    Refresher * refresher  = new Refresher( refreshSet, this );
+    Refresher * refresher  = new Refresher( this, refreshSet );
     CHECK_NEW( refresher );
 
     connect( outputWindow, SIGNAL( lastProcessFinished( int ) ),
@@ -1142,10 +1002,9 @@ void MainWindow::moveToTrash()
     outputWindow->showAfterTimeout();
 
     // Move all selected items to trash
-
-    foreach ( FileInfo * item, selectedItems )
+    foreach ( const FileInfo * item, selectedItems )
     {
-	bool success = Trash::trash( item->path() );
+	const bool success = Trash::trash( item->path() );
 
 	if ( success )
 	    outputWindow->addStdout( tr( "Moved to trash: %1" ).arg( item->path() ) );
@@ -1166,16 +1025,21 @@ void MainWindow::openConfigDialog()
     // complex dialog and recreate it from scratch than to simply leave it
     // alive and just show it again. Well, whatever - so be it.
     //
-    // And yes, I added debug logging here, in the dialog's setup(), in
-    // showEvent(); I added update(). No result whatsoever.
-    // Okay, then let's take the long way around.
+    // Hiding and showing seems to work fine as of 5.15, but stay with the
+    // destroy-and-recreate model.  However, actually delete the dialog when
+    // it is closed instead of just before it is re-opened.
 
-    if ( _configDialog )
-	delete _configDialog;
+//    if ( _configDialog )
+//	delete _configDialog;
 
     _configDialog = new ConfigDialog( this );
     CHECK_PTR( _configDialog );
+    _configDialog->setAttribute(Qt::WA_DeleteOnClose);
+
     _configDialog->cleanupConfigPage()->setCleanupCollection( app()->cleanupCollection() );
+
+    connect( _configDialog,	SIGNAL( finished( int ) ),
+	     this,		SLOT  ( configDialogFinished( int ) ) );
 
     if ( ! _configDialog->isVisible() )
     {
@@ -1185,15 +1049,22 @@ void MainWindow::openConfigDialog()
 }
 
 
+void MainWindow::configDialogFinished( int )
+{
+    // Dangling pointer, config has been destroyed
+    _configDialog = 0;
+}
+
+
 void MainWindow::showFileTypeStats()
 {
-    FileTypeStatsWindow::populateSharedInstance( app()->selectedDirInfoOrRoot() );
+    FileTypeStatsWindow::populateSharedInstance( this, app()->selectedDirInfoOrRoot() );
 }
 
 
 void MainWindow::showFileSizeStats()
 {
-    FileSizeStatsWindow::populateSharedInstance( app()->selectedDirInfoOrRoot() );
+    FileSizeStatsWindow::populateSharedInstance( this, app()->selectedDirInfoOrRoot() );
 }
 
 
@@ -1231,7 +1102,7 @@ void MainWindow::showFilesystems()
 	_filesystemsWindow = new FilesystemsWindow( this );
 
         connect( _filesystemsWindow, SIGNAL( readFilesystem( QString ) ),
-                 this,               SLOT  ( openUrl       ( QString ) ) );
+                 this,               SLOT  ( openDir       ( QString ) ) );
     }
 
     _filesystemsWindow->populate();
@@ -1241,8 +1112,8 @@ void MainWindow::showFilesystems()
 
 void MainWindow::showDirPermissionsWarning()
 {
-    if ( _dirPermissionsWarning || ! _enableDirPermissionsWarning )
-	return;
+//    if ( _dirPermissionsWarning || ! _enableDirPermissionsWarning )
+	return; // never display, I know already
 
     PanelMessage * msg = new PanelMessage( _ui->messagePanel );
     CHECK_NEW( msg );
@@ -1250,7 +1121,6 @@ void MainWindow::showDirPermissionsWarning()
     msg->setHeading( tr( "Some directories could not be read." ) );
     msg->setText( tr( "You might not have sufficient permissions." ) );
     msg->setIcon( QPixmap( ":/icons/lock-closed.png" ) );
-
     msg->connectDetailsLink( this, SLOT( showUnreadableDirs() ) );
 
     _ui->messagePanel->add( msg );
@@ -1261,9 +1131,48 @@ void MainWindow::showDirPermissionsWarning()
 
 void MainWindow::showUnreadableDirs()
 {
-    UnreadableDirsWindow::populateSharedInstance( app()->dirTree()->root() );
+    UnreadableDirsWindow::populateSharedInstance( app()->root() );
 }
 
+/*
+void MainWindow::showAboutDialog()
+{
+    QMessageBox::about( this, tr( "About QDirStat" ), ABOUT_DIALOG_TEXT );
+}
+
+
+void MainWindow::showDonateDialog()
+{
+    QMessageBox::about( this, tr( "Donate" ), DONATE_DIALOG_TEXT );
+}
+*/
+
+#if 0
+void MainWindow::itemClicked( const QModelIndex & index )
+{
+    if ( ! _verboseSelection )
+	return;
+
+    if ( index.isValid() )
+    {
+	const FileInfo * item = static_cast<const FileInfo *>( index.internalPointer() );
+
+	logDebug() << "Clicked row " << index.row()
+		   << " col " << index.column()
+		   << " (" << QDirStat::DataColumns::fromViewCol( index.column() ) << ")"
+		   << "\t" << item
+		   << Qt::endl;
+	// << " data(0): " << index.model()->data( index, 0 ).toString()
+	// logDebug() << "Ancestors: " << Debug::modelTreeAncestors( index ).join( " -> " ) << Qt::endl;
+    }
+    else
+    {
+	logDebug() << "Invalid model index" << Qt::endl;
+    }
+
+    // app()->dirTreeModel()->dumpPersistentIndexList();
+}
+#endif
 
 void MainWindow::selectionChanged()
 {
@@ -1275,6 +1184,8 @@ void MainWindow::selectionChanged()
 	logNewline();
 	app()->selectionModel()->dumpSelectedItems();
     }
+
+    updateActions();
 }
 
 
@@ -1287,10 +1198,12 @@ void MainWindow::currentItemChanged( FileInfo * newCurrent, FileInfo * oldCurren
 
     if ( _verboseSelection )
     {
-	logDebug() << "new current: " << newCurrent << endl;
-	logDebug() << "old current: " << oldCurrent << endl;
+	logDebug() << "new current: " << newCurrent << Qt::endl;
+	logDebug() << "old current: " << oldCurrent << Qt::endl;
 	app()->selectionModel()->dumpSelectedItems();
     }
+
+    updateActions();
 }
 
 
@@ -1306,12 +1219,12 @@ void MainWindow::mousePressEvent( QMouseEvent * event )
             // history back / forward buttons in the tool bar
 
             case Qt::BackButton:
-                // logDebug() << "BackButton" << endl;
+                // logDebug() << "BackButton" << Qt::endl;
                 action = _ui->actionGoBack;
                 break;
 
             case Qt::ForwardButton:
-                // logDebug() << "ForwardButton" << endl;
+                // logDebug() << "ForwardButton" << Qt::endl;
                 action = _ui->actionGoForward;
                 break;
 
@@ -1320,15 +1233,16 @@ void MainWindow::mousePressEvent( QMouseEvent * event )
                 break;
         }
 
-        if ( action )
-        {
-            if ( action->isEnabled() )
-                action->trigger();
-        }
+        if ( action && action->isEnabled() )
+            action->trigger();
     }
 }
 
 
+void MainWindow::quit()
+{
+    QCoreApplication::quit();
+}
 
 
 //---------------------------------------------------------------------------
@@ -1336,43 +1250,16 @@ void MainWindow::mousePressEvent( QMouseEvent * event )
 //---------------------------------------------------------------------------
 
 
-void MainWindow::toggleVerboseSelection()
+void MainWindow::toggleVerboseSelection( bool verboseSelection)
 {
     // Verbose selection is toggled with Shift-F7
-
-    _verboseSelection = _ui->actionVerboseSelection->isChecked();
+    _verboseSelection = verboseSelection;
 
     if ( app()->selectionModel() )
 	app()->selectionModel()->setVerbose( _verboseSelection );
 
     logInfo() << "Verbose selection is now " << ( _verboseSelection ? "on" : "off" )
-	      << ". Change this with Shift-F7." << endl;
-}
-
-
-void MainWindow::itemClicked( const QModelIndex & index )
-{
-    if ( ! _verboseSelection )
-	return;
-
-    if ( index.isValid() )
-    {
-	FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
-
-	logDebug() << "Clicked row " << index.row()
-		   << " col " << index.column()
-		   << " (" << QDirStat::DataColumns::fromViewCol( index.column() ) << ")"
-		   << "\t" << item
-		   << endl;
-	// << " data(0): " << index.model()->data( index, 0 ).toString()
-	// logDebug() << "Ancestors: " << Debug::modelTreeAncestors( index ).join( " -> " ) << endl;
-    }
-    else
-    {
-	logDebug() << "Invalid model index" << endl;
-    }
-
-    // app()->dirTreeModel()->dumpPersistentIndexList();
+	      << ". Change this with Shift-F7." << Qt::endl;
 }
 
 

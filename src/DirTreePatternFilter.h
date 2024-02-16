@@ -10,19 +10,28 @@
 #ifndef DirTreePatternFilter_h
 #define DirTreePatternFilter_h
 
-#include <QRegExp>
-
 #include "DirTreeFilter.h"
+#include "Wildcard.h"
 
 
 namespace QDirStat
 {
     /**
      * Dir tree filter that checks a wildcard match against a path.
-     * This uses QRegExp in wildcard mode.
+     * This uses QRegularExpression in wildcard mode through the
+     * Wildcard wrapper class.
      **/
     class DirTreePatternFilter: public DirTreeFilter
     {
+    protected:
+
+	/**
+	 * Constructor. If 'pattern' contains a slash ("/"), it is matched
+	 * against the complete path. Otherwise, it is matched only against the
+	 * filename.  Used the the create method to generate a filter.
+	 **/
+	DirTreePatternFilter( const QString & pattern );
+
     public:
 
 	/**
@@ -36,16 +45,9 @@ namespace QDirStat
 	static DirTreeFilter * create( const QString & pattern );
 
 	/**
-	 * Constructor. If 'pattern' contains a slash ("/"), it is matched
-	 * against the complete path. Otherwise, it is matched only against the
-	 * filename.
-	 **/
-	DirTreePatternFilter( const QString & pattern );
-
-	/**
 	 * Destructor.
 	 **/
-	virtual ~DirTreePatternFilter();
+	virtual ~DirTreePatternFilter() {}
 
 	/**
 	 * Return 'true' if the filesystem object specified by 'path' should
@@ -55,16 +57,10 @@ namespace QDirStat
 	 **/
 	virtual bool ignore( const QString & path ) const Q_DECL_OVERRIDE;
 
-	/**
-	 * Return the pattern.
-	 **/
-	QString pattern() const { return _pattern; }
-
 
     protected:
 
-	QString _pattern;
-        QRegExp _regExp;
+        Wildcard _wildcard;
 
     };	// class DirTreePatternFilter
 
@@ -88,7 +84,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirTreeSuffixFilter();
+	virtual ~DirTreeSuffixFilter() {}
 
 	/**
 	 * Return 'true' if the filesystem object specified by 'path' should

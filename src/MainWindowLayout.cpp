@@ -17,79 +17,64 @@
 using namespace QDirStat;
 
 
-void MainWindow::createLayouts()
+void MainWindow::initLayouts()
 {
+    // Qt Designer does not support QActionGroups; it was there for Qt 3, but
+    // they dropped that feature for Qt 4/5.
+    _layoutActionGroup = new QActionGroup( this );
+    CHECK_NEW( _layoutActionGroup );
+
     // Notice that the column layouts are handled in the HeaderTweaker and its
     // ColumnLayout helper class; see also HeaderTweaker.h and .cpp.
     //
     // The layout names "L1", "L2", "L3" here are important: They need to match
     // the names in the HeaderTweaker.
-
-    TreeLayout * layout;
-
-    layout = new TreeLayout( "L1" );
-    CHECK_NEW( layout );
-    _layouts[ "L1" ] = layout;
-
-    layout = new TreeLayout( "L2" );
-    CHECK_NEW( layout );
-    _layouts[ "L2" ] = layout;
-
-    layout = new TreeLayout( "L3" );
-    CHECK_NEW( layout );
-    _layouts[ "L3" ] = layout;
-
-    // L3 is the only one where the defaults for the flags need changing.
-    layout->showDetailsPanel = false;
+    initLayout( "L1", _ui->actionLayout1 );
+    initLayout( "L2", _ui->actionLayout2 );
+    initLayout( "L3", _ui->actionLayout3 );
 }
 
 
-void MainWindow::initLayoutActions()
+void MainWindow::initLayout( const QString & layoutName, QAction * action )
 {
-    // Qt Designer does not support QActionGroups; it was there for Qt 3, but
-    // they dropped that feature for Qt 4/5.
+    TreeLayout * layout = new TreeLayout( layoutName );
+    CHECK_NEW( layout );
 
-    _layoutActionGroup = new QActionGroup( this );
-    CHECK_NEW( _layoutActionGroup );
+    _layouts[ layoutName ] = layout;
 
-    _layoutActionGroup->addAction( _ui->actionLayout1 );
-    _layoutActionGroup->addAction( _ui->actionLayout2 );
-    _layoutActionGroup->addAction( _ui->actionLayout3 );
+    _layoutActionGroup->addAction( action );
+    action->setData( layoutName );
+    if ( layoutName == currentLayoutName() )
+	action->setChecked( true );
+}
 
-    _ui->actionLayout1->setData( "L1" );
-    _ui->actionLayout2->setData( "L2" );
-    _ui->actionLayout3->setData( "L3" );
+
+void MainWindow::changeLayoutSlot()
+{
+    // Get the layout to use from data() from the QAction that sent the signal.
+    QAction * action   = qobject_cast<QAction *>( sender() );
+    const QString layoutName = action && action->data().isValid() ? action->data().toString() : "L2";
+    changeLayout( layoutName );
 }
 
 
 void MainWindow::changeLayout( const QString & name )
 {
-    _layoutName = name;
+    logDebug() << "Changing to layout " << name << Qt::endl;
 
-    if ( _layoutName.isEmpty() )
-    {
-	// Get the layout to use from data() from the QAction that sent the signal.
-
-	QAction * action   = qobject_cast<QAction *>( sender() );
-	_layoutName = action && action->data().isValid() ?
-	    action->data().toString() : "L2";
-    }
-
-    logDebug() << "Changing to layout " << _layoutName << endl;
-
-    _ui->dirTreeView->headerTweaker()->changeLayout( _layoutName );
+    _ui->dirTreeView->headerTweaker()->changeLayout( name );
 
     if ( _currentLayout )
 	saveLayout( _currentLayout );
 
-    if ( _layouts.contains( _layoutName ) )
+    if ( _layouts.contains( name ) )
     {
-	_currentLayout = _layouts[ _layoutName ];
+	_currentLayout = _layouts[ name ];
 	applyLayout( _currentLayout );
     }
     else
     {
-	logError() << "No layout " << _layoutName << endl;
+	logError() << "No layout " << name << Qt::endl;
     }
 }
 
@@ -98,15 +83,15 @@ void MainWindow::saveLayout( TreeLayout * layout )
 {
     CHECK_PTR( layout );
 
-    layout->showDetailsPanel = _ui->actionShowDetailsPanel->isChecked();
+    layout->_showDetailsPanel = _ui->actionShowDetailsPanel->isChecked();
 }
 
 
-void MainWindow::applyLayout( TreeLayout * layout )
+void MainWindow::applyLayout( const TreeLayout * layout )
 {
     CHECK_PTR( layout );
 
-    _ui->actionShowDetailsPanel->setChecked( layout->showDetailsPanel );
+    _ui->actionShowDetailsPanel->setChecked( layout->_showDetailsPanel );
 }
 
 
@@ -115,19 +100,19 @@ void MainWindow::readLayoutSettings( TreeLayout * layout )
     CHECK_PTR( layout );
 
     Settings settings;
-    settings.beginGroup( QString( "TreeViewLayout_%1" ).arg( layout->name ) );
-    layout->showDetailsPanel = settings.value( "ShowDetailsPanel", layout->showDetailsPanel ).toBool();
+    settings.beginGroup( QString( "TreeViewLayout_%1" ).arg( layout->_name ) );
+    layout->_showDetailsPanel = settings.value( "ShowDetailsPanel", layout->_showDetailsPanel ).toBool();
     settings.endGroup();
 }
 
 
-void MainWindow::writeLayoutSettings( TreeLayout * layout )
+void MainWindow::writeLayoutSettings( const TreeLayout * layout )
 {
     CHECK_PTR( layout );
 
     Settings settings;
-    settings.beginGroup( QString( "TreeViewLayout_%1" ).arg( layout->name ) );
-    settings.setValue( "ShowDetailsPanel", layout->showDetailsPanel );
+    settings.beginGroup( QString( "TreeViewLayout_%1" ).arg( layout->_name ) );
+    settings.setValue( "ShowDetailsPanel", layout->_showDetailsPanel );
     settings.endGroup();
 }
 

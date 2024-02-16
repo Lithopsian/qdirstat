@@ -7,7 +7,10 @@
  */
 
 
+#include <QClipboard>
+#include <QContextMenuEvent>
 #include <QFileIconProvider>
+#include <QMenu>
 
 #include "FilesystemsWindow.h"
 #include "MountPoints.h"
@@ -99,18 +102,12 @@ void FilesystemsWindow::clear()
 
 void FilesystemsWindow::initWidgets()
 {
-    QStringList headers;
-    headers << tr( "Device" )
-	    << tr( "Mount Point" )
-	    << tr( "Type" );
+    QStringList headers = { tr( "Device" ), tr( "Mount Point" ), tr( "Type" ) };
 
     if ( MountPoints::hasSizeInfo() )
     {
-	headers << tr( "Size"	  )
-		<< tr( "Used"	  )
-		<< tr( "Reserved" )
-		<< tr( "Free"	  )
-		<< tr( "Free %"	  );
+	const QStringList sizeHeaders = { tr( "Size" ), tr( "Used" ), tr( "Reserved" ), tr( "Free" ), tr( "Free %" ) };
+	headers += sizeHeaders;
     }
 
     _ui->fsTree->setHeaderLabels( headers );
@@ -130,14 +127,26 @@ void FilesystemsWindow::initWidgets()
     _ui->fsTree->sortItems( FS_DeviceCol, Qt::AscendingOrder );
     enableActions();
 
-    connect( _ui->refreshButton, SIGNAL( clicked() ),
-	     this,		 SLOT  ( refresh() ) );
+    connect( _ui->refreshButton, &QAbstractButton::clicked,
+	     this,		 &FilesystemsWindow::refresh );
 
-    connect( _ui->readButton,	 SIGNAL( clicked() ),
-	     this,		 SLOT  ( readSelectedFilesystem() ) );
+    connect( _ui->fsTree,	 &QTreeWidget::customContextMenuRequested,
+	      this,		 &FilesystemsWindow::contextMenu);
 
-    connect( _ui->fsTree,	 SIGNAL( itemSelectionChanged() ),
-	     this,		 SLOT  ( enableActions()	) );
+    connect( _ui->fsTree,	 &QTreeWidget::itemDoubleClicked,
+	     _ui->actionRead,	 &QAction::triggered );
+
+    connect( _ui->readButton,	 &QAbstractButton::clicked,
+	     _ui->actionRead,	 &QAction::triggered );
+
+    connect( _ui->actionRead,	 &QAction::triggered,
+	     this,		 &FilesystemsWindow::readSelectedFilesystem );
+
+    connect( _ui->actionCopy,	 &QAction::triggered,
+	     this,		 &FilesystemsWindow::copyDeviceToClipboard );
+
+    connect( _ui->fsTree,	 &QTreeWidget::itemSelectionChanged,
+	     this,		 &FilesystemsWindow::enableActions );
 }
 
 
@@ -149,11 +158,10 @@ void FilesystemsWindow::enableActions()
 
 void FilesystemsWindow::readSelectedFilesystem()
 {
-    QString path = selectedPath();
-
+    const QString path = selectedPath();
     if ( ! path.isEmpty() )
     {
-	logDebug() << "Read " << path << endl;
+	//logDebug() << "Read " << path << Qt::endl;
 	emit readFilesystem( path );
     }
 }
@@ -162,12 +170,11 @@ void FilesystemsWindow::readSelectedFilesystem()
 QString FilesystemsWindow::selectedPath() const
 {
     QString result;
-    QList<QTreeWidgetItem *> sel = _ui->fsTree->selectedItems();
 
+    const QList<QTreeWidgetItem *> sel = _ui->fsTree->selectedItems();
     if ( ! sel.isEmpty() )
     {
 	FilesystemItem * item = dynamic_cast<FilesystemItem *>( sel.first() );
-
 	if ( item )
 	    result = item->mountPath();
     }
@@ -175,6 +182,39 @@ QString FilesystemsWindow::selectedPath() const
     return result;
 }
 
+
+void FilesystemsWindow::copyDeviceToClipboard()
+{
+    const FilesystemItem * currentItem = dynamic_cast<FilesystemItem *>( _ui->fsTree->currentItem() );
+    if ( currentItem )
+	QApplication::clipboard()->setText( currentItem->device().trimmed() );
+}
+
+
+void FilesystemsWindow::contextMenu( const QPoint & pos )
+{
+    // See if the right click was actually on an item
+    if ( !_ui->fsTree->itemAt( pos ) )
+	return;
+
+    // The clicked item will always be the current item now
+    _ui->actionRead->setText( tr( "Read at " ) + selectedPath() );
+
+    QMenu menu;
+    menu.addAction( _ui->actionRead );
+    menu.addAction( _ui->actionCopy );
+
+    menu.exec( _ui->fsTree->mapToGlobal( pos ) );
+}
+
+
+void FilesystemsWindow::keyPressEvent( QKeyEvent * event )
+{
+    if ( !selectedPath().isEmpty() && QList<int>( { Qt::Key_Return, Qt::Key_Enter } ).contains( event->key() ) )
+	readSelectedFilesystem();
+    else
+	QDialog::keyPressEvent( event );
+}
 
 
 
@@ -191,7 +231,6 @@ FilesystemItem::FilesystemItem( MountPoint  * mountPoint,
     _isNetworkMount ( mountPoint->isNetworkMount()  ),
     _isReadOnly	    ( mountPoint->isReadOnly()	    )
 {
-    QString blanks = QString( 4, ' ' );
     QString dev    = _device;
 
     if ( dev.startsWith( "/dev/mapper/luks-" ) )
@@ -207,15 +246,15 @@ FilesystemItem::FilesystemItem( MountPoint  * mountPoint,
         }
     }
 
-    setText( FS_DeviceCol,    dev + blanks );
+    setText( FS_DeviceCol,    dev + QString( 4, ' ' ) );
     setText( FS_MountPathCol, _mountPath );
-    setText( FS_TypeCol,      _fsType	 );
+    setText( FS_TypeCol,      _fsType );
 
     setTextAlignment( FS_TypeCol, Qt::AlignHCenter );
 
     if ( parent->columnCount() >= FS_TotalSizeCol && _totalSize >= 0 )
     {
-	blanks = QString( 3, ' ' ); // Enforce left margin
+	const QString blanks = QString( 3, ' ' ); // Enforce left margin
 
 	setText( FS_TotalSizeCol, blanks + formatSize( _totalSize	      ) );
 	setText( FS_UsedSizeCol,  blanks + formatSize( _usedSize	      ) );
@@ -254,7 +293,7 @@ bool FilesystemItem::operator<( const QTreeWidgetItem & rawOther ) const
 {
     const FilesystemItem & other = dynamic_cast<const FilesystemItem &>( rawOther );
 
-    int col = treeWidget() ? treeWidget()->sortColumn() : FS_DeviceCol;
+    const int col = treeWidget() ? treeWidget()->sortColumn() : FS_DeviceCol;
 
     switch ( col )
     {

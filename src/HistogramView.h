@@ -10,20 +10,19 @@
 #ifndef HistogramView_h
 #define HistogramView_h
 
+
 #include <QGraphicsView>
 #include <QList>
-
-#define MAX_BUCKET_COUNT 100
 
 
 class QGraphicsSceneMouseEvent;
 
-typedef QList<qreal> QRealList;
-
 
 namespace QDirStat
 {
-    class DelayedRebuilder;
+    typedef QList<qreal> QRealList;
+
+//    class AdaptiveTimer;
 
     /**
      * Histogram widget.
@@ -230,25 +229,25 @@ namespace QDirStat
 	 * Enable or disable showing the median (percentile 50) as an overlay
 	 * over the histogram.
 	 **/
-	void setShowMedian( bool show = true ) { _showMedian = show; }
+//	void setShowMedian( bool show = true ) { _showMedian = show; }
 
 	/**
 	 * Return 'true' if the median is shown as an overlay, 'false' if not.
 	 **/
-	bool showMedian() const { return _showMedian; }
+//	bool showMedian() const { return _showMedian; }
 
 	/**
 	 * Enable or disable showing the 1st and 3rd quartiles (Q1 and Q3,
 	 * percentile 25 and 75, respectively) as an overlay over the
 	 * histogram.
 	 **/
-	void setShowQuartiles( bool show = true ) { _showQuartiles = show; }
+//	void setShowQuartiles( bool show = true ) { _showQuartiles = show; }
 
 	/**
 	 * Return 'true' if the 1st and 3rd quartiles are shown as an overlay,
 	 * 'false' if not.
 	 **/
-	bool showQuartiles() const { return _showQuartiles; }
+//	bool showQuartiles() const { return _showQuartiles; }
 
 	/**
 	 * Enable or disable showing percentiles as an overlay over the
@@ -256,12 +255,12 @@ namespace QDirStat
 	 * default '5' it will display P5, P10, P15 etc.; step = 0 disables
 	 * them completely.
 	 **/
-	void setPercentileStep( int step = 5 ) { _percentileStep = step; }
+//	void setPercentileStep( int step = 5 ) { _percentileStep = step; }
 
 	/**
 	 * Return the percentile step or 0 if no percentiles are shown.
 	 **/
-	int percentileStep() const { return _percentileStep; }
+//	int percentileStep() const { return _percentileStep; }
 
 	/**
 	 * Set how many percentiles to display as an overlay at the left margin
@@ -275,13 +274,13 @@ namespace QDirStat
 	 *
 	 * A value of 0 means show no additional percentiles.
 	 **/
-	void setLeftMarginPercentiles( int number = 0 )
-	    { _leftMarginPercentiles = number; }
+//	void setLeftMarginPercentiles( int number = 0 )
+//	    { _leftMarginPercentiles = number; }
 
 	/**
 	 * Return the left margin percentiles or 0 if none are shown.
 	 **/
-	int leftMarginPercentiles() { return _leftMarginPercentiles; }
+//	int leftMarginPercentiles() { return _leftMarginPercentiles; }
 
 	/**
 	 * Set how many percentiles to display as an overlay at the right
@@ -295,24 +294,24 @@ namespace QDirStat
 	 *
 	 * A value of 0 means show no additional percentiles.
 	 **/
-	void setRightMarginPercentiles( int number= 2 )
-	    { _leftMarginPercentiles = number; }
+//	void setRightMarginPercentiles( int number= 2 )
+//	    { _leftMarginPercentiles = number; }
 
 	/**
 	 * Return the right margin percentiles or 0 if none are shown.
 	 **/
-	int rightMarginPercentiles() { return _rightMarginPercentiles; }
+//	int rightMarginPercentiles() { return _rightMarginPercentiles; }
 
 	/**
 	 * Enable or disable a logarithmic (log2) height scale.
 	 **/
-	void setUseLogHeightScale( bool enable ) { _useLogHeightScale = enable; }
+//	void setUseLogHeightScale( bool enable ) { _useLogHeightScale = enable; }
 
 	/**
 	 * Return 'true' if a logarithmic height scale is used or 'false' if
 	 * not.
 	 **/
-	bool useLogHeightScale() const { return _useLogHeightScale; }
+//	bool useLogHeightScale() const { return _useLogHeightScale; }
 
 	/**
 	 * Automatically determine if a logarithmic height scale should be
@@ -340,6 +339,12 @@ namespace QDirStat
     public slots:
 
 	/**
+	 * The first build of the histogram, will be submitted on a delay
+	 * or it will crash.
+	 **/
+	void build();
+
+	/**
 	 * Rebuild the histogram based on the current data.
 	 **/
 	void rebuild();
@@ -357,7 +362,8 @@ namespace QDirStat
 	 * displayed, i.e. if it is between _startPercentile and
 	 * _endPercentile.
 	 **/
-	bool percentileDisplayed( int index ) const;
+	bool percentileDisplayed( int index ) const
+		{ return index >= _startPercentile && index <= _endPercentile; }
 
 
 	// Graphical Elements
@@ -421,17 +427,16 @@ namespace QDirStat
         /**
          * Return 'true' if an overflow ("cutoff") panel is needed.
          **/
-        bool needOverflowPanel() const;
+        bool needOverflowPanel() const { return _startPercentile > 0 || _endPercentile < 100; }
 
 
 	//
 	// Data Members
 	//
 
-	DelayedRebuilder * _rebuilder;
+//	AdaptiveTimer	 * _rebuilder;
 	QGraphicsItem	 * _histogramPanel;
         bool               _geometryDirty;
-
 
 	// Statistics Data
 
@@ -455,17 +460,17 @@ namespace QDirStat
 
 	// Brushes and Pens
 
-	QBrush	  _panelBackground;
-	QBrush	  _barBrush;
-	QPen	  _barPen;
+	const QBrush	  _panelBackground = QBrush( QColor( 0xF0, 0xF0, 0xF0 ) );
+	const QBrush	  _barBrush = QBrush( QColor( 0xB0, 0xB0, 0xD0 ) );
+	const QPen	  _barPen = QPen( QColor( 0x40, 0x40, 0x50 ), 1 );
 
-	QPen	  _medianPen;
-	QPen	  _quartilePen;
-	QPen	  _percentilePen;
-	QPen	  _decilePen;
+	const QPen	  _medianPen = QPen( Qt::magenta, 2 );
+	const QPen	  _quartilePen = QPen( Qt::blue, 2 );
+	const QPen	  _percentilePen = QPen( QColor( 0xA0, 0xA0, 0xA0 ), 1 );
+	const QPen	  _decilePen = QPen( QColor( 0x30, 0x80, 0x30 ), 1 );
 
-	QPen	  _piePen;
-	QBrush	  _overflowSliceBrush;
+	const QPen	  _piePen = QPen( Qt::black, 2 );
+	const QBrush	  _overflowSliceBrush = QBrush( QColor( 0xD0, 0x40, 0x20 ) );
 
 	// Geometry
 
@@ -476,17 +481,17 @@ namespace QDirStat
 	qreal	  _rightBorder;
 	qreal	  _topBorder;
 	qreal	  _bottomBorder;
+	qreal	  _viewMargin;		// around all elements of the view
 
 	qreal	  _markerExtraHeight;
 
 	qreal	  _overflowWidth;
 	qreal	  _overflowLeftBorder;
 	qreal	  _overflowRightBorder;
-	qreal	  _overflowSpacing;	// between histogram and overflow area
+	qreal	  _overflowSpacing; // between histogram and overflow area
 	qreal	  _pieDiameter;
 	qreal	  _pieSliceOffset;
 
-	qreal	  _viewMargin;		// around all elements of the view
     };
 
 }	// namespace QDirStat

@@ -10,9 +10,9 @@
 #ifndef Exception_h
 #define Exception_h
 
-#include "Logger.h"
-
 #include <QString>
+
+#include "Logger.h"
 
 
 /**
@@ -184,7 +184,7 @@ public:
 class BadMagicNumberException: public Exception
 {
 public:
-    BadMagicNumberException( void * badPointer ):
+    BadMagicNumberException( const void * badPointer ):
 	Exception( QString( "Magic number check failed for address 0x%1" )
 		   .arg( (qulonglong) badPointer, 0, 16 ) )
 	{}
@@ -402,7 +402,7 @@ void _throw_helper( const EX_t	  &exception,
 	<< "THROW "
 	<< exception.className() << ": "
 	<< exception.what()
-	<< endl;
+	<< Qt::endl;
 
     throw( exception );
 }
@@ -419,7 +419,7 @@ void _caught_helper( const EX_t	   &exception,
 	<< "CAUGHT "
 	<< exception.className() << ": "
 	<< exception.what()
-	<< endl;
+	<< Qt::endl;
 }
 
 
@@ -436,7 +436,7 @@ void _rethrow_helper( const EX_t    &exception,
 	<< "RETHROW "
 	<< exception.className() << ": "
 	<< exception.what()
-	<< endl;
+	<< Qt::endl;
 
     throw;
 }

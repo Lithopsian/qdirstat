@@ -37,21 +37,21 @@ ConfigDialog::ConfigDialog( QWidget * parent ):
     CHECK_NEW( _ui );
     _ui->setupUi( this );
 
-    _cleanupConfigPage = new CleanupConfigPage( this );
-    CHECK_NEW( _cleanupConfigPage );
-    _ui->pagesTabWidget->addTab( _cleanupConfigPage, tr( "Cleanup Actions" ) );
+    _generalConfigPage = new GeneralConfigPage( this );
+    CHECK_NEW( _generalConfigPage );
+    _ui->pagesTabWidget->addTab( _generalConfigPage, tr( "General" ) );
 
     _mimeCategoryConfigPage = new MimeCategoryConfigPage( this );
     CHECK_NEW( _mimeCategoryConfigPage );
     _ui->pagesTabWidget->addTab( _mimeCategoryConfigPage, tr( "MIME Categories" ) );
 
+    _cleanupConfigPage = new CleanupConfigPage( this );
+    CHECK_NEW( _cleanupConfigPage );
+    _ui->pagesTabWidget->addTab( _cleanupConfigPage, tr( "Cleanup Actions" ) );
+
     _excludeRulesConfigPage = new ExcludeRulesConfigPage( this );
     CHECK_NEW( _excludeRulesConfigPage );
     _ui->pagesTabWidget->addTab( _excludeRulesConfigPage, tr( "Exclude Rules" ) );
-
-    _generalConfigPage = new GeneralConfigPage( this );
-    CHECK_NEW( _generalConfigPage );
-    _ui->pagesTabWidget->addTab( _generalConfigPage, tr( "General" ) );
 
     connect( _ui->applyButton,	 SIGNAL( clicked() ),
 	     this,		 SLOT  ( apply()   ) );
@@ -65,7 +65,7 @@ ConfigDialog::ConfigDialog( QWidget * parent ):
 
 ConfigDialog::~ConfigDialog()
 {
-    // logDebug() << "ConfigDialog destructor" << endl;
+    // logDebug() << "ConfigDialog destructor" << Qt::endl;;
     delete _ui;
 }
 

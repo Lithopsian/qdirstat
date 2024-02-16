@@ -10,77 +10,102 @@
 #ifndef AdaptiveTimer_h
 #define AdaptiveTimer_h
 
+
 #include <QObject>
-#include <QVariant>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QList>
-
-
-typedef QList<int> IntList;
 
 
 namespace QDirStat
 {
     /**
-     * Timer for delivering events that each obsolete each previous one, for
-     * example for updating a widget's data.
+     * Timer for delivering signals that each obsolete each previous one, for
+     * example for an expensive blocking operation to retrieve the contents of
+     * a widget.
      *
-     * If events are delivered only sparingly, this acts like a zero timer,
-     * i.e. each event is delivered immediately as soon as Qt returns to its
-     * main loop. This causes very little (if any) delay.
+     * Infrequent requests can be delivered on a zero timer, as soon as the Qt
+     * event loop processes them.
      *
-     * When things heat up and events are coming in rapidly, this timer
-     * increases the delay of event delivery while always only delivering the
-     * latest event and discarding all others that would only contain outdated
-     * information anyway.
+     * When requests are made more quickly, a delay can be introduced before a
+     * request is delivered for execution, and previous requests still waiting
+     * will be discarded as they are now obsolete.
      *
-     * The intention behind this is to reduce very expensive operations to a
-     * minimum and only show the latest and up-to-date data.
+     * The delay in delivering a request is configurable as a multiple of the
+     * time that it took the previous request to complete.  This avoids pointlessly
+     * penalising users with fast hardware or when lookups are coming from cache,
+     * but reduces lockups with real lookups on slower hardware.
      **/
     class AdaptiveTimer: public QObject
     {
         Q_OBJECT
 
+        typedef QList<float> Delays;
+        typedef QList<int> Cooldowns;
+        typedef std::function<void()> Payload;
+
     public:
 
         /**
-         * Constructor.
+         * Constructor supplying custom delays and cooldown periods.
+         *
+         * The delay stage will only escalate as many times as the number of delays
+         * in the list.  The number of cooldowns will typically be the same as the
+         * number of delays.  If there are more cooldowns than delays, the extra delays
+         * will never be reached.  If there are fewer cooldowns, the extra delay stages
+         * will get a cooldown period of zero, meaing they will effectively not be
+         * reached.
+         *
+         * An empty cooldowns list effectively means only the first stage will ever
+         * be used.  This will typically deliver the requests with a zero delay.  An
+         * empty delays list means that a fixed default delay will be used, but for
+         * this the alternate constructor should be used.
+         *
+         * The delays will typically be longer for higher stages, while the cooldowns
+         * will be shorter so that the longer delays are only used for repidly-repeated
+         * requests while shorter delays will be used for less frequent requests.
          **/
-        AdaptiveTimer( QObject * parent = 0 );
+        AdaptiveTimer( QObject * parent, Delays delays, Cooldowns cooldowns );
+
+        /**
+         * Constructor with a single default delay.  There are no escalation stages
+         * and the delay is a fixed length in milliseconds.  Nobody using this at the
+         * moment (HistogramView was using it, and previously DelayedRebuilder, but
+         * only as a hack workaround for trying to set the histogram geometry before
+         * the window was visible).
+         **/
+        AdaptiveTimer( QObject * parent, int defaultDelay = 0 );
 
         /**
          * Destructor.
          **/
-        virtual ~AdaptiveTimer();
+        virtual ~AdaptiveTimer() {}
 
         /**
-         * Add another stage for increased event delivery delays.
-         * If not set, there is only one stage with a zero delay.
+         * Initialise the timers.
          **/
-        void addDelayStage( int delayMillisec );
+        void init();
 
         /**
-         * Add another period for cooling down.
-         * If nothing is set, the period defaults to 3 sec.
+         * Add another stage for increased event delivery delays.  If not
+         * set, there is only one stage with a zero delay. The value is a
+         * multiple of the time for the previous request to be reported as
+         * completed.
          **/
-        void addCoolDownPeriod( int coolDownMillisec );
+//        void addDelayStage( float delayFactor ) { _delays << delayFactor; }
 
         /**
-         * Clear all internal data, including all defined delays and intervals.
+         * Add another period for cooling down.  This is the interval
+         * between requests that will cause a step up to the next delay
+         * stage, and also the gap between requests that will allow the
+         * delay to drop back to the previous stage.
          **/
-        void clear();
+//        void addCooldown( int cooldownMillisec ) { _cooldowns << cooldownMillisec; }
 
         /**
          * Return the current delay stage.
          **/
         int delayStage() const { return _delayStage; }
-
-        /**
-         * Return the current cool down stage.
-         **/
-        int coolDownStage() const { return _coolDownStage; }
-
-    public slots:
 
         /**
          * Incoming request with optional user-defined payload. The payload
@@ -89,35 +114,28 @@ namespace QDirStat
          * If requests arrive very rapidly, only the latest one will be
          * delivered, all others will be discarded.
          **/
-        void delayedRequest( const QVariant & payload = QVariant() );
-
-    signals:
-
-        /**
-         * Outgoing request with the latest payload from the latest
-         * receiveRequest() call.
-         **/
-        void deliverRequest( const QVariant & payload );
-
-    protected slots:
-
-        /**
-         * Timeout for the delivery timer.
-         **/
-        void deliveryTimeout();
-
-        /**
-         * Timeout for the cool down timer.
-         **/
-        void coolDown();
+        void request( Payload payload );
 
 
     protected:
 
         /**
-         * Use the next higher cooldown stage if there is any.
+         * Returns the number of milliseconds that should be used for the delay timer.
+         * This is the value from the delays list corresponding to the current stage, or
+         * a default value if the delays list is empty.
          **/
-        void heatUp();
+        int currentDelay() const;
+
+        /**
+         * Indicate that the delivery pockage task is now complete, so that it
+         * can be timed and the adaptive timer interval set.
+         **/
+//        void deliveryComplete();
+
+        /**
+         * Returns the cooldown period for the current stage.
+         **/
+        int cooldownPeriod() const;
 
         /**
          * Increase the delivery delay.
@@ -129,17 +147,26 @@ namespace QDirStat
          **/
         void decreaseDelay();
 
+        /**
+         * Timeout for the delivery timer.
+         **/
+        void deliveryTimeout();
+
 
         // Data members
 
-        QVariant _payload;
-        int      _delayStage;
-        IntList  _delays;
-        QTimer   _deliveryTimer;
+        Payload       _payload;
 
-        int      _coolDownStage;
-        IntList  _coolDownPeriods;
-        QTimer   _coolDownTimer;
+        QElapsedTimer _payloadStopwatch;
+        int           _payloadTime;
+
+        int           _delayStage;
+        Delays        _delays;
+        Cooldowns     _cooldowns;
+        int           _defaultDelay;
+
+        QTimer        _deliveryTimer;
+        QTimer        _cooldownTimer;
 
     }; // class AdaptiveTimer
 

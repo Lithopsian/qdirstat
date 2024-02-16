@@ -9,9 +9,10 @@
 
 #include "FileAgeStatsWindow.h"
 #include "DirTree.h"
+#include "HeaderTweaker.h"
+#include "PercentBar.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
-#include "HeaderTweaker.h"
 #include "FormatUtil.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -32,7 +33,7 @@ FileAgeStatsWindow::FileAgeStatsWindow( QWidget * parent ):
     _sizePercentBarDelegate( 0 ),
     _startGapsWithCurrentYear( true )
 {
-    // logDebug() << "init" << endl;
+    // logDebug() << "init" << Qt::endl;
 
     CHECK_NEW( _ui );
     CHECK_NEW( _stats );
@@ -75,42 +76,35 @@ void FileAgeStatsWindow::initWidgets()
 
     // _ui->treeWidget->setColumnCount( YearListColumnCount );
 
-    QStringList headers;
-
-    headers << tr( "Year"    )
-            << tr( "Files"   )
-            << tr( "Files %" )  // percent bar
-            << tr( "%"       )  // percent value
-            << tr( "Size"    )
-            << tr( "Size %"  )  // percent bar
-            << tr( "%"       ); // percent value
-
+    const QStringList headers = { tr( "Year"    ),
+                                  tr( "Files"   ),
+                                  tr( "Files %" ),  // percent bar
+                                  tr( "%"       ),  // percent value
+                                  tr( "Size"    ),
+                                  tr( "Size %"  ),  // percent bar
+                                  tr( "%"       )
+                                }; // percent value
 
     _ui->treeWidget->setHeaderLabels( headers );
     _ui->treeWidget->header()->setStretchLastSection( false );
 
-
     // Delegates for the percent bars
 
     _filesPercentBarDelegate =
-        new PercentBarDelegate( _ui->treeWidget, YearListFilesPercentBarCol );
+        new PercentBarDelegate( _ui->treeWidget, YearListFilesPercentBarCol, 7 );
     CHECK_NEW( _filesPercentBarDelegate );
-    _filesPercentBarDelegate->setStartColorIndex( 7 );
     _ui->treeWidget->setItemDelegateForColumn( YearListFilesPercentBarCol, _filesPercentBarDelegate );
 
     _sizePercentBarDelegate =
-        new PercentBarDelegate( _ui->treeWidget, YearListSizePercentBarCol );
+        new PercentBarDelegate( _ui->treeWidget, YearListSizePercentBarCol, 1 );
     CHECK_NEW( _sizePercentBarDelegate );
-    _sizePercentBarDelegate->setStartColorIndex( 1 );
     _ui->treeWidget->setItemDelegateForColumn( YearListSizePercentBarCol, _sizePercentBarDelegate );
 
 
     // Center the column headers
-
     QTreeWidgetItem * hItem = _ui->treeWidget->headerItem();
-
     for ( int col = 0; col < headers.size(); ++col )
-	hItem->setTextAlignment( col, Qt::AlignHCenter );
+        hItem->setTextAlignment( col, Qt::AlignHCenter );
 
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
 
@@ -118,7 +112,7 @@ void FileAgeStatsWindow::initWidgets()
     // Signal/slot connections
 
     connect( _ui->refreshButton, SIGNAL( clicked() ),
-	     this,		 SLOT  ( refresh() ) );
+             this,               SLOT  ( refresh() ) );
 
     connect( _ui->treeWidget,    SIGNAL( itemSelectionChanged() ),
              this,               SLOT  ( enableActions()        ) );
@@ -146,12 +140,12 @@ void FileAgeStatsWindow::syncedPopulate( FileInfo * newSubtree )
 
 void FileAgeStatsWindow::populate( FileInfo * newSubtree )
 {
-    // logDebug() << "populating with " << newSubtree << endl;
+    // logDebug() << "populating with " << newSubtree << Qt::endl;
 
     clear();
     _subtree = newSubtree;
 
-    _ui->heading->setText( tr( "File Age Statistics for %1" )
+    _ui->heading->setText( tr( "File age statistics for %1" )
                            .arg( _subtree.url() ) );
 
     // For better Performance: Disable sorting while inserting many items
@@ -231,7 +225,7 @@ YearsList FileAgeStatsWindow::findGaps()
     if ( years.isEmpty() )
         return gaps;
 
-    short lastYear = _startGapsWithCurrentYear ? FileAgeStats::thisYear() : years.last();
+    const short lastYear = _startGapsWithCurrentYear ? FileAgeStats::thisYear() : years.last();
 
     if ( lastYear - years.first() == years.count() - 1 )
         return gaps;
@@ -246,44 +240,35 @@ YearsList FileAgeStatsWindow::findGaps()
 }
 
 
-YearListItem * FileAgeStatsWindow::selectedItem() const
+const YearListItem * FileAgeStatsWindow::selectedItem() const
 {
-    QTreeWidgetItem *currentItem = _ui->treeWidget->currentItem();
+    const QTreeWidgetItem * currentItem = _ui->treeWidget->currentItem();
 
-    return currentItem ? dynamic_cast<YearListItem *>( currentItem ) : 0;
+    return currentItem ? dynamic_cast<const YearListItem *>( currentItem ) : 0;
 }
 
 
 void FileAgeStatsWindow::locateFiles()
 {
-    YearListItem * item = selectedItem();
+    const YearListItem * item = selectedItem();
 
     if ( item )
     {
         short month = item->stats().month;
         short year  = item->stats().year;
 
-    if ( month > 0 && year > 0 )
-        emit locateFilesFromMonth( _subtree.url(), year, month );
-    else if ( year > 0 )
-        emit locateFilesFromYear( _subtree.url(), year );
+        if ( month > 0 && year > 0 )
+            emit locateFilesFromMonth( _subtree.url(), year, month );
+        else if ( year > 0 )
+            emit locateFilesFromYear( _subtree.url(), year );
     }
 }
 
 
 void FileAgeStatsWindow::enableActions()
 {
-    bool locateEnabled = false;
-
-    YearListItem * sel = selectedItem();
-
-    if ( sel )
-    {
-        locateEnabled =
-            sel->stats().filesCount > 0 &&
-            sel->stats().filesCount <= MAX_LOCATE_FILES;
-    }
-
+    const YearListItem * sel = selectedItem();
+    const bool locateEnabled = sel && sel->stats().filesCount > 0 && sel->stats().filesCount <= MAX_LOCATE_FILES;
     _ui->locateButton->setEnabled( locateEnabled );
 }
 

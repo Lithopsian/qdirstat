@@ -2,24 +2,13 @@
 <ui version="4.0">
  <class>FilesystemsWindow</class>
  <widget class="QDialog" name="FilesystemsWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>850</width>
-    <height>360</height>
-   </rect>
-  </property>
   <property name="windowTitle">
-   <string>Filesystems</string>
+   <string>Mounted Filesystems</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="spacing">
-    <number>6</number>
-   </property>
    <item>
     <widget class="QLabel" name="heading">
      <property name="font">
@@ -29,7 +18,7 @@
       </font>
      </property>
      <property name="text">
-      <string>&amp;Mounted Filesystems</string>
+      <string>&amp;Mounted filesystems</string>
      </property>
      <property name="buddy">
       <cstring>fsTree</cstring>
@@ -38,10 +27,13 @@
    </item>
    <item>
     <widget class="QTreeWidget" name="fsTree">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
      <property name="indentation">
       <number>5</number>
      </property>
-     <property name="rootIsDecorated">
+     <property name="uniformRowHeights">
       <bool>true</bool>
      </property>
      <property name="sortingEnabled">
@@ -58,20 +50,10 @@
     </widget>
    </item>
    <item>
-    <widget class="QDirStat::MessagePanel" name="messagePanel" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-    </widget>
+    <widget class="QDirStat::MessagePanel" name="messagePanel" native="true"/>
    </item>
    <item>
     <layout class="QHBoxLayout" name="buttonsLayout">
-     <property name="topMargin">
-      <number>0</number>
-     </property>
      <item>
       <widget class="QPushButton" name="refreshButton">
        <property name="text">
@@ -93,20 +75,14 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
       <widget class="QPushButton" name="closeButton">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="text">
         <string>&amp;Close</string>
        </property>
@@ -115,6 +91,30 @@
     </layout>
    </item>
   </layout>
+  <action name="actionRead">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/open-dir.png</normaloff>:/icons/open-dir.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Read</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/edit-copy.png</normaloff>:/icons/edit-copy.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Copy device</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -124,7 +124,9 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>closeButton</sender>

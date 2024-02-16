@@ -6,6 +6,7 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <sys/types.h> // uid_t
 
 #include "SystemFileChecker.h"
 #include "DirInfo.h"
@@ -16,37 +17,13 @@
 using namespace QDirStat;
 
 
-bool SystemFileChecker::isSystemFile( FileInfo * file )
-{
-    if ( ! file )
-        return false;
-
-    if ( file->isPseudoDir() && file->parent() )
-        file = file->parent();
-
-    QString path = file->url();
-
-    if ( file->isDir() )
-        path += "/";
-
-    if ( isSystemPath( path ) )
-        return true;
-
-    if ( file->hasUid() && isSystemUid( file->uid() ) &&
-         mightBeSystemPath( path ) )
-        return true;
-
-    return false;
-}
-
-
-bool SystemFileChecker::isSystemUid( uid_t uid )
+bool isSystemUid( uid_t uid )
 {
     return uid < (uid_t) MIN_NON_SYSTEM_UID;
 }
 
 
-bool SystemFileChecker::isSystemPath( const QString & path )
+bool isSystemPath( const QString & path )
 {
     if ( path.startsWith( "/boot/"  ) ||
          path.startsWith( "/bin/"   ) ||
@@ -99,7 +76,7 @@ bool SystemFileChecker::isSystemPath( const QString & path )
 }
 
 
-bool SystemFileChecker::mightBeSystemPath( const QString & path )
+bool mightBeSystemPath( const QString & path )
 {
     if ( path.contains  ( "/lost+found/" ) ||   // Also on other mounted filesystems!
          path.startsWith( "/run/"        ) ||
@@ -112,4 +89,31 @@ bool SystemFileChecker::mightBeSystemPath( const QString & path )
     {
         return false;
     }
+}
+
+
+bool SystemFileChecker::isSystemFile( const FileInfo * file )
+{
+    if ( ! file )
+        return false;
+
+    if ( file->isPseudoDir() && file->parent() )
+        file = file->parent();
+
+    if ( file->parent() && file->parent()->url() == "/" )
+        return true;
+
+    QString path = file->url();
+
+    if ( file->isDir() )
+        path += "/";
+
+    if ( isSystemPath( path ) )
+        return true;
+
+    if ( file->hasUid() && isSystemUid( file->uid() ) &&
+         mightBeSystemPath( path ) )
+        return true;
+
+    return false;
 }

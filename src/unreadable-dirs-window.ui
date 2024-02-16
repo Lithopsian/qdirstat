@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>UnreadableDirsWindow</class>
  <widget class="QDialog" name="UnreadableDirsWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>800</width>
-    <height>249</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Unreadable Directories</string>
   </property>
@@ -18,23 +10,11 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
      <item>
       <widget class="QLabel" name="headingIcon">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
        <property name="pixmap">
         <pixmap resource="icons.qrc">:/icons/lock-closed.png</pixmap>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
        </property>
       </widget>
      </item>
@@ -47,7 +27,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Directories that could not be Read</string>
+        <string>Directories that could not be read</string>
        </property>
       </widget>
      </item>
@@ -56,19 +36,10 @@
    <item>
     <widget class="QTreeWidget" name="treeWidget">
      <property name="indentation">
-      <number>0</number>
-     </property>
-     <property name="rootIsDecorated">
-      <bool>false</bool>
+      <number>5</number>
      </property>
      <property name="uniformRowHeights">
       <bool>true</bool>
-     </property>
-     <property name="itemsExpandable">
-      <bool>false</bool>
-     </property>
-     <property name="expandsOnDoubleClick">
-      <bool>false</bool>
      </property>
      <attribute name="headerStretchLastSection">
       <bool>false</bool>
@@ -82,37 +53,27 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="buttonHBox">
+     <property name="leftMargin">
+      <number>5</number>
+     </property>
      <property name="topMargin">
       <number>5</number>
      </property>
      <item>
       <widget class="QLabel" name="totalLabel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>Total: 0</string>
        </property>
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QPushButton" name="closeButton">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="text">
         <string>&amp;Close</string>
        </property>

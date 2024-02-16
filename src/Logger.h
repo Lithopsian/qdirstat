@@ -33,6 +33,14 @@ enum LogSeverity
 };
 
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+namespace Qt
+{
+    const static auto endl = ::endl;
+    const static auto SkipEmptyParts = QString::SkipEmptyParts;
+}
+#endif
+
 // Log macros for stream (QTextStream) output.
 //
 // Unlike qDebug() etc., they also record the location in the source code that
@@ -40,10 +48,6 @@ enum LogSeverity
 //
 // These macros all use the default logger. Create similar macros to use your
 // own class-specific logger.
-//
-// Usage example:
-//
-//   logDebug() << "Result: " << result << endl;
 
 #define logVerbose()	Logger::log( 0, __FILE__, __LINE__, __FUNCTION__, LogSeverityVerbose   )
 #define logDebug()	Logger::log( 0, __FILE__, __LINE__, __FUNCTION__, LogSeverityDebug     )
@@ -54,37 +58,10 @@ enum LogSeverity
 
 
 /**
- * Log the signal sender of a QObject.
- *
- * This is done as a macro to properly log the source code location.
- * Usage:
- *
- *   logSender();
- *
- * The do..while() loop is used because it syntactically allows to put a
- * semicolon (without nasty side effects) after the macro when it is used.
- **/
-#define logSender()                                                      \
-    do                                                                   \
-    {                                                                    \
-        QObject * obj = sender();                                        \
-                                                                         \
-        if ( obj )                                                       \
-            logDebug() << "sender(): " << obj->metaObject()->className() \
-                       << " " << obj->objectName()                       \
-                       << endl;                                          \
-        else                                                             \
-            logDebug() << "No sender" << endl;                           \
-                                                                         \
-    } while( 0 )
-
-
-
-/**
  * Logging class. Use one of the macros above for stream output:
  *
- *     logDebug() << "Debug logging demo " << myString << ": " << 42 << endl;
- *     logError() << "Can't open file " << filename << ": " << errno << endl;
+ *     logDebug() << "Debug logging demo " << myString << ": " << 42 << Qt::endl;
+ *     logError() << "Can't open file " << filename << ": " << errno << Qt::endl;
  *
  * Remember to terminate each log line with 'endl'.
  * Unlike qDebug() etc., this class does NOT add spaces or quotes.
@@ -201,7 +178,7 @@ public:
      * Notice that due to the way C++ evaluates expressions, the runtime cost
      * will not change significantly, only the log file size:
      *
-     *	   logDebug() << "Result: " << myObj->result() << endl;
+     *	   logDebug() << "Result: " << myObj->result() << Qt::endl;
      *
      * Even if the log level is higher than logDebug(), this will still call
      * myObj->result() and its operator<<(). If you want to avoid that, use

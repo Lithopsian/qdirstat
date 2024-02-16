@@ -6,29 +6,26 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>654</width>
-    <height>569</height>
+    <width>563</width>
+    <height>529</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>Form</string>
-  </property>
-  <layout class="QVBoxLayout" name="verticalLayout_7">
+  <layout class="QVBoxLayout" name="verticalLayout_6">
    <item>
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <property name="handleWidth">
-      <number>13</number>
-     </property>
-     <property name="childrenCollapsible">
-      <bool>false</bool>
-     </property>
      <widget class="QWidget" name="layoutWidget">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QListWidget" name="listWidget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>100</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
            <width>200</width>
@@ -44,12 +41,9 @@
            <property name="toolTip">
             <string>Move the current cleanup action to the top of the list.</string>
            </property>
-           <property name="text">
-            <string>...</string>
-           </property>
            <property name="icon">
             <iconset resource="icons.qrc">
-             <normaloff>:/icons/go-top.png</normaloff>:/icons/go-top.png</iconset>
+             <normaloff>:/icons/move-top.png</normaloff>:/icons/move-top.png</iconset>
            </property>
           </widget>
          </item>
@@ -58,12 +52,9 @@
            <property name="toolTip">
             <string>Move the current cleanup action one position up in the list.</string>
            </property>
-           <property name="text">
-            <string>...</string>
-           </property>
            <property name="icon">
             <iconset resource="icons.qrc">
-             <normaloff>:/icons/go-up.png</normaloff>:/icons/go-up.png</iconset>
+             <normaloff>:/icons/move-up.png</normaloff>:/icons/move-up.png</iconset>
            </property>
           </widget>
          </item>
@@ -74,8 +65,8 @@
            </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>20</width>
-             <height>40</height>
+             <width>0</width>
+             <height>0</height>
             </size>
            </property>
           </spacer>
@@ -86,11 +77,8 @@
             <string>Create a new cleanup action.
 You can create as many as you like.</string>
            </property>
-           <property name="text">
-            <string>...</string>
-           </property>
            <property name="icon">
-            <iconset resource="icons.qrc">
+            <iconset resource="../../qdirstat-master/src/icons.qrc">
              <normaloff>:/icons/add.png</normaloff>:/icons/add.png</iconset>
            </property>
           </widget>
@@ -100,11 +88,8 @@ You can create as many as you like.</string>
            <property name="toolTip">
             <string>Remove the current cleanup action.</string>
            </property>
-           <property name="text">
-            <string>...</string>
-           </property>
            <property name="icon">
-            <iconset resource="icons.qrc">
+            <iconset resource="../../qdirstat-master/src/icons.qrc">
              <normaloff>:/icons/remove.png</normaloff>:/icons/remove.png</iconset>
            </property>
           </widget>
@@ -127,12 +112,9 @@ You can create as many as you like.</string>
            <property name="toolTip">
             <string>Move the current cleanup action one position down in the list.</string>
            </property>
-           <property name="text">
-            <string>...</string>
-           </property>
            <property name="icon">
             <iconset resource="icons.qrc">
-             <normaloff>:/icons/go-down.png</normaloff>:/icons/go-down.png</iconset>
+             <normaloff>:/icons/move-down.png</normaloff>:/icons/move-down.png</iconset>
            </property>
           </widget>
          </item>
@@ -141,12 +123,9 @@ You can create as many as you like.</string>
            <property name="toolTip">
             <string>Move the current cleanup action to the bottom of the list.</string>
            </property>
-           <property name="text">
-            <string>...</string>
-           </property>
            <property name="icon">
             <iconset resource="icons.qrc">
-             <normaloff>:/icons/go-bottom.png</normaloff>:/icons/go-bottom.png</iconset>
+             <normaloff>:/icons/move-bottom.png</normaloff>:/icons/move-bottom.png</iconset>
            </property>
           </widget>
          </item>
@@ -154,32 +133,20 @@ You can create as many as you like.</string>
        </item>
       </layout>
      </widget>
-     <widget class="QGroupBox" name="activeGroupBox">
-      <property name="minimumSize">
-       <size>
-        <width>310</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>Uncheck to disable this cleanup action completely.</string>
-      </property>
-      <property name="title">
-       <string>&amp;Active</string>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+     <widget class="QWidget" name="layoutWidget_2">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <layout class="QGridLayout" name="topFieldsGridLayout">
-         <item row="0" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="bottomMargin">
+          <number>8</number>
+         </property>
+         <item>
           <widget class="QLabel" name="titleCaption">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
            </property>
            <property name="text">
             <string>&amp;Title:</string>
@@ -189,34 +156,8 @@ You can create as many as you like.</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="0" colspan="2">
-          <widget class="QCheckBox" name="askForConfirmationCheckBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>Check this if a confirmation dialog should be
-opened before executing the command.
-There will be only one confirmation dialog,
-even if multiple items are selected or if
-the command is executed recursively.</string>
-           </property>
-           <property name="text">
-            <string>As&amp;k For Confirmation</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
+         <item>
           <widget class="QLineEdit" name="titleLineEdit">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>2</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
            <property name="toolTip">
             <string>Enter a title for this cleanup action.
 This will show up in the menus.
@@ -224,495 +165,448 @@ You can add a hotkey with &quot;&amp;&quot;.</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="0" colspan="2">
-          <layout class="QHBoxLayout" name="miniHelpLayout">
-           <item>
-            <spacer name="miniHelpLeftSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Preferred</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>34</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="miniHelpLabel">
-             <property name="toolTip">
-              <string>These are the macros you can use in the command.
-Both %p and %n always contain only one item.
-If multiple items are selected, the command will be
-executed multiple times.</string>
-             </property>
-             <property name="text">
-              <string>%p  Full Path
-%n  File / Directory Name Without Path
-%d  Directory Name With Full Path
-</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="miniHelpRightSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="commandCaption">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>&amp;Command Line:</string>
-           </property>
-           <property name="buddy">
-            <cstring>commandLineEdit</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="QLineEdit" name="commandLineEdit">
-           <property name="toolTip">
-            <string>Enter the command to be executed here.
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="activeGroupBox">
+         <property name="toolTip">
+          <string>Uncheck to disable this cleanup action completely.</string>
+         </property>
+         <property name="title">
+          <string>&amp;Active</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,0">
+            <item>
+             <widget class="QLabel" name="commandCaption">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>&amp;Command line:</string>
+              </property>
+              <property name="buddy">
+               <cstring>commandLineEdit</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="icon">
+              <property name="pixmap">
+               <pixmap resource="icons.qrc">:/icons/information.png</pixmap>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="commandLineEdit">
+            <property name="toolTip">
+             <string>Enter the command to be executed here.
 Each command will be executed with a shell.
 
 If multiple items are selected, the command
 will be executed once for each selected item.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0" colspan="2">
-          <widget class="QCheckBox" name="recurseCheckBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>Select if the command should be executed recursively
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="miniHelpLabel">
+            <property name="toolTip">
+             <string>These are the macros you can use in the command.
+Both %p and %n always contain only one item.
+If multiple items are selected, the command will be
+executed multiple times.</string>
+            </property>
+            <property name="text">
+             <string>%p - Full path
+%n - File / directory name without path
+%d - Directory name with full path</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="recurseCheckBox">
+            <property name="toolTip">
+             <string>Select if the command should be executed recursively
 for each directory in the selected branch.
 The command will be called separately for each directory level.</string>
-           </property>
-           <property name="text">
-            <string>&amp;Recurse Into Subdirectories</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QComboBox" name="refreshPolicyComboBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>2</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>This specifies if and how the directory tree should be
+            </property>
+            <property name="text">
+             <string>&amp;Recurse into subdirectories</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="askForConfirmationCheckBox">
+            <property name="toolTip">
+             <string>Check this if a confirmation dialog should be
+opened before executing the command.
+There will be only one confirmation dialog,
+even if multiple items are selected or if
+the command is executed recursively.</string>
+            </property>
+            <property name="text">
+             <string>As&amp;k for confirmation</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="topMargin">
+             <number>8</number>
+            </property>
+            <property name="bottomMargin">
+             <number>16</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="refreshPolicyCaption">
+              <property name="text">
+               <string>Tree refresh polic&amp;y after cleanup:</string>
+              </property>
+              <property name="buddy">
+               <cstring>refreshPolicyComboBox</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="refreshPolicyComboBox">
+              <property name="toolTip">
+               <string>This specifies if and how the directory tree should be
 re-read from disk after the cleanup action is finished.</string>
-           </property>
-           <property name="currentIndex">
-            <number>1</number>
-           </property>
-           <item>
-            <property name="text">
-             <string>No Refresh</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Refresh This Item</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Refresh This Item's Parent</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Assume Item Has Been Deleted</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="refreshPolicyCaption">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>R&amp;efresh Policy:</string>
-           </property>
-           <property name="buddy">
-            <cstring>refreshPolicyComboBox</cstring>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <spacer name="toolBoxSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Preferred</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QToolBox" name="toolBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
-         <widget class="QWidget" name="worksForPage">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>330</width>
-            <height>147</height>
-           </rect>
-          </property>
-          <attribute name="label">
-           <string>Works For...</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="worksForPageLayout">
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayout">
-             <item>
-              <widget class="QCheckBox" name="worksForDirCheckBox">
-               <property name="toolTip">
-                <string>Check this if the command can be applied to directories.</string>
-               </property>
+              </property>
+              <property name="currentIndex">
+               <number>1</number>
+              </property>
+              <item>
                <property name="text">
-                <string>&amp;Directories</string>
+                <string>No Refresh</string>
                </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="worksForFilesCheckBox">
-               <property name="toolTip">
-                <string>Check this if the command can be applied to files.</string>
-               </property>
+              </item>
+              <item>
                <property name="text">
-                <string>&amp;Files</string>
+                <string>Refresh This Item</string>
                </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="worksForDotEntriesCheckBox">
-               <property name="toolTip">
-                <string>Check this if the command can be applied to the &lt;Files&gt; entries in the tree.
+              </item>
+              <item>
+               <property name="text">
+                <string>Refresh This Item's Parent</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Assume Item Has Been Deleted</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QToolBox" name="toolBox">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>200</height>
+             </size>
+            </property>
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <widget class="QWidget" name="worksForPage">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>234</width>
+               <height>116</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Works For...</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="worksForPageLayout">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                 <widget class="QCheckBox" name="worksForDirCheckBox">
+                  <property name="toolTip">
+                   <string>Check this if the command can be applied to directories.</string>
+                  </property>
+                  <property name="text">
+                   <string>&amp;Directories</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="worksForFilesCheckBox">
+                  <property name="toolTip">
+                   <string>Check this if the command can be applied to files.</string>
+                  </property>
+                  <property name="text">
+                   <string>&amp;Files</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="worksForDotEntriesCheckBox">
+                  <property name="toolTip">
+                   <string>Check this if the command can be applied to the &lt;Files&gt; entries in the tree.
 Note that they don't really have a counterpart on the disk.</string>
-               </property>
-               <property name="text">
-                <string>&lt;Files&gt; Pse&amp;udo Entries</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <spacer name="worksForPageSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="text">
+                   <string>&lt;Files&gt; pseudo &amp;entries</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="worksForPageSpacer">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="outputWindowPage">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>234</width>
+               <height>116</height>
+              </rect>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="outputWindowPage">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>330</width>
-            <height>152</height>
-           </rect>
-          </property>
-          <attribute name="label">
-           <string>Output Window</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
-           <item>
-            <layout class="QGridLayout" name="outputWindowPageGridLayout">
-             <item row="0" column="0">
-              <widget class="QLabel" name="outputWindowPolicyCaption">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>1</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>&amp;Policy:</string>
-               </property>
-               <property name="buddy">
-                <cstring>outputWindowPolicyComboBox</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="outputWindowPolicyComboBox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>4</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>Select if and when to open a window for the output of the command.
+             <attribute name="label">
+              <string>Output Window</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <layout class="QGridLayout" name="outputWindowPageGridLayout" columnstretch="0,1">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="outputWindowPolicyCaption">
+                  <property name="text">
+                   <string>&amp;Policy:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>outputWindowPolicyComboBox</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QComboBox" name="outputWindowPolicyComboBox">
+                  <property name="toolTip">
+                   <string>Select if and when to open a window for the output of the command.
 If there is an error, the output window is always opened unless
 &quot;Never Show&quot; is selected here.
 &quot;Show After Timeout&quot; is a useful setting for most cases.</string>
-               </property>
-               <property name="currentIndex">
-                <number>2</number>
-               </property>
-               <item>
-                <property name="text">
-                 <string>Show Always</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Show If Error Output</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Show After Timeout</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Never Show</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="outputWindowTimeoutCaption">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>1</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>Ti&amp;meout:</string>
-               </property>
-               <property name="buddy">
-                <cstring>outputWindowTimeoutSpinBox</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="outputWindowTimeoutSpinBox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                 <horstretch>2</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>Set the timeout for the &quot;Show After Timeout&quot; setting.
+                  </property>
+                  <property name="currentIndex">
+                   <number>2</number>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Show Always</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Show If Error Output</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Show After Timeout</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Never Show</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="outputWindowTimeoutCaption">
+                  <property name="text">
+                   <string>Ti&amp;meout:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>outputWindowTimeoutSpinBox</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QDoubleSpinBox" name="outputWindowTimeoutSpinBox">
+                  <property name="toolTip">
+                   <string>Set the timeout for the &quot;Show After Timeout&quot; setting.
 Don't underestimate your computer: It can get more
 done in half a second than you might think.
 On the other hand, waiting for half a second feels
 longer than you might think.</string>
-               </property>
-               <property name="suffix">
-                <string> sec</string>
-               </property>
-               <property name="decimals">
-                <number>1</number>
-               </property>
-               <property name="maximum">
-                <double>300.000000000000000</double>
-               </property>
-               <property name="value">
-                <double>0.500000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0" colspan="2">
-              <widget class="QCheckBox" name="outputWindowAutoCloseCheckBox">
-               <property name="toolTip">
-                <string>Check this to automatically close the
+                  </property>
+                  <property name="suffix">
+                   <string> sec</string>
+                  </property>
+                  <property name="decimals">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <double>300.000000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>0.500000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0" colspan="2">
+                 <widget class="QCheckBox" name="outputWindowAutoCloseCheckBox">
+                  <property name="toolTip">
+                   <string>Check this to automatically close the
 output window if there was no error.
 If you are interested in the output of your
 command, uncheck this.</string>
-               </property>
-               <property name="text">
-                <string>Auto C&amp;lose If No Error</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <spacer name="outputWindowPageSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="text">
+                   <string>Auto c&amp;lose if no error</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="outputWindowPageSpacer">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="shellPage">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>254</width>
+               <height>101</height>
+              </rect>
              </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::MinimumExpanding</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="shellPage">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>330</width>
-            <height>142</height>
-           </rect>
-          </property>
-          <attribute name="label">
-           <string>Shell</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_5">
-           <item>
-            <layout class="QHBoxLayout" name="shellPageLayout">
-             <item>
-              <widget class="QLabel" name="shellCaption">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>1</horstretch>
-                 <verstretch>1</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>&amp;Shell:</string>
-               </property>
-               <property name="buddy">
-                <cstring>shellComboBox</cstring>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="shellComboBox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>3</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>Select a shell here or enter your favourite one.
+             <attribute name="label">
+              <string>Shell</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_5">
+              <item>
+               <layout class="QHBoxLayout" name="shellPageLayout" stretch="0,1">
+                <item>
+                 <widget class="QLabel" name="shellCaption">
+                  <property name="text">
+                   <string>&amp;Shell:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>shellComboBox</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="shellComboBox">
+                  <property name="toolTip">
+                   <string>Select a shell here or enter your favourite one.
 
 Each command is executed with a shell and the &quot;-c&quot; option.
 Shells may behave differently for wildcards and special characters.
 
 If you are setting this up for other users, better stay on the safe side
 and select a shell with a well-known behaviour like /bin/bash.</string>
-               </property>
-               <property name="editable">
-                <bool>true</bool>
-               </property>
-               <item>
+                  </property>
+                  <property name="editable">
+                   <bool>true</bool>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>$SHELL (Login Shell)</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>/bin/bash</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>/bin/sh</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QLabel" name="shellMiniHelp">
                 <property name="text">
-                 <string>$SHELL (Login Shell)</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>/bin/bash</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>/bin/sh</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QLabel" name="shellMiniHelp">
-             <property name="text">
-              <string>Each command is executed with a shell
+                 <string>Each command is executed with a shell
 and the '-c' option.</string>
-             </property>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="shellPageSpacer">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
             </widget>
-           </item>
-           <item>
-            <spacer name="shellPageSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::MinimumExpanding</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -722,6 +616,7 @@ and the '-c' option.</string>
   </layout>
  </widget>
  <resources>
+  <include location="../../qdirstat-master/src/icons.qrc"/>
   <include location="icons.qrc"/>
  </resources>
  <connections/>

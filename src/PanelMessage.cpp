@@ -83,8 +83,8 @@ void PanelMessage::connectDetailsLink( const QObject * receiver,
 {
     if ( receiver )
     {
-	connect( _ui->detailsLinkLabel, SIGNAL( linkActivated( QString ) ),
-		 receiver, slotName );
+	connect( _ui->detailsLinkLabel,	SIGNAL( linkActivated( QString ) ),
+		 receiver,		slotName );
 
 	_ui->detailsLinkLabel->show();
     }

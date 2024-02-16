@@ -3,14 +3,6 @@
  <author>Stefan Hundhammer</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>1157</width>
-    <height>650</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>QDirStat</string>
   </property>
@@ -36,13 +28,7 @@
         <number>8</number>
        </property>
        <widget class="QWidget" name="treeViewContainer" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>1</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="treeViewLayout">
+        <layout class="QVBoxLayout" name="verticalLayout_3">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -59,87 +45,20 @@
           <number>0</number>
          </property>
          <item>
-          <layout class="QHBoxLayout" name="breadcrumbHBox">
+          <layout class="QVBoxLayout" name="verticalLayout_2">
            <property name="spacing">
-            <number>0</number>
+            <number>4</number>
            </property>
            <item>
-            <widget class="QToolButton" name="bookmarkButton">
-             <property name="toolTip">
-              <string>Bookmark / Un-Bookmark</string>
-             </property>
-             <property name="layoutDirection">
-              <enum>Qt::LeftToRight</enum>
-             </property>
-             <property name="text">
-              <string notr="true">...</string>
-             </property>
-             <property name="icon">
-              <iconset resource="icons.qrc">
-               <normaloff>:/icons/bookmark-off.png</normaloff>
-               <normalon>:/icons/bookmark.png</normalon>:/icons/bookmark-off.png</iconset>
-             </property>
-             <property name="shortcut">
-              <string>Ctrl+D</string>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-             <property name="autoRaise">
-              <bool>true</bool>
-             </property>
-            </widget>
+            <widget class="QDirStat::BreadcrumbNavigator" name="breadcrumbNavigator"/>
            </item>
            <item>
-            <widget class="QDirStat::BreadcrumbNavigator" name="breadcrumbNavigator">
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;/work/src/&lt;a href=&quot;/work/src/qdirstat&quot;&gt;qdirstat&lt;/a&gt;/&lt;a href=&quot;/work/src/qdirstat/src&quot;&gt;src&lt;/a&gt;/&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
-             </property>
-             <property name="indent">
-              <number>2</number>
-             </property>
-            </widget>
+            <widget class="QDirStat::DirTreeView" name="dirTreeView"/>
            </item>
           </layout>
          </item>
          <item>
-          <spacer name="breadcrumbVSpacer">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>6</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QDirStat::DirTreeView" name="dirTreeView">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>1</horstretch>
-             <verstretch>1</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDirStat::MessagePanel" name="messagePanel" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
+          <widget class="QDirStat::MessagePanel" name="messagePanel" native="true"/>
          </item>
         </layout>
        </widget>
@@ -150,16 +69,7 @@
         <property name="widgetResizable">
          <bool>true</bool>
         </property>
-        <widget class="QDirStat::FileDetailsView" name="fileDetailsView">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>88</width>
-           <height>282</height>
-          </rect>
-         </property>
-        </widget>
+        <widget class="QDirStat::FileDetailsView" name="fileDetailsView"/>
        </widget>
       </widget>
       <widget class="QDirStat::TreemapView" name="treemapView"/>
@@ -168,21 +78,13 @@
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1157</width>
-     <height>27</height>
-    </rect>
-   </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
     </property>
     <addaction name="actionOpenDir"/>
     <addaction name="actionOpenPkg"/>
-    <addaction name="actionShowUnpkgFiles"/>
+    <addaction name="actionOpenUnpkg"/>
     <addaction name="separator"/>
     <addaction name="actionRefreshAll"/>
     <addaction name="actionRefreshSelected"/>
@@ -216,6 +118,7 @@
       <string>Tree&amp;map</string>
      </property>
      <addaction name="actionShowTreemap"/>
+     <addaction name="actionTreemapZoomTo"/>
      <addaction name="actionTreemapZoomIn"/>
      <addaction name="actionTreemapZoomOut"/>
      <addaction name="actionResetTreemapZoom"/>
@@ -250,24 +153,10 @@
     <property name="title">
      <string>&amp;Go</string>
     </property>
-    <widget class="QMenu" name="menuBookmarks">
-     <property name="tearOffEnabled">
-      <bool>true</bool>
-     </property>
-     <property name="title">
-      <string>To &amp;Bookmark</string>
-     </property>
-     <property name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/bookmark.png</normaloff>:/icons/bookmark.png</iconset>
-     </property>
-     <property name="toolTipsVisible">
-      <bool>false</bool>
-     </property>
-    </widget>
+    <addaction name="actionGoBack"/>
+    <addaction name="actionGoForward"/>
     <addaction name="actionGoUp"/>
     <addaction name="actionGoToToplevel"/>
-    <addaction name="menuBookmarks"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -285,8 +174,8 @@
     <addaction name="actionHelp"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
-    <addaction name="separator"/>
     <addaction name="actionTreemapHelp"/>
+    <addaction name="separator"/>
     <addaction name="actionPkgViewHelp"/>
     <addaction name="actionUnpkgViewHelp"/>
     <addaction name="actionFileAgeStatsHelp"/>
@@ -302,7 +191,6 @@
     <property name="title">
      <string>&amp;Clean Up</string>
     </property>
-    <addaction name="actionMoveToTrash"/>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuDiscover">
@@ -335,11 +223,17 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionOpenDir"/>
+   <addaction name="actionRefreshSelected"/>
+   <addaction name="separator"/>
+   <addaction name="actionFindFiles"/>
+   <addaction name="separator"/>
    <addaction name="actionGoBack"/>
    <addaction name="actionGoForward"/>
    <addaction name="actionGoUp"/>
-   <addaction name="actionRefreshAll"/>
+   <addaction name="actionGoToToplevel"/>
    <addaction name="separator"/>
+   <addaction name="actionTreemapZoomTo"/>
    <addaction name="actionTreemapZoomIn"/>
    <addaction name="actionTreemapZoomOut"/>
    <addaction name="actionResetTreemapZoom"/>
@@ -375,7 +269,7 @@
     <string>&amp;Open Directory...</string>
    </property>
    <property name="toolTip">
-    <string>Open a directory to scan.</string>
+    <string>Open a directory to scan</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -386,7 +280,7 @@
     <string>&amp;Close All Tree Levels</string>
    </property>
    <property name="toolTip">
-    <string>Close all branches of the directory tree.</string>
+    <string>Close all branches of the directory tree</string>
    </property>
   </action>
   <action name="actionExpandTreeLevel0">
@@ -394,7 +288,7 @@
     <string>Level &amp;0</string>
    </property>
    <property name="toolTip">
-    <string>Expand (open) the directory tree to level 0.</string>
+    <string>Expand (open) the directory tree to level 0</string>
    </property>
   </action>
   <action name="actionExpandTreeLevel1">
@@ -402,7 +296,7 @@
     <string>Level &amp;1</string>
    </property>
    <property name="toolTip">
-    <string>Expand (open) the directory tree to level 1.</string>
+    <string>Expand (open) the directory tree to level 1</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+1</string>
@@ -413,7 +307,7 @@
     <string>Level &amp;2</string>
    </property>
    <property name="toolTip">
-    <string>Expand (open) the directory tree to level 2.</string>
+    <string>Expand (open) the directory tree to level 2</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+2</string>
@@ -424,7 +318,7 @@
     <string>Level &amp;3</string>
    </property>
    <property name="toolTip">
-    <string>Expand (open) the directory tree to level 3.</string>
+    <string>Expand (open) the directory tree to level 3</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+3</string>
@@ -435,7 +329,7 @@
     <string>Level &amp;4</string>
    </property>
    <property name="toolTip">
-    <string>Expand (open) the directory tree to level 4.</string>
+    <string>Expand (open) the directory tree to level 4</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+4</string>
@@ -446,7 +340,7 @@
     <string>Level &amp;5</string>
    </property>
    <property name="toolTip">
-    <string>Expand (open) the directory tree to level 5.</string>
+    <string>Expand (open) the directory tree to level 5</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+5</string>
@@ -505,7 +399,7 @@
     <string>&amp;Stop Reading</string>
    </property>
    <property name="toolTip">
-    <string>Stop reading directories.</string>
+    <string>Stop reading directories</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -520,7 +414,7 @@
     <string>&amp;Write To Cache File...</string>
    </property>
    <property name="toolTip">
-    <string>Write the current directory tree to a cache file.</string>
+    <string>Write the current directory tree to a cache file</string>
    </property>
   </action>
   <action name="actionAskReadCache">
@@ -532,19 +426,19 @@
     <string>&amp;Read Cache File...</string>
    </property>
    <property name="toolTip">
-    <string>Read a directory tree from a cache file.</string>
+    <string>Read a directory tree from a cache file</string>
    </property>
   </action>
   <action name="actionRefreshAll">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
+     <normaloff>:/icons/refresh-all.png</normaloff>:/icons/refresh-all.png</iconset>
    </property>
    <property name="text">
     <string>Refresh &amp;All</string>
    </property>
    <property name="toolTip">
-    <string>Re-read the entire directory tree from disk.</string>
+    <string>Re-read the entire directory tree from disk</string>
    </property>
    <property name="shortcut">
     <string>F5</string>
@@ -559,22 +453,37 @@
     <string>&amp;Copy Path</string>
    </property>
    <property name="toolTip">
-    <string>Copy the full path of the current item to the system clipboard for use in other applications.</string>
+    <string>Copy the full path of the current item to the system clipboard for use in other applications</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
    </property>
   </action>
+  <action name="actionTreemapZoomTo">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/magnifier-zoom-actual.png</normaloff>:/icons/magnifier-zoom-actual.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom &amp;To</string>
+   </property>
+   <property name="toolTip">
+    <string>Zoom the treemap in to the selected item</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+=</string>
+   </property>
+  </action>
   <action name="actionTreemapZoomIn">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/zoom-in.png</normaloff>:/icons/zoom-in.png</iconset>
+     <normaloff>:/icons/magnifier-zoom-in.png</normaloff>:/icons/magnifier-zoom-in.png</iconset>
    </property>
    <property name="text">
     <string>Zoom &amp;In</string>
    </property>
    <property name="toolTip">
-    <string>Zoom the treemap in (enlarge) one level.</string>
+    <string>Zoom the treemap in (enlarge) one level</string>
    </property>
    <property name="shortcut">
     <string>Ctrl++</string>
@@ -583,13 +492,13 @@
   <action name="actionTreemapZoomOut">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/zoom-out.png</normaloff>:/icons/zoom-out.png</iconset>
+     <normaloff>:/icons/magnifier-zoom-out.png</normaloff>:/icons/magnifier-zoom-out.png</iconset>
    </property>
    <property name="text">
     <string>Zoom &amp;Out</string>
    </property>
    <property name="toolTip">
-    <string>Zoom the treemap out one level.</string>
+    <string>Zoom the treemap out one level</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+-</string>
@@ -598,13 +507,13 @@
   <action name="actionResetTreemapZoom">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/zoom-best-fit.png</normaloff>:/icons/zoom-best-fit.png</iconset>
+     <normaloff>:/icons/magnifier-zoom-actual-equal.png</normaloff>:/icons/magnifier-zoom-actual-equal.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Reset Zoom</string>
    </property>
    <property name="toolTip">
-    <string>Reset the treemap zoom factor to normal.</string>
+    <string>Reset the treemap zoom factor to normal</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+0</string>
@@ -615,7 +524,7 @@
     <string>Re&amp;build</string>
    </property>
    <property name="toolTip">
-    <string>Rebuild the treemap.</string>
+    <string>Rebuild the treemap</string>
    </property>
   </action>
   <action name="actionShowTreemap">
@@ -629,7 +538,7 @@
     <string>&amp;Show Treemap</string>
    </property>
    <property name="toolTip">
-    <string>Enable or disable showing the treemap view.</string>
+    <string>Enable or disable showing the treemap view</string>
    </property>
    <property name="shortcut">
     <string>F9</string>
@@ -644,7 +553,7 @@
     <string>&amp;Up One Level</string>
    </property>
    <property name="toolTip">
-    <string>Up One Level</string>
+    <string>Go up up one level</string>
    </property>
    <property name="shortcut">
     <string>Alt+Up</string>
@@ -656,10 +565,10 @@
      <normaloff>:/icons/go-top.png</normaloff>:/icons/go-top.png</iconset>
    </property>
    <property name="text">
-    <string>To Tople&amp;vel</string>
+    <string>To &amp;Toplevel</string>
    </property>
    <property name="toolTip">
-    <string>Navigate to the toplevel directory of this tree.</string>
+    <string>Navigate to the toplevel directory of this tree</string>
    </property>
    <property name="shortcut">
     <string>Alt+Home</string>
@@ -673,27 +582,22 @@
    <property name="text">
     <string>A&amp;bout QDirStat...</string>
    </property>
-   <property name="toolTip">
-    <string>About QDirStat</string>
-   </property>
   </action>
   <action name="actionAboutQt">
    <property name="text">
     <string>About &amp;Qt...</string>
    </property>
-   <property name="iconText">
-    <string>About Qt...</string>
-   </property>
-   <property name="toolTip">
-    <string>About Qt</string>
-   </property>
   </action>
   <action name="actionRefreshSelected">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
+   </property>
    <property name="text">
-    <string>Re&amp;fresh Selected</string>
+    <string>Refresh &amp;Selected</string>
    </property>
    <property name="toolTip">
-    <string>Reread the selected branch from disk.</string>
+    <string>Reread the selected branch from disk</string>
    </property>
    <property name="shortcut">
     <string>F6</string>
@@ -704,7 +608,7 @@
     <string>Read &amp;Excluded Directory</string>
    </property>
    <property name="toolTip">
-    <string>Read a directory that was excluded by an exclude rule.</string>
+    <string>Read a directory that was excluded by an exclude rule</string>
    </property>
   </action>
   <action name="actionContinueReadingAtMountPoint">
@@ -716,7 +620,7 @@
     <string>Continue Reading at &amp;Mount Point</string>
    </property>
    <property name="toolTip">
-    <string>Continue Reading at Mount Point</string>
+    <string>Continue reading at filesystem mount point not crossed</string>
    </property>
   </action>
   <action name="actionConfigure">
@@ -725,7 +629,7 @@
      <normaloff>:/icons/preferences.png</normaloff>:/icons/preferences.png</iconset>
    </property>
    <property name="text">
-    <string>C&amp;onfigure QDirStat</string>
+    <string>&amp;Settings...</string>
    </property>
    <property name="toolTip">
     <string>Configure QDirStat</string>
@@ -751,10 +655,10 @@
      <normaloff>:/icons/trashcan.png</normaloff>:/icons/trashcan.png</iconset>
    </property>
    <property name="text">
-    <string>Move to T&amp;rash</string>
+    <string>Move to &amp;Trash</string>
    </property>
    <property name="toolTip">
-    <string>Move the selected items to the trash bin.</string>
+    <string>Move the selected items to the trash bin</string>
    </property>
    <property name="shortcut">
     <string>Del</string>
@@ -773,7 +677,7 @@
     <string>File &amp;Type Statistics</string>
    </property>
    <property name="toolTip">
-    <string>File Type Statistics</string>
+    <string>Open the file type statistics window</string>
    </property>
    <property name="shortcut">
     <string>F3</string>
@@ -782,12 +686,6 @@
   <action name="actionHelp">
    <property name="text">
     <string>QDirStat &amp;Help</string>
-   </property>
-   <property name="iconText">
-    <string>QDirStat Help</string>
-   </property>
-   <property name="toolTip">
-    <string>QDirStat Help</string>
    </property>
    <property name="statusTip">
     <string>https://github.com/shundhammer/qdirstat/blob/master/README.md</string>
@@ -799,6 +697,9 @@
   <action name="actionFileSizeStats">
    <property name="text">
     <string>File &amp;Size Statistics</string>
+   </property>
+   <property name="toolTip">
+    <string>Open the file size statistics window</string>
    </property>
    <property name="shortcut">
     <string>F2</string>
@@ -815,7 +716,7 @@
     <string>Show &amp;Details Panel</string>
    </property>
    <property name="toolTip">
-    <string>Show &amp;Details Panel</string>
+    <string>Show details panel</string>
    </property>
   </action>
   <action name="actionLayout1">
@@ -827,6 +728,9 @@
    </property>
    <property name="iconText">
     <string>L1</string>
+   </property>
+   <property name="toolTip">
+    <string>Layout 1 (short)</string>
    </property>
    <property name="shortcut">
     <string>Alt+1</string>
@@ -845,6 +749,9 @@
    <property name="iconText">
     <string>L2</string>
    </property>
+   <property name="toolTip">
+    <string>Layout 2 (classic)</string>
+   </property>
    <property name="shortcut">
     <string>Alt+2</string>
    </property>
@@ -859,6 +766,9 @@
    <property name="iconText">
     <string>L3</string>
    </property>
+   <property name="toolTip">
+    <string>Layout 3 (full)</string>
+   </property>
    <property name="shortcut">
     <string>Alt+3</string>
    </property>
@@ -866,9 +776,6 @@
   <action name="actionDonate">
    <property name="text">
     <string>&amp;Donate...</string>
-   </property>
-   <property name="iconText">
-    <string notr="true">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=EYJXAVLGNRR5W</string>
    </property>
    <property name="toolTip">
     <string>Make a donation to support the QDirStat project</string>
@@ -885,14 +792,13 @@
   <action name="actionOpenPkg">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/tree-medium/package.png</normaloff>
-     <normalon>:/icons/tree-medium/folder-pkg.png</normalon>:/icons/tree-medium/package.png</iconset>
+     <normaloff>:/icons/package.png</normaloff>:/icons/package.png</iconset>
    </property>
    <property name="text">
     <string>Show Installed &amp;Packages...</string>
    </property>
    <property name="toolTip">
-    <string>Show Installed Packages</string>
+    <string>Show files in installed packages</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
@@ -902,17 +808,15 @@
    <property name="text">
     <string>The &amp;Packages View...</string>
    </property>
-   <property name="iconText">
-    <string>The Packages View...</string>
-   </property>
-   <property name="toolTip">
-    <string>The Packages View</string>
-   </property>
    <property name="statusTip">
     <string>https://github.com/shundhammer/qdirstat/blob/master/doc/Pkg-View.md</string>
    </property>
   </action>
-  <action name="actionShowUnpkgFiles">
+  <action name="actionOpenUnpkg">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/unpkg.png</normaloff>:/icons/unpkg.png</iconset>
+   </property>
    <property name="text">
     <string>Show &amp;Unpackaged Files...</string>
    </property>
@@ -927,12 +831,6 @@
    <property name="text">
     <string>The &amp;Unpackaged Files View...</string>
    </property>
-   <property name="iconText">
-    <string>The Unpackaged Files View...</string>
-   </property>
-   <property name="toolTip">
-    <string>The Unpackaged Files View</string>
-   </property>
    <property name="statusTip">
     <string>https://github.com/shundhammer/qdirstat/blob/master/doc/Unpkg-View.md</string>
    </property>
@@ -940,6 +838,9 @@
   <action name="actionShowFilesystems">
    <property name="text">
     <string>Show Mounted &amp;Filesystems</string>
+   </property>
+   <property name="toolTip">
+    <string>Show mounted filesystems</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+M</string>
@@ -950,7 +851,7 @@
     <string>&amp;Largest Files</string>
    </property>
    <property name="toolTip">
-    <string>Largest Files</string>
+    <string>Show a list of the largest files in the current directory tree</string>
    </property>
   </action>
   <action name="actionDiscoverNewestFiles">
@@ -958,7 +859,7 @@
     <string>&amp;Newest Files</string>
    </property>
    <property name="toolTip">
-    <string>Newest Files</string>
+    <string>Show a list of the newest files in the current directory tree</string>
    </property>
   </action>
   <action name="actionDiscoverOldestFiles">
@@ -966,7 +867,7 @@
     <string>&amp;Oldest Files</string>
    </property>
    <property name="toolTip">
-    <string>Oldest Files</string>
+    <string>Show a list of the oldest files in the current directory tree</string>
    </property>
   </action>
   <action name="actionDiscoverHardLinkedFiles">
@@ -974,7 +875,7 @@
     <string>Files with Multiple &amp;Hard Links</string>
    </property>
    <property name="toolTip">
-    <string>Files with Multiple Hard Links</string>
+    <string>Show a list of files with multiple hard links</string>
    </property>
   </action>
   <action name="actionDiscoverBrokenSymLinks">
@@ -982,7 +883,7 @@
     <string>&amp;Broken Symbolic LInks</string>
    </property>
    <property name="toolTip">
-    <string>Broken Symbolic LInks</string>
+    <string>Show a list of broken symlinks</string>
    </property>
   </action>
   <action name="actionDiscoverSparseFiles">
@@ -990,7 +891,7 @@
     <string>&amp;Sparse Files</string>
    </property>
    <property name="toolTip">
-    <string>Sparse Files</string>
+    <string>Show a list of sparse files</string>
    </property>
   </action>
   <action name="actionBtrfsSizeReporting">
@@ -1004,12 +905,6 @@
   <action name="actionShadowedByMount">
    <property name="text">
     <string>Files Shadowed by a &amp;Mount...</string>
-   </property>
-   <property name="iconText">
-    <string>Files Shadowed by a Mount...</string>
-   </property>
-   <property name="toolTip">
-    <string>Files Shadowed by a Mount</string>
    </property>
    <property name="statusTip">
     <string>https://github.com/shundhammer/qdirstat/blob/master/doc/Shadowed-by-Mount.md</string>
@@ -1055,6 +950,9 @@
    <property name="text">
     <string>File &amp;Age Statistics</string>
    </property>
+   <property name="toolTip">
+    <string>Open the file age statistics window</string>
+   </property>
    <property name="shortcut">
     <string>F4</string>
    </property>
@@ -1088,7 +986,7 @@
     <string>&amp;Forward</string>
    </property>
    <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Go forward again to the next directory (after going back).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Go forward again to the next directory (after going back)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="shortcut">
     <string>Alt+Right</string>
@@ -1103,22 +1001,18 @@
    </property>
   </action>
   <action name="actionFindFiles">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/magnifier-left.png</normaloff>:/icons/magnifier-left.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Find...</string>
    </property>
    <property name="toolTip">
-    <string>Find Files or Directories in the Scanned Tree</string>
+    <string>Find files or directories in the scanned Tree</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
-   </property>
-  </action>
-  <action name="actionSelectAllBookmarks">
-   <property name="text">
-    <string>Select &amp;All</string>
-   </property>
-   <property name="toolTip">
-    <string>Select all Bookmarks in the Tree</string>
    </property>
   </action>
   <action name="actionTreemapHelp">
@@ -1135,6 +1029,12 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>QDirStat::MessagePanel</class>
+   <extends>QWidget</extends>
+   <header>MessagePanel.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>QDirStat::DirTreeView</class>
    <extends>QTreeView</extends>
    <header>DirTreeView.h</header>
@@ -1143,6 +1043,7 @@
    <class>QDirStat::TreemapView</class>
    <extends>QGraphicsView</extends>
    <header>TreemapView.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>QDirStat::BreadcrumbNavigator</class>
@@ -1153,12 +1054,6 @@
    <class>QDirStat::FileDetailsView</class>
    <extends>QWidget</extends>
    <header>FileDetailsView.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>QDirStat::MessagePanel</class>
-   <extends>QWidget</extends>
-   <header>MessagePanel.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -44,35 +44,27 @@ namespace QDirStat
 	void addWidgetTree( QObject * tree );
 
 	/**
-	 * Search the known widget trees for the first QAction with the Qt
-	 * object name 'actionName'. Return 0 if there is no such QAction.
+	 * Add all the actions in 'actionNames' to a menu. Return 'true' if
+	 * success, 'false' if any of the actions were not found.
+	 *
+	 * If 'enabledOnly' is 'true', only those actions that are currently
+	 * enabled are added.
+	 *
+	 * If an action name in actionNames starts with "---", a separator is
+	 * added to the menu instead of an action.
+	 *
+	 * Notice that this class already logs an error for action names that
+	 * were not found.
 	 **/
-	QAction * action( const QString & actionName );
+	bool addActions( QWidget * widget,
+			 const QStringList & actionNames,
+			 bool                enabledOnly = false);
 
 	/**
-	 * Add all the actions in 'actionNames' to a widget (typically a
-	 * menu). Return 'true' if success, 'false' if any of the actions were
-	 * not found.
-         *
-         * If 'enabledOnly' is 'true', only those actions that are currently
-         * enabled are added.
-	 *
-	 * If the widget is a menu, and an action name in actionNames starts
-	 * with "---", a separator is added to the menu instead of an action.
-         *
-         * Notice that this class already logs an error for action names that
-         * were not found.
+	 * Add only the enabled actions in 'actionNames' to a widget.
 	 **/
-	bool addActions( QWidget *           widget,
-                         const QStringList & actionNames,
-                         bool                enabledOnly = false);
-
-        /**
-         * Add only the enabled actions in 'actionNames' to a widget.
-         **/
-        bool addEnabledActions( QWidget *           widget,
-                                const QStringList & actionNames )
-            { return addActions( widget, actionNames, true ); }
+	bool addEnabledActions( QWidget * widget, const QStringList & actionNames )
+		{ return addActions( widget, actionNames, true ); }
 
 
     protected:
@@ -83,12 +75,17 @@ namespace QDirStat
 	 **/
 	ActionManager() {}
 
+	/**
+	 * Search the known widget trees for the first QAction with the Qt
+	 * object name 'actionName'. Return 0 if there is no such QAction.
+	 **/
+	QAction * action( const QString & actionName ) const;
+
 
 	//
 	// Data members
 	//
 
-	static ActionManager *	   _instance;
 	QList<QPointer<QObject> >  _widgetTrees;
 
     };	// class ActionManager

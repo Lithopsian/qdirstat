@@ -28,17 +28,17 @@ SelectionModel::SelectionModel( DirTreeModel * dirTreeModel, QObject * parent ):
     _selectedItemsDirty(false),
     _verbose(false)
 {
-    connect( this, SIGNAL( currentChanged	  ( QModelIndex, QModelIndex ) ),
-	     this, SLOT	 ( propagateCurrentChanged( QModelIndex, QModelIndex ) ) );
+    connect( this, &SelectionModel::currentChanged,
+	     this, &SelectionModel::propagateCurrentChanged );
 
-    connect( this, SIGNAL( selectionChanged	    ( QItemSelection, QItemSelection  ) ),
-	     this, SLOT	 ( propagateSelectionChanged( QItemSelection, QItemSelection  ) ) );
+    connect( this, qOverload<const QItemSelection &, const QItemSelection &>( &QItemSelectionModel::selectionChanged ),
+	     this, &SelectionModel::propagateSelectionChanged );
 
-    connect( dirTreeModel->tree(), SIGNAL( deletingChild      ( FileInfo * ) ),
-	     this,		   SLOT	 ( deletingChildNotify( FileInfo * ) ) );
+    connect( dirTreeModel->tree(), &DirTree::deletingChild,
+	     this,		   &SelectionModel::deletingChildNotify );
 
-    connect( dirTreeModel->tree(), SIGNAL( clearing() ),
-	     this,		   SLOT	 ( clear()    ) );
+    connect( dirTreeModel->tree(), &DirTree::clearing,
+	     this,		   &SelectionModel::clear );
 }
 
 
@@ -52,7 +52,7 @@ void SelectionModel::clear()
 {
     _selectedItems.clear();
     _selectedItemsDirty = true;
-    _currentItem   = 0;
+    _currentItem = 0;
     _currentBranch = 0;
 
     clearSelection();
@@ -74,7 +74,7 @@ FileInfoSet SelectionModel::selectedItems()
 		FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
 		CHECK_MAGIC( item );
 
-		// logDebug() << "Adding " << item << " col " << index.column() << " to selected items" << endl;
+		// logDebug() << "Adding " << item << " col " << index.column() << " to selected items" << Qt::endl;
 		_selectedItems << item;
 	    }
 	}
@@ -109,12 +109,9 @@ void SelectionModel::propagateCurrentChanged( const QModelIndex & newCurrentInde
 }
 
 
-void SelectionModel::propagateSelectionChanged( const QItemSelection & selected,
-						const QItemSelection & deselected )
+void SelectionModel::propagateSelectionChanged( const QItemSelection &,
+						const QItemSelection & )
 {
-    Q_UNUSED( selected );
-    Q_UNUSED( deselected );
-
     _selectedItemsDirty = true;
     emit selectionChanged();
     emit selectionChanged( selectedItems() );
@@ -136,7 +133,7 @@ void SelectionModel::extendSelection( FileInfo * item, bool clear )
 
 	if ( index.isValid() )
 	{
-	    logDebug() << "Selecting " << item << endl;
+	    logDebug() << "Selecting " << item << Qt::endl;
 	    SelectionFlags flags = Select | Rows;
 
 	    if ( clear )
@@ -145,10 +142,9 @@ void SelectionModel::extendSelection( FileInfo * item, bool clear )
 	    select( index, flags ); // emits selectionChanged()
 	}
     }
-    else
+    else if ( clear )
     {
-	if ( clear )
-	    clearSelection(); // emits selectionChanged()
+	clearSelection(); // emits selectionChanged()
     }
 }
 
@@ -156,7 +152,7 @@ void SelectionModel::extendSelection( FileInfo * item, bool clear )
 void SelectionModel::setSelectedItems( const FileInfoSet & selectedItems )
 {
     if ( _verbose )
-	logDebug() << "Selecting " << selectedItems.size() << " items" << endl;
+	logDebug() << "Selecting " << selectedItems.size() << " items" << Qt::endl;
 
     QItemSelection sel;
 
@@ -175,7 +171,7 @@ void SelectionModel::setSelectedItems( const FileInfoSet & selectedItems )
 void SelectionModel::setCurrentItem( FileInfo * item, bool select )
 {
     if ( _verbose )
-	logDebug() << item << " select: " << select << endl;
+	logDebug() << item << " select: " << select << Qt::endl;
 
     if ( select )
 	clear();
@@ -184,27 +180,23 @@ void SelectionModel::setCurrentItem( FileInfo * item, bool select )
 
     if ( item )
     {
-	QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
+	const QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
 
 	if ( index.isValid() )
 	{
 	    if ( _verbose )
-		logDebug() << "Setting current to " << index << endl;
+		logDebug() << "Setting current to " << index << Qt::endl;
 
 	    setCurrentIndex( index, select ? ( Current | Select | Rows ) : Current );
 	}
 	else
 	{
-	    logError() << "NOT FOUND in dir tree: " << item << endl;
+	    logError() << "NOT FOUND in dir tree: " << item << Qt::endl;
 	}
     }
     else
     {
-#if (QT_VERSION < QT_VERSION_CHECK( 5, 0, 0 ))
-	setCurrentIndex( QModelIndex(), Current );
-#else
 	clearCurrentIndex();
-#endif
     }
 }
 
@@ -216,14 +208,14 @@ void SelectionModel::setCurrentItem( const QString & path )
     if ( item )
 	setCurrentItem( item, true );
     else
-	logError() << "No item with path " << path << endl;
+	logError() << "No item with path " << path << Qt::endl;
 }
 
 
 void SelectionModel::setCurrentBranch( FileInfo * item )
 {
     _currentBranch = item;
-    QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
+    const QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
 
     emit currentBranchChanged( item  );
     emit currentBranchChanged( index );
@@ -246,13 +238,11 @@ void SelectionModel::prepareRefresh( const FileInfoSet & refreshSet )
 	// ancestor (but not that item itself) in the refreshSet.
 
 	while ( dir && refreshSet.containsAncestorOf( dir ) )
-	{
 	    dir = dir->parent();
-	}
     }
 
     if ( _verbose )
-	logDebug() << "Selecting " << dir << endl;
+	logDebug() << "Selecting " << dir << Qt::endl;
 
     setCurrentItem( dir, true );
     setCurrentBranch( dir );
@@ -264,20 +254,18 @@ void SelectionModel::deletingChildNotify( FileInfo * deletedChild )
     _selectedItemsDirty = true;
     _selectedItems.clear();
 
-    if ( _currentItem->isInSubtree( deletedChild ) )
+    if ( _currentItem && _currentItem->isInSubtree( deletedChild ) )
 	setCurrentItem( 0 );
 }
 
 
 void SelectionModel::dumpSelectedItems()
 {
-    logDebug() << "Current item: " << _currentItem << endl;
-    logDebug() << selectedItems().size() << " items selected" << endl;
+    logDebug() << "Current item: " << _currentItem << Qt::endl;
+    logDebug() << selectedItems().size() << " items selected" << Qt::endl;
 
-    foreach ( FileInfo * item, selectedItems() )
-    {
-	logDebug() << "	 Selected: " << item << endl;
-    }
+    foreach ( const FileInfo * item, selectedItems() )
+	logDebug() << "	 Selected: " << item << Qt::endl;
 
     logNewline();
 }
@@ -290,25 +278,25 @@ void SelectionModel::dumpSelectedItems()
 SelectionModelProxy::SelectionModelProxy( SelectionModel * master, QObject * parent ):
     QObject( parent )
 {
-    connect( master, SIGNAL( selectionChanged( QItemSelection, QItemSelection ) ),
-	     this,   SIGNAL( selectionChanged( QItemSelection, QItemSelection ) ) );
+    connect( master, qOverload<const QItemSelection &, const QItemSelection &>( &QItemSelectionModel::selectionChanged ),
+	     this,   qOverload<const QItemSelection &, const QItemSelection &>( &SelectionModelProxy::selectionChanged ) );
 
-    connect( master, SIGNAL( currentChanged( QModelIndex, QModelIndex ) ),
-	     this,   SIGNAL( currentChanged( QModelIndex, QModelIndex ) ) );
+    connect( master, &SelectionModel::currentChanged,
+	     this,   &SelectionModelProxy::currentChanged );
 
-    connect( master, SIGNAL( currentColumnChanged( QModelIndex, QModelIndex ) ),
-	     this,   SIGNAL( currentColumnChanged( QModelIndex, QModelIndex ) ) );
+    connect( master, &SelectionModel::currentColumnChanged,
+	     this,   &SelectionModelProxy::currentColumnChanged );
 
-    connect( master, SIGNAL( currentRowChanged	 ( QModelIndex, QModelIndex ) ),
-	     this,   SIGNAL( currentRowChanged	 ( QModelIndex, QModelIndex ) ) );
+    connect( master, &SelectionModel::currentRowChanged,
+	     this,   &SelectionModelProxy::currentRowChanged );
 
-    connect( master, SIGNAL( selectionChanged() ),
-	     this,   SIGNAL( selectionChanged() ) );
+    connect( master, qOverload<>( &SelectionModel::selectionChanged ),
+	     this,   qOverload<>( &SelectionModelProxy::selectionChanged ) );
 
-    connect( master, SIGNAL( selectionChanged( FileInfoSet ) ),
-	     this,   SIGNAL( selectionChanged( FileInfoSet ) ) );
+    connect( master, qOverload<const FileInfoSet &>( &SelectionModel::selectionChanged ),
+	     this,   qOverload<const FileInfoSet &>( &SelectionModelProxy::selectionChanged ) );
 
-    connect( master, SIGNAL( currentItemChanged( FileInfo *, FileInfo * ) ),
-	     this,   SIGNAL( currentItemChanged( FileInfo *, FileInfo * ) ) );
+    connect( master, &SelectionModel::currentItemChanged,
+	     this,   &SelectionModelProxy::currentItemChanged );
 }
 

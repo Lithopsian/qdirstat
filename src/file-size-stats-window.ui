@@ -26,12 +26,6 @@
    </item>
    <item>
     <widget class="QTabWidget" name="tabWidget">
-     <property name="tabPosition">
-      <enum>QTabWidget::North</enum>
-     </property>
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
      <widget class="QWidget" name="histogramPage">
       <attribute name="title">
        <string>&amp;Histogram</string>
@@ -42,25 +36,15 @@
        </item>
        <item>
         <layout class="QHBoxLayout" name="optionsButtonLayout">
-         <item>
+         <item alignment="Qt::AlignLeft">
           <widget class="QPushButton" name="optionsButton">
            <property name="text">
             <string>&amp;Options &gt;&gt;</string>
            </property>
+           <property name="default">
+            <bool>true</bool>
+           </property>
           </widget>
-         </item>
-         <item>
-          <spacer name="optionsSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>248</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </item>
@@ -90,6 +74,22 @@
             <property name="verticalSpacing">
              <number>9</number>
             </property>
+            <item row="1" column="0">
+             <widget class="QSpinBox" name="startPercentileSpinBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="prefix">
+               <string>P</string>
+              </property>
+              <property name="maximum">
+               <number>24</number>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="0" colspan="2">
              <widget class="QSlider" name="startPercentileSlider">
               <property name="maximum">
@@ -97,19 +97,6 @@
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QPushButton" name="autoButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>A&amp;uto</string>
               </property>
              </widget>
             </item>
@@ -129,32 +116,6 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QSpinBox" name="startPercentileSpinBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="prefix">
-               <string>P</string>
-              </property>
-              <property name="maximum">
-               <number>24</number>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLabel" name="startPercentileLabel">
-              <property name="text">
-               <string>&amp;Start Percentile</string>
-              </property>
-              <property name="buddy">
-               <cstring>startPercentileSpinBox</cstring>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="3">
              <widget class="QLabel" name="endPercentileLabel">
               <property name="text">
@@ -165,6 +126,19 @@
               </property>
               <property name="buddy">
                <cstring>endPercentileSpinBox</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="autoButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>A&amp;uto</string>
               </property>
              </widget>
             </item>
@@ -190,6 +164,16 @@
               </property>
              </widget>
             </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="startPercentileLabel">
+              <property name="text">
+               <string>&amp;Start Percentile</string>
+              </property>
+              <property name="buddy">
+               <cstring>startPercentileSpinBox</cstring>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -204,152 +188,20 @@
       <layout class="QVBoxLayout" name="percentilePageLayout">
        <item>
         <layout class="QHBoxLayout" name="topComboBoxLayout">
-         <item>
-          <spacer name="comboBoxSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+         <item alignment="Qt::AlignRight">
+          <widget class="QCheckBox" name="percentileFilterCheckBox">
+           <property name="text">
+            <string>Show &amp;all percentiles</string>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QComboBox" name="percentileFilterComboBox">
-           <property name="editable">
-            <bool>false</bool>
-           </property>
-           <item>
-            <property name="text">
-             <string>Interesting only</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Show all</string>
-            </property>
-           </item>
           </widget>
          </item>
         </layout>
        </item>
        <item>
         <widget class="QTableWidget" name="percentileTable">
-         <property name="rowCount">
-          <number>100</number>
-         </property>
-         <property name="columnCount">
-          <number>3</number>
-         </property>
          <attribute name="verticalHeaderVisible">
           <bool>false</bool>
          </attribute>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <row/>
-         <column/>
-         <column/>
-         <column/>
         </widget>
        </item>
       </layout>
@@ -366,7 +218,7 @@
      </widget>
      <widget class="QWidget" name="helpPage">
       <attribute name="title">
-       <string>H&amp;elp</string>
+       <string>&amp;Help</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
@@ -503,6 +355,15 @@
             <colorrole role="ToolTipText">
              <brush brushstyle="SolidPattern">
               <color alpha="255">
+               <red>0</red>
+               <green>0</green>
+               <blue>0</blue>
+              </color>
+             </brush>
+            </colorrole>
+            <colorrole role="PlaceholderText">
+             <brush brushstyle="NoBrush">
+              <color alpha="128">
                <red>0</red>
                <green>0</green>
                <blue>0</blue>
@@ -646,6 +507,15 @@
               </color>
              </brush>
             </colorrole>
+            <colorrole role="PlaceholderText">
+             <brush brushstyle="NoBrush">
+              <color alpha="128">
+               <red>0</red>
+               <green>0</green>
+               <blue>0</blue>
+              </color>
+             </brush>
+            </colorrole>
            </inactive>
            <disabled>
             <colorrole role="WindowText">
@@ -783,6 +653,15 @@
               </color>
              </brush>
             </colorrole>
+            <colorrole role="PlaceholderText">
+             <brush brushstyle="NoBrush">
+              <color alpha="128">
+               <red>0</red>
+               <green>0</green>
+               <blue>0</blue>
+              </color>
+             </brush>
+            </colorrole>
            </disabled>
           </palette>
          </property>
@@ -794,142 +673,115 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>272</width>
-            <height>750</height>
+            <width>276</width>
+            <height>658</height>
            </rect>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_3">
+          <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
-            <widget class="QLabel" name="statisticsBasicsHeading">
-             <property name="text">
-              <string>&lt;h3&gt;Statistics Basics&lt;/h3&gt;</string>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <property name="bottomMargin">
+              <number>20</number>
              </property>
-            </widget>
+             <item>
+              <widget class="QLabel" name="statisticsBasicsHeading">
+               <property name="text">
+                <string>&lt;h3&gt;Statistics Basics&lt;/h3&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCommandLinkButton" name="medianPercentilesHelpButton">
+               <property name="text">
+                <string>Median, Quartiles and Percentiles</string>
+               </property>
+               <property name="description">
+                <string>Basic statistics terms explained in a way that everybody can understand.</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCommandLinkButton" name="histogramsInGeneralHelpButton">
+               <property name="text">
+                <string>Histograms in General</string>
+               </property>
+               <property name="description">
+                <string>What is a histogram? What is it good for?</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
-            <widget class="QCommandLinkButton" name="medianPercentilesHelpButton">
-             <property name="text">
-              <string>Median, Quartiles and Percentiles</string>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <property name="bottomMargin">
+              <number>10</number>
              </property>
-             <property name="description">
-              <string>Basic statistics terms explained in a way that everybody can understand.</string>
-             </property>
-            </widget>
+             <item>
+              <widget class="QLabel" name="fileSizeStatsHeading">
+               <property name="text">
+                <string>&lt;h3&gt;QDirStat File Size Statistics&lt;/h3&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCommandLinkButton" name="fileSizeHistogramHelpButton">
+               <property name="text">
+                <string>The File Size Histogram</string>
+               </property>
+               <property name="description">
+                <string>QDirStat's &quot;File Size&quot; histogram in particular: What is it? What does it tell you?</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCommandLinkButton" name="overflowAreaHelpButton">
+               <property name="text">
+                <string>The Overflow Area</string>
+               </property>
+               <property name="description">
+                <string>Explaining the &quot;Cut off&quot; panel with the pie charts at the right side of the histogram.</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCommandLinkButton" name="histogramOptionsHelpButton">
+               <property name="text">
+                <string>Histogram Options</string>
+               </property>
+               <property name="description">
+                <string>Explanation of the sliders, input fields and buttons in the panel that opens when you click the &quot;Options&quot; button below the histogram.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
-            <widget class="QCommandLinkButton" name="histogramsInGeneralHelpButton">
-             <property name="text">
-              <string>Histograms in General</string>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <property name="bottomMargin">
+              <number>20</number>
              </property>
-             <property name="description">
-              <string>What is a histogram? What is it good for?</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="sectionSpacer1">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Minimum</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="fileSizeStatsHeading">
-             <property name="text">
-              <string>&lt;h3&gt;QDirStat File Size Statistics&lt;/h3&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCommandLinkButton" name="fileSizeHistogramHelpButton">
-             <property name="text">
-              <string>The File Size Histogram</string>
-             </property>
-             <property name="description">
-              <string>QDirStat's &quot;File Size&quot; histogram in particular: What is it? What does it tell you?</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCommandLinkButton" name="overflowAreaHelpButton">
-             <property name="text">
-              <string>The Overflow Area</string>
-             </property>
-             <property name="description">
-              <string>Explaining the &quot;Cut off&quot; panel with the pie charts at the right side of the histogram.</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCommandLinkButton" name="histogramOptionsHelpButton">
-             <property name="text">
-              <string>Histogram Options</string>
-             </property>
-             <property name="description">
-              <string>Explanation of the sliders, input fields and buttons in the panel that opens when you click the &quot;Options&quot; button below the histogram.</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="sectionSpacer2">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Minimum</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>15</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QCommandLinkButton" name="percentilesTableHelpButton">
-             <property name="text">
-              <string>The Percentiles Table</string>
-             </property>
-             <property name="description">
-              <string>Explanation of the table on the &quot;Percentiles&quot; page in this dialog.</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCommandLinkButton" name="bucketsTableHelpButton">
-             <property name="text">
-              <string>The Buckets Table</string>
-             </property>
-             <property name="description">
-              <string>Explanation of the table on the &quot;Buckets&quot; table in this dialog.</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="sectionSpacer3">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Minimum</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>10</height>
-              </size>
-             </property>
-            </spacer>
+             <item>
+              <widget class="QCommandLinkButton" name="percentilesTableHelpButton">
+               <property name="text">
+                <string>The Percentiles Table</string>
+               </property>
+               <property name="description">
+                <string>Explanation of the table on the &quot;Percentiles&quot; page in this dialog.</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCommandLinkButton" name="bucketsTableHelpButton">
+               <property name="text">
+                <string>The Buckets Table</string>
+               </property>
+               <property name="description">
+                <string>Explanation of the table on the &quot;Buckets&quot; table in this dialog.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QLabel" name="label">
@@ -944,12 +796,12 @@
               <enum>Qt::Vertical</enum>
              </property>
              <property name="sizeType">
-              <enum>QSizePolicy::MinimumExpanding</enum>
+              <enum>QSizePolicy::Expanding</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
-               <width>20</width>
-               <height>24</height>
+               <width>0</width>
+               <height>0</height>
               </size>
              </property>
             </spacer>
@@ -964,30 +816,8 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="buttonBoxLayout">
-     <property name="topMargin">
-      <number>5</number>
-     </property>
-     <item>
-      <spacer name="buttonBoxSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
+     <item alignment="Qt::AlignRight">
       <widget class="QPushButton" name="closeButton">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="text">
         <string>&amp;Close</string>
        </property>
@@ -1013,7 +843,6 @@
   <tabstop>endPercentileSlider</tabstop>
   <tabstop>startPercentileSpinBox</tabstop>
   <tabstop>endPercentileSpinBox</tabstop>
-  <tabstop>percentileFilterComboBox</tabstop>
   <tabstop>percentileTable</tabstop>
   <tabstop>closeButton</tabstop>
  </tabstops>

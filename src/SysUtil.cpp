@@ -15,8 +15,9 @@
 #include <sys/stat.h>   // lstat()
 #include <sys/types.h>
 
+#include <QProcess>
+
 #include "SysUtil.h"
-#include "Process.h"
 #include "DirSaver.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -25,10 +26,10 @@
 using namespace QDirStat;
 
 
-bool SysUtil::tryRunCommand( const QString & commandLine,
-			     const QRegExp & expectedResult,
-			     bool	     logCommand,
-			     bool	     logOutput	)
+bool SysUtil::tryRunCommand( const QString		& commandLine,
+			     const QRegularExpression	& expectedResult,
+			     bool			logCommand,
+			     bool			logOutput )
 {
     int exitCode = -1;
     QString output = runCommand( commandLine, &exitCode,
@@ -37,12 +38,12 @@ bool SysUtil::tryRunCommand( const QString & commandLine,
 
     if ( exitCode != 0 )
     {
-	// logDebug() << "Exit code: " << exitCode << " command line: \"" << commandLine << "\"" << endl;
+	// logDebug() << "Exit code: " << exitCode << " command line: \"" << commandLine << "\"" << Qt::endl;
 	return false;
     }
 
-    bool expected = expectedResult.exactMatch( output );
-    // logDebug() << "Expected: " << expected << endl;
+    const bool expected = expectedResult.match( output ).hasMatch();
+    // logDebug() << "Expected: " << expected << Qt::endl;
 
     return expected;
 }
@@ -58,15 +59,15 @@ QString SysUtil::runCommand( const QString & commandLine,
     if ( exitCode_ret )
 	*exitCode_ret = -1;
 
-    QStringList args = commandLine.split( QRegExp( "\\s+" ) );
+    QStringList args = commandLine.split( QRegularExpression( "\\s+" ) );
 
     if ( args.size() < 1 )
     {
-	logError() << "Bad command line: \"" << commandLine << "\"" << endl;
+	logError() << "Bad command line: \"" << commandLine << "\"" << Qt::endl;
 	return "ERROR: Bad command line";
     }
 
-    QString command = args.takeFirst();
+    const QString command = args.takeFirst();
 
     return runCommand( command, args, exitCode_ret,
 		       timeout_sec, logCommand, logOutput, ignoreErrCode );
@@ -86,24 +87,24 @@ QString SysUtil::runCommand( const QString &	 command,
 
     if ( ! haveCommand( command ) )
     {
-	logInfo() << "Command not found: " << command << endl;
+	logInfo() << "Command not found: " << command << Qt::endl;
 	return "ERROR: Command not found";
     }
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert( "LANG", "C" ); // Prevent output in translated languages
 
-    Process process;
+    QProcess process;
     process.setProgram( command );
     process.setArguments( args );
     process.setProcessEnvironment( env );
     process.setProcessChannelMode( QProcess::MergedChannels ); // combine stdout and stderr
 
     if ( logCommand )
-	logDebug() << command << " " << args.join( " " ) << endl;
+	logDebug() << command << " " << args.join( " " ) << Qt::endl;
 
     process.start();
-    bool success = process.waitForFinished( timeout_sec * 1000 );
+    const bool success = process.waitForFinished( timeout_sec * 1000 );
     QString output = QString::fromUtf8( process.readAll() );
 
     if ( success )
@@ -118,29 +119,29 @@ QString SysUtil::runCommand( const QString &	 command,
 		logError() << "Command exited with exit code "
 			   << process.exitCode() << ": "
 			   << command << "\" args: " << args
-			   << endl;
+			   << Qt::endl;
 	    }
 	}
 	else
 	{
-	    logError() << "Command crashed: \"" << command << "\" args: " << args << endl;
+	    logError() << "Command crashed: \"" << command << "\" args: " << args << Qt::endl;
 	    output = "ERROR: Command crashed\n\n" + output;
 	}
     }
     else
     {
-	logError() << "Timeout or crash: \"" << command << "\" args: " << args << endl;
+	logError() << "Timeout or crash: \"" << command << "\" args: " << args << Qt::endl;
 	output = "ERROR: Timeout or crash\n\n" + output;
     }
 
     if ( logOutput || ( process.exitCode() != 0 && ! ignoreErrCode ) )
     {
-        QString logOutput = output.trimmed();
+        const QString logOutput = output.trimmed();
 
         if ( logOutput.contains( '\n' ) )
-            logDebug() << "Output: \n" << output << endl;
+            logDebug() << "Output: \n" << output << Qt::endl;
         else
-            logDebug() << "Output: \"" << logOutput << "\"" << endl;
+            logDebug() << "Output: \"" << logOutput << "\"" << Qt::endl;
     }
 
     return output;
@@ -149,9 +150,9 @@ QString SysUtil::runCommand( const QString &	 command,
 
 void SysUtil::openInBrowser( const QString & url )
 {
-    logDebug() << "Opening URL " << url << endl;
+    logDebug() << "Opening URL " << url << Qt::endl;
 
-    Process::startDetached( "/usr/bin/xdg-open", QStringList() << url );
+    QProcess::startDetached( "/usr/bin/xdg-open", { url } );
 }
 
 
@@ -181,7 +182,7 @@ bool SysUtil::runningAsTrueRoot()
 
 QString SysUtil::homeDir( uid_t uid )
 {
-    struct passwd * pw = getpwuid( uid );
+    const struct passwd * pw = getpwuid( uid );
 
     return pw ? QString::fromUtf8( pw->pw_dir ) : QString();
 }
@@ -195,7 +196,7 @@ QString SysUtil::symLinkTarget( const QString & path )
 
 bool SysUtil::isBrokenSymLink( const QString & path )
 {
-    QByteArray target = readLink( path );
+    const QByteArray target = readLink( path );
 
     if ( target.size() == 0 )   // path is not a symlink
         return false;           // so it's also not a broken symlink
@@ -203,16 +204,16 @@ bool SysUtil::isBrokenSymLink( const QString & path )
 
     // Start from the symlink's parent directory
 
-    QStringList pathSegments = path.split( '/', QString::SkipEmptyParts );
+    QStringList pathSegments = path.split( '/', Qt::SkipEmptyParts );
     pathSegments.removeLast(); // We already know it's a symlink, not a directory
-    QString parentPath = QString( path.startsWith( "/" ) ? "/" : "" ) + pathSegments.join( "/" );
-    DirSaver dir( parentPath );
+    const QString parentPath = QString( path.startsWith( "/" ) ? "/" : "" ) + pathSegments.join( "/" );
+    const DirSaver dir( parentPath );
 
     // We can't use access() here since that would follow symlinks.
     // Let's use lstat() instead.
 
     struct stat statBuf;
-    int statResult = lstat( target, &statBuf );
+    const int statResult = lstat( target, &statBuf );
 
     if ( statResult == 0 )      // lstat() successful?
     {
@@ -225,7 +226,7 @@ bool SysUtil::isBrokenSymLink( const QString & path )
             logWarning() << "Permission denied for one of the directories"
                          << " in symlink target " << QString::fromUtf8( target )
                          << " of symlink " << path
-                         << endl;
+                         << Qt::endl;
 
             return false;       // We don't know if the symlink is broken
         }
@@ -233,7 +234,7 @@ bool SysUtil::isBrokenSymLink( const QString & path )
         {
             logWarning() << "Broken symlink " << path
                          << " errno: " << strerror( errno )
-                         << endl;
+                         << Qt::endl;
             return true;
         }
     }
@@ -249,11 +250,11 @@ QByteArray SysUtil::readLink( const QString & path )
 QByteArray SysUtil::readLink( const QByteArray & path )
 {
     QByteArray targetBuf( PATH_MAX, 0 );
-    ssize_t len = ::readlink( path, targetBuf.data(), targetBuf.size() );
+    const ssize_t len = ::readlink( path, targetBuf.data(), targetBuf.size() );
 
     if ( len == 0 )
     {
-        logWarning() << QString::fromUtf8( path ) << " is not a symlink" << endl;
+        logWarning() << QString::fromUtf8( path ) << " is not a symlink" << Qt::endl;
     }
     else if ( len == targetBuf.size() )
     {
@@ -264,7 +265,7 @@ QByteArray SysUtil::readLink( const QByteArray & path )
         // workarounds and simply fail with an error in the log.
 
         logError() << "Symlink target of " << QString::fromUtf8( path )
-                   << " is longer than " << PATH_MAX << " bytes" << endl;
+                   << " is longer than " << PATH_MAX << " bytes" << Qt::endl;
         targetBuf.clear();
     }
     else

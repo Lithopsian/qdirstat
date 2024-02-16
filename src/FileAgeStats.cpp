@@ -84,8 +84,9 @@ void FileAgeStats::collectRecursive( FileInfo * dir )
 
         if ( item && item->isFile() )
         {
-            short year  = item->mtimeYear();
-            short month = item->mtimeMonth();
+            const auto yearAndMonth = item->yearAndMonth();
+            const short year = yearAndMonth.first;
+            const short month = yearAndMonth.second;
 
             YearStats &yearStats = _yearStats[ year ];
 
@@ -103,9 +104,7 @@ void FileAgeStats::collectRecursive( FileInfo * dir )
         }
 
 	if ( item->hasChildren() )
-	{
 	    collectRecursive( item );
-	}
 
         ++it;
     }
@@ -195,12 +194,6 @@ YearStats * FileAgeStats::monthStats( short year, short month )
     }
 
     return stats;
-}
-
-
-bool FileAgeStats::monthStatsAvailableFor( short year ) const
-{
-    return year == _thisYear || year == _lastYear;
 }
 
 

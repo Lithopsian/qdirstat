@@ -10,8 +10,8 @@
 #define FormatUtil_h
 
 
-#include <time.h>       // time_t
-#include <sys/types.h>  // mode_t
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <QString>
 #include <QTextStream>
@@ -28,7 +28,7 @@ namespace QDirStat
      *
      * Note: For logDebug() etc., operator<< is overwritten to do exactly that:
      *
-     *	   logDebug() << "Size: " << x->totalSize() << endl;
+     *	   logDebug() << "Size: " << x->totalSize() << Qt::endl;
      **/
     QString formatSize( FileSize size );
 
@@ -88,7 +88,7 @@ namespace QDirStat
 
     /**
      * Format the filesystem object type from a mode, e.g. "Directory",
-     * "Symbolic Link", "Block Device", "File".
+     * "Symbolic link", "Block device", "File".
      **/
     QString formatFilesystemObjectType( mode_t mode );
 

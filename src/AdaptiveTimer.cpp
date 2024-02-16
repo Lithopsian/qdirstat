@@ -12,170 +12,136 @@
 #include "Exception.h"
 
 
-#define DEFAULT_COOLDOWN_PERIOD 3000 // millisec
-#define VERBOSE_STAGES          0
-#define VERBOSE_DELAY           1
+#define VERBOSE_DELAY           0
 
 
 using namespace QDirStat;
 
 
-AdaptiveTimer::AdaptiveTimer( QObject * parent ):
-    QObject( parent )
+AdaptiveTimer::AdaptiveTimer( QObject * parent, QList<float> delays, QList<int> cooldowns ):
+    QObject ( parent ),
+    _payloadTime { 0 },
+    _delayStage { 0 },
+    _delays { delays },
+    _cooldowns { cooldowns },
+    _defaultDelay { 0 }
 {
-    clear();
-
-    connect( &_deliveryTimer, SIGNAL( timeout()         ),
-             this,            SLOT  ( deliveryTimeout() ) );
-
-    connect( &_coolDownTimer, SIGNAL( timeout()  ),
-             this,            SLOT  ( coolDown() ) );
+    init();
 }
 
-
-AdaptiveTimer::~AdaptiveTimer()
+/*
+AdaptiveTimer::AdaptiveTimer( QObject * parent, int defaultDelay ):
+    QObject ( parent ),
+    _payloadTime { 0 },
+    _delayStage { 0 },
+    _defaultDelay { defaultDelay }
 {
-
+    init();
 }
+*/
 
-
-void AdaptiveTimer::addDelayStage( int delayMillisec )
+void AdaptiveTimer::init()
 {
-    if ( _delays.isEmpty() )
-        _deliveryTimer.setInterval( delayMillisec );
+    connect( &_deliveryTimer, &QTimer::timeout,
+             this,            &AdaptiveTimer::deliveryTimeout );
 
-    _delays << delayMillisec;
-}
+    connect( &_cooldownTimer, &QTimer::timeout,
+             this,            &AdaptiveTimer::decreaseDelay );
 
-
-void AdaptiveTimer::addCoolDownPeriod( int coolDownMillisec )
-{
-    if ( _coolDownPeriods.isEmpty() )
-        _coolDownTimer.setInterval( coolDownMillisec );
-
-    _coolDownPeriods << coolDownMillisec;
-}
-
-
-void AdaptiveTimer::clear()
-{
-    _deliveryTimer.stop();
     _deliveryTimer.setSingleShot( true );
-    _deliveryTimer.setInterval( 0 );
-
-    _coolDownTimer.stop();
-    _coolDownTimer.setSingleShot( true );
-    _coolDownTimer.setInterval( DEFAULT_COOLDOWN_PERIOD ); // millisec
-
-    _delays.clear();
-    _coolDownPeriods.clear();
-
-    _delayStage    = 0;
-    _coolDownStage = 0;
+    _cooldownTimer.setSingleShot( true );
 }
 
 
-void AdaptiveTimer::delayedRequest( const QVariant & payload )
+void AdaptiveTimer::request( Payload payload )
 {
-    // logDebug() << "Received request for " << payload.toString() << endl;
+    //logDebug() << "Received request" << Qt::endl;
     _payload = payload;
 
-    if ( _coolDownTimer.isActive() )
+    if ( _cooldownTimer.isActive() )
         increaseDelay();
-    else
-        _coolDownTimer.start();
 
-    _deliveryTimer.start();
+    _deliveryTimer.start( currentDelay() );
 }
 
 
 void AdaptiveTimer::deliveryTimeout()
 {
-    // logDebug() << "Delivering request for " << _payload.toString() << endl;
-    emit deliverRequest( _payload );
+    //logDebug() << "Delivering request" << Qt::endl;
+
+    _payloadStopwatch.start();
+    _payload();
+    _payloadTime = _payloadStopwatch.elapsed();
+
+    //logDebug() << "deliveryTime=" << _deliveryTime << Qt::endl;
+
+//    deliveryComplete();
+//    emit deliverRequest( _payload );
+
+    _cooldownTimer.start( cooldownPeriod() );
+}
+
+
+/*
+void AdaptiveTimer::deliveryComplete()
+{
+    _deliveryTime = _deliveryStopwatch.elapsed();
+    // logDebug() << "deliveryTime=" << _deliveryTime << Qt::endl;
+
+    _deliveryTimer.setInterval( _deliveryTime * _delays[ _delayStage ] );
+
+    _cooldownTimer.start();
+}
+*/
+
+int AdaptiveTimer::currentDelay() const
+{
+    if ( _delays.isEmpty() )
+        return _defaultDelay;
+
+    return _payloadTime * _delays[ _delayStage ];
+}
+
+
+int AdaptiveTimer::cooldownPeriod() const
+{
+    if ( _cooldowns.isEmpty() )
+        return 0;
+
+    // Might be more delays than cooldowns
+    const int cooldownStage = qMin( _cooldowns.size() - 1, _delayStage );
+    return _cooldowns[ cooldownStage ];
 }
 
 
 void AdaptiveTimer::increaseDelay()
 {
-    if ( _delayStage < _delays.size () - 1 )
-    {
-        int delay = _delays[ ++_delayStage ];
+    if ( _delayStage >= _delays.size() - 1 )
+        return;
+
+    ++_delayStage;
 
 #if VERBOSE_DELAY
-        logDebug() << "Increasing delay to stage " << _delayStage
-                   << ": " << delay << " millisec"
-                   << endl;
+    logDebug() << "Increasing delay to stage " << _delayStage
+               << ": " << currentDelay() << " millisec"
+               << Qt::endl;
 #endif
-
-        _deliveryTimer.setInterval( delay );
-    }
-
-    heatUp();
 }
 
 
 void AdaptiveTimer::decreaseDelay()
 {
-    if ( _delayStage > 0 )
-    {
-        int delay = _delays[ --_delayStage ];
+    if ( _delayStage == 0 )
+        return;
+
+    --_delayStage;
 
 #if VERBOSE_DELAY
-        logDebug() << "Decreasing delay to stage " << _delayStage
-                   << ": " << delay << " millisec"
-                   << endl;
+    logDebug() << "Decreasing delay to stage " << _delayStage
+               << ": " << currentDelay() << " millisec"
+               << Qt::endl;
 #endif
 
-        _deliveryTimer.setInterval( delay );
-    }
-
-    if ( _delayStage > 0 )
-        _coolDownTimer.start();
-}
-
-
-void AdaptiveTimer::heatUp()
-{
-    // logDebug() << "Heating up" << endl;
-
-    if ( _coolDownStage < _coolDownPeriods.size() - 1 )
-    {
-        int coolDownInterval = _coolDownStage < _coolDownPeriods.size() ?
-                                                _coolDownPeriods[ ++_coolDownStage ] : DEFAULT_COOLDOWN_PERIOD;
-
-#if VERBOSE_STAGES
-        logDebug() << "Heating up to cooldown stage " << _coolDownStage
-                   << ": " << coolDownInterval << " millisec"
-                   << endl;
-#endif
-
-        _coolDownTimer.setInterval( coolDownInterval );
-    }
-
-    _coolDownTimer.start();
-}
-
-
-void AdaptiveTimer::coolDown()
-{
-    // logDebug() << "Cooling down" << endl;
-
-    if ( _coolDownStage > 0 )
-    {
-        --_coolDownStage;
-
-        int coolDownInterval = _coolDownStage < _coolDownPeriods.size() ?
-                                                _coolDownPeriods[ _coolDownStage ] : DEFAULT_COOLDOWN_PERIOD;
-
-#if VERBOSE_STAGES
-        logDebug() << "Cooling down to stage " << _coolDownStage
-                   << ": " << coolDownInterval << " millisec"
-                   << endl;
-#endif
-
-        _coolDownTimer.setInterval( coolDownInterval );
-    }
-
-    decreaseDelay();
+    // continue to cool down even if there are no further requests
+    _cooldownTimer.start( cooldownPeriod() );
 }

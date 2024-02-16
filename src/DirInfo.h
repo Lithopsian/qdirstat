@@ -28,12 +28,6 @@ namespace QDirStat
      * directory tree; this class fills those stubs with life.
      *
      * @short directory item within a DirTree.
-     *
-     * Important derived classes:
-     *
-     * - DotEntry  to collect direct file children of a directory
-     * - Attic     to collect ignored children
-     * - PkgInfo   for a software package
      **/
     class DirInfo: public FileInfo
     {
@@ -42,31 +36,37 @@ namespace QDirStat
 	/**
 	 * Constructor from a stat buffer (i.e. based on an lstat() call).
 	 **/
-	DirInfo( const QString & filenameWithoutPath,
-		 struct stat   * statInfo,
+	DirInfo( DirInfo       * parent,
 		 DirTree       * tree,
-		 DirInfo       * parent = 0 );
+		 const QString & filenameWithoutPath,
+		 struct stat   * statInfo );
 
 	/**
 	 * Constructor from the bare necessary fields for use from a cache file
 	 * reader.
 	 **/
-	DirInfo( DirTree *	 tree,
-		 DirInfo *	 parent,
+	DirInfo( DirInfo *	 parent,
+		 DirTree *	 tree,
 		 const QString & filenameWithoutPath,
 		 mode_t		 mode,
 		 FileSize	 size,
 		 time_t		 mtime );
 
 	/**
-	 * Default constructor.
-	 *
-	 * This is the only constructor that will not create a dot entry
-	 * immediately. If that is desired, you can always use ensureDotEntry()
-	 * later.
+	 * This constructor does not initially create a dot entry.  If that
+	 * is desired, you can always use ensureDotEntry() later.
 	 **/
-	DirInfo( DirTree * tree,
-		 DirInfo * parent = 0 );
+	DirInfo( DirInfo	* parent,
+	         DirTree	* tree,
+		 const QString	& name );
+
+	/**
+	 * Constructor from just a tree.  Will have no parent, no name, and
+	 * no dot entry.
+	 **/
+	DirInfo( DirTree * tree ):
+	    DirInfo ( 0, tree, "" )
+	{}
 
 	/**
 	 * Destructor.
@@ -236,7 +236,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isBusy() Q_DECL_OVERRIDE;
+	virtual bool isBusy() const Q_DECL_OVERRIDE;
 
 	/**
 	 * Returns the number of pending read jobs in this subtree. When this
@@ -580,15 +580,21 @@ namespace QDirStat
 	 **/
 	virtual void cleanupAttics();
 
-        /**
-         * Populate the _dominantChildren list.
-         **/
-        void findDominantChildren();
+	/**
+	 * Populate the _dominantChildren list.
+	 **/
+	void findDominantChildren();
 
 
 	//
 	// Data members
 	//
+
+	FileInfoList *	_sortedChildren;
+	FileInfoList *	_dominantChildren;
+	DataColumn	_lastSortCol;
+	Qt::SortOrder	_lastSortOrder;
+	bool		_lastIncludeAttic:1;
 
 	bool		_isMountPoint:1;	// Flag: is this a mount point?
 	bool		_isExcluded:1;		// Flag: was this directory excluded?
@@ -618,12 +624,6 @@ namespace QDirStat
 	int		_errSubDirCount;
 	time_t		_latestMtime;
 	time_t		_oldestFileMtime;
-
-	FileInfoList *	_sortedChildren;
-        FileInfoList *  _dominantChildren;
-	DataColumn	_lastSortCol;
-	Qt::SortOrder	_lastSortOrder;
-	bool		_lastIncludeAttic;
 
 	DirReadState	_readState;
 

@@ -14,8 +14,7 @@
 #include <QTreeWidgetItem>
 
 #include "ui_filesystems-window.h"
-#include "FileInfo.h"	// FileSize
-
+#include "FileSize.h"
 
 
 namespace QDirStat
@@ -77,6 +76,8 @@ namespace QDirStat
 	 **/
 	void populate();
 
+    protected slots:
+
 	/**
 	 * Refresh (reload) all data.
 	 **/
@@ -91,9 +92,6 @@ namespace QDirStat
 	 **/
 	virtual void reject() Q_DECL_OVERRIDE;
 
-
-    protected slots:
-
 	/**
 	 * Enable or disable widgets such as the "Read" button.
 	 **/
@@ -105,6 +103,10 @@ namespace QDirStat
 	 **/
 	void readSelectedFilesystem();
 
+	/**
+	 * Copies the device path to the clipboard, trieggered from the context menu.
+	 **/
+	void copyDeviceToClipboard();
 
     protected:
 
@@ -122,6 +124,18 @@ namespace QDirStat
 	 * Show panel message warning about Btrfs and how it reports free sizes
 	 **/
 	void showBtrfsFreeSizeWarning();
+
+	/**
+	 * Custom context menu signalled.
+	 **/
+	virtual void contextMenu( const QPoint & pos );
+
+	/**
+	 * Key press event for detecting evnter/return.
+	 *
+	 * Reimplemented from QWidget.
+	 **/
+	virtual void keyPressEvent( QKeyEvent * event ) Q_DECL_OVERRIDE;
 
 
 	//

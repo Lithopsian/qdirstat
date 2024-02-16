@@ -8,7 +8,9 @@
 
 #include "MainWindow.h"
 #include "QDirStatApp.h"
-#include "ShowUnpkgFilesDialog.h"
+#include "OpenUnpkgDialog.h"
+#include "DirTree.h"
+#include "DirTreeModel.h"
 #include "DirTreePatternFilter.h"
 #include "DirTreePkgFilter.h"
 #include "PkgManager.h"
@@ -21,17 +23,17 @@
 using namespace QDirStat;
 
 
-void MainWindow::askShowUnpkgFiles()
+void MainWindow::askOpenUnpkg()
 {
-    PkgManager * pkgManager = PkgQuery::primaryPkgManager();
+    const PkgManager * pkgManager = PkgQuery::primaryPkgManager();
 
     if ( ! pkgManager )
     {
-	logError() << "No supported primary package manager" << endl;
+	logError() << "No supported primary package manager" << Qt::endl;
 	return;
     }
 
-    ShowUnpkgFilesDialog dialog( this );
+    OpenUnpkgDialog dialog( this );
 
     if ( dialog.exec() == QDialog::Accepted )
 	showUnpkgFiles( dialog.values() );
@@ -40,39 +42,36 @@ void MainWindow::askShowUnpkgFiles()
 
 void MainWindow::showUnpkgFiles( const QString & url )
 {
-    UnpkgSettings unpkgSettings( UnpkgSettings::ReadFromConfig );
-    unpkgSettings.startingDir = url;
-
-    showUnpkgFiles( unpkgSettings );
+    showUnpkgFiles( UnpkgSettings( url ) );
 }
 
 
 void MainWindow::showUnpkgFiles( const UnpkgSettings & unpkgSettings )
 {
-    logDebug() << "Settings:" << endl;
     unpkgSettings.dump();
 
-    PkgManager * pkgManager = PkgQuery::primaryPkgManager();
+    _enableDirPermissionsWarning = true;
 
+    const PkgManager * pkgManager = PkgQuery::primaryPkgManager();
     if ( ! pkgManager )
     {
-	logError() << "No supported primary package manager" << endl;
+	logError() << "No supported primary package manager" << Qt::endl;
 	return;
     }
 
-    app()->dirTreeModel()->clear(); // For instant feedback
-    BusyPopup msg( tr( "Reading file lists..." ), this );
-
+    pkgQuerySetup();
+    BusyPopup msg( tr( "Reading package database..." ), this );
 
     setUnpkgExcludeRules( unpkgSettings );
     setUnpkgFilters( unpkgSettings, pkgManager );
+    setUnpkgCrossFilesystems( unpkgSettings );
 
     // Start reading the directory
-
     try
     {
         QString dir = parseUnpkgStartingDir( unpkgSettings );
 
+        _futureSelection.setUrl( dir );
 	app()->dirTreeModel()->openUrl( dir );
 	updateWindowTitle( app()->dirTree()->url() );
     }
@@ -89,8 +88,11 @@ void MainWindow::showUnpkgFiles( const UnpkgSettings & unpkgSettings )
 void MainWindow::setUnpkgExcludeRules( const UnpkgSettings & unpkgSettings )
 {
     // Set up the exclude rules for directories that should be ignored
-
-    ExcludeRules * excludeRules = new ExcludeRules( unpkgSettings.excludeDirs );
+    ExcludeRules * excludeRules = new ExcludeRules( unpkgSettings.excludeDirs(),
+                                                    ExcludeRule::Wildcard,
+                                                    true,    // case-sensitive
+                                                    true,    // useFullPath
+                                                    false ); // checkAnyFileChild
     CHECK_NEW( excludeRules );
 
     app()->dirTree()->setExcludeRules( excludeRules );
@@ -98,39 +100,34 @@ void MainWindow::setUnpkgExcludeRules( const UnpkgSettings & unpkgSettings )
 
 
 void MainWindow::setUnpkgFilters( const UnpkgSettings & unpkgSettings,
-                                  PkgManager          * pkgManager )
+                                  const PkgManager    * pkgManager )
 {
     // Filter for ignoring all files from all installed packages
-
     DirTreeFilter * filter = new DirTreePkgFilter( pkgManager );
     CHECK_NEW( filter );
 
     app()->dirTree()->clearFilters();
     app()->dirTree()->addFilter( filter );
 
-
     // Add the filters for each file pattern the user explicitly requested to ignore
-
-    foreach ( const QString & pattern, unpkgSettings.ignorePatterns )
-    {
+    foreach ( const QString & pattern, unpkgSettings.ignorePatterns() )
 	app()->dirTree()->addFilter( DirTreePatternFilter::create( pattern ) );
-    }
+}
+
+
+void MainWindow::setUnpkgCrossFilesystems( const UnpkgSettings & unpkgSettings )
+{
+    app()->dirTree()->setCrossFilesystems( unpkgSettings.crossFilesystems() );
 }
 
 
 QString MainWindow::parseUnpkgStartingDir( const UnpkgSettings & unpkgSettings )
 {
-    QString dir = unpkgSettings.startingDir;
-    dir.replace( QRegExp( "^unpkg:" ), "" );
+    QString dir = unpkgSettings.startingDir();
+    dir.replace( QRegularExpression( "^unpkg:/+", QRegularExpression::CaseInsensitiveOption ), "/" );
 
-    if ( dir != unpkgSettings.startingDir )
-	logInfo() << "Parsed starting dir: " << dir << endl;
+    if ( dir != unpkgSettings.startingDir() )
+	logInfo() << "Parsed starting dir: " << dir << Qt::endl;
 
     return dir;
-}
-
-
-bool MainWindow::isUnpkgUrl( const QString & url )
-{
-    return url.startsWith( "unpkg:/" );
 }

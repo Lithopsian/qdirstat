@@ -11,14 +11,13 @@
 #define FileInfo_h
 
 
-#include <sys/types.h>  // dev_t, mode_t, nlink_t
-#include <sys/stat.h>   // S_ISDIR() etc.
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <QTextStream>
 #include <QList>
 
 #include "FileSize.h"
-#include "Logger.h"
 
 // The size of a standard disk block.
 //
@@ -61,10 +60,10 @@ namespace QDirStat
      * The most basic building block of a DirTree:
      *
      * Information about one single directory entry. This is the type of info
-     * typically obtained by stat() / lstat() or similar system calls.
+     * typically obtained by stat() / lstat() or similar calls.
      *
      * This class is tuned for size rather than speed: A typical Linux system
-     * easily has 500,000+ filesystem objects, and at least one entry of this
+     * easily has 150,000+ filesystem objects, and at least one entry of this
      * sort is required for each of them.
      *
      * This class provides stubs for children management, yet those stubs all
@@ -72,46 +71,77 @@ namespace QDirStat
      * Derived classes need to take care of that.
      *
      * @short Basic file information (like obtained by the lstat() sys call)
-     *
-     * Important derived classes:
-     *
-     * - DirInfo     for a directory
-     *   - DotEntry  to collect direct file children of a directory
-     *   - Attic     to collect ignored children
-     *   - PkgInfo   for a software package
      **/
     class FileInfo
     {
     public:
+
 	/**
-	 * Default constructor.
+	 * Constructor from raw data values.
 	 **/
-	FileInfo( DirTree    * tree,
-		  DirInfo    * parent = 0,
-		  const char * name   = 0 );
+	FileInfo( DirInfo	* parent,
+		  DirTree	* tree,
+		  const QString	& filenameWithoutPath,
+		  mode_t	  mode,
+		  FileSize	  size,
+		  time_t	  mtime,
+		  bool		  isSparseFile,
+		  FileSize	  blocks,
+		  nlink_t	  links ):
+	    _parent { parent },
+	    _next { 0 },
+	    _tree { tree },
+	    _magic { FileInfoMagic },
+	    _name { filenameWithoutPath },
+	    _isLocalFile { true },
+	    _isSparseFile { isSparseFile },
+	    _isIgnored { false },
+	    _device { 0 },
+	    _mode { mode },
+	    _links { links },
+	    _uid { 0 },
+	    _gid { 0 },
+	    _size { size },
+	    _blocks { blocks },
+	    _allocatedSize { blocks * STD_BLOCK_SIZE },
+	    _mtime { mtime }
+	{}
+
+	/**
+	 * Constructor from the bare necessary fields.
+	 *
+	 * Don't make any assumptions about the file's tail. We might use
+	 *
+	 * _allocatedSize = _blocks * STD_BLOCK_SIZE;
+	 *
+	 * but that might be wrong if the filesystem has intelligent fragment
+	 * handling. Simply use the byte size instead.
+	 **/
+	FileInfo( DirInfo	* parent,
+		  DirTree	* tree,
+		  const QString	& filenameWithoutPath,
+		  mode_t	  mode,
+		  FileSize	  size,
+		  time_t	  mtime ):
+	    FileInfo { parent, tree, filenameWithoutPath, mode, size, mtime, false, blocksFromSize( size ), 1 }
+	{}
+
+	/**
+	 * Constructor from just the parent, tree, and name.
+	 **/
+	FileInfo( DirInfo	* parent,
+		  DirTree	* tree,
+		  const QString	& name ):
+	    FileInfo { parent, tree, name, 0, 0, 0, false, 0, 1 }
+	{}
 
 	/**
 	 * Constructor from a stat buffer (i.e. based on an lstat() call).
 	 **/
-	FileInfo( const QString & filenameWithoutPath,
-		  struct stat	* statInfo,
+	FileInfo( DirInfo	* parent,
 		  DirTree	* tree,
-		  DirInfo	* parent = 0 );
-
-	/**
-	 * Constructor from the bare necessary fields
-	 * for use from a cache file reader
-	 *
-	 * If 'blocks' is -1, it will be calculated from 'size'.
-	 **/
-	FileInfo( DirTree *	  tree,
-		  DirInfo *	  parent,
-		  const QString & filenameWithoutPath,
-		  mode_t	  mode,
-		  FileSize	  size,
-		  time_t	  mtime,
-		  FileSize	  blocks = -1,
-		  nlink_t	  links	 = 1 );
+		  const QString	& filenameWithoutPath,
+		  struct stat	* statInfo );
 
 	/**
 	 * Destructor.
@@ -128,7 +158,7 @@ namespace QDirStat
 	 * Notice that this is intentionally not a virtual function to avoid
 	 * a segfault via the vptr if it is not valid.
 	 **/
-	bool checkMagicNumber() const;
+	bool checkMagicNumber() const { return _magic == FileInfoMagic; }
 
 	/**
 	 * Returns whether or not this is a local file (protocol "file:").
@@ -183,7 +213,7 @@ namespace QDirStat
 	 * Notice: You can simply use the QTextStream operator<< to output
 	 * exactly this:
 	 *
-	 * logDebug() << "Found fileInfo " << info << endl;
+	 * logDebug() << "Found fileInfo " << info << Qt::endl;
 	 **/
 	virtual QString debugUrl() const;
 
@@ -277,6 +307,12 @@ namespace QDirStat
 	FileSize size() const;
 
 	/**
+	 * The number of blocks, calculated from the size of the file.
+	 **/
+	static int blocksFromSize( FileSize size )
+	    { return ( size % STD_BLOCK_SIZE ) > 0 ? size / STD_BLOCK_SIZE + 1 : size / STD_BLOCK_SIZE; }
+
+	/**
 	 * The file size in bytes without taking multiple hard links into
 	 * account.
 	 **/
@@ -327,22 +363,13 @@ namespace QDirStat
 	time_t mtime() const { return _mtime; }
 
         /**
-         * The year of the modification time of the file (1970-2037).
-         *
-         * The first call to this will calculate the value from _mtime and
-         * cache it (and the corresponding month); that's why this is not a
-         * const method.
-         **/
-        short mtimeYear();
-
-        /**
-         * The month of the modification time of the file (1-12).
+         * Returns the year and month derived from the file mtime.
          *
          * The first call to this will calculate the value from _mtime and
          * cache it (and the corresponding year); that's why this is not a
          * const method.
          **/
-        short mtimeMonth();
+	 QPair<short, short> yearAndMonth();
 
 	/**
 	 * Returns the total size in bytes of this subtree.
@@ -470,7 +497,7 @@ namespace QDirStat
 	 * This default implementation silently ignores the value passed and
 	 * does nothing. Derived classes may want to overwrite this.
 	 **/
-	virtual void setExcluded( bool excl ) { Q_UNUSED( excl); return; }
+	virtual void setExcluded( bool ) { return; }
 
 	/**
 	 * Returns whether or not this is a mount point.
@@ -485,8 +512,8 @@ namespace QDirStat
 	 * This default implementation silently ignores the value passed and
 	 * does nothing. Derived classes may want to overwrite this.
 	 **/
-	virtual void setMountPoint( bool isMountPoint = true )
-	    { Q_UNUSED( isMountPoint ); return; }
+	virtual void setMountPoint( bool )
+	    { return; }
 
 	/**
 	 * Returns true if this subtree is finished reading.
@@ -503,7 +530,7 @@ namespace QDirStat
 	 * This default implementation always returns 'false';
 	 * derived classes should overwrite this.
 	 **/
-	virtual bool isBusy() { return false; }
+	virtual bool isBusy() const { return false; }
 
 	/**
 	 * Returns the number of pending read jobs in this subtree. When this
@@ -521,16 +548,16 @@ namespace QDirStat
 	 **/
 	bool filesystemCanReportBlocks() const;
 
-        /**
-         * Return 'true' if this is a dominant item among its siblings, i.e. if
-         * its total size is much larger than the other items on the same level.
-         *
-         * This forwards the query to the parent, if there is one.
-         **/
-        bool isDominant();
 
+	/**
+	 * Return 'true' if this is a dominant item among its siblings, i.e. if
+	 * its total size is much larger than the other items on the same level.
+	 *
+	 * This forwards the query to the parent, if there is one.
+	 **/
+	bool isDominant();
 
-	//
+ 	//
 	// Tree management
 	//
 
@@ -576,8 +603,7 @@ namespace QDirStat
 	 * This default implementation does nothing.
 	 * Derived classes might want to overwrite this.
 	 **/
-	virtual void setFirstChild( FileInfo *newFirstChild )
-	    { Q_UNUSED( newFirstChild ); }
+	virtual void setFirstChild( FileInfo * ) {}
 
 	/**
 	 * Returns true if this entry has any children.
@@ -614,7 +640,7 @@ namespace QDirStat
 	 *
 	 * This default implementation does nothing.
 	 **/
-	virtual void insertChild( FileInfo *newChild ) { Q_UNUSED( newChild ); }
+	virtual void insertChild( FileInfo * ) {}
 
 	/**
 	 * Return the "Dot Entry" for this node if there is one (or 0
@@ -632,8 +658,7 @@ namespace QDirStat
 	 *
 	 * This default implementation does nothing.
 	 **/
-	virtual void setDotEntry( FileInfo *newDotEntry )
-	    { Q_UNUSED( newDotEntry ); }
+	virtual void setDotEntry( FileInfo * ) {}
 
 	/**
 	 * Return 'true' if this is a pseudo directory: A "dot entry" or an
@@ -692,7 +717,7 @@ namespace QDirStat
 	 *
 	 * This default implementation does nothing.
 	 **/
-	virtual void childAdded( FileInfo *newChild ) { Q_UNUSED( newChild ); }
+	virtual void childAdded( FileInfo * ) {}
 
 	/**
 	 * Remove a child from the children list.
@@ -705,13 +730,13 @@ namespace QDirStat
 	 * This default implementation does nothing.
 	 * Derived classes that can handle children should overwrite this.
 	 **/
-	virtual void unlinkChild( FileInfo *deletedChild ) { Q_UNUSED( deletedChild ); }
+	virtual void unlinkChild( FileInfo * ) {}
 
 	/**
 	 * Notification that a child is about to be deleted somewhere in the
 	 * subtree.
 	 **/
-	virtual void deletingChild( FileInfo *deletedChild ) { Q_UNUSED( deletedChild ); }
+	virtual void deletingChild( FileInfo * ) {}
 
 	/**
 	 * Get the current state of the directory reading process:
@@ -934,15 +959,19 @@ namespace QDirStat
 
         /**
          * Calculate values that are dependent on _mtime, yet quite expensive
-         * to calculate, and cache them: _mtimeYear, _mtimeMonth
+	     * to calculate, and cache them: _mtimeYear, _mtimeMonth
          **/
-        void processMtime();
+//        void processMtime();
 
 
 	// Data members.
 	//
 	// Keep this short in order to use as little memory as possible -
 	// there will be a _lot_ of entries of this kind!
+
+	DirInfo	 *	_parent;		// pointer to the parent entry
+	FileInfo *	_next;			// pointer to the next entry
+	DirTree	 *	_tree;			// pointer to the parent tree
 
 	short		_magic;			// magic number to detect if this object is valid
 	QString		_name;			// the file name (without path!)
@@ -958,12 +987,6 @@ namespace QDirStat
 	FileSize	_blocks;		// 512 bytes blocks
 	FileSize	_allocatedSize;		// allocated size in bytes
 	time_t		_mtime;			// modification time
-        short           _mtimeYear;             // year  of the modification time or -1
-        short           _mtimeMonth;            // month of the modification time or -1
-
-	DirInfo	 *	_parent;		// pointer to the parent entry
-	FileInfo *	_next;			// pointer to the next entry
-	DirTree	 *	_tree;			// pointer to the parent tree
 
 	static bool	_ignoreHardLinks;	// don't distribute size for multiple hard links
 
@@ -971,7 +994,7 @@ namespace QDirStat
 
 
 
-    typedef QList<FileInfo *> FileInfoList;
+    typedef QVector<FileInfo *> FileInfoList;
 
 
 

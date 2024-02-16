@@ -6,35 +6,57 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>266</width>
-    <height>427</height>
+    <width>229</width>
+    <height>368</height>
    </rect>
-  </property>
-  <property name="windowTitle">
-   <string>Details</string>
   </property>
   <property name="currentIndex">
    <number>0</number>
   </property>
   <widget class="QWidget" name="fileDetailsPage">
-   <layout class="QHBoxLayout" name="fileDetailsHBox">
+   <layout class="QHBoxLayout" name="horizontalLayout_5">
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>5</number>
+    </property>
     <item>
-     <layout class="QVBoxLayout" name="fileDetailsVBox">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1">
       <item>
-       <layout class="QHBoxLayout" name="fileHeadingHBox">
+       <layout class="QHBoxLayout" name="fileHeadingHBox" stretch="0,0,0,0,0,1">
         <item>
          <widget class="QLabel" name="fileIcon">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
           <property name="pixmap">
            <pixmap resource="icons.qrc">:/icons/tree-medium/file.png</pixmap>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="specialIcon">
+          <property name="pixmap">
+           <pixmap resource="icons.qrc">:/icons/tree-medium/special.png</pixmap>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="blockIcon">
+          <property name="pixmap">
+           <pixmap resource="icons.qrc">:/icons/tree-medium/block-device.png</pixmap>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="charIcon">
+          <property name="pixmap">
+           <pixmap resource="icons.qrc">:/icons/tree-medium/char-device.png</pixmap>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="symlinkIcon">
+          <property name="pixmap">
+           <pixmap resource="icons.qrc">:/icons/tree-medium/symlink.png</pixmap>
           </property>
          </widget>
         </item>
@@ -47,7 +69,10 @@
            </font>
           </property>
           <property name="text">
-           <string>myfile.txt</string>
+           <string notr="true">myfile.txt</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
           </property>
           <property name="textInteractionFlags">
            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
@@ -57,23 +82,109 @@
        </layout>
       </item>
       <item>
-       <spacer name="fileTopSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <layout class="QGridLayout" name="gridLayout" columnstretch="0,1">
+        <property name="topMargin">
+         <number>10</number>
         </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
+        <property name="horizontalSpacing">
+         <number>0</number>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>13</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <layout class="QGridLayout" name="fileGridLayout" columnstretch="0,1">
+        <item row="8" column="1">
+         <widget class="QLabel" name="filePermissionsLabel">
+          <property name="text">
+           <string notr="true">rw-r--r--  0644</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="fileSpacerCaption2">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>10</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="12" column="0">
+         <widget class="QLabel" name="filePackageCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Package:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="fileUserCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>User:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="0">
+         <widget class="QLabel" name="fileSystemFileWarningSpacer">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>10</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLabel" name="fileUserLabel">
+          <property name="text">
+           <string notr="true">user</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="0">
+         <widget class="QLabel" name="fileMTimeCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Last modified:   </string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="fileSizeLabel">
+          <property name="text">
+           <string notr="true">42.0 kB</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="fileMimeOrLinkCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string notr="true">MIME or link:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="fileTypeLabel">
+          <property name="text">
+           <string notr="true">file</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="fileTypeCaption">
           <property name="font">
@@ -86,59 +197,40 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="fileTypeLabel">
+        <item row="4" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="fileAllocatedLabel">
           <property name="text">
-           <string>File</string>
+           <string notr="true">42.0 kB</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="fileMimeCategoryCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
+        <item row="7" column="1">
+         <widget class="QLabel" name="fileGroupLabel">
           <property name="text">
-           <string>MIME Category:</string>
+           <string notr="true">group</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QLabel" name="fileMimeCategoryLabel">
+        <item row="9" column="1">
+         <widget class="QLabel" name="fileMTimeLabel">
           <property name="text">
-           <string>Documents</string>
+           <string notr="true">31.06.2018 09:18</string>
           </property>
          </widget>
         </item>
         <item row="4" column="0">
-         <widget class="QLabel" name="fileSizeCaption">
+         <widget class="QLabel" name="fileAllocatedCaption">
           <property name="font">
            <font>
             <italic>true</italic>
            </font>
           </property>
           <property name="text">
-           <string>Size:</string>
+           <string>Allocated:</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="fileSizeLabel">
-          <property name="text">
-           <string>42.0 kB</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="fileSpacerCaption1">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
+        <item row="11" column="0">
          <widget class="QLabel" name="fileSystemFileWarning">
           <property name="font">
            <font>
@@ -152,74 +244,19 @@
           </property>
          </widget>
         </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="fileSizeCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Size:</string>
+          </property>
+         </widget>
+        </item>
         <item row="8" column="0">
-         <widget class="QLabel" name="filePackageCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Package:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1">
-         <widget class="QLabel" name="filePackageLabel">
-          <property name="text">
-           <string>none</string>
-          </property>
-          <property name="textInteractionFlags">
-           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="QLabel" name="fileSpacerCaption2">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="0">
-         <widget class="QLabel" name="fileUserCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>User:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="1">
-         <widget class="QLabel" name="fileUserLabel">
-          <property name="text">
-           <string>kilroy</string>
-          </property>
-         </widget>
-        </item>
-        <item row="11" column="0">
-         <widget class="QLabel" name="fileGroupCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Group:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="11" column="1">
-         <widget class="QLabel" name="fileGroupLabel">
-          <property name="text">
-           <string>users</string>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="0">
          <widget class="QLabel" name="filePermissionsCaption">
           <property name="font">
            <font>
@@ -231,67 +268,22 @@
           </property>
          </widget>
         </item>
-        <item row="12" column="1">
-         <widget class="QLabel" name="filePermissionsLabel">
-          <property name="text">
-           <string>rw-r--r--  0644</string>
-          </property>
-         </widget>
-        </item>
-        <item row="13" column="0">
-         <widget class="QLabel" name="fileMTimeCaption">
+        <item row="7" column="0">
+         <widget class="QLabel" name="fileGroupCaption">
           <property name="font">
            <font>
             <italic>true</italic>
            </font>
           </property>
           <property name="text">
-           <string>Last Modified:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="13" column="1">
-         <widget class="QLabel" name="fileMTimeLabel">
-          <property name="text">
-           <string>31.06.2018 09:18</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="fileAllocatedCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Allocated:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="fileAllocatedLabel">
-          <property name="text">
-           <string>42.0 kB</string>
+           <string>Group:</string>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QDirStat::PopupLabel" name="fileSymLinkTargetLabel">
+         <widget class="QLabel" name="fileMimeOrLinkLabel">
           <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="fileSymLinkTargetCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Link Target:</string>
+           <string notr="true">category</string>
           </property>
          </widget>
         </item>
@@ -305,24 +297,28 @@
            </font>
           </property>
           <property name="text">
-           <string>Broken Symlink! </string>
+           <string>broken symlink</string>
           </property>
-          <property name="margin">
-           <number>0</number>
+         </widget>
+        </item>
+        <item row="12" column="1">
+         <widget class="QLabel" name="filePackageLabel">
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
           </property>
          </widget>
         </item>
        </layout>
       </item>
       <item>
-       <spacer name="fileBottomStretch">
+       <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>20</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -330,14 +326,14 @@
      </layout>
     </item>
     <item>
-     <spacer name="fileRightStretch">
+     <spacer name="horizontalSpacer">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>76</width>
-        <height>20</height>
+        <width>0</width>
+        <height>0</height>
        </size>
       </property>
      </spacer>
@@ -345,22 +341,13 @@
    </layout>
   </widget>
   <widget class="QWidget" name="dirDetailsPage">
-   <layout class="QHBoxLayout" name="dirDetailsHBox">
+   <layout class="QHBoxLayout" name="horizontalLayout_6">
     <item>
-     <layout class="QVBoxLayout" name="dirDetailsVBox">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <layout class="QHBoxLayout" name="dirHeadingHBox">
+       <layout class="QHBoxLayout" name="dirHeadingHBox" stretch="0,0,1">
         <item>
          <widget class="QLabel" name="dirIcon">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
           <property name="pixmap">
            <pixmap resource="icons.qrc">:/icons/tree-medium/dir.png</pixmap>
           </property>
@@ -368,15 +355,6 @@
         </item>
         <item>
          <widget class="QLabel" name="dirUnreadableIcon">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
           <property name="pixmap">
            <pixmap resource="icons.qrc">:/icons/tree-medium/unreadable-dir.png</pixmap>
           </property>
@@ -391,7 +369,7 @@
            </font>
           </property>
           <property name="text">
-           <string>doc/</string>
+           <string notr="true">doc/</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
@@ -404,53 +382,68 @@
        </layout>
       </item>
       <item>
-       <spacer name="dirTopSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>13</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <layout class="QGridLayout" name="dirGridLayout" columnstretch="0,1">
-        <property name="horizontalSpacing">
+       <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,1">
+        <property name="topMargin">
          <number>10</number>
         </property>
-        <item row="2" column="0">
-         <widget class="QLabel" name="dirTotalSizeCaption">
+        <property name="horizontalSpacing">
+         <number>0</number>
+        </property>
+        <item row="11" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="dirOwnSizeLabel">
+          <property name="text">
+           <string notr="true">4.0 kiB</string>
+          </property>
+         </widget>
+        </item>
+        <item row="14" column="1">
+         <widget class="QLabel" name="dirPermissionsLabel">
+          <property name="text">
+           <string notr="true">rwxr-xr-x  0755</string>
+          </property>
+         </widget>
+        </item>
+        <item row="12" column="1">
+         <widget class="QLabel" name="dirUserLabel">
+          <property name="text">
+           <string notr="true">kilroy</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="0">
+         <widget class="QLabel" name="dirOwnSizeCaption">
           <property name="font">
            <font>
             <italic>true</italic>
            </font>
           </property>
           <property name="text">
-           <string>Total Size:</string>
+           <string>Own size:</string>
           </property>
          </widget>
         </item>
-        <item row="9" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="dirOwnSizeLabel">
+        <item row="6" column="1">
+         <widget class="QLabel" name="dirFileCountLabel">
           <property name="text">
-           <string>4.0 kiB</string>
+           <string notr="true">15</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QLabel" name="dirItemCountLabel">
+        <item row="10" column="0">
+         <widget class="QLabel" name="dirDirectoryHeading">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <italic>true</italic>
+            <bold>true</bold>
+           </font>
+          </property>
           <property name="text">
-           <string>17</string>
+           <string>Directory</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="0">
+        <item row="6" column="0">
          <widget class="QLabel" name="dirFileCountCaption">
           <property name="font">
            <font>
@@ -462,104 +455,41 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
-         <widget class="QLabel" name="dirFileCountLabel">
-          <property name="text">
-           <string>15</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="dirSubDirCountCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Subdirs:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QLabel" name="dirSubDirCountLabel">
-          <property name="text">
-           <string>2</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="dirLatestMTimeCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Last Modified:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="1">
+        <item row="8" column="1">
          <widget class="QLabel" name="dirLatestMTimeLabel">
           <property name="text">
-           <string>31.06.2018 09:18</string>
+           <string notr="true">31.06.2018 09:18</string>
           </property>
          </widget>
         </item>
         <item row="0" column="1">
          <widget class="QLabel" name="dirTypeLabel">
           <property name="text">
-           <string>Directory</string>
+           <string notr="true">directory</string>
           </property>
          </widget>
         </item>
-        <item row="10" column="1">
-         <widget class="QLabel" name="dirUserLabel">
+        <item row="4" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="dirAllocatedLabel">
           <property name="text">
-           <string>kilroy</string>
+           <string notr="true">512.0 MiB</string>
           </property>
          </widget>
         </item>
-        <item row="11" column="0">
-         <widget class="QLabel" name="dirGroupCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
+        <item row="1" column="1" rowspan="2">
+         <widget class="QLabel" name="dirLockedIcon">
           <property name="text">
-           <string>Group:</string>
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap resource="icons.qrc">:/icons/lock-closed.png</pixmap>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
           </property>
          </widget>
         </item>
-        <item row="11" column="1">
-         <widget class="QLabel" name="dirGroupLabel">
-          <property name="text">
-           <string>users</string>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="0">
-         <widget class="QLabel" name="dirPermissionsCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Permissions:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="1">
-         <widget class="QLabel" name="dirPermissionsLabel">
-          <property name="text">
-           <string>rwxr-xr-x  0755</string>
-          </property>
-         </widget>
-        </item>
-        <item row="13" column="0">
+        <item row="15" column="0">
          <widget class="QLabel" name="dirMTimeCaption">
           <property name="font">
            <font>
@@ -567,45 +497,18 @@
            </font>
           </property>
           <property name="text">
-           <string>Last Modified:</string>
+           <string>Last modified:</string>
           </property>
          </widget>
         </item>
         <item row="13" column="1">
-         <widget class="QLabel" name="dirMTimeLabel">
+         <widget class="QLabel" name="dirGroupLabel">
           <property name="text">
-           <string>31.06.2018 09:18</string>
+           <string notr="true">users</string>
           </property>
          </widget>
         </item>
-        <item row="8" column="0">
-         <widget class="QLabel" name="dirDirectoryHeading">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <italic>true</italic>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>
-Directory</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="QLabel" name="dirOwnSizeCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Own Size:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="0">
+        <item row="12" column="0">
          <widget class="QLabel" name="dirUserCaption">
           <property name="font">
            <font>
@@ -614,6 +517,25 @@ Directory</string>
           </property>
           <property name="text">
            <string>User:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="dirItemCountCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Items:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="15" column="1">
+         <widget class="QLabel" name="dirMTimeLabel">
+          <property name="text">
+           <string notr="true">31.06.2018 09:18</string>
           </property>
          </widget>
         </item>
@@ -629,7 +551,7 @@ Directory</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
+        <item row="2" column="0">
          <widget class="QLabel" name="dirSubTreeHeading">
           <property name="font">
            <font>
@@ -639,50 +561,11 @@ Directory</string>
            </font>
           </property>
           <property name="text">
-           <string>
-Subtree</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="dirTotalSizeLabel">
-          <property name="text">
-           <string>512.0 MiB</string>
+           <string>Subtree</string>
           </property>
          </widget>
         </item>
         <item row="4" column="0">
-         <widget class="QLabel" name="dirItemCountCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Items:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1" alignment="Qt::AlignLeft|Qt::AlignBottom">
-         <widget class="QLabel" name="dirLockedIcon">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="pixmap">
-           <pixmap resource="icons.qrc">:/icons/lock-closed.png</pixmap>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
          <widget class="QLabel" name="dirAllocatedCaption">
           <property name="font">
            <font>
@@ -694,10 +577,104 @@ Subtree</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="dirAllocatedLabel">
+        <item row="13" column="0">
+         <widget class="QLabel" name="dirGroupCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
           <property name="text">
-           <string>512.0 MiB</string>
+           <string>Group:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="dirTotalSizeLabel">
+          <property name="text">
+           <string notr="true">512.0 MiB</string>
+          </property>
+         </widget>
+        </item>
+        <item row="14" column="0">
+         <widget class="QLabel" name="dirPermissionsCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Permissions:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="0">
+         <widget class="QLabel" name="label">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>10</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QLabel" name="dirLatestMTimeCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Last modified:   </string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="dirTotalSizeCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Total size:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QLabel" name="dirItemCountLabel">
+          <property name="text">
+           <string notr="true">17</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QLabel" name="dirSubDirCountLabel">
+          <property name="text">
+           <string notr="true">2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="dirSubDirCountCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Subdirs:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>10</height>
+           </size>
           </property>
          </widget>
         </item>
@@ -710,8 +687,8 @@ Subtree</string>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>74</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -725,8 +702,8 @@ Subtree</string>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>1</width>
-        <height>20</height>
+        <width>0</width>
+        <height>0</height>
        </size>
       </property>
      </spacer>
@@ -735,18 +712,18 @@ Subtree</string>
   </widget>
   <widget class="QWidget" name="pkgDetailsPage">
    <layout class="QHBoxLayout" name="pkgDetailsHBox">
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>5</number>
+    </property>
     <item>
      <layout class="QVBoxLayout" name="pkgDetailsVBox">
       <item>
-       <layout class="QHBoxLayout" name="pkgHeadingHBox">
+       <layout class="QHBoxLayout" name="pkgHeadingHBox" stretch="0,1">
         <item>
          <widget class="QLabel" name="pkgIcon">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
           <property name="text">
            <string/>
           </property>
@@ -764,33 +741,66 @@ Subtree</string>
            </font>
           </property>
           <property name="text">
-           <string>superfoomatic</string>
+           <string notr="true">superfoomatic</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
           </property>
          </widget>
         </item>
        </layout>
       </item>
       <item>
-       <spacer name="pkgTopSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <layout class="QGridLayout" name="pkgGridLayout" columnstretch="0,1">
+        <property name="topMargin">
+         <number>10</number>
         </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
+        <property name="horizontalSpacing">
+         <number>0</number>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>13</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <layout class="QGridLayout" name="pkgGridLayout">
+        <item row="10" column="1">
+         <widget class="QLabel" name="pkgLatestMTimeLabel">
+          <property name="text">
+           <string notr="true">2019-04-28 16:02</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="pkgItemCountCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Items:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="2">
+         <widget class="QLabel" name="pkgInstalledFilesHeading">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <italic>true</italic>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Installed Files</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <widget class="QLabel" name="pkgFileCountLabel">
+          <property name="text">
+           <string notr="true">280</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="pkgTypeCaption">
           <property name="font">
@@ -803,10 +813,15 @@ Subtree</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="pkgTypeLabel">
+        <item row="6" column="0">
+         <widget class="QLabel" name="pkgAllocatedCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
           <property name="text">
-           <string>Package</string>
+           <string>Allocated:</string>
           </property>
          </widget>
         </item>
@@ -822,10 +837,100 @@ Subtree</string>
           </property>
          </widget>
         </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="pkgTypeLabel">
+          <property name="text">
+           <string notr="true">package</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="pkgTotalSizeCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Total size:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="pkgTotalSizeLabel">
+          <property name="text">
+           <string notr="true">240.0 MB</string>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="0">
+         <widget class="QLabel" name="pkgLatestMTimeCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Last modified:   </string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="pkgAllocatedLabel">
+          <property name="text">
+           <string notr="true">240.0 MB</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="1">
+         <widget class="QLabel" name="pkgSubDirCountLabel">
+          <property name="text">
+           <string notr="true">37</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="0">
+         <widget class="QLabel" name="pkgSubDirCountCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Subdirs:</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="1">
          <widget class="QLabel" name="pkgVersionLabel">
           <property name="text">
-           <string>42.0</string>
+           <string notr="true">42.0</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QLabel" name="pkgFileCountCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Files:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="pkgArchLabel">
+          <property name="text">
+           <string notr="true">amd64</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QLabel" name="pkgItemCountLabel">
+          <property name="text">
+           <string notr="true">317</string>
           </property>
          </widget>
         </item>
@@ -841,139 +946,13 @@ Subtree</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="pkgArchLabel">
-          <property name="text">
-           <string>super128</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0" colspan="2">
-         <widget class="QLabel" name="pkgInstalledFilesHeading">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <italic>true</italic>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>
-Installed Files</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="pkgTotalSizeCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Total Size:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="pkgTotalSizeLabel">
-          <property name="text">
-           <string>240.0 MB</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="pkgItemCountCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Items:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QLabel" name="pkgItemCountLabel">
-          <property name="text">
-           <string>317</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="pkgFileCountCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Files:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="1">
-         <widget class="QLabel" name="pkgFileCountLabel">
-          <property name="text">
-           <string>280</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="0">
-         <widget class="QLabel" name="pkgSubDirCountCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Subdirs:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1">
-         <widget class="QLabel" name="pkgSubDirCountLabel">
-          <property name="text">
-           <string>37</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="QLabel" name="pkgLatestMTimeCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Last Modified:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="1">
-         <widget class="QLabel" name="pkgLatestMTimeLabel">
-          <property name="text">
-           <string>2019-04-28 16:02</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="pkgAllocatedCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Allocated:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="pkgAllocatedLabel">
-          <property name="text">
-           <string>240.0 MB</string>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>10</height>
+           </size>
           </property>
          </widget>
         </item>
@@ -986,8 +965,8 @@ Installed Files</string>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>38</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -1001,8 +980,8 @@ Installed Files</string>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>7</width>
-        <height>20</height>
+        <width>0</width>
+        <height>0</height>
        </size>
       </property>
      </spacer>
@@ -1010,11 +989,23 @@ Installed Files</string>
    </layout>
   </widget>
   <widget class="QWidget" name="pkgSummaryPage">
-   <layout class="QHBoxLayout" name="pkgSummaryHBox">
+   <layout class="QHBoxLayout" name="horizontalLayout_11">
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>5</number>
+    </property>
     <item>
-     <layout class="QVBoxLayout" name="pkgSummaryVBox">
+     <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <widget class="QLabel" name="pkgSummaryHeading">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>22</height>
+         </size>
+        </property>
         <property name="font">
          <font>
           <weight>75</weight>
@@ -1025,26 +1016,154 @@ Installed Files</string>
         <property name="text">
          <string>Packages Summary</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+        </property>
        </widget>
       </item>
       <item>
-       <spacer name="pkgSummaryTopSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <layout class="QGridLayout" name="pkgSummaryGridLayout" columnstretch="0,1">
+        <property name="topMargin">
+         <number>10</number>
         </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
+        <property name="horizontalSpacing">
+         <number>0</number>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>13</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <layout class="QGridLayout" name="pkgSummaryGridLayout">
+        <item row="8" column="0">
+         <widget class="QLabel" name="pkgSummaryLatestMTimeCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Last modified:   </string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="pkgSummaryPkgCountLabel">
+          <property name="text">
+           <string notr="true">42</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="pkgSummarySubDirCountCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Subdirs:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QLabel" name="pkgSummaryItemCountLabel">
+          <property name="text">
+           <string notr="true">317</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QLabel" name="pkgSummarySubDirCountLabel">
+          <property name="text">
+           <string notr="true">37</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="pkgSummaryItemCountCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Items:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="pkgSummaryFileCountCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Files:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLabel" name="pkgSummaryFileCountLabel">
+          <property name="text">
+           <string notr="true">280</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QLabel" name="pkgSummaryInstalledFilesHeading">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <italic>true</italic>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Installed Files</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="pkgSummaryAllocatedLabel">
+          <property name="text">
+           <string notr="true">240.0 MB</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="pkgSummaryAllocatedCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Allocated:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <widget class="QLabel" name="pkgSummaryLatestMTimeLabel">
+          <property name="text">
+           <string notr="true">2019-04-28 16:02</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDirStat::FileSizeLabel" name="pkgSummaryTotalSizeLabel">
+          <property name="text">
+           <string notr="true">240.0 MB</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="pkgSummaryTotalSizeCaption">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="text">
+           <string>Total size:</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="pkgSummaryPkgCountCaption">
           <property name="font">
@@ -1057,139 +1176,13 @@ Installed Files</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="pkgSummaryPkgCountLabel">
-          <property name="text">
-           <string>42</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QLabel" name="pkgSummaryInstalledFilesHeading">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <italic>true</italic>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>
-Installed Files</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="pkgSummaryTotalSizeCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Total Size:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="pkgSummaryTotalSizeLabel">
-          <property name="text">
-           <string>240.0 MB</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="pkgSummaryItemCountCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Items:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QLabel" name="pkgSummaryItemCountLabel">
-          <property name="text">
-           <string>317</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="pkgSummaryFileCountCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Files:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QLabel" name="pkgSummaryFileCountLabel">
-          <property name="text">
-           <string>280</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="pkgSummarySubDirCountCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Subdirs:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QLabel" name="pkgSummarySubDirCountLabel">
-          <property name="text">
-           <string>37</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="pkgSummaryLatestMTimeCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Last Modified:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="1">
-         <widget class="QLabel" name="pkgSummaryLatestMTimeLabel">
-          <property name="text">
-           <string>2019-04-28 16:02</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="pkgSummaryAllocatedCaption">
-          <property name="font">
-           <font>
-            <italic>true</italic>
-           </font>
-          </property>
-          <property name="text">
-           <string>Allocated:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QDirStat::FileSizeLabel" name="pkgSummaryAllocatedLabel">
-          <property name="text">
-           <string>240.0 MB</string>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>10</height>
+           </size>
           </property>
          </widget>
         </item>
@@ -1202,8 +1195,8 @@ Installed Files</string>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>38</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -1217,8 +1210,8 @@ Installed Files</string>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>7</width>
-        <height>20</height>
+        <width>0</width>
+        <height>0</height>
        </size>
       </property>
      </spacer>
@@ -1227,10 +1220,19 @@ Installed Files</string>
   </widget>
   <widget class="QWidget" name="selectionSummaryPage">
    <layout class="QHBoxLayout" name="selPageHBox">
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>5</number>
+    </property>
     <item>
      <layout class="QVBoxLayout" name="selPageVBox">
       <item>
-       <layout class="QHBoxLayout" name="selHeadingLayout">
+       <layout class="QHBoxLayout" name="selHeadingLayout" stretch="0,1">
+        <property name="spacing">
+         <number>0</number>
+        </property>
         <item>
          <widget class="QLabel" name="selItemCount">
           <property name="font">
@@ -1241,12 +1243,21 @@ Installed Files</string>
            </font>
           </property>
           <property name="text">
-           <string>9</string>
+           <string notr="true">9</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLabel" name="selHeading">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>22</height>
+           </size>
+          </property>
           <property name="font">
            <font>
             <weight>75</weight>
@@ -1257,46 +1268,17 @@ Installed Files</string>
           <property name="text">
            <string>Selected Items</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+          </property>
          </widget>
-        </item>
-        <item>
-         <spacer name="selHeadingRightStretch">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>31</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </item>
       <item>
-       <spacer name="selTopSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
        <layout class="QGridLayout" name="selGridLayout" columnstretch="0,1">
-        <property name="horizontalSpacing">
+        <property name="topMargin">
          <number>10</number>
-        </property>
-        <property name="verticalSpacing">
-         <number>8</number>
         </property>
         <item row="2" column="0">
          <widget class="QLabel" name="selFileCountCaption">
@@ -1313,21 +1295,21 @@ Installed Files</string>
         <item row="2" column="1">
          <widget class="QLabel" name="selFileCountLabel">
           <property name="text">
-           <string>7</string>
+           <string notr="true">7</string>
           </property>
          </widget>
         </item>
         <item row="3" column="1">
          <widget class="QLabel" name="selDirCountLabel">
           <property name="text">
-           <string>2</string>
+           <string notr="true">2</string>
           </property>
          </widget>
         </item>
         <item row="0" column="1">
          <widget class="QDirStat::FileSizeLabel" name="selTotalSizeLabel">
           <property name="text">
-           <string>512.0 MB</string>
+           <string notr="true">512.0 MB</string>
           </property>
          </widget>
         </item>
@@ -1351,14 +1333,14 @@ Installed Files</string>
            </font>
           </property>
           <property name="text">
-           <string>Files in Subtrees:</string>
+           <string>Files in subtrees:</string>
           </property>
          </widget>
         </item>
         <item row="4" column="1">
          <widget class="QLabel" name="selSubtreeFileCountLabel">
           <property name="text">
-           <string>84</string>
+           <string notr="true">84</string>
           </property>
          </widget>
         </item>
@@ -1370,7 +1352,7 @@ Installed Files</string>
            </font>
           </property>
           <property name="text">
-           <string>Total Size:</string>
+           <string>Total size:</string>
           </property>
          </widget>
         </item>
@@ -1389,7 +1371,7 @@ Installed Files</string>
         <item row="1" column="1">
          <widget class="QDirStat::FileSizeLabel" name="selAllocatedLabel">
           <property name="text">
-           <string>512.0 MB</string>
+           <string notr="true">512.0 MB</string>
           </property>
          </widget>
         </item>
@@ -1402,8 +1384,8 @@ Installed Files</string>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -1417,8 +1399,8 @@ Installed Files</string>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>31</width>
-        <height>20</height>
+        <width>0</width>
+        <height>0</height>
        </size>
       </property>
      </spacer>
@@ -1434,8 +1416,8 @@ Installed Files</string>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>20</width>
-        <height>406</height>
+        <width>0</width>
+        <height>0</height>
        </size>
       </property>
      </spacer>
@@ -1449,13 +1431,10 @@ Installed Files</string>
    <extends>QLabel</extends>
    <header>FileSizeLabel.h</header>
   </customwidget>
-  <customwidget>
-   <class>QDirStat::PopupLabel</class>
-   <extends>QLabel</extends>
-   <header>PopupLabel.h</header>
-  </customwidget>
  </customwidgets>
  <resources>
+  <include location="icons.qrc"/>
+  <include location="icons.qrc"/>
   <include location="icons.qrc"/>
  </resources>
  <connections/>

@@ -15,6 +15,8 @@
 #include <QList>
 #include <QTextStream>
 
+#include "SettingsHelpers.h"
+
 class OutputWindow;
 
 
@@ -49,14 +51,41 @@ namespace QDirStat
 	};
 
 	/**
-	 * Constructor.
+	 * Constructor with nearly all fields.
 	 *
 	 * 'title' is the human readable menu title.
 	 * 'command' is the shell command to execute.
 	 **/
-	Cleanup( QString   command = "",
-		 QString   title   = "",
-		 QObject * parent  = 0 );
+	Cleanup( QObject            * parent,
+		 bool                 active,
+		 QString              title,
+		 QString              command,
+		 bool                 recurse,
+		 bool                 askForConfirmation,
+		 RefreshPolicy        refreshPolicy,
+		 bool                 worksForDir,
+		 bool                 worksForFile,
+		 bool                 worksForDotEntry,
+		 OutputWindowPolicy   outputWindowPolicy = ShowAfterTimeout,
+		 int                  outputWindowTimeout = 500,
+		 bool                 outputWindowAutoClose = false,
+		 QString              shell = "",
+		 QString              iconName = "" );
+
+	/**
+	 * Default constructor.  Used by the config dialog to create an empty cleanup
+	 * with the default settings and no parent.
+	 **/
+	Cleanup():
+	    Cleanup { 0, true, "", "", false, false, RefreshThis, true, true, false }
+	{}
+
+	/**
+	 * The copy constructor is deleted by Qt, but make it possible to
+	 * provide a copy without being a real action so that the config
+	 * dialog can play about with it.
+	 **/
+	Cleanup( const Cleanup * cleanup );
 
 	/**
 	 * Return the command line that will be executed upon calling
@@ -77,12 +106,12 @@ namespace QDirStat
 	 * Return the cleanup action's title without '&' keyboard shortcuts.
 	 * Uses the ID as fallback if the name is empty.
 	 **/
-	QString cleanTitle() const;
+	QString cleanTitle() const { return _title.isEmpty() ? _command : QString( _title ).remove( '&' ); }
 
 	/**
 	 * Return the icon name of this cleanup action.
 	 **/
-	QString iconName() const { return _iconName; }
+	const QString & iconName() const { return _iconName; }
 
 	/**
 	 * Return whether or not this cleanup action is generally active.
@@ -119,7 +148,7 @@ namespace QDirStat
 	 * Return whether or not the cleanup action should be performed
 	 * recursively in subdirectories of the initial FileInfo.
 	 **/
-	bool recurse()			const { return _recurse; }
+	bool recurse() const { return _recurse; }
 
 	/**
 	 * Return whether or not this cleanup should ask the user for
@@ -138,14 +167,14 @@ namespace QDirStat
 	 * Regardless of which shell is used, the command is always started
 	 * with the shell and the "-c" option.
 	 **/
-	QString shell() const { return _shell; }
+	const QString & shell() const { return _shell; }
 
 	/**
 	 * Return the full path name to the user's login shell.
 	 * The $SHELL environment variable is used to obtain this value.
 	 * If this is empty, this defaults to defaultShells().first().
 	 **/
-	static QString loginShell();
+	const static QString & loginShell();
 
 	/**
 	 * Return the full paths to the available (and executable) shells:
@@ -153,13 +182,14 @@ namespace QDirStat
 	 *     /bin/bash
 	 *     /bin/sh
 	 **/
-	static const QStringList & defaultShells();
+	const static QStringList & defaultShells();
 
 	/**
 	 * Return the first default shell or an empty string if there is no
 	 * usable shell at all.
 	 **/
-	static QString defaultShell();
+	static QString defaultShell()
+	    { return defaultShells().isEmpty() ? QString() : defaultShells().first(); }
 
 	/**
 	 * Return 'true' if programName is non-empty and executable.
@@ -213,7 +243,7 @@ namespace QDirStat
 	 * collected in the same output window.
 	 *
 	 * Possible values:
-	 *
+	 *mapping
 	 * ShowAlways: Always open an output window. This makes sense for
 	 * cleanup actions that take a while, like compressing files, recoding
 	 * videos, recompressing JPG images.
@@ -253,12 +283,12 @@ namespace QDirStat
 	/**
 	 * Return a mapping from RefreshPolicy to string.
 	 **/
-	static QMap<int, QString> refreshPolicyMapping();
+	static SettingsEnumMapping refreshPolicyMapping();
 
 	/**
 	 * Return a mapping from OutputWindowPolicy to string.
 	 **/
-	static QMap<int, QString> outputWindowPolicyMapping();
+	static SettingsEnumMapping outputWindowPolicyMapping();
 
 	/**
 	 * Return a mapping from macros to applications that may be specific
@@ -276,7 +306,7 @@ namespace QDirStat
 	 *	KDE:	"konqueror --profile filemanagement" // not that dumbed-down Dolphin
 	 *	GNOME:	"nautilus"
 	 *	Unity:	"nautilus"
-	 *	Xfcd:	"thunar"
+	 *	Xfce:	"thunar"
 	 *	LXDE:	"pcmanfm"
 	 *
 	 * What desktop is currently used is guessed from $XDG_CURRENT_DESKTOP.
@@ -297,20 +327,20 @@ namespace QDirStat
 	// Setters (see the corresponding getter for documentation)
 	//
 
-	void setTitle		     ( const QString & title  );
-	void setCommand		     ( const QString & command)	   { _command		    = command;	 }
-	void setIcon		     ( const QString & iconName );
-	void setActive		     ( bool active   )		   { _active		    = active;	 }
-	void setWorksForDir	     ( bool canDo    )		   { _worksForDir	    = canDo;	 }
-	void setWorksForFile	     ( bool canDo    )		   { _worksForFile	    = canDo;	 }
-	void setWorksForDotEntry     ( bool canDo    )		   { _worksForDotEntry	    = canDo;	 }
-	void setRecurse		     ( bool recurse  )		   { _recurse		    = recurse;	 }
-	void setAskForConfirmation   ( bool ask	     )		   { _askForConfirmation    = ask;	 }
-	void setShell		     ( const QString &	  sh	 ) { _shell		    = sh;	 }
-	void setRefreshPolicy	     ( RefreshPolicy	  policy ) { _refreshPolicy	    = policy;	 }
-	void setOutputWindowPolicy   ( OutputWindowPolicy policy ) { _outputWindowPolicy    = policy;	 }
-	void setOutputWindowTimeout  ( int timeoutMillisec )	   { _outputWindowTimeout   = timeoutMillisec; }
-	void setOutputWindowAutoClose( bool autoClose )		   { _outputWindowAutoClose = autoClose; }
+	void setActive		     ( bool		  active    ) { _active		       = active;    }
+	void setTitle		     ( const QString	& title	    );
+	void setCommand		     ( const QString	& command   ) { _command	       = command;   }
+	void setIcon		     ( const QString	& iconName  );
+	void setRecurse		     ( bool	 	  recurse   ) { _recurse	       = recurse;   }
+	void setAskForConfirmation   ( bool		  ask	    ) { _askForConfirmation    = ask;	    }
+	void setRefreshPolicy	     ( RefreshPolicy	  policy    ) { _refreshPolicy	       = policy;    }
+	void setWorksForDir	     ( bool		  canDo     ) { _worksForDir	       = canDo;	    }
+	void setWorksForFile	     ( bool		  canDo     ) { _worksForFile	       = canDo;	    }
+	void setWorksForDotEntry     ( bool		  canDo     ) { _worksForDotEntry      = canDo;	    }
+	void setOutputWindowPolicy   ( OutputWindowPolicy policy    ) { _outputWindowPolicy    = policy;    }
+	void setOutputWindowTimeout  ( int		  timeout   ) { _outputWindowTimeout   = timeout;   }
+	void setOutputWindowAutoClose( bool		  autoClose ) { _outputWindowAutoClose = autoClose; }
+	void setShell		     ( const QString	& sh	    ) { _shell		       = sh;	    }
 
 
     public slots:
@@ -395,13 +425,25 @@ namespace QDirStat
 	/**
 	 * Return a string with all occurrences of a single quote escaped with
 	 * backslash.
+	 *
+	 * While any sane person would expect this should be done with a backslash
+	 * in front of the single quote, i.e. \', this is not how shells do it.
+	 * Instead, you have to terminate the string with one single quote, then
+	 * put the single quote in a new quoted string that, but this time using
+	 * double quotes, and finally reopen the original string with another
+	 * single quote.
+	 *
+	 * Thus, 'Don't do this' becomes 'Don'"'"'t do this'.
+	 *
+	 * This does not exactly become any prettier with the C compiler requiring
+	 * a backslash for an embedded double quote.
 	 **/
-	QString escaped( const QString & unescaped ) const;
+	QString escaped( const QString & unescaped ) const { return QString( unescaped ).replace( "'", "'\\''" ); }
 
 	/**
 	 * Return a string in single quotes.
 	 **/
-	QString quoted( const QString & unquoted ) const;
+	QString quoted( const QString & unquoted ) const { return "'" + unquoted + "'"; }
 
 	/**
 	 * Run a command with 'item' as base to expand variables.
@@ -415,20 +457,20 @@ namespace QDirStat
 	// Data members
 	//
 
-	QString		   _command;
-	QString		   _title;
-	QString		   _iconName;
 	bool		   _active;
+	QString		   _title;
+	QString		   _command;
+	QString		   _iconName;
+	bool		   _recurse;
+	bool		   _askForConfirmation;
+	RefreshPolicy	   _refreshPolicy;
 	bool		   _worksForDir;
 	bool		   _worksForFile;
 	bool		   _worksForDotEntry;
-	bool		   _recurse;
-	bool		   _askForConfirmation;
-	QString		   _shell;
-	RefreshPolicy	   _refreshPolicy;
 	OutputWindowPolicy _outputWindowPolicy;
 	int		   _outputWindowTimeout;
 	bool		   _outputWindowAutoClose;
+	QString		   _shell;
     };
 
 

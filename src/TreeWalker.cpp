@@ -34,13 +34,13 @@ qreal TreeWalker::upperPercentileThreshold( PercentileStats & stats )
 
     if ( percentile > 0 )
     {
-        logDebug() << "Threshold: " << percentile << ". percentile" << endl;
+        logDebug() << "Threshold: " << percentile << ". percentile" << Qt::endl;
         threshold = stats.percentile( percentile );
     }
     else
     {
-        logDebug() << "Threshold: " << MAX_RESULTS << " items" << endl;
-        int index = stats.dataSize() - MAX_RESULTS;
+        logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
+        const int index = stats.dataSize() - MAX_RESULTS;
         threshold = stats.data().at( index );
     }
 
@@ -61,13 +61,13 @@ qreal TreeWalker::lowerPercentileThreshold( PercentileStats & stats )
 
     if ( percentile > 0 )
     {
-        logDebug() << "Threshold: " << percentile << ". percentile" << endl;
+        logDebug() << "Threshold: " << percentile << ". percentile" << Qt::endl;
         threshold = stats.percentile( percentile );
     }
     else
     {
-        logDebug() << "Threshold: " << MAX_RESULTS << " items" << endl;
-        int index = MAX_RESULTS;
+        logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
+        const int index = MAX_RESULTS;
         threshold = stats.data().at( index );
     }
 
@@ -104,11 +104,19 @@ void OldFilesTreeWalker::prepare( FileInfo * subtree )
 bool BrokenSymLinksTreeWalker::check( FileInfo * item )
 {
     return item &&
-        item->isSymLink() &&
-        SysUtil::isBrokenSymLink( item->url() );
+           item->isSymLink() &&
+           SysUtil::isBrokenSymLink( item->url() );
 }
 
 
+bool FilesFromMonthTreeWalker::check( FileInfo * item )
+{
+    if ( !item || !item->isFile() )
+        return false;
+
+    const auto yearAndMonth = item->yearAndMonth();
+    return yearAndMonth.first  == _year && yearAndMonth.second == _month;
+}
 
 
 void FindFilesTreeWalker::prepare( FileInfo * subtree )
@@ -123,23 +131,21 @@ bool FindFilesTreeWalker::check( FileInfo * item )
     if ( _count >= MAX_FIND_FILES_RESULTS )
     {
         _overflow = true;
-
         return false;
     }
 
     if ( ! item )
         return false;
 
-    bool match = false;
-
-    if ( ( _filter.findDirs()     && item->isDir()     ) ||
-         ( _filter.findFiles()    && item->isFile()    ) ||
-         ( _filter.findSymLinks() && item->isSymLink() ) ||
-         ( _filter.findPkg()      && item->isPkgInfo() )   )
+    if ( ( !_filter.findDirs()     || !item->isDir()     ) &&
+         ( !_filter.findFiles()    || !item->isFile()    ) &&
+         ( !_filter.findSymLinks() || !item->isSymLink() ) &&
+         ( !_filter.findPkg()      || !item->isPkgInfo() ) )
     {
-        match = _filter.matches( item->name() );
+        return false;
     }
 
+    const bool match = _filter.matches( item->name() );
     if ( match )
         ++_count;
 

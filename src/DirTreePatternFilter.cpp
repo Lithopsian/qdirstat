@@ -6,12 +6,13 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <QRegularExpression>
 
 #include "DirTreePatternFilter.h"
 #include "Exception.h"
 #include "Logger.h"
 
-#define VERBOSE_MATCH	0
+#define VERBOSE_MATCH 0
 
 
 using namespace QDirStat;
@@ -27,9 +28,9 @@ DirTreeFilter * DirTreePatternFilter::create( const QString & pattern )
     if ( pattern.startsWith( "*." ) )
     {
 	QString suffix = pattern;
-	suffix.remove( 0, 1 ); // Remove the leading "*"
+	suffix.remove( 0, 2 ); // Remove the leading "*."
 
-	if ( QRegExp( "^\\.[a-zA-Z0-9]+" ).exactMatch( suffix ) )
+	if ( QRegularExpression( "\\A(?:\\w+)\\z" ).match( suffix ).hasMatch() )
 	    filter = new DirTreeSuffixFilter( suffix );
     }
 
@@ -42,32 +43,19 @@ DirTreeFilter * DirTreePatternFilter::create( const QString & pattern )
 
 
 DirTreePatternFilter::DirTreePatternFilter( const QString & pattern ):
-    _pattern( pattern )
+    _wildcard { CaseSensitiveWildcard( pattern.contains( "/" ) ? pattern : QString( "*/" ) + pattern ) }
 {
-    QString pat = _pattern.contains( "/" ) ?
-	_pattern :
-	QString( "*/" ) + _pattern;
-
-    logDebug() << "Creating pattern filter matching against " << pat << endl;
-    _regExp = QRegExp( pat, Qt::CaseSensitive, QRegExp::Wildcard );
-}
-
-
-DirTreePatternFilter::~DirTreePatternFilter()
-{
-
+    logDebug() << "Creating pattern filter matching against " << _wildcard.pattern() << Qt::endl;
 }
 
 
 bool DirTreePatternFilter::ignore( const QString & path ) const
 {
-    bool match = _regExp.exactMatch( path );
+    bool match = _wildcard.exactMatch( path );
 
 #if VERBOSE_MATCH
     if ( match )
-    {
-	logDebug() << "Ignoring " << path << " by pattern filter *" << _pattern << endl;
-    }
+	logDebug() << "Ignoring " << path << " by pattern filter " << _wildcard.pattern() << Qt::endl;
 #endif
 
     return match;
@@ -80,13 +68,7 @@ bool DirTreePatternFilter::ignore( const QString & path ) const
 DirTreeSuffixFilter::DirTreeSuffixFilter( const QString & suffix ):
     _suffix( suffix )
 {
-    logDebug() << "Creating suffix filter matching *" << suffix << endl;
-}
-
-
-DirTreeSuffixFilter::~DirTreeSuffixFilter()
-{
-
+    logDebug() << "Creating suffix filter matching *" << suffix << Qt::endl;
 }
 
 
@@ -96,9 +78,7 @@ bool DirTreeSuffixFilter::ignore( const QString & path ) const
 
 #if VERBOSE_MATCH
     if ( match )
-    {
-	logDebug() << "Ignoring " << path << " by suffix filter *" << _suffix << endl;
-    }
+	logDebug() << "Ignoring " << path << " by suffix filter *" << _suffix << Qt::endl;
 #endif
 
     return match;
