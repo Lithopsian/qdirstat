@@ -16,18 +16,11 @@
 using namespace QDirStat;
 
 
-DataColumns * DataColumns::_instance = 0;
-
-
 DataColumns * DataColumns::instance()
 {
-    if ( ! _instance )
-    {
-	_instance = new DataColumns();
-	CHECK_NEW( _instance );
-    }
+    static DataColumns _instance;
 
-    return _instance;
+    return &_instance;
 }
 
 
@@ -53,25 +46,22 @@ DataColumns::DataColumns():
 }
 
 
-const DataColumnList DataColumns::defaultColumns() const
+const DataColumnList DataColumns::defaultColumns()
 {
-    DataColumnList columns;
-
-    columns << NameCol
-	    << PercentBarCol
-	    << PercentNumCol
-	    << SizeCol
-	    << TotalItemsCol
-	    << TotalFilesCol
-	    << TotalSubDirsCol
-	    << LatestMTimeCol
-            << OldestFileMTimeCol
-	    << UserCol
-	    << GroupCol
-	    << PermissionsCol
-	    << OctalPermissionsCol;
-
-    return columns;
+    return { NameCol,
+	     PercentBarCol,
+	     PercentNumCol,
+	     SizeCol,
+	     TotalItemsCol,
+	     TotalFilesCol,
+	     TotalSubDirsCol,
+	     LatestMTimeCol,
+	     OldestFileMTimeCol,
+	     UserCol,
+	     GroupCol,
+	     PermissionsCol,
+	     OctalPermissionsCol
+           };
 }
 
 
@@ -79,7 +69,7 @@ void DataColumns::readSettings()
 {
     Settings settings;
     settings.beginGroup( "DataColumns" );
-    QStringList strColList = settings.value( "Columns" ).toStringList();
+    const QStringList strColList = settings.value( "Columns" ).toStringList();
     settings.endGroup();
 
     _columns = fromStringList( strColList );
@@ -111,7 +101,7 @@ DataColumn DataColumns::mappedCol( DataColumn viewCol ) const
 {
     if ( viewCol < 0 || viewCol >= colCount() )
     {
-	logError() << "Invalid view column no.: " << (int) viewCol << endl;
+	logError() << "Invalid view column no.: " << (int) viewCol << Qt::endl;
 	return UndefinedCol;
     }
 
@@ -152,7 +142,7 @@ QString DataColumns::toString( DataColumn col )
 	    // can catch unhandled enum values
     }
 
-    logError() << "Unknown DataColumn " << (int) col << endl;
+    logError() << "Unknown DataColumn " << (int) col << Qt::endl;
     return QString( "<Unknown DataColumn %1>" ).arg( (int) col );
 }
 
@@ -164,13 +154,13 @@ DataColumn DataColumns::fromString( const QString & str )
 
     for ( int i = DataColumnBegin; i <= DataColumnEnd; ++i )
     {
-	DataColumn col = static_cast<DataColumn>( i );
+	const DataColumn col = static_cast<DataColumn>( i );
 
 	if ( str == toString( col ) )
 	    return col;
     }
 
-    logError() << "Undefined DataColumn \"" << str << "\"" << endl;
+    logError() << "Undefined DataColumn \"" << str << "\"" << Qt::endl;
     return UndefinedCol;
 }
 
@@ -179,10 +169,8 @@ QStringList DataColumns::toStringList( const DataColumnList & colList )
 {
     QStringList strList;
 
-    foreach ( DataColumn col, colList )
-    {
+    foreach ( const DataColumn col, colList )
 	strList << toString( col );
-    }
 
     return strList;
 }
@@ -208,9 +196,9 @@ void DataColumns::ensureNameColFirst( DataColumnList & colList )
 {
     if ( colList.first() != NameCol )
     {
-	logError() << "NameCol is required to be first!" << endl;
+	//~ logError() << "NameCol is required to be first!" << Qt::endl;
 	colList.removeAll( NameCol );
 	colList.prepend( NameCol );
-	logError() << "Fixed column list: " << toStringList( colList ) << endl;
+	logError() << "Fixed column list: " << toStringList( colList ) << Qt::endl;
     }
 }

@@ -38,18 +38,18 @@ DirTreeView::DirTreeView( QWidget * parent ):
     CHECK_NEW( _sizeColDelegate );
     setItemDelegateForColumn( SizeCol, _sizeColDelegate );
 
-    setRootIsDecorated( true );
-    setSortingEnabled( true );
-    setSelectionMode( ExtendedSelection );
-    setContextMenuPolicy( Qt::CustomContextMenu );
-    setTextElideMode( Qt::ElideMiddle );
-    setUniformRowHeights( true ); // Important for very large directories
+//    setRootIsDecorated( true );
+//    setSortingEnabled( true );
+//    setSelectionMode( ExtendedSelection );
+//    setContextMenuPolicy( Qt::CustomContextMenu );
+//    setTextElideMode( Qt::ElideMiddle );
+//    setUniformRowHeights( true ); // Important for very large directories
 
     _headerTweaker = new HeaderTweaker( header(), this );
     CHECK_NEW( _headerTweaker );
 
     connect( this , SIGNAL( customContextMenuRequested( const QPoint & ) ),
-	     this,  SLOT  ( contextMenu		      ( const QPoint & ) ) );
+	     this,  SLOT  ( actionContextMenu	      ( const QPoint & ) ) );
 }
 
 
@@ -62,66 +62,46 @@ DirTreeView::~DirTreeView()
 void DirTreeView::currentChanged( const QModelIndex & current,
 				  const QModelIndex & oldCurrent )
 {
-    // logDebug() << "Setting new current to " << current << endl;
+    //logDebug() << "New current " << current << ", old current" << oldCurrent << Qt::endl;
     QTreeView::currentChanged( current, oldCurrent );
     scrollTo( current );
 }
 
 
-void DirTreeView::contextMenu( const QPoint & pos )
+void DirTreeView::actionContextMenu( const QPoint & pos )
 {
     QModelIndex index = indexAt( pos );
-
     if ( ! index.isValid() )
     {
-	// logDebug() << "No item at this position" << endl;
+	// logDebug() << "No item at this position" << Qt::endl;
 	return;
     }
 
-    DataColumn col  = DataColumns::fromViewCol( index.column() );
-    FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
-    CHECK_MAGIC( item );
-
-    if ( col == SizeCol )
-	sizeContextMenu( pos, item );
-    else
-	actionContextMenu( pos, item );
-}
-
-
-void DirTreeView::actionContextMenu( const QPoint & pos, FileInfo * item )
-{
     QMenu menu;
-    QStringList actions;
 
     // The first action should not be a destructive one like "move to trash":
     // It's just too easy to select and execute the first action accidentially,
     // especially on a laptop touchpad.
-
-    actions << "actionGoUp"
-            << "actionGoToToplevel"
-            << "---"
-            << "actionMoveToTrash"
-        ;
-
-    // Intentionally adding unconditionally, even if disabled
-    ActionManager::instance()->addActions( &menu, actions );
-
+    const QStringList actions1 = { "actionGoUp",
+                                   "actionGoToToplevel",
+                                   "---",
+                                   "actionCopyPathToClipboard",
+                                   "actionMoveToTrash",
+                                   "---"
+                                 };
+    ActionManager::instance()->addActions( &menu, actions1 );
 
     // User-defined cleanups
-
     if ( _cleanupCollection )
 	_cleanupCollection->addEnabledToMenu( &menu );
 
     // Less commonly used menu options
-    actions.clear();
-    actions << "---"
-	    << "actionRefreshSelected"
-	    << "actionReadExcludedDirectory"
-	    << "actionContinueReadingAtMountPoint"
-        ;
-
-    ActionManager::instance()->addEnabledActions( &menu, actions );
+    const QStringList actions2 = { "---",
+	                           "actionRefreshSelected",
+	                           "actionReadExcludedDirectory",
+	                           "actionContinueReadingAtMountPoint"
+	                         };
+    ActionManager::instance()->addEnabledActions( &menu, actions2 );
 
     // Submenu for the auxiliary views to keep the context menu short.
     //
@@ -134,23 +114,23 @@ void DirTreeView::actionContextMenu( const QPoint & pos, FileInfo * item )
     // also discouraged, but here discoverability of these features is more
     // important.
 
+    FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
+    CHECK_MAGIC( item );
     if ( item->isDirInfo() )    // Not for files, symlinks etc.
     {
         QMenu * subMenu = menu.addMenu( tr( "View in" ) );
 
-        actions.clear();
-        actions << "actionFileSizeStats"
-                << "actionFileTypeStats"
-                << "actionFileAgeStats"
-            ;
-
+        QStringList actions = { "actionFileSizeStats",
+                                "actionFileTypeStats",
+                                "actionFileAgeStats"
+                              };
         ActionManager::instance()->addActions( subMenu, actions );
     }
 
     menu.exec( mapToGlobal( pos ) );
 }
 
-
+/*
 void DirTreeView::sizeContextMenu( const QPoint & pos, FileInfo * item )
 {
     if ( item->totalSize() >= 1024 ||
@@ -174,7 +154,7 @@ void DirTreeView::sizeContextMenu( const QPoint & pos, FileInfo * item )
         menu.exec( mapToGlobal( pos ) );
     }
 }
-
+*/
 
 QModelIndexList DirTreeView::expandedIndexes() const
 {
@@ -187,7 +167,7 @@ QModelIndexList DirTreeView::expandedIndexes() const
 
     if ( ! dirTreeModel )
     {
-	logError() << "Wrong model type to get this information" << endl;
+	logError() << "Wrong model type to get this information" << Qt::endl;
 	return QModelIndexList();
     }
 
@@ -211,17 +191,18 @@ void DirTreeView::closeAllExcept( const QModelIndex & branch )
 
     while ( index.isValid() )
     {
-	// logDebug() << "Not closing " << index << endl;
+	// logDebug() << "Not closing " << index << Qt::endl;
 	branchesToClose.removeAll( index );
 	index = index.parent();
     }
 
     // Close all items in branchesToClose
 
-    foreach ( index, branchesToClose )
+//    foreach ( index, branchesToClose ) // too slow
     {
-	// logDebug() << "Closing " << index << endl;
-	collapse( index );
+	// logDebug() << "Closing " << index << Qt::endl;
+	collapseAll();
+//	collapse( index );
     }
 
     scrollTo( currentIndex(), QAbstractItemView::PositionAtCenter );
@@ -234,7 +215,7 @@ void DirTreeView::setExpanded( FileInfo * item, bool expanded )
 
     if ( ! dirTreeModel )
     {
-	logError() << "Wrong model type" << endl;
+	logError() << "Wrong model type" << Qt::endl;
         return;
     }
 

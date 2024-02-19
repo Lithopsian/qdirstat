@@ -31,8 +31,8 @@ using namespace QDirStat;
 CleanupCollection::CleanupCollection( SelectionModel * selectionModel,
 				      QObject	     * parent ):
     QObject( parent ),
-    _selectionModel( selectionModel ),
-    _listMover( _cleanupList )
+    _selectionModel( selectionModel )
+//    _listMover( _cleanupList )
 {
     readSettings();
 
@@ -41,11 +41,6 @@ CleanupCollection::CleanupCollection( SelectionModel * selectionModel,
 
     (void) Cleanup::desktopSpecificApps();
 
-    if ( _cleanupList.isEmpty() )
-	addStdCleanups();
-
-    updateActions();
-
     connect( selectionModel, SIGNAL( selectionChanged() ),
 	     this,	     SLOT  ( updateActions()	) );
 }
@@ -53,14 +48,13 @@ CleanupCollection::CleanupCollection( SelectionModel * selectionModel,
 
 CleanupCollection::~CleanupCollection()
 {
-    writeSettings();
+//    writeSettings( _cleanupList );
     clear();
 }
 
 
 void CleanupCollection::add( Cleanup * cleanup )
 {
-    CHECK_PTR( cleanup );
     _cleanupList << cleanup;
 
     connect( cleanup, SIGNAL( triggered() ),
@@ -69,14 +63,14 @@ void CleanupCollection::add( Cleanup * cleanup )
     updateMenusAndToolBars();
 }
 
-
+/*
 void CleanupCollection::remove( Cleanup * cleanup )
 {
-    int index = indexOf( cleanup );
+    const int index = indexOf( cleanup );
 
     if ( index == -1 )
     {
-	logError() << "No such cleanup: " << cleanup << endl;
+	logError() << "No such cleanup: " << cleanup << Qt::endl;
 	return;
     }
 
@@ -86,23 +80,29 @@ void CleanupCollection::remove( Cleanup * cleanup )
     // No need for updateMenusAndToolBars() since QObject/QWidget will take care of
     // deleted actions all by itself.
 }
-
+*/
 
 void CleanupCollection::addStdCleanups()
 {
     foreach ( Cleanup * cleanup, StdCleanup::stdCleanups( this ) )
     {
+	CHECK_PTR( cleanup );
 	add( cleanup );
     }
+
+    writeSettings( _cleanupList );
+
+    CleanupSettings settings;
+    settings.setValue( "StdCleanupsAdded", true );
 }
 
 
 int CleanupCollection::indexOf( Cleanup * cleanup ) const
 {
-    int index = _cleanupList.indexOf( cleanup );
+    const int index = _cleanupList.indexOf( cleanup );
 
     if ( index == -1 )
-	logError() << "Cleanup " << cleanup << " is not in this collection" << endl;
+	logError() << "Cleanup " << cleanup << " is not in this collection" << Qt::endl;
 
     return index;
 }
@@ -136,39 +136,32 @@ void CleanupCollection::updateMenusAndToolBars()
 
 void CleanupCollection::updateActions()
 {
-    FileInfoSet sel = _selectionModel->selectedItems();
+    const FileInfoSet sel = _selectionModel->selectedItems();
 
-    bool dirSelected	  = sel.containsDir();
-    bool fileSelected	  = sel.containsFile();
-    bool pkgSelected      = sel.containsPkg();
-    bool dotEntrySelected = sel.containsDotEntry();
-    bool busy		  = sel.containsBusyItem();
-    bool treeBusy	  = sel.treeIsBusy();
+    const bool empty		= sel.isEmpty();
+    const bool dirSelected	= sel.containsDir();
+    const bool fileSelected	= sel.containsFile();
+    const bool pkgSelected      = sel.containsPkg();
+    const bool dotEntrySelected = sel.containsDotEntry();
+    const bool busy		= sel.containsBusyItem();
+    const bool treeBusy		= sel.treeIsBusy();
 
     foreach ( Cleanup * cleanup, _cleanupList )
     {
-	if ( ! cleanup->active() || sel.isEmpty() )
+	if ( ! cleanup->active() ||
+	     ( treeBusy		&& cleanup->refreshPolicy() != Cleanup::NoRefresh ) ||
+	     ( dirSelected	&& ! cleanup->worksForDir() ) ||
+	     ( dotEntrySelected	&& ! cleanup->worksForDotEntry() ) ||
+	     ( fileSelected	&& ! cleanup->worksForFile() ) ||
+             pkgSelected ||
+	     busy ||
+	     empty )
+	{
 	    cleanup->setEnabled( false );
+	}
 	else
 	{
-	    bool enabled = ! busy;
-
-	    if ( treeBusy && cleanup->refreshPolicy() != Cleanup::NoRefresh )
-		enabled = false;
-
-	    if ( dirSelected && ! cleanup->worksForDir() )
-		enabled = false;
-
-	    if ( dotEntrySelected && ! cleanup->worksForDotEntry() )
-		enabled = false;
-
-	    if ( fileSelected && ! cleanup->worksForFile() )
-		enabled = false;
-
-            if ( pkgSelected )
-                enabled = false;
-
-	    cleanup->setEnabled( enabled );
+	    cleanup->setEnabled( true );
 	}
     }
 }
@@ -183,7 +176,6 @@ void CleanupCollection::updateMenus()
 	if ( menu )
 	{
 	    // Remove all Cleanups from this menu
-
 	    foreach ( QAction * action, menu->actions() )
 	    {
 		Cleanup * cleanup = dynamic_cast<Cleanup *>( action );
@@ -208,7 +200,6 @@ void CleanupCollection::updateToolBars()
 	if ( toolBar )
 	{
 	    // Remove all Cleanups from this tool bar
-
 	    foreach ( QAction * action, toolBar->actions() )
 	    {
 		Cleanup * cleanup = dynamic_cast<Cleanup *>( action );
@@ -231,21 +222,21 @@ void CleanupCollection::execute()
     if ( ! cleanup )
     {
 	logError() << "Wrong sender type: "
-		   << sender()->metaObject()->className() << endl;
+		   << sender()->metaObject()->className() << Qt::endl;
 	return;
     }
 
-    FileInfoSet selection = _selectionModel->selectedItems();
+    const FileInfoSet selection = _selectionModel->selectedItems();
 
     if ( selection.isEmpty() )
     {
-	logWarning() << "Nothing selected" << endl;
+	logWarning() << "Nothing selected" << Qt::endl;
 	return;
     }
 
     if ( cleanup->askForConfirmation() && ! confirmation( cleanup, selection ) )
     {
-	logDebug() << "User declined confirmation" << endl;
+	logDebug() << "User declined confirmation" << Qt::endl;
 	return;
     }
 
@@ -276,12 +267,11 @@ void CleanupCollection::execute()
     if ( cleanup->refreshPolicy() == Cleanup::RefreshThis ||
 	 cleanup->refreshPolicy() == Cleanup::RefreshParent )
     {
-	FileInfoSet refreshSet =
-	    cleanup->refreshPolicy() == Cleanup::RefreshParent ?
-	    Refresher::parents( selection ) : selection;
+	const FileInfoSet refreshSet =
+	    cleanup->refreshPolicy() == Cleanup::RefreshParent ? Refresher::parents( selection ) : selection;
 
 	_selectionModel->prepareRefresh( refreshSet );
-	Refresher * refresher = new Refresher( refreshSet, this );
+	Refresher * refresher = new Refresher( this, refreshSet );
 	CHECK_NEW( refresher );
 
 	connect( outputWindow, SIGNAL( lastProcessFinished( int ) ),
@@ -293,7 +283,7 @@ void CleanupCollection::execute()
 
 
     // Intentionally not using the normalized FileInfoSet here: If a user
-    // selects a file and one of its ancestors, he might be interested to
+    // selects a file and one of its ancestors, they might be interested to
     // perform an action on each of them individually. We can't know if the
     // action on the ancestor affects any of its children.
 
@@ -306,12 +296,15 @@ void CleanupCollection::execute()
 	else
 	{
 	    logWarning() << "Cleanup " << cleanup
-			 << " does not work for " << item << endl;
+			 << " does not work for " << item << Qt::endl;
 	}
     }
 
     if ( cleanup->refreshPolicy() == Cleanup::AssumeDeleted )
     {
+	connect( outputWindow,	SIGNAL( lastProcessFinished( int ) ),
+		 this,		SIGNAL( assumedDeleted() ) );
+
         // It is important to use the normalized FileInfoSet here to avoid a
         // segfault because we are iterating over items whose ancestors we just
         // deleted (thus invalidating pointers to it). Normalizing removes
@@ -322,7 +315,7 @@ void CleanupCollection::execute()
             DirTree * tree = item->tree();
 
             if ( tree->isBusy() )
-                logWarning() << "Ignoring AssumeDeleted: DirTree is being read" << endl;
+                logWarning() << "Ignoring AssumeDeleted: DirTree is being read" << Qt::endl;
             else
                 tree->deleteSubtree( item );
         }
@@ -334,12 +327,13 @@ void CleanupCollection::execute()
 
 bool CleanupCollection::confirmation( Cleanup * cleanup, const FileInfoSet & items )
 {
-    QString msg = "<html>";
-    QString title = cleanup->cleanTitle();
+    // Pad the title to avoid tiny dialog boxes
+    const QString title = cleanup->cleanTitle().leftJustified( 40, 0x00A0 );
 
+    QString msg = "<html>";
     if ( items.size() == 1 ) // The most common case
     {
-	FileInfo * item = items.first();
+	const FileInfo * item = items.first();
 
 	if ( item->isDir() || item->isPseudoDir() )
 	    msg += tr( "<h3>%1</h3>for <b>directory</b> %2" ).arg( title ).arg( item->url() );
@@ -350,13 +344,12 @@ bool CleanupCollection::confirmation( Cleanup * cleanup, const FileInfoSet & ite
     }
     else // Multiple items selected
     {
-
 	QStringList urls;
-	bool isMixed = items.containsDir() && items.containsFile();
+	const bool isMixed = items.containsDir() && items.containsFile();
 
 	if ( isMixed )
 	{
-	    QStringList dirs	= filteredUrls( items, true, false,    // dibs, nonDirs
+	    QStringList dirs	= filteredUrls( items, true, false,    // dirs, nonDirs
 						true );		       // extraHighlight
 	    QStringList nonDirs = filteredUrls( items, false, true  ); // dirs, nonDirs
 
@@ -382,10 +375,10 @@ bool CleanupCollection::confirmation( Cleanup * cleanup, const FileInfoSet & ite
 	msg += tr( "<h3>%1</h3> for:<br>\n%2<br>" ).arg( title ).arg( urls.join( "<br>" ) );
     }
 
-    int ret = QMessageBox::question( qApp->activeWindow(),
-				     tr( "Please Confirm" ), // title
-				     msg,		     // text
-				     QMessageBox::Yes | QMessageBox::No );
+    const int ret = QMessageBox::question( qApp->activeWindow(),
+					   tr( "Please Confirm" ), // title
+					   msg,		     // text
+					   QMessageBox::Yes | QMessageBox::No );
     return ret == QMessageBox::Yes;
 }
 
@@ -402,7 +395,7 @@ QStringList CleanupCollection::filteredUrls( const FileInfoSet & items,
 	if ( ( dirs    &&   (*it)->isDir() ) ||
 	     ( nonDirs && ! (*it)->isDir() )   )
 	{
-	    QString name = (*it)->url();
+	    const QString name = (*it)->url();
 
 	    if ( (*it)->isDir() )
 	    {
@@ -435,7 +428,7 @@ void CleanupCollection::addToMenu( QMenu * menu, bool keepUpdated )
 }
 
 
-void CleanupCollection::addEnabledToMenu( QMenu * menu )
+void CleanupCollection::addEnabledToMenu( QMenu * menu ) const
 {
     CHECK_PTR( menu );
 
@@ -453,14 +446,10 @@ void CleanupCollection::addToToolBar( QToolBar * toolBar, bool keepUpdated )
 
     foreach ( Cleanup * cleanup, _cleanupList )
     {
-	if ( cleanup->active() &&
-	     ! cleanup->icon().isNull() )
-	{
-	    // Add only cleanups that have an icon to avoid overcrowding the
-	    // toolbar with actions that only have a text.
-
+	// Add only cleanups that have an icon to avoid overcrowding the
+	// toolbar with actions that only have a text.
+	if ( cleanup->active() && ! cleanup->icon().isNull() )
 	    toolBar->addAction( cleanup );
-	}
     }
 
     if ( keepUpdated && ! _toolBars.contains( toolBar ) )
@@ -468,43 +457,15 @@ void CleanupCollection::addToToolBar( QToolBar * toolBar, bool keepUpdated )
 }
 
 
-void CleanupCollection::moveUp( Cleanup * cleanup )
-{
-    _listMover.moveUp( cleanup );
-    updateMenusAndToolBars();
-}
-
-
-void CleanupCollection::moveDown( Cleanup * cleanup )
-{
-    _listMover.moveDown( cleanup );
-    updateMenusAndToolBars();
-}
-
-
-void CleanupCollection::moveToTop( Cleanup * cleanup )
-{
-    _listMover.moveToTop( cleanup );
-    updateMenusAndToolBars();
-}
-
-
-void CleanupCollection::moveToBottom( Cleanup * cleanup )
-{
-    _listMover.moveToBottom( cleanup );
-    updateMenusAndToolBars();
-}
-
-
 void CleanupCollection::readSettings()
 {
+    clear();
+
     CleanupSettings settings;
-    QStringList cleanupGroups = settings.findGroups( settings.groupPrefix() );
+    const QStringList cleanupGroups = settings.findGroups( settings.groupPrefix() );
 
-    if ( ! cleanupGroups.isEmpty() ) // Keep defaults (StdCleanups) if settings empty
+    if ( ! cleanupGroups.isEmpty() )
     {
-	clear();
-
 	// Read all settings groups [Cleanup_xx] that were found
 
 	foreach ( const QString & groupName, cleanupGroups )
@@ -513,35 +474,46 @@ void CleanupCollection::readSettings()
 
 	    // Read one cleanup
 
-	    QString command  = settings.value( "Command" ).toString();
-	    QString title    = settings.value( "Title"	 ).toString();
-	    QString iconName = settings.value( "Icon"	 ).toString();
-	    QString hotkey   = settings.value( "Hotkey"	 ).toString();
-	    QString shell    = settings.value( "Shell"	 ).toString();
+	    const QString title    = settings.value( "Title"	).toString();
+	    const QString command  = settings.value( "Command"	).toString();
+	    const QString iconName = settings.value( "Icon"	).toString();
+	    const QString hotkey   = settings.value( "Hotkey"	).toString();
+	    const QString shell    = settings.value( "Shell"	).toString();
 
-	    bool active		       = settings.value( "Active"		, true	).toBool();
-	    bool worksForDir	       = settings.value( "WorksForDir"		, true	).toBool();
-	    bool worksForFile	       = settings.value( "WorksForFile"		, true	).toBool();
-	    bool worksForDotEntry      = settings.value( "WorksForDotEntry"	, true	).toBool();
-	    bool recurse	       = settings.value( "Recurse"		, false ).toBool();
-	    bool askForConfirmation    = settings.value( "AskForConfirmation"	, false ).toBool();
-	    bool outputWindowAutoClose = settings.value( "OutputWindowAutoClose", false ).toBool();
-	    int	 outputWindowTimeout   = settings.value( "OutputWindowTimeout"	, 0	).toInt();
+	    const bool active		     = settings.value( "Active"			, true	).toBool();
+	    const bool worksForDir	     = settings.value( "WorksForDir"		, true	).toBool();
+	    const bool worksForFile	     = settings.value( "WorksForFile"		, true	).toBool();
+	    const bool worksForDotEntry      = settings.value( "WorksForDotEntry"	, true	).toBool();
+	    const bool recurse		     = settings.value( "Recurse"		, false ).toBool();
+	    const bool askForConfirmation    = settings.value( "AskForConfirmation"	, false ).toBool();
+	    const bool outputWindowAutoClose = settings.value( "OutputWindowAutoClose"	, false ).toBool();
+	    const int  outputWindowTimeout   = settings.value( "OutputWindowTimeout"	, 0	).toInt();
 
-	    int refreshPolicy	    = readEnumEntry( settings, "RefreshPolicy",
-						     Cleanup::NoRefresh,
-						     Cleanup::refreshPolicyMapping() );
+	    const int refreshPolicy	 = readEnumEntry( settings, "RefreshPolicy",
+							  Cleanup::NoRefresh,
+							  Cleanup::refreshPolicyMapping() );
 
-	    int outputWindowPolicy  = readEnumEntry( settings, "OutputWindowPolicy",
-						     Cleanup::ShowAfterTimeout,
-						     Cleanup::outputWindowPolicyMapping() );
-	    if ( ! command.isEmpty() &&
-		 ! title.isEmpty()     )
+	    const int outputWindowPolicy = readEnumEntry( settings, "OutputWindowPolicy",
+							  Cleanup::ShowAfterTimeout,
+							  Cleanup::outputWindowPolicyMapping() );
+
+	    if ( command.isEmpty() || title.isEmpty() )
 	    {
-		Cleanup * cleanup = new Cleanup( command, title, this );
+		logError() << "Need at least Command and Title for a cleanup" << Qt::endl;
+	    }
+	    else
+	    {
+//		Cleanup * cleanup = new Cleanup( command, title, this );
+		Cleanup * cleanup = new Cleanup( this, active, title, command,
+						 recurse, askForConfirmation,
+						 static_cast<Cleanup::RefreshPolicy>( refreshPolicy ),
+						 worksForDir, worksForFile, worksForDotEntry,
+						 static_cast<Cleanup::OutputWindowPolicy>( outputWindowPolicy ),
+						 outputWindowTimeout, outputWindowAutoClose,
+						 shell );
 		CHECK_NEW( cleanup );
 		add( cleanup );
-
+/*
 		cleanup->setActive	    ( active	       );
 		cleanup->setWorksForDir	    ( worksForDir      );
 		cleanup->setWorksForFile    ( worksForFile     );
@@ -553,44 +525,29 @@ void CleanupCollection::readSettings()
 		cleanup->setOutputWindowTimeout	 ( outputWindowTimeout	 );
 		cleanup->setRefreshPolicy     ( static_cast<Cleanup::RefreshPolicy>( refreshPolicy ) );
 		cleanup->setOutputWindowPolicy( static_cast<Cleanup::OutputWindowPolicy>( outputWindowPolicy ) );
-
+*/
 		if ( ! iconName.isEmpty() )
 		    cleanup->setIcon( iconName );
 
 		if ( ! hotkey.isEmpty() )
-                {
-                    if ( hotkey == "Ctrl+F" )
-                    {
-                        // Crude workaround for the "Open File Manager Here" Ctrl+F shortcut
-                        // clashing with Ctrl+F for "Find..." in the "Edit" menu.
-
-                        // Yes, that's ugly; sorry. But Ctrl+F for "Find" has become an
-                        // established standard.
-
-                        hotkey = "Ctrl+G";
-                        logError() << "The Ctrl+F hotkey for '" << title
-                                   << "' is now taken by 'Edit' -> 'Find...'." << endl;
-                        logError() << "Changing to " << hotkey << "." << endl;
-                    }
-
 		    cleanup->setShortcut( hotkey );
-                }
 
 		// if ( ! shell.isEmpty() )
-		//    logDebug() << "Using custom shell " << shell << " for " << cleanup << endl;
-	    }
-	    else
-	    {
-		logError() << "Need at least Command and Title for a cleanup" << endl;
+		//    logDebug() << "Using custom shell " << shell << " for " << cleanup << Qt::endl;
 	    }
 
 	    settings.endGroup(); // [Cleanup_01], [Cleanup_02], ...
 	}
     }
+
+    if ( _cleanupList.isEmpty() && !settings.value( "StdCleanupsAdded", false ).toBool() )
+        addStdCleanups();
+
+    updateActions();
 }
 
 
-void CleanupCollection::writeSettings()
+void CleanupCollection::writeSettings( const CleanupList & newCleanups)
 {
     CleanupSettings settings;
 
@@ -610,11 +567,11 @@ void CleanupCollection::writeSettings()
     // unique. readSettings() will happily pick up any group that starts with
     // "Cleanup_".
 
-    for ( int i=0; i < _cleanupList.size(); ++i )
+    for ( int i=0; i < newCleanups.size(); ++i )
     {
 	settings.beginGroup( "Cleanup", i+1 );
 
-	Cleanup * cleanup = _cleanupList.at(i);
+	const Cleanup * cleanup = newCleanups.at(i);
 
 	settings.setValue( "Command"		  , cleanup->command()		     );
 	settings.setValue( "Title"		  , cleanup->title()		     );
@@ -627,7 +584,7 @@ void CleanupCollection::writeSettings()
 	settings.setValue( "OutputWindowAutoClose", cleanup->outputWindowAutoClose() );
 
 	if ( cleanup->outputWindowTimeout() > 0 )
-	    settings.setValue( "OutputWindowTimeout"  , cleanup->outputWindowTimeout()	 );
+	    settings.setValue( "OutputWindowTimeout" , cleanup->outputWindowTimeout() );
 
 	writeEnumEntry( settings, "RefreshPolicy",
 			cleanup->refreshPolicy(),
@@ -644,9 +601,12 @@ void CleanupCollection::writeSettings()
 	    settings.setValue( "Icon", cleanup->iconName() );
 
 	if ( ! cleanup->shortcut().isEmpty() )
-	    settings.setValue( "Hotkey" , cleanup->shortcut().toString() );
+	    settings.setValue( "Hotkey", cleanup->shortcut().toString() );
 
 	settings.endGroup(); // [Cleanup_01], [Cleanup_02], ...
     }
+
+    // Load the new settings into the real cleanup collection
+    readSettings();
 }
 

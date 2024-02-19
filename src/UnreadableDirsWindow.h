@@ -15,14 +15,13 @@
 #include <QTreeWidgetItem>
 
 #include "ui_unreadable-dirs-window.h"
-#include "FileInfo.h"
-#include "FileInfoSet.h"
 #include "Subtree.h"
 
 
 namespace QDirStat
 {
     class DirTree;
+    class FileInfo;
     class FileTypeStats;
     class MimeCategory;
 

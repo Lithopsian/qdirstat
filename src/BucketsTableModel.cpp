@@ -16,20 +16,6 @@
 using namespace QDirStat;
 
 
-BucketsTableModel::BucketsTableModel( QWidget * parent, HistogramView * histogram ):
-    QAbstractTableModel( parent ),
-    _histogram( histogram )
-{
-    // logDebug() << "init" << endl;
-}
-
-
-BucketsTableModel::~BucketsTableModel()
-{
-    // logDebug() << "destroying" << endl;
-}
-
-
 void BucketsTableModel::reset()
 {
     beginResetModel();
@@ -43,14 +29,6 @@ int BucketsTableModel::rowCount( const QModelIndex & parent ) const
 }
 
 
-int BucketsTableModel::columnCount( const QModelIndex & parent ) const
-{
-    Q_UNUSED( parent );
-
-    return ColCount;
-}
-
-
 QVariant BucketsTableModel::data( const QModelIndex & index, int role ) const
 {
     if ( ! index.isValid() )
@@ -60,23 +38,18 @@ QVariant BucketsTableModel::data( const QModelIndex & index, int role ) const
     {
 	case Qt::DisplayRole:
 	    {
-                int row = index.row();
+                const int row = index.row();
 
                 if ( row < 0 || row >= _histogram->bucketCount() )
                     return QVariant();
 
-                QString result;
-
                 switch ( index.column() )
                 {
-                    case StartCol:  result = formatSize( _histogram->bucketStart( row ) ); break;
-                    case EndCol:    result = formatSize( _histogram->bucketEnd  ( row ) ); break;
-                    case ValueCol:  result = QString::number( _histogram->bucket( row ) ); break;
-
+                    case StartCol:  return " " + formatSize( _histogram->bucketStart( row ) ) + " ";
+                    case EndCol:    return " " + formatSize( _histogram->bucketEnd  ( row ) ) + " ";
+                    case ValueCol:  return " " + QString::number( _histogram->bucket( row ) ) + " ";
                     default:        return QVariant();
                 }
-
-                return " " + result + " "; // Maintain some margin
 	    }
 
 	case Qt::TextAlignmentRole:
@@ -100,18 +73,13 @@ QVariant BucketsTableModel::headerData( int	        section,
 	case Qt::DisplayRole:
             if ( orientation == Qt::Horizontal )
             {
-                QString result;
-
                 switch ( section )
                 {
-                    case StartCol:	result = tr( "Start"         ); break;
-                    case EndCol:	result = tr( "End"           ); break;
-                    case ValueCol:	result = tr( "Files"         ); break;
-
+                    case StartCol:	return " " + tr( "Start" ) + " ";
+                    case EndCol:	return " " + tr( "End"   ) + " ";
+                    case ValueCol:	return " " + tr( "Files" ) + " ";
                     default: return QVariant();
                 }
-
-                return " " + result + " "; // Maintain some margin
             }
             else
             {
@@ -133,13 +101,3 @@ QVariant BucketsTableModel::headerData( int	        section,
 	    return QVariant();
     }
 }
-
-
-Qt::ItemFlags BucketsTableModel::flags( const QModelIndex &index ) const
-{
-    Qt::ItemFlags flags = QAbstractTableModel::flags( index );
-    flags |= Qt::ItemIsSelectable;
-
-    return flags;
-}
-

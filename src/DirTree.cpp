@@ -18,27 +18,28 @@
 #include "FileInfoIterator.h"
 #include "FileInfoSet.h"
 #include "ExcludeRules.h"
+#include "PkgFilter.h"
 #include "PkgReader.h"
 #include "MountPoints.h"
 #include "FormatUtil.h"
 #include "Logger.h"
 #include "Exception.h"
 
-#define VERBOSE_EXCLUDE_RULES	1
+#define VERBOSE_EXCLUDE_RULES 0
 
 using namespace QDirStat;
 
 
 DirTree::DirTree():
-    QObject(),
-    _excludeRules( 0 ),
-    _beingDestroyed( false ),
-    _haveClusterSize( false ),
-    _blocksPerCluster( 0 )
+    QObject {},
+    _root { new DirInfo( this ) },
+    _crossFilesystems { false },
+    _isBusy { false },
+    _excludeRules { 0 },
+    _beingDestroyed { false },
+    _haveClusterSize { false },
+    _blocksPerCluster { 0 }
 {
-    _isBusy	      = false;
-    _crossFilesystems = false;
-    _root = new DirInfo( this );
     CHECK_NEW( _root );
 
     connect( & _jobQueue, SIGNAL( finished()	 ),
@@ -85,15 +86,9 @@ FileInfo * DirTree::firstToplevel() const
 }
 
 
-bool DirTree::isToplevel( FileInfo *item ) const
+bool DirTree::isTopLevel( FileInfo *item ) const
 {
     return item && item->parent() && ! item->parent()->parent();
-}
-
-
-QString DirTree::url() const
-{
-    return _url;
 }
 
 
@@ -103,6 +98,7 @@ void DirTree::clear()
 
     if ( _root )
     {
+	logDebug() << Qt::endl;
 	emit clearing();
 	_root->clear();
     }
@@ -125,12 +121,14 @@ void DirTree::reset()
 void DirTree::startReading( const QString & rawUrl )
 {
     QFileInfo fileInfo( rawUrl );
-    _url = fileInfo.absoluteFilePath();
-    // logDebug() << "rawUrl: \"" << rawUrl << "\"" << endl;
-    logInfo() << "   url: \"" << _url	 << "\"" << endl;
+    const QString canonicalPath = fileInfo.canonicalFilePath(); // fix me, broken link handling
+    _url = canonicalPath.isEmpty() ? fileInfo.absoluteFilePath() : canonicalPath;
+    //logDebug() << "rawUrl: \"" << rawUrl << "\"" << Qt::endl;
+    logInfo() << "   url: \"" << _url	 << "\"" << Qt::endl;
+
     MountPoint * mountPoint = MountPoints::findNearestMountPoint( _url );
     _device = mountPoint ? mountPoint->device() : "";
-    logInfo() << "device: " << _device << endl;
+    logInfo() << "device: " << _device << Qt::endl;
 
     if ( _root->hasChildren() )
 	clear();
@@ -160,7 +158,7 @@ void DirTree::startReading( const QString & rawUrl )
     }
     else	// stat() failed
     {
-	logWarning() << "stat(" << _url << ") failed" << endl;
+	logWarning() << "stat(" << _url << ") failed" << Qt::endl;
 	_isBusy = false;
 	emit finished();
     }
@@ -199,7 +197,7 @@ void DirTree::refresh( DirInfo * subtree )
 	// if one selected item is in the subtree of another, and that parent
 	// was already refreshed.
 
-	logWarning() << "Item is no longer valid - not refreshing subtree" << endl;
+	logWarning() << "Item is no longer valid - not refreshing subtree" << Qt::endl;
 	return;
     }
 
@@ -219,7 +217,7 @@ void DirTree::refresh( DirInfo * subtree )
     }
     else	// Refresh subtree
     {
-	// logDebug() << "Refreshing subtree " << subtree << endl;
+	// logDebug() << "Refreshing subtree " << subtree << Qt::endl;
 
 	clearSubtree( subtree );
 
@@ -269,6 +267,7 @@ void DirTree::slotFinished()
 
 void DirTree::childAddedNotify( FileInfo * newChild )
 {
+    //logDebug() << Qt::endl;
     if ( ! _haveClusterSize )
         detectClusterSize( newChild );
 
@@ -281,23 +280,23 @@ void DirTree::childAddedNotify( FileInfo * newChild )
 
 void DirTree::deletingChildNotify( FileInfo * deletedChild )
 {
-    logDebug() << "Deleting child " << deletedChild << endl;
+    logDebug() << "Deleting child " << deletedChild << Qt::endl;
     emit deletingChild( deletedChild );
 
     if ( deletedChild == _root )
 	_root = 0;
 }
 
-
+/*
 void DirTree::childDeletedNotify()
 {
     emit childDeleted();
 }
-
+*/
 
 void DirTree::deleteSubtree( FileInfo *subtree )
 {
-    // logDebug() << "Deleting subtree " << subtree << endl;
+    // logDebug() << "Deleting subtree " << subtree << Qt::endl;
     DirInfo * parent = subtree->parent();
 
     // Send notification to anybody interested (e.g., to attached views)
@@ -314,7 +313,7 @@ void DirTree::deleteSubtree( FileInfo *subtree )
 	    {
 		if ( parent->parent()->isFinished() )
 		{
-		    // logDebug() << "Removing empty dot entry " << parent << endl;
+		    // logDebug() << "Removing empty dot entry " << parent << Qt::endl;
 
 		    deletingChildNotify( parent );
 		    parent->parent()->deleteEmptyDotEntry();
@@ -325,7 +324,7 @@ void DirTree::deleteSubtree( FileInfo *subtree )
 	    }
 	    else	// no parent - this should never happen (?)
 	    {
-		logError() << "Internal error: Killing dot entry without parent " << parent << endl;
+		logError() << "Internal error: Killing dot entry without parent " << parent << Qt::endl;
 
 		// Better leave that dot entry alone - we shouldn't have come
 		// here in the first place. Who knows what will happen if this
@@ -398,28 +397,28 @@ void DirTree::sendFinished()
     emit finished();
 }
 
-
+/*
 void DirTree::sendAborted()
 {
     _isBusy = false;
     emit aborted();
 }
-
-
+*/
+/*
 void DirTree::sendStartingReading( DirInfo * dir )
 {
     emit startingReading( dir );
 }
-
+*/
 
 void DirTree::sendReadJobFinished( DirInfo * dir )
 {
-    // logDebug() << dir << endl;
+    // logDebug() << dir << Qt::endl;
     emit readJobFinished( dir );
 }
 
 
-FileInfo * DirTree::locate( QString url, bool findPseudoDirs )
+FileInfo * DirTree::locate( const QString & url, bool findPseudoDirs ) const
 {
     if ( ! _root )
 	return 0;
@@ -444,11 +443,21 @@ bool DirTree::writeCache( const QString & cacheFileName )
 }
 
 
-void DirTree::readCache( const QString & cacheFileName )
+bool DirTree::readCache( const QString & cacheFileName )
 {
     _isBusy = true;
     emit startingReading();
-    addJob( new CacheReadJob( this, 0, cacheFileName ) );
+    CacheReadJob * readJob = new CacheReadJob( this, 0, cacheFileName );
+    if ( !readJob->reader() )
+    {
+	delete readJob;
+//	emit aborted();
+	return false;
+
+    }
+
+    addJob( readJob );
+    return true;
 }
 
 
@@ -466,7 +475,7 @@ void DirTree::readPkg( const PkgFilter & pkgFilter )
     _url    = pkgFilter.url();
     emit startingReading();
 
-    // logDebug() << "Reading " << pkgFilter << endl;
+    // logDebug() << "Reading " << pkgFilter << Qt::endl;
     PkgReader reader( this );
     reader.read( pkgFilter );
 }
@@ -480,16 +489,16 @@ void DirTree::setExcludeRules( ExcludeRules * newRules )
 #if VERBOSE_EXCLUDE_RULES
     if ( newRules )
     {
-	logDebug() << "New tmp exclude rules:" << endl;
+	logDebug() << "New tmp exclude rules:" << Qt::endl;
 
 	for ( ExcludeRuleListIterator it = newRules->begin(); it != newRules->end(); ++it )
 	{
-	    logDebug() << *it << endl;
+	    logDebug() << *it << Qt::endl;
 	}
     }
     else
     {
-	logDebug() << "Clearing tmp exclude rules" << endl;
+	logDebug() << "Clearing tmp exclude rules" << Qt::endl;
     }
 #endif
 
@@ -555,7 +564,7 @@ void DirTree::moveIgnoredToAttic( DirInfo * dir )
 
     foreach ( FileInfo * child, ignoredChildren )
     {
-	// logDebug() << "Moving ignored " << child << " to attic" << endl;
+	// logDebug() << "Moving ignored " << child << " to attic" << Qt::endl;
 	dir->moveToAttic( child );
 
 	if ( child->isDirInfo() )
@@ -588,7 +597,7 @@ void DirTree::ignoreEmptyDirs( DirInfo * dir )
 	    if ( subDir->totalUnignoredItems() == 0 )
 		// && ! subDir->isMountPoint()
 	    {
-		// logDebug() << "Ignoring empty subdir " << subDir << endl;
+		// logDebug() << "Ignoring empty subdir " << subDir << Qt::endl;
 		subDir->setIgnored( true );
 	    }
 	    else
@@ -608,7 +617,7 @@ void DirTree::unatticAll( DirInfo * dir )
 
     if ( dir->attic() )
     {
-	// logDebug() << "Moving all attic children to the normal children list for " << dir << endl;
+	// logDebug() << "Moving all attic children to the normal children list for " << dir << Qt::endl;
 	dir->takeAllChildren( dir->attic() );
 	dir->deleteEmptyAttic();
 	dir->recalc();
@@ -661,9 +670,9 @@ void DirTree::detectClusterSize( FileInfo * item )
         _haveClusterSize  = true;
 
         logInfo() << "Cluster size: " << _blocksPerCluster << " blocks ("
-                  << formatSize( clusterSize() ) << ")" << endl;
-        logDebug() << "Derived from " << item << " " << formatSize( item->rawByteSize() )
-                   << " (allocated: " << formatSize( item->rawAllocatedSize() ) << ")"
-                   << endl;
+                  << formatSize( clusterSize() ) << ")" << Qt::endl;
+//        logDebug() << "Derived from " << item << " " << formatSize( item->rawByteSize() )
+//                   << " (allocated: " << formatSize( item->rawAllocatedSize() ) << ")"
+//                   << Qt::endl;
     }
 }

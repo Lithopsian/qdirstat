@@ -16,18 +16,11 @@
 using namespace QDirStat;
 
 
-ActionManager * ActionManager::_instance = 0;
-
-
 ActionManager * ActionManager::instance()
 {
-    if ( ! _instance )
-    {
-	_instance = new ActionManager();
-	CHECK_NEW( _instance );
-    }
+    static ActionManager _instance;
 
-    return _instance;
+    return &_instance;
 }
 
 
@@ -39,9 +32,9 @@ void ActionManager::addWidgetTree( QObject * tree )
 }
 
 
-QAction * ActionManager::action( const QString & actionName )
+QAction * ActionManager::action( const QString & actionName ) const
 {
-    foreach ( QPointer<QObject> tree, _widgetTrees )
+    foreach ( const QPointer<QObject> tree, _widgetTrees )
     {
 	if ( tree ) // might be destroyed in the meantime
 	{
@@ -52,7 +45,7 @@ QAction * ActionManager::action( const QString & actionName )
 	}
     }
 
-    logError() << "No action with name " << actionName << " found" << endl;
+    logError() << "No action with name " << actionName << " found" << Qt::endl;;
     return 0;
 }
 
@@ -61,32 +54,30 @@ bool ActionManager::addActions( QWidget *           widget,
                                 const QStringList & actionNames,
                                 bool                enabledOnly  )
 {
-    CHECK_PTR( widget );
-
-    bool    foundAll = true;
-    QMenu * menu     = qobject_cast<QMenu *>( widget );
+    bool foundAll = true;
+    QMenu * menu = qobject_cast<QMenu *>( widget );
 
     foreach ( const QString & actionName, actionNames )
     {
 	if ( actionName.startsWith( "---" ) )
-        {
-            if ( menu )
-                menu->addSeparator();
-        }
+	{
+	    if ( menu )
+		menu->addSeparator();
+	}
 	else
 	{
 	    QAction * act = action( actionName );
 
 	    if ( act )
-            {
-                if ( act->isEnabled() || ! enabledOnly )
+	    {
+		if ( act->isEnabled() || ! enabledOnly )
                     widget->addAction( act );
             }
 	    else
-            {
-                // ActionManager::action() already logs an error if not found
+	    {
+		// ActionManager::action() already logs an error if not found
 		foundAll = false;
-            }
+	    }
 	}
     }
 

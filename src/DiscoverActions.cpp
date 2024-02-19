@@ -8,31 +8,17 @@
 
 
 #include "DiscoverActions.h"
-#include "TreeWalker.h"
-#include "LocateFilesWindow.h"
-#include "FileSearchFilter.h"
-#include "DirInfo.h"
 #include "BusyPopup.h"
+#include "DirInfo.h"
+#include "DirTree.h"
+#include "FileSearchFilter.h"
+#include "LocateFilesWindow.h"
 #include "QDirStatApp.h"
+#include "TreeWalker.h"
 #include "Logger.h"
 #include "Exception.h"
 
 using namespace QDirStat;
-
-
-DiscoverActions::DiscoverActions( QObject * parent ):
-    QObject( parent )
-{
-    // NOP
-}
-
-
-DiscoverActions::~DiscoverActions()
-{
-    // Notice that _locateFilesWindow gets the main window as its widget
-    // parent, so it will automatically be destroyed when the main window and
-    // its child widgets are destroyed.
-}
 
 
 void DiscoverActions::discoverLargestFiles()
@@ -86,7 +72,7 @@ void DiscoverActions::discoverSparseFiles()
 
 void DiscoverActions::discoverFilesFromYear( const QString & path, short year )
 {
-    QString headingText = tr( "Files from %1 in %2" ).arg( year ).arg( "%1");
+    const QString headingText = tr( "Files from %1 in %2" ).arg( year ).arg( "%1");
 
     discoverFiles( new QDirStat::FilesFromYearTreeWalker( year ), headingText, path );
     _locateFilesWindow->sortByColumn( LocateListMTimeCol, Qt::DescendingOrder );
@@ -95,13 +81,11 @@ void DiscoverActions::discoverFilesFromYear( const QString & path, short year )
 
 void DiscoverActions::discoverFilesFromMonth( const QString & path, short year, short month )
 {
-    QString headingText = tr( "Files from %1/%2 in %3" ).arg( month ).arg( year).arg( "%1");
+    const QString headingText = tr( "Files from %1/%2 in %3" ).arg( month ).arg( year).arg( "%1");
 
     discoverFiles( new QDirStat::FilesFromMonthTreeWalker( year, month ), headingText, path );
     _locateFilesWindow->sortByColumn( LocateListMTimeCol, Qt::DescendingOrder );
 }
-
-
 
 
 void DiscoverActions::discoverFiles( TreeWalker *    treeWalker,
@@ -133,24 +117,18 @@ void DiscoverActions::discoverFiles( TreeWalker *    treeWalker,
 
 void DiscoverActions::ensureLocateFilesWindow( TreeWalker * treeWalker )
 {
-    if ( ! _locateFilesWindow )
-    {
+    if ( _locateFilesWindow )
+        _locateFilesWindow->setTreeWalker( treeWalker );
+    else
 	// This deletes itself when the user closes it. The associated QPointer
 	// keeps track of that and sets the pointer to 0 when it happens.
-
 	_locateFilesWindow = new LocateFilesWindow( treeWalker,
                                                     app()->findMainWindow() ); // parent
-    }
-    else
-    {
-        _locateFilesWindow->setTreeWalker( treeWalker );
-    }
 }
 
 
 void DiscoverActions::findFiles( const FileSearchFilter & filter )
 {
-
     ensureLocateFilesWindow( new FindFilesTreeWalker( filter ) );
     FileInfo * sel = filter.subtree();
 
@@ -159,7 +137,7 @@ void DiscoverActions::findFiles( const FileSearchFilter & filter )
 
     if ( sel )
     {
-        QString headingText = tr( "Search Results for \"%1\"" ).arg( filter.pattern() );
+        const QString headingText = tr( "Search Results for \"%1\"" ).arg( filter.pattern() );
 
         _locateFilesWindow->setHeading( headingText );
         _locateFilesWindow->populate( sel );

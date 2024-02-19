@@ -57,14 +57,12 @@ void BusyPopup::processEvents( int millisec )
 }
 
 
-void BusyPopup::showEvent( QShowEvent * event )
+void BusyPopup::showEvent( QShowEvent * )
 {
-    Q_UNUSED( event );
-
     if ( parentWidget() )
     {
-	int x = ( parentWidget()->width()  - width()  ) / 2;
-	int y = ( parentWidget()->height() - height() ) / 2;
+	const int x = ( parentWidget()->width()  - width()  ) / 2;
+	const int y = ( parentWidget()->height() - height() ) / 2;
 
 	move( parentWidget()->x() + x, parentWidget()->y() + y );
     }

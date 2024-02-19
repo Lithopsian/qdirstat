@@ -18,12 +18,8 @@ using namespace QDirStat;
 
 DotEntry::DotEntry( DirTree * tree,
 		    DirInfo * parent )
-    : DirInfo( tree, parent )
+    : DirInfo( parent, tree, dotEntryName() )
 {
-    _name	= dotEntryName();
-    _dotEntry	= 0;
-    _mtime	= 0;
-
     if ( parent )
     {
 	_device = parent->device();

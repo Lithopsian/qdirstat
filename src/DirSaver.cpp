@@ -7,14 +7,14 @@
  */
 
 
-#include <unistd.h>     // chdir()
+#include <unistd.h>
 #include "Logger.h"
 #include "DirSaver.h"
 
 
-DirSaver::DirSaver( const QString & newPath )
+DirSaver::DirSaver( const QString & newPath ):
+    _oldWorkingDir { QDir::currentPath() }
 {
-    _oldWorkingDir = QDir::currentPath();
     cd( newPath );
 }
 
@@ -29,15 +29,15 @@ void DirSaver::cd( const QString & newPath )
 {
     if ( newPath.isEmpty() )
     {
-	logWarning() << "Empty path" << endl;
+	logWarning() << "Empty path" << Qt::endl;
 	return;
     }
 
-    // logDebug() << "cd " << newPath << endl;
-    int result = chdir( newPath.toUtf8() );
+    // logDebug() << "cd " << newPath << Qt::endl;
+    const int result = chdir( newPath.toUtf8() );
 
     if ( result != 0 )
-        logWarning() << "chdir( " << newPath << " ) failed" << endl;
+        logWarning() << "chdir( " << newPath << " ) failed" << Qt::endl;
 }
 
 
