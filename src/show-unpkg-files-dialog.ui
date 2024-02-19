@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>414</width>
-    <height>400</height>
+    <width>396</width>
+    <height>410</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,30 +31,26 @@
     </widget>
    </item>
    <item>
-    <spacer name="topVSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
+    <layout class="QGridLayout" name="gridLayout">
+     <property name="leftMargin">
+      <number>8</number>
      </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
+     <property name="topMargin">
+      <number>8</number>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>9</height>
-      </size>
+     <property name="rightMargin">
+      <number>8</number>
      </property>
-    </spacer>
-   </item>
-   <item>
-    <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="startingDirCaption">
+     <property name="bottomMargin">
+      <number>16</number>
+     </property>
+     <item row="2" column="0" alignment="Qt::AlignTop">
+      <widget class="QLabel" name="ignorePatternsCaption">
        <property name="text">
-        <string>Starting &amp;Directory:</string>
+        <string>I&amp;gnore Patterns:</string>
        </property>
        <property name="buddy">
-        <cstring>startingDirComboBox</cstring>
+        <cstring>ignorePatternsTextEdit</cstring>
        </property>
       </widget>
      </item>
@@ -103,16 +99,6 @@
        </item>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="excludeDirsCaption">
-       <property name="text">
-        <string>E&amp;xclude Directories:</string>
-       </property>
-       <property name="buddy">
-        <cstring>excludeDirsTextEdit</cstring>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1">
       <widget class="QPlainTextEdit" name="excludeDirsTextEdit">
        <property name="sizePolicy">
@@ -126,6 +112,9 @@
          <width>160</width>
          <height>73</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>&lt;nobr&gt;Do not show directories matching a full path pattern, &lt;/nobr&gt;with no trailing slash, using *, ?, and [] as wildcards.</string>
        </property>
        <property name="lineWrapMode">
         <enum>QPlainTextEdit::NoWrap</enum>
@@ -141,13 +130,23 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="ignorePatternsCaption">
+     <item row="0" column="0">
+      <widget class="QLabel" name="startingDirCaption">
        <property name="text">
-        <string>I&amp;gnore Patterns:</string>
+        <string>Starting &amp;Directory:</string>
        </property>
        <property name="buddy">
-        <cstring>ignorePatternsTextEdit</cstring>
+        <cstring>startingDirComboBox</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" alignment="Qt::AlignTop">
+      <widget class="QLabel" name="excludeDirsCaption">
+       <property name="text">
+        <string>E&amp;xclude Directories:</string>
+       </property>
+       <property name="buddy">
+        <cstring>excludeDirsTextEdit</cstring>
        </property>
       </widget>
      </item>
@@ -165,6 +164,9 @@
          <height>73</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Ignore files matching either:&lt;br/&gt;1) a filename suffix, in the format *.abc;&lt;br/&gt;&lt;nobr&gt;2) a filename, excluding the path, using *, ?, and [] as wildcards;&lt;nobr/&gt;&lt;br/&gt;3) a full path, using *, ?, and [] as wildcards.</string>
+       </property>
        <property name="lineWrapMode">
         <enum>QPlainTextEdit::NoWrap</enum>
        </property>
@@ -174,23 +176,20 @@
        </property>
       </widget>
      </item>
+     <item row="3" column="1">
+      <widget class="QCheckBox" name="crossFilesystemsCheckBox">
+       <property name="toolTip">
+        <string>Normal mounts only,
+no bind mounts,
+no multiple mounts,
+no network mounts</string>
+       </property>
+       <property name="text">
+        <string>Cross &amp;Filesystems</string>
+       </property>
+      </widget>
+     </item>
     </layout>
-   </item>
-   <item>
-    <spacer name="bottomVSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>9</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

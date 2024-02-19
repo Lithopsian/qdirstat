@@ -26,7 +26,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Directories with File Type</string>
+      <string>Directories with file type</string>
      </property>
     </widget>
    </item>
@@ -38,9 +38,6 @@
      <property name="sortingEnabled">
       <bool>true</bool>
      </property>
-     <attribute name="headerStretchLastSection">
-      <bool>true</bool>
-     </attribute>
      <column>
       <property name="text">
        <string notr="true">1</string>
@@ -67,20 +64,14 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
       <widget class="QPushButton" name="closeButton">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="text">
         <string>&amp;Close</string>
        </property>

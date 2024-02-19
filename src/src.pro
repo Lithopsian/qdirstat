@@ -1,4 +1,5 @@
 # qmake .pro file for qdirstat/src
+# qmake .pro file for qdirstat/src
 #
 # Go to the project toplevel dir and build all Makefiles:
 #
@@ -29,30 +30,14 @@ TARGET.path	 = $$INSTALL_PREFIX/bin
 INSTALLS	+= TARGET desktop icons
 
 
-# Fix the train wreck that Qt 5.15 is.
-#
-# Some genius decided to mark everything as deprecated that will change in
-# the upcoming Qt 6.0, but they had not considered that
-# THE PROPOSED CHANGES ARE COMPLETELY INCOMPATIBLE TO Qt 5.14 OR EARLIER!!
-#
-# Some enum values moved from the QString namespace to the Qt namespace; you
-# can write code that will compile with Qt 5.1 - 5.14 OR for Qt 5.15, but not both.
-#
-# Great move, guys. In the 20+ years (since 1998 or so) that I have been
-# working with Qt, this level of complete and utter fuck-up never happened
-# before, much less between minor versions.
-#
-# So there is only one solution: STFU, Qt!
-
-QMAKE_CXXFLAGS	+=  -Wno-deprecated -Wno-deprecated-declarations
+# QMAKE_CXXFLAGS	+=  -Wno-deprecated -Wno-deprecated-declarations
 
 
 SOURCES	  = main.cpp			\
             QDirStatApp.cpp             \
 	    ActionManager.cpp		\
 	    AdaptiveTimer.cpp		\
-            Attic.cpp			\
-            BookmarksManager.cpp        \
+	    Attic.cpp			\
 	    BreadcrumbNavigator.cpp	\
 	    BucketsTableModel.cpp	\
 	    BusyPopup.cpp		\
@@ -62,7 +47,6 @@ SOURCES	  = main.cpp			\
 	    ConfigDialog.cpp		\
 	    DataColumns.cpp		\
 	    DebugHelpers.cpp		\
-	    DelayedRebuilder.cpp	\
 	    DirInfo.cpp			\
 	    DirReadJob.cpp		\
 	    DirSaver.cpp		\
@@ -78,8 +62,7 @@ SOURCES	  = main.cpp			\
 	    Exception.cpp		\
 	    ExcludeRules.cpp		\
 	    ExcludeRulesConfigPage.cpp	\
-	    ExistingDirCompleter.cpp	\
-            ExistingDirValidator.cpp	\
+	    ExistingDir.cpp		\
 	    FileAgeStats.cpp		\
 	    FileAgeStatsWindow.cpp	\
 	    FileDetailsView.cpp		\
@@ -87,21 +70,19 @@ SOURCES	  = main.cpp			\
 	    FileInfoIterator.cpp	\
 	    FileInfoSet.cpp		\
 	    FileInfoSorter.cpp		\
-            FileMTimeStats.cpp		\
-            FileSearchFilter.cpp        \
+	    FileMTimeStats.cpp		\
+	    FileSearchFilter.cpp	\
 	    FileSizeLabel.cpp		\
 	    FileSizeStats.cpp		\
 	    FileSizeStatsWindow.cpp	\
 	    FileSystemsWindow.cpp	\
 	    FileTypeStats.cpp		\
 	    FileTypeStatsWindow.cpp	\
-            FindFilesDialog.cpp         \
+	    FindFilesDialog.cpp		\
 	    FormatUtil.cpp		\
 	    GeneralConfigPage.cpp	\
 	    HeaderTweaker.cpp		\
-	    HistogramDraw.cpp		\
 	    HistogramItems.cpp		\
-	    HistogramOverflowPanel.cpp	\
 	    HistogramView.cpp		\
 	    History.cpp			\
 	    HistoryButtons.cpp		\
@@ -110,7 +91,7 @@ SOURCES	  = main.cpp			\
 	    LocateFilesWindow.cpp	\
 	    Logger.cpp			\
 	    MainWindow.cpp		\
-	    MainWindowHelp.cpp          \
+	    MainWindowHelp.cpp	\
 	    MainWindowLayout.cpp	\
 	    MainWindowMenus.cpp		\
 	    MainWindowUnpkg.cpp		\
@@ -121,6 +102,7 @@ SOURCES	  = main.cpp			\
 	    MountPoints.cpp		\
 	    OpenDirDialog.cpp		\
 	    OpenPkgDialog.cpp		\
+	    OpenUnpkgDialog.cpp		\
 	    OutputWindow.cpp		\
 	    PacManPkgManager.cpp	\
 	    PanelMessage.cpp		\
@@ -133,8 +115,6 @@ SOURCES	  = main.cpp			\
 	    PkgManager.cpp		\
 	    PkgQuery.cpp		\
 	    PkgReader.cpp		\
-	    PopupLabel.cpp		\
-	    Process.cpp			\
 	    ProcessStarter.cpp		\
 	    Refresher.cpp		\
 	    RpmPkgManager.cpp		\
@@ -142,7 +122,6 @@ SOURCES	  = main.cpp			\
 	    SelectionModel.cpp		\
 	    Settings.cpp		\
 	    SettingsHelpers.cpp		\
-	    ShowUnpkgFilesDialog.cpp	\
 	    SizeColDelegate.cpp		\
 	    StdCleanup.cpp		\
 	    Subtree.cpp			\
@@ -153,7 +132,8 @@ SOURCES	  = main.cpp			\
 	    TreemapTile.cpp		\
 	    TreemapView.cpp		\
 	    UnpkgSettings.cpp		\
-	    UnreadableDirsWindow.cpp
+	    UnreadableDirsWindow.cpp	\
+	    Wildcard.cpp
 
 
 HEADERS	  =				\
@@ -161,9 +141,8 @@ HEADERS	  =				\
 	    ActionManager.h		\
 	    AdaptiveTimer.h		\
 	    Attic.h			\
-            BookmarksManager.h          \
-            BreadcrumbNavigator.h	\
-            BrokenLibc.h                \
+	    BreadcrumbNavigator.h	\
+	    BrokenLibc.h                \
 	    BucketsTableModel.h		\
 	    BusyPopup.h			\
 	    Cleanup.h			\
@@ -172,7 +151,6 @@ HEADERS	  =				\
 	    ConfigDialog.h		\
 	    DataColumns.h		\
 	    DebugHelpers.h		\
-	    DelayedRebuilder.h		\
 	    DirInfo.h			\
 	    DirReadJob.h		\
 	    DirSaver.h			\
@@ -189,26 +167,25 @@ HEADERS	  =				\
 	    Exception.h			\
 	    ExcludeRules.h		\
 	    ExcludeRulesConfigPage.h	\
-	    ExistingDirCompleter.h	\
-	    ExistingDirValidator.h	\
+	    ExistingDir.h		\
 	    FileDetailsView.h		\
 	    FileInfo.h			\
 	    FileInfoIterator.h		\
 	    FileInfoSet.h		\
 	    FileInfoSorter.h		\
 	    FileMTimeStats.h		\
-            FileSearchFilter.h          \
+	    FileSearchFilter.h		\
 	    FileSizeLabel.h		\
 	    FileSizeStats.h		\
 	    FileSizeStatsWindow.h	\
 	    FileSystemsWindow.h		\
 	    FileTypeStats.h		\
+	    FindFilesDialog.h		\
 	    GeneralConfigPage.h		\
 	    HeaderTweaker.h		\
 	    HistogramItems.h		\
 	    HistogramView.h		\
 	    ListEditor.h		\
-	    ListMover.h			\
 	    LocateFileTypeWindow.h	\
 	    LocateFilesWindow.h		\
 	    Logger.h			\
@@ -220,6 +197,7 @@ HEADERS	  =				\
 	    MountPoints.h		\
 	    OpenDirDialog.h		\
 	    OpenPkgDialog.h		\
+	    OpenUnpkgDialog.h		\
 	    OutputWindow.h		\
 	    PacManPkgManager.h		\
 	    PanelMessage.h		\
@@ -232,17 +210,13 @@ HEADERS	  =				\
 	    PkgManager.h		\
 	    PkgQuery.h			\
 	    PkgReader.h			\
-	    PopupLabel.h		\
-	    Process.h			\
 	    ProcessStarter.h		\
-	    Qt4Compat.h			\
 	    Refresher.h			\
 	    RpmPkgManager.h		\
-	    SearchFilter.h              \
+	    SearchFilter.h		\
 	    SelectionModel.h		\
 	    Settings.h			\
 	    SettingsHelpers.h		\
-	    ShowUnpkgFilesDialog.h	\
 	    SignalBlocker.h		\
 	    SizeColDelegate.h		\
 	    StdCleanup.h		\
@@ -257,25 +231,24 @@ HEADERS	  =				\
 	    FileAgeStatsWindow.h	\
 	    FileSize.h			\
 	    FileTypeStatsWindow.h	\
-            FindFilesDialog.h           \
 	    FormatUtil.h		\
 	    History.h			\
 	    HistoryButtons.h		\
 	    TreeWalker.h		\
 	    TreemapView.h		\
-	    Version.h
-
+	    Version.h			\
+	    Wildcard.h
 
 
 FORMS	  = main-window.ui		   \
 	    cleanup-config-page.ui	   \
 	    config-dialog.ui		   \
 	    exclude-rules-config-page.ui   \
-            find-files-dialog.ui           \
+	    find-files-dialog.ui	   \
 	    file-age-stats-window.ui	   \
 	    file-details-view.ui	   \
 	    file-size-stats-window.ui	   \
-            file-type-stats-window.ui	   \
+	    file-type-stats-window.ui	   \
 	    filesystems-window.ui	   \
 	    general-config-page.ui	   \
 	    locate-file-type-window.ui	   \
@@ -284,9 +257,10 @@ FORMS	  = main-window.ui		   \
 	    mime-category-config-page.ui   \
 	    open-dir-dialog.ui		   \
 	    open-pkg-dialog.ui		   \
+	    open-unpkg-dialog.ui	   \
 	    output-window.ui		   \
 	    panel-message.ui		   \
-	    show-unpkg-files-dialog.ui	   \
+#	    show-unpkg-files-dialog.ui	   \
 	    unreadable-dirs-window.ui
 
 

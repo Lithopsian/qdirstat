@@ -53,7 +53,23 @@
             <widget class="QDirStat::BreadcrumbNavigator" name="breadcrumbNavigator"/>
            </item>
            <item>
-            <widget class="QDirStat::DirTreeView" name="dirTreeView"/>
+            <widget class="QDirStat::DirTreeView" name="dirTreeView">
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::ExtendedSelection</enum>
+             </property>
+             <property name="textElideMode">
+              <enum>Qt::ElideMiddle</enum>
+             </property>
+             <property name="uniformRowHeights">
+              <bool>true</bool>
+             </property>
+             <property name="sortingEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -69,10 +85,29 @@
         <property name="widgetResizable">
          <bool>true</bool>
         </property>
-        <widget class="QDirStat::FileDetailsView" name="fileDetailsView"/>
+        <widget class="QDirStat::FileDetailsView" name="fileDetailsView">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>79</width>
+           <height>214</height>
+          </rect>
+         </property>
+        </widget>
        </widget>
       </widget>
-      <widget class="QDirStat::TreemapView" name="treemapView"/>
+      <widget class="QDirStat::TreemapView" name="treemapView">
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="optimizationFlags">
+        <set>QGraphicsView::DontAdjustForAntialiasing|QGraphicsView::DontSavePainterState</set>
+       </property>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -430,10 +465,6 @@
    </property>
   </action>
   <action name="actionRefreshAll">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/refresh-all.png</normaloff>:/icons/refresh-all.png</iconset>
-   </property>
    <property name="text">
     <string>Refresh &amp;All</string>
    </property>
