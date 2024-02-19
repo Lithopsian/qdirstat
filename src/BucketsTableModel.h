@@ -37,12 +37,16 @@ namespace QDirStat
         /**
          * Constructor.
          **/
-        BucketsTableModel( QWidget * parent, HistogramView * histogram );
+        BucketsTableModel( QObject * parent, HistogramView * histogram ):
+	    QAbstractTableModel { parent },
+	    _histogram { histogram }
+	{}
 
         /**
          * Destructor.
          **/
-        virtual ~BucketsTableModel();
+        virtual ~BucketsTableModel()
+	{}
 
         /**
          * Return the associated histogram view.
@@ -62,12 +66,13 @@ namespace QDirStat
         /**
 	 * Return the number of rows (direct tree children) for 'parent'.
 	 **/
-	virtual int rowCount   ( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
+	virtual int rowCount( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
 
 	/**
 	 * Return the number of columns for 'parent'.
 	 **/
-	virtual int columnCount( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
+	virtual int columnCount( const QModelIndex & ) const Q_DECL_OVERRIDE
+	    { return ColCount; }
 
 	/**
 	 * Return data to be displayed for the specified model index and role.
@@ -85,7 +90,8 @@ namespace QDirStat
 	 * Return item flags for the specified model index. This specifies if
 	 * the item can be selected, edited etc.
 	 **/
-	virtual Qt::ItemFlags flags( const QModelIndex &index ) const Q_DECL_OVERRIDE;
+	virtual Qt::ItemFlags flags( const QModelIndex &index ) const Q_DECL_OVERRIDE
+	    { return QAbstractTableModel::flags( index ) | Qt::ItemIsSelectable; }
 
 
     protected:

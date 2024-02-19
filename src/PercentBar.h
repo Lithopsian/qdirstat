@@ -13,8 +13,8 @@
 #include <QColor>
 #include <QList>
 
-#include "DirTreeView.h"
 #include "DirTreeModel.h"       // RawDataRole
+#include "DirTreeView.h"       // RawDataRole
 
 
 typedef QList<QColor> ColorList;
@@ -68,13 +68,26 @@ namespace QDirStat
     public:
 
 	/**
-	 * Constructor. 'percentBarCol' is the column that this delegate is to
-	 * paint the percent bar in.
+	 * Constructor with all the base fields.  Other constructors will
+	 * delegate to this one.
          *
 	 **/
-	PercentBarDelegate( QTreeView * treeView, int percentBarCol );
+	PercentBarDelegate( QTreeView * treeView,
+			    int percentBarCol,
+			    int startColorIndex,
+			    int invisibleLevels );
 
 	/**
+	 * Constructor with startColorIndex for the age stats window.
+         *
+	 **/
+	PercentBarDelegate( QTreeView * treeView,
+			    int percentBarCol,
+			    int startColorIndex ):
+	    PercentBarDelegate { treeView, percentBarCol, startColorIndex, 1 }
+	{}
+
+	    /**
 	 * Destructor.
 	 **/
 	virtual ~PercentBarDelegate();
@@ -101,22 +114,17 @@ namespace QDirStat
 	 * This object reference can be used directly to add, remove or change
 	 * colors.
 	 **/
-	ColorList & fillColors() { return _fillColors; }
-
-	/**
-	 * Return the default fill colors.
-	 **/
-	ColorList defaultFillColors() const;
+//	ColorList & fillColors() { return _fillColors; }
 
         /**
          * Set the index of the starting color (default: 0).
          **/
-        void setStartColorIndex( int index ) { _startColorIndex = index; }
+//        void setStartColorIndex( int index ) { _startColorIndex = index; }
 
         /**
          * Return the index of the starting color.
          **/
-        int startColorIndex() const { return _startColorIndex; }
+//        int startColorIndex() const { return _startColorIndex; }
 
 
     public slots:
@@ -133,6 +141,11 @@ namespace QDirStat
 
 
     protected:
+
+	/**
+	 * Return the default fill colors.
+	 **/
+	ColorList defaultFillColors() const;
 
 	/**
 	 * Find out the tree depth level of item 'index' by following its
@@ -155,6 +168,23 @@ namespace QDirStat
          **/
         virtual QVariant percentData( const QModelIndex & index ) const;
 
+	/**
+	 * Paint a percent bar into a widget.
+	 * 'indentPixel' is the number of pixels to indent the bar.
+	 **/
+	static void paintPercentBar( float	    percent,
+				     QPainter *	    painter,
+				     int	    indentPixel,
+				     const QRect  & cellRect,
+				     const QColor & fillColor,
+				     const QColor & barBackground );
+
+	/**
+	 * Return a color that contrasts with 'contrastColor'.
+	 **/
+	static QColor contrastingColor( const QColor &desiredColor,
+					const QColor &contrastColor );
+
 
 	//
 	// Data Members
@@ -162,8 +192,8 @@ namespace QDirStat
 
 	QTreeView * _treeView;
         int         _percentBarCol;
-        int         _invisibleLevels;
         int         _startColorIndex;
+        int         _invisibleLevels;
 	ColorList   _fillColors;
 	QColor	    _barBackground;
 	int	    _sizeHintWidth;
@@ -188,10 +218,8 @@ namespace QDirStat
 	 * Constructor.
 	 **/
 	DirTreePercentBarDelegate( DirTreeView * treeView, int percentBarCol ):
-            PercentBarDelegate( treeView, percentBarCol )
-        {
-            _invisibleLevels = 2;       // invisible root and invisible toplevel
-        }
+            PercentBarDelegate { treeView, percentBarCol, 0, 2 }
+        {}
 
 	/**
 	 * Destructor.
@@ -213,24 +241,6 @@ namespace QDirStat
             { return index.data( RawDataRole ); }
 
     };  // class DirTreePercentBarDelegate
-
-
-    /**
-     * Paint a percent bar into a widget.
-     * 'indentPixel' is the number of pixels to indent the bar.
-     **/
-    void paintPercentBar( float		 percent,
-			  QPainter *	 painter,
-			  int		 indentPixel,
-			  const QRect  & cellRect,
-			  const QColor & fillColor,
-			  const QColor & barBackground	 );
-
-    /**
-     * Return a color that contrasts with 'contrastColor'.
-     **/
-    QColor contrastingColor( const QColor &desiredColor,
-			     const QColor &contrastColor );
 
 }      // namespace QDirStat
 

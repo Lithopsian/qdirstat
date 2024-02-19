@@ -12,8 +12,7 @@
 
 #include <QObject>
 #include <QList>
-
-#include "Process.h"
+#include <QProcess>
 
 
 namespace QDirStat
@@ -35,13 +34,18 @@ namespace QDirStat
         /**
          * Constructor.
          **/
-        ProcessStarter( QObject * parent = 0 );
+        ProcessStarter( QObject * parent = 0 ):
+            QObject( parent ),
+            _maxParallel( 8 ),
+            _autoDelete( false ),
+            _started( false )
+        {}
 
         /**
          * Add another process. This class does not take over ownership of the
          * process objects.
          **/
-        void add( Process * process );
+        void add( QProcess * process );
 
         /**
          * Begin starting processes.
@@ -81,8 +85,8 @@ namespace QDirStat
         /**
          * Notification that a process has finished.
          **/
-        void processFinished( int                  exitCode,
-                              QProcess::ExitStatus exitStatus );
+        void processFinished( int,
+                              QProcess::ExitStatus );
 
     protected:
 
@@ -93,11 +97,11 @@ namespace QDirStat
 
         // Data members
 
-        int              _maxParallel;
-        bool             _autoDelete;
-        bool             _started;
-        QList<Process *> _running;
-        QList<Process *> _waiting;
+        int               _maxParallel;
+        bool              _autoDelete;
+        bool              _started;
+        QList<QProcess *> _running;
+        QList<QProcess *> _waiting;
     };
 }
 

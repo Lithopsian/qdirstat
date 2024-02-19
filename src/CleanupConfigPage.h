@@ -41,8 +41,8 @@ namespace QDirStat
 	/**
 	 * Return the internal CleanupCollection.
 	 **/
-	CleanupCollection * cleanupCollection() const
-	    { return _cleanupCollection; }
+//	CleanupCollection * cleanupCollection() const
+//	    { return _cleanupCollection; }
 
     public slots:
 
@@ -68,12 +68,6 @@ namespace QDirStat
 	 * current cleanup.
 	 **/
 	void titleChanged( const QString & newTitle );
-
-        /**
-         * Enable / disable widgets based on the current refresh policy.
-         **/
-        void refreshPolicyChanged( int index );
-
 
     protected:
 
@@ -109,12 +103,11 @@ namespace QDirStat
 	/**
 	 * Remove a value from the internal list and delete it.
 	 *
-	 * This is called when the 'Remove' button is clicked and the user
-	 * confirms the confirmation pop-up.
+	 * This is called when the 'Remove' button is clicked.
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void removeValue( void * value );
+	virtual void removeValue( void * );
 
 	/**
 	 * Return a text for the list item of 'value'.
@@ -131,20 +124,19 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual QString deleteConfirmationMessage( void * value ) Q_DECL_OVERRIDE;
+//	virtual QString deleteConfirmationMessage( void * value ) Q_DECL_OVERRIDE;
 
 	/**
-	 * Move a value in the internal list. This is called from moveUp(),
-	 * moveDown() etc.; 'operation' is one of 'moveUp()', moveDown()
-	 * etc. that can be called with QMetaObject::invokeMethod().
-	 *
-	 * Implemented from ListEditor.
-	 *
-	 * This is a kludge - a workaround of not being able to use C++
-	 * templates.
+	 * Enable or disable all the edit widgets on the right side
+	 * of the splitter.
 	 **/
-	virtual void moveValue( void * value, const char * operation ) Q_DECL_OVERRIDE;
+	void enableEditWidgets( bool enable );
 
+	/**
+	 * Test whether two Cleanup objects are eqial for the purposes of
+	 * the configuration dialog.
+	 **/
+	bool equal( const Cleanup * cleanup1, const Cleanup * cleanup2 ) const;
 
 	//
 	// Data members

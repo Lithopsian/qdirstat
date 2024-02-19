@@ -12,9 +12,9 @@
 
 
 #include <QTimer>
+#include <QTextStream>
 
 #include "FileInfo.h"
-#include "Logger.h"
 
 
 namespace QDirStat
@@ -82,17 +82,17 @@ namespace QDirStat
 	/**
 	 * Set the corresponding DirInfo item.
 	 **/
-	virtual void setDir( DirInfo * dir );
+	virtual void setDir( DirInfo * dir ) { _dir = dir; }
 
 	/**
 	 * Return the corresponding DirTree.
 	 **/
-	DirTree * tree() const { return _tree; }
+//	DirTree * tree() const { return _tree; }
 
 	/**
 	 * Return the job queue this job is in or 0 if it isn't queued.
 	 **/
-	DirReadJobQueue * queue() const { return _queue; }
+//	DirReadJobQueue * queue() const { return _queue; }
 
 	/**
 	 * Set the job queue this job is in.
@@ -236,16 +236,16 @@ namespace QDirStat
 	 *
 	 * The default is 'false'.
 	 **/
-	bool applyFileChildExcludeRules() const
-	    { return _applyFileChildExcludeRules; }
+//	bool applyFileChildExcludeRules() const
+//	    { return _applyFileChildExcludeRules; }
+
+    protected:
 
 	/**
 	 * Set the applyFileChildExcludeRules flag.
 	 **/
 	void setApplyFileChildExcludeRules( bool val )
 	    { _applyFileChildExcludeRules = val; }
-
-    protected:
 
 	/**
 	 * Read the directory. Prior to this nothing happens.
@@ -427,7 +427,7 @@ namespace QDirStat
 	/**
 	 * Remove the head of the queue and return it.
 	 **/
-	DirReadJob * dequeue();
+//	DirReadJob * dequeue();
 
 	/**
 	 * Get the head of the queue (the next job that is due for processing).
@@ -470,9 +470,14 @@ namespace QDirStat
 	void abort();
 
 	/**
-	 * Delete all jobs for a subtree except 'exceptJob'.
+	 * Delete all jobs from the given queue, except 'exceptJob'.
 	 **/
-	void killAll( DirInfo * subtree, DirReadJob * exceptJob = 0 );
+	int killQueue( DirInfo * subtree, QList<DirReadJob *> & queue, const DirReadJob * exceptJob );
+
+	/**
+	 * Delete all jobs for a subtree, except 'exceptJob'.
+	 **/
+	void killSubtree( DirInfo * subtree, const DirReadJob * exceptJob = 0 );
 
 	/**
 	 * Notification that a job is finished.

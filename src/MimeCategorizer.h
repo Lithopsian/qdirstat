@@ -10,172 +10,287 @@
 #define MimeCategorizer_h
 
 #include <QObject>
-#include <QMap>
+#include <QBitArray>
+#include <QReadWriteLock>
 
 #include "MimeCategory.h"
+#include "Wildcard.h"
 
-#define CATEGORY_EXECUTABLES "Executables"
-#define CATEGORY_SYMLINKS    "Symlinks"
+#define CATEGORY_EXECUTABLE "executable"
+#define CATEGORY_SYMLINK "symlink"
 
 
 namespace QDirStat
 {
+    /* Suffixes matches return a list (possibly with only one entry) of pairs.
+     * Each pair contains a regular expression and the category it matches to.
+     * The regular expression may be empty, indicating a plain suffix that matches
+     * any file with that suffix.  Pairs with an empty regular expression will
+     * always be the last pair in a list.
+     **/
+    typedef QPair<Wildcard, MimeCategory *> WildcardPair;
+
+
     class FileInfo;
 
     /**
      * Class to determine the MimeCategory of filenames.
      *
      * This class is optimized for performance since the names of all files in
-     * QDirStat's DirTree need to be checked (something in the order of 200,000
+     * QDirStat's DirTree need to be checked (something in the order of 300,000
      * in a typical Linux root filesystem).
      *
-     * This is a singleton class. Use instance() to get the instance. Remember
-     * to call instance()->writeSettings() in an appropriate destructor in the
-     * application to write the settings to disk.
+     * This is a singleton class. Use instance() to get the instance.
+     *
+     * Configured patterns are matched against the filaname portion of each file.
+     * Patterns are a simplified regular expression and can contain '?', '*', and
+     * square bracket pairs.  They are always anchored to match the whole filename.
+     *
+     * For performance, the most common expected pattern types are processed into
+     * hash arrays so that a filename can be matched against every pattern of that
+     * type at once.  There are maps for patterns with no wildcard characters and for
+     * patterns which match against a filename suffix (eg. .cpp or *.cpp).  There
+     * are maps for both case-sensitive and insenitive matches.  Other regular
+     * expressions are matched last.
+     *
+     * Patterns without wildcards (eg. Makefile) are matched first for precedence
+     * although they would be expected to be fairly uncommon matches.  Only filenames
+     * with the same length as one of the patterns are tested.
+     *
+     * Patterns with suffixes are matched next, but patterns which include a suffix in
+     * addition to other matches (eg. ui_*.h) take precedence.  To do this without
+     * looping through multiple regular expressions for every file, such patterns are
+     * combined in a list with the plain suffix patterns.  If a match to a suffix is found
+     * then all the entries in the list (usually just one) must be examined, any regular
+     * expressions tested, and the last entry in the list will be an empty regular
+     * expression representing the plain suffix match (assuming there was one).
+     *
+     * Finally, any file which has not been matched is tested against a list of regular
+     * expressions in each category.  This is relatively very slow and hopefully there
+     * will be both few regular expressions that don't include suffixes and few file
+     * which need to be tested against them.
      **/
     class MimeCategorizer: public QObject
     {
 	Q_OBJECT
 
-    protected:
+    private:
 
-	/**
-	 * Constructor.
-	 * This is a singleton class; use instance() instead.
-	 **/
-	MimeCategorizer();
+	    /**
+	     * Constructor.
+	     * This is a singleton class; use instance() tp get a categorizer object.
+	     **/
+	    MimeCategorizer();
 
-	/**
-	 * Destructor.
-	 **/
-	virtual ~MimeCategorizer();
+	    /**
+	     * Destructor.
+	     **/
+	    virtual ~MimeCategorizer();
 
 
     public:
 
-	/**
-	 * Get the singleton for this class. The first call to this will create
-	 * it.
-	 **/
-	static MimeCategorizer * instance();
+	    /**
+	     * Get the singleton for this class. The first call to this will create
+	     * it.
+	     **/
+	    static MimeCategorizer * instance();
 
-	/**
-	 * Return the color for a FileInfo item or white if it doesn't fit
-	 * into any of the available categories.
-	 **/
-	QColor color( FileInfo * item );
+	    /**
+	     * Return the category name for a FileInfo item or "" if it doesn't fit
+	     * into any of the available categories.
+	     **/
+	    const QString & name( const FileInfo * item );
 
-	/**
-	 * Return the MimeCategory for a FileInfo item or 0 if it doesn't fit
-	 * into any of the available categories.
-	 **/
-	MimeCategory * category( FileInfo * item );
+	    /**
+	     * Return the color for a FileInfo item or white if it doesn't fit
+	     * into any of the available categories.
+	     **/
+	    const QColor & color( const FileInfo * item );
 
-	/**
-	 * Return the MimeCategory for a filename or 0 if it doesn't fit into
-	 * any of the available categories.
-	 *
-	 * If 'suffix_ret' is non-null, it returns the suffix used if the
-	 * category was found by a suffix rule. If the category was not found
-	 * or if a regexp (rather than a suffix rule) matched, this returns an
-	 * empty string.
-	 **/
-	MimeCategory * category( const QString & filename, QString * suffix_ret = 0 );
+	    /**
+	     * Return the MimeCategory for a filename or 0 if it doesn't fit into
+	     * any of the available categories.
+	     *
+	     * If 'suffix_ret' is non-null, it returns the suffix used if the
+	     * category was found by a suffix rule. If the category was not found
+	     * or if a wildcard (rather than a suffix rule) matched, this returns an
+	     * empty string.
+	     **/
+	    const MimeCategory * category( const FileInfo * item, QString * suffix_ret );
 
-	/**
-	 * Add a MimeCategory.
-	 **/
-	void add( MimeCategory * category );
+	    /**
+	     * Return the MimeCategories list.
+	     **/
+	    const MimeCategoryList & categories() const { return _categories; }
 
-	/**
-	 * Remove and delete a MimeCategory.
-	 **/
-	void remove( MimeCategory * category );
-
-	/**
-	 * Return the number of MimeCategories.
-	 **/
-	int size() const { return _categories.size(); }
-
-	/**
-	 * Return the MimeCategories list.
-	 **/
-	const MimeCategoryList & categories() const { return _categories; }
-
-	/**
-	 * Clear all categories.
-	 **/
-	void clear();
-
-
-    public slots:
-
-	/**
-	 * Read the MimeCategory parameter from the settings.
-	 **/
-	void readSettings();
-
-	/**
-	 * Write the MimeCategory parameter to the settings.
-	 **/
-	void writeSettings();
+	    /**
+	     * Replace the existing category list wih a new list.  The new categories
+	     * will also be written to the settings file.
+	     **/
+	    void replaceCategories( const MimeCategoryList & categories );
 
 
     protected:
 
-	/**
-	 * Build the internal maps and clear the _mapsDirty flag.
-	 **/
-	void buildMaps();
+	    /**
+	     * Clear all categories.
+	     **/
+	    void clear();
 
-	/**
-	 * Add all suffixes in 'suffixList' as key to 'suffixMap' with value
-	 * 'category'.
-	 *
-	 * This provides a really fast map lookup for each suffix.
-	 **/
-	void addSuffixes( QMap<QString, MimeCategory *> & suffixMap,
-			  MimeCategory			* category,
-			  const QStringList		& suffixList  );
+	    /**
+	     * Read the MimeCategory parameter from the settings.
+	     **/
+	    void readSettings();
 
-	/**
-	 * Iterate over all categories to find categories by name.
-	 **/
-	MimeCategory * matchCategoryName( const QString & categoryName ) const;
+	    /**
+	     * Write the MimeCategory parameter to the settings.
+	     **/
+	    void writeSettings( const MimeCategoryList & categoryList );
 
-	/**
-	 * Iterate over all categories and try all patterns until the first
-	 * match. Return the matched category or 0 if none matched.
-	 **/
-	MimeCategory * matchPatterns( const QString & filename ) const;
+	    /**
+	     * Return the MimeCategory for a FileInfo item or an empty dummy category
+	     * if it doesn't fit into any of the available categories.
+	     **/
+	    const MimeCategory * category( const FileInfo * item ) const;
 
-	/**
-	 * Make sure that the Executable and Symlink categories exist, in case
-	 * they have been manually removed from the configuration file.
-	 **/
-	void ensureMandatoryCategories();
+	    /**
+	     * Return the MimeCategory for a filename or 0 if it doesn't fit into
+	     * any of the available categories.
+	     *
+	     * If 'suffix_ret' is non-null, it returns the suffix used if the
+	     * category was found by a suffix rule. If the category was not found
+	     * or if a wildcard (rather than a suffix rule) matched, this returns an
+	     * empty string.
+	     **/
+	    const MimeCategory * category( const QString & filename, QString * suffix_ret ) const;
 
-	/**
-	 * Add default categories in case none were read from the settings.
-	 **/
-	void addDefaultCategories();
+	    /**
+	     * Build the internal maps used for looking up file types.
+	     **/
+	    void buildMaps();
 
-	//
-	// Data members
-	//
+	    /**
+	     * Add all patterns with no wildcards (exact filename match) to either
+	     * the case-sensitive map or the case-insensitive map, and also to a
+	     * global set including all the case-sensitive patterns, and all the
+	     * case-insensitive patterns, both lowercased and uppercased.
+	     * *
+	     * This provides an extremely lookup for each filename.
+	     **/
+	    void addExactKeys( MimeCategory * category );
 
-	static MimeCategorizer *	_instance;
+	    /**
+	     * Add one filename/category combination to a map.
+	     **/
+	    void addExactKey( QHash<QString, MimeCategory *> & keys,
+					      QBitArray & lengths,
+					      const QString & key,
+					      MimeCategory * category );
 
-	bool				_mapsDirty;
-	MimeCategoryList		_categories;
+	    /**
+	     * Add all suffixes from both suffix lists in the category as keys with a value
+	     * that is a pair containing an empty regular expression and a category.  One entry
+	     * is created in the case-sensitive map for each case-sensitive suffix, one for an
+	     * uppercased copy of each case-insensitive suffixi, and one for a lowercasedd copy
+	     * of each case-insensitive suffix.  A lowercased version of each case-insensitive
+	     * suffix is also added to the case-insensitive map to catch any strange files with
+	     * mixed-case suffixes.
+	     * su
+	     *
+	     * This provides a really fast lookup for each suffix.
+	     **/
+	    void addSuffixKeys( MimeCategory * category );
 
-	QMap<QString, MimeCategory *>	_caseInsensitiveSuffixMap;
-	QMap<QString, MimeCategory *>	_caseSensitiveSuffixMap;
+	    /**
+	     * Adds one simple suffix to one suffix map.
+	     **/
+	    void addSuffixKey( QMultiHash<QString, WildcardPair> & suffixes,
+					       const QString & suffix,
+					       MimeCategory * category );
 
-	MimeCategory *_executableCategory;
-	MimeCategory *_symlinkCategory;
+	    /**
+	     * Add regular expressions which include a suffix to the suffix maps.
+	     * This allows a more specific wildcard to override a plain suffix match and
+	     * reduces the need for matching filenames individually against every regular expression.
+	     **/
+	    void addWildcardKeys( MimeCategory * category );
+
+	    /**
+	     * Add regular expression patterns which do not include a suffix pattern to a plain list
+	     * of pairs, each containing the regular expression and the corresponding category.
+	     **/
+	    void buildWildcardLists( MimeCategory * category );
+
+	    /**
+	     * Iterate over all categories to find categories by name.
+	     **/
+	    const MimeCategory * findCategoryByName( const QString & categoryName ) const;
+
+	    /**
+	     * Iterate over the pairs of regular expressions and categories that match a
+	     * particular suffix.  Return the first category that matches either one of
+	     * the regular expressions or has en empty regular expression, indicating a
+	     * plain suffix pattern.
+	     **/
+	    const MimeCategory * matchWildcardSuffix( const QMultiHash<QString, WildcardPair> & map,
+						      const QString & filename,
+						      const QString & suffix ) const;
+
+	    /**
+	     * Iterate over the regular expression list trying each until the first
+	     * match. Return the matched category or 0 if none matched.
+	     **/
+	    const MimeCategory * matchWildcard( const QString & filename ) const;
+
+	    /**
+	     * Make sure that the Executable and Symlink categories exist, in case
+	     * they have been manually removed from the configuration file.
+	     **/
+	    void ensureMandatoryCategories();
+
+	    /**
+	     * Add default categories in case none were read from the settings.
+	     **/
+	    void addDefaultCategories();
+
+	    /**
+	     * Create a new category and add it to the live list held in this class.
+	     **/
+	    MimeCategory * create( const QString & name, const QColor & color );
+
+
+	signals:
+
+	    /**
+	     * Emitted when changes are applied from the settings dialogue.
+	     **/
+	    void categoriesChanged();
+
+	private:
+
+	    //
+	    // Data members
+	    //
+
+	    MimeCategoryList _categories;
+
+	    const MimeCategory *_executableCategory;
+	    const MimeCategory *_symlinkCategory;
+	    const MimeCategory _emptyCategory;
+
+	    QHash<QString, MimeCategory *>	_caseInsensitiveExact;
+	    QHash<QString, MimeCategory *>	_caseSensitiveExact;
+	    QMultiHash<QString, WildcardPair>	_caseInsensitiveSuffixes;
+	    QMultiHash<QString, WildcardPair>	_caseSensitiveSuffixes;
+	    QList<WildcardPair>			_wildcards;
+	    QBitArray				_caseInsensitiveLengths;
+	    QBitArray				_caseSensitiveLengths;
+
+	    QReadWriteLock _lock;
 
     };	// class MimeCategorizer
+
 
 }	// namespace QDirStat
 

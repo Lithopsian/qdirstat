@@ -10,6 +10,7 @@
 #ifndef DelayedRebuilder_h
 #define DelayedRebuilder_h
 
+#define DefaultRebuildDelayMillisec 20
 
 #include <QObject>
 
@@ -32,12 +33,18 @@ namespace QDirStat
         /**
          * Constructor.
          **/
-        DelayedRebuilder( QObject * parent = 0 );
+        DelayedRebuilder( QObject * parent = 0 ):
+            QObject { parent },
+            _firstRebuild { true },
+            _pendingRebuildCount { 0 },
+            _delayMillisec { DefaultRebuildDelayMillisec }
+        {}
 
         /**
          * Destructor.
          **/
-        virtual ~DelayedRebuilder();
+        virtual ~DelayedRebuilder()
+        {}
 
         /**
          * Return 'true' if this is the first rebuild ever.
@@ -45,16 +52,9 @@ namespace QDirStat
         bool firstRebuild() const { return _firstRebuild; }
 
         /**
-         * Return the number of pending rebuilds.
-         **/
-        int pendingRebuildCount() const { return _pendingRebuildCount; }
-
-        /**
          * Change the default 200 millisec delay to a new value.
          **/
         void setDelay( int delayMillisec ) { _delayMillisec = delayMillisec; }
-
-    public slots:
 
         /**
          * Schedule a rebuild after the timeout is over. Repeated calls to this
@@ -79,6 +79,12 @@ namespace QDirStat
         void rebuildDelayed();
 
     protected:
+
+        /**
+         * Return the number of pending rebuilds.
+         **/
+        int pendingRebuildCount() const { return _pendingRebuildCount; }
+
 
         bool _firstRebuild;
         int  _pendingRebuildCount;

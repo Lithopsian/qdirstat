@@ -53,10 +53,10 @@ namespace QDirStat
 	    { return _cleanupConfigPage; }
 
 	/**
-	 * Return the mime category config page.
+	 * Return the general config page.
 	 **/
-	MimeCategoryConfigPage * mimeCategoryConfigPage() const
-	    { return _mimeCategoryConfigPage; }
+	GeneralConfigPage * generalConfigPage() const
+	    { return _generalConfigPage; }
 
     public slots:
 

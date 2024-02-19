@@ -17,7 +17,7 @@ namespace QDirStat
 {
     /**
      * Thin compatibility layer around QProcess to maintain backwards
-     * compatibility to Qt4: Enable creating a process with program to start
+     * compatibility to Qt5.1: enable creating a process with program to start
      * and arguments supplied in the constructor and store them for later use
      * with a plain start() without any more arguments.
      **/
@@ -26,7 +26,9 @@ namespace QDirStat
 	Q_OBJECT
 
     public:
-	explicit Process( QObject *parent = 0 );
+	explicit Process( QObject *parent = 0 ):
+	    QProcess { parent }
+	{}
 
 #if (QT_VERSION < QT_VERSION_CHECK( 5, 1, 0))
 

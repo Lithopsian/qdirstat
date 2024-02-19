@@ -74,6 +74,13 @@ namespace QDirStat
 	virtual ~DirInfo();
 
 	/**
+	 * Returns the number of hard links, always zero for DirInfo objects.
+	 *
+	 * Reimplemented - inherited from FileInfo.
+	 **/
+	virtual nlink_t links() const Q_DECL_OVERRIDE { return 0; }
+
+	/**
 	 * Returns the total size in bytes of this subtree.
 	 *
 	 * Reimplemented - inherited from FileInfo.
@@ -87,10 +94,10 @@ namespace QDirStat
 	 **/
 	virtual FileSize totalAllocatedSize() Q_DECL_OVERRIDE;
 
-        /**
-         * The ratio of totalSize() / totalAllocatedSize() in percent.
-         **/
-        int totalUsedPercent();
+	/**
+	 * The ratio of totalSize() / totalAllocatedSize() in percent.
+	 **/
+	int totalUsedPercent();
 
 	/**
 	 * Returns the total size in blocks of this subtree.

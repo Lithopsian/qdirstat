@@ -13,11 +13,13 @@
 #include <QDialog>
 
 #include "ui_find-files-dialog.h"
-#include "FileSearchFilter.h"
 
 
 namespace QDirStat
 {
+    class DirInfo;
+    class FileSearchFilter;
+
     /**
      * Dialog for searching files in the scanned directory tree.
      **/
@@ -25,11 +27,11 @@ namespace QDirStat
     {
 	Q_OBJECT
 
-    public:
+    protected:
 	/**
-	 * Constructor.
+	 * Internal constructor.
 	 *
-	 * Consider using the static methods instead.
+	 * Use the static method askFindFiles for access.
 	 **/
 	FindFilesDialog( QWidget * parent = 0 );
 
@@ -38,6 +40,7 @@ namespace QDirStat
 	 **/
 	virtual ~FindFilesDialog();
 
+    public:
 	/**
 	 * Open an "open package" dialog and wait for the user to enter
 	 * values.
@@ -47,12 +50,6 @@ namespace QDirStat
 	 **/
 	static FileSearchFilter askFindFiles( bool    * canceled_ret,
                                               QWidget * parent = 0   );
-
-	/**
-	 * The package filter the user entered.
-	 **/
-	FileSearchFilter fileSearchFilter();
-
 
     public slots:
 
@@ -70,6 +67,11 @@ namespace QDirStat
 
 
     protected:
+
+	/**
+	 * The package filter the user entered.
+	 **/
+	FileSearchFilter fileSearchFilter();
 
 	/**
 	 * Read settings from the config file

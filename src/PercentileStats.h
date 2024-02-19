@@ -38,12 +38,15 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	PercentileStats();
+	PercentileStats():
+	    _sorted { false }
+	{}
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PercentileStats();
+	virtual ~PercentileStats()
+	{}
 
 	/**
 	 * Clear the collected data and shrink the list.

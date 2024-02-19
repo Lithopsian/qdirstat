@@ -47,7 +47,13 @@ namespace QDirStat
         /**
          * Access to the history manager.
          **/
-	History * history() { return _history; }
+//	History * history() { return _history; }
+
+	/**
+	 * Enable or disable the browser-like "Go Back" and "Go Forward"
+	 * actions.
+	 **/
+	void updateActions();
 
 
     public slots:
@@ -63,12 +69,6 @@ namespace QDirStat
 	 * Move one entry back in the history of visited directories.
 	 **/
 	void historyGoForward();
-
-	/**
-	 * Enable or disable the browser-like "Go Back" and "Go Forward"
-	 * actions.
-	 **/
-	void updateActions();
 
 	/**
 	 * Add a FileInfo item to the history if it's a directory and its URL

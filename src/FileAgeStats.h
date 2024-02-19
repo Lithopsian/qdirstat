@@ -13,12 +13,14 @@
 #include <QHash>
 #include <QList>
 
-#include "FileInfo.h"
+#include "FileSize.h"
 
 
 namespace QDirStat
 {
+    class FileInfo;
     class YearStats;
+
     typedef QHash<short, YearStats>     YearStatsHash;
     typedef QList<short>                YearsList;
 
@@ -105,7 +107,7 @@ namespace QDirStat
          *
          * Month statistics are only available for this year and the last year.
          **/
-        bool monthStatsAvailableFor( short year ) const;
+        bool monthStatsAvailableFor( short year ) const { return year == _thisYear || year == _lastYear; }
 
         /**
          * Return the current year.

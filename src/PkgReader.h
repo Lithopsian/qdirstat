@@ -10,12 +10,11 @@
 #define PkgReader_h
 
 #include <QMap>
+#include <QProcess>
 #include <QSharedPointer>
 
 #include "DirReadJob.h"
 #include "PkgInfo.h"
-#include "PkgFilter.h"
-#include "Process.h"
 
 
 namespace QDirStat
@@ -23,6 +22,7 @@ namespace QDirStat
     // Forward declarations
     class DirTree;
     class PkgFileListCache;
+    class PkgFilter;
 
 
     /**
@@ -70,7 +70,7 @@ namespace QDirStat
 	 **/
 	void writeSettings();
 
-        /**
+	/**
          * Return 'true' if packaged files that are missing should be logged.
          *
          * This can be set manually in the [Pkg] section of the config file at
@@ -123,7 +123,7 @@ namespace QDirStat
          * Create a process for reading the file list for 'pkg' with the
          * appropriate external command. The process is not started yet.
          **/
-        Process * createReadFileListProcess( PkgInfo * pkg );
+        QProcess * createReadFileListProcess( PkgInfo * pkg );
 
 
 	// Data members
@@ -133,7 +133,7 @@ namespace QDirStat
 	QMultiMap<QString, PkgInfo *>	_multiPkg;
         int                             _maxParallelProcesses;
         int                             _minCachePkgListSize;
-        static bool                     _verboseMissingPkgFiles;
+	static bool 			_verboseMissingPkgFiles;
 
     };	// class PkgReader
 
@@ -280,9 +280,9 @@ namespace QDirStat
          * Reading is then started from the outside with startReading() when
          * the job is scheduled.
 	 **/
-	AsyncPkgReadJob( DirTree * tree,
-                         PkgInfo * pkg,
-                         Process * readFileListProcess );
+	AsyncPkgReadJob( DirTree  * tree,
+                         PkgInfo  * pkg,
+                         QProcess * readFileListProcess );
 
 
 	/**
@@ -312,7 +312,7 @@ namespace QDirStat
 
         // Data members
 
-        Process *   _readFileListProcess;
+        QProcess *  _readFileListProcess;
         QStringList _fileList;
 
     };  // class AsyncPkgReadJob
@@ -340,7 +340,10 @@ namespace QDirStat
 	 **/
 	CachePkgReadJob( DirTree * tree,
                          PkgInfo * pkg,
-                         QSharedPointer<PkgFileListCache> fileListCache );
+                         QSharedPointer<PkgFileListCache> fileListCache ):
+	    PkgReadJob( tree, pkg ),
+	    _fileListCache( fileListCache )
+	{}
 
         /**
          * Destructor.

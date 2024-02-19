@@ -10,12 +10,16 @@
 #ifndef FileInfoSet_h
 #define FileInfoSet_h
 
+#include <QMetaType>
 #include <QSet>
-#include "FileInfo.h"
+
+#include "FileSize.h"
 
 
 namespace QDirStat
 {
+	class FileInfo;
+
     /**
      * Container for FileInfo pointers. This is a wrapper around QSet with a
      * few add-on functions.
@@ -128,5 +132,6 @@ namespace QDirStat
 
 }	// namespace QDirStat
 
+Q_DECLARE_METATYPE(QDirStat::FileInfoSet);
 
 #endif	// FileInfoSet_h

@@ -12,17 +12,15 @@
 
 #include "ListEditor.h"
 #include "ui_exclude-rules-config-page.h"
-#include "ExcludeRules.h"
 
 
 namespace QDirStat
 {
-    class CleanupCollection;
-
+	class ExcludeRule;
 
     /**
-     * Configuration page (tab) for cleanups:
-     * Edit, add, delete, reorder cleanups in the cleanup collection.
+     * Configuration page (tab) for exclude rules:
+     * Edit, add, delete, and reorder exclude rules.
      **/
     class ExcludeRulesConfigPage: public ListEditor
     {
@@ -33,8 +31,13 @@ namespace QDirStat
 	ExcludeRulesConfigPage( QWidget * parent = 0 );
 	virtual ~ExcludeRulesConfigPage();
 
-
-    public slots:
+    protected slots:
+	/**
+	 * Create a new list item.  Overload of ListEditor::add() to allow
+	 * detection of new insertions so that focus can be put in the only
+	 * sensible place.
+	 **/
+	virtual void add() Q_DECL_OVERRIDE;
 
 	/**
 	 * Populate the widgets.
@@ -51,14 +54,11 @@ namespace QDirStat
 	 **/
 	void discardChanges();
 
-    protected slots:
-
 	/**
 	 * Notification that the user changed the "Pattern" field of the
 	 * current exclude rule.
 	 **/
 	void patternChanged( const QString & newPattern );
-
 
     protected:
 
@@ -121,19 +121,17 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual QString deleteConfirmationMessage( void * value ) Q_DECL_OVERRIDE;
+//	virtual QString deleteConfirmationMessage( void * value ) Q_DECL_OVERRIDE;
 
 	/**
-	 * Move a value in the internal list. This is called from moveUp(),
-	 * moveDown() etc.; 'operation' is one of 'moveUp()', moveDown()
-	 * etc. that can be called with QMetaObject::invokeMethod().
-	 *
-	 * Implemented from ListEditor.
-	 *
-	 * This is a kludge - a workaround of not being able to use C++
-	 * templates.
+	 * Clean up the working list of rules when the dialog is being closed.
 	 **/
-	virtual void moveValue( void * value, const char * operation ) Q_DECL_OVERRIDE;
+//	void finished( int result );
+
+	/**
+	 * Comparison operator for two exclude rules.
+	 **/
+	static bool equal ( const ExcludeRule * rule1, const ExcludeRule * rule2 );
 
 
 	//

@@ -38,16 +38,35 @@ namespace QDirStat
 
     /**
      * Format a file / subtree size as bytes, but still human readable with a
-     * space as a thousands separator, i.e. "12 345 678 Bytes".
-     *
-     * Intentionally NOT using the locale's thousands separator since this
-     * causes confusion to no end when it's only one of them, and it's unclear
-     * what locale is used: German uses "," as the decimal separator and "." as
-     * the thousands separator, exactly the other way round as English. So it's
-     * never clear if 12.345 is a little more than twelve or twelve thousand.
-     * A space character avoids this confusion.
+     * thousands separator.
      **/
     QString formatByteSize( FileSize size );
+
+    /**
+     * Format a file size string with no thousands separators and "B" for the units.
+     * This is only intended for small values, typically less than 1,000.
+     **/
+    QString formatShortByteSize( FileSize size );
+
+
+    /**
+     * Format a string of the form "/ 3 links" for describing hard links.  If the
+     * number of links is less than 2, an empty string is returned.
+     **/
+    QString formatLinksInline( nlink_t numLinks );
+
+    /**
+     * Format a string of the form "<br/>3 links" for describing hard links on a
+     * separate line, typically in a tooltip.  If the number of links is less than 2,
+     * an empty string is returned.
+     **/
+    QString formatLinksRichText( nlink_t numLinks );
+
+    /**
+     * Wraps the text in html formatting to prevent line breaks except at explicit
+     * newlines and break tags.
+     **/
+    QString whitespacePre( const QString & text );
 
     /**
      * Format a timestamp (like the latestMTime()) human-readable.
@@ -65,11 +84,12 @@ namespace QDirStat
     QString formatPercent( float percent );
 
     /**
-     * Format the mode (the permissions bits) returned from the stat() system
-     * call in the commonly used formats, both symbolic and octal, e.g.
-     *	   drwxr-xr-x  0755
+     * Return the mode (the permission bits) returned from stat() like the
+     * "ls -l" shell command does, e.g.
+     *
+     *	   drwxr-xr-x
      **/
-    QString formatPermissions( mode_t mode );
+    QString symbolicMode( mode_t perm );
 
     /**
      * Format a number in octal with a leading zero.
@@ -77,21 +97,16 @@ namespace QDirStat
     QString formatOctal( int number );
 
     /**
-     * Return the mode (the permission bits) returned from stat() like the
-     * "ls -l" shell command does, e.g.
-     *
-     *	   drwxr-xr-x
-     *
-     * 'omitTypeForRegularFiles' specifies if the leading "-" should be omitted.
+     * Format a file stat mode as octal.
      **/
-    QString symbolicMode( mode_t perm, bool omitTypeForRegularFiles = false );
+    QString octalMode( mode_t mode );
 
     /**
-     * Format the filesystem object type from a mode, e.g. "Directory",
-     * "Symbolic link", "Block device", "File".
+     * Format the mode (the permissions bits) returned from the stat() system
+     * call in the commonly used formats, both symbolic and octal, e.g.
+     *	   drwxr-xr-x  0755
      **/
-    QString formatFilesystemObjectType( mode_t mode );
-
+    QString formatPermissions( mode_t mode );
 
     /**
      * Human-readable output of a file size in a debug stream.

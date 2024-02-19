@@ -13,21 +13,21 @@
 #include <QAbstractItemModel>
 #include <QColor>
 #include <QFont>
+#include <QGuiApplication>
 #include <QIcon>
+#include <QPalette>
 #include <QSet>
 #include <QTimer>
 #include <QTextStream>
 
 #include "DataColumns.h"
 #include "FileInfo.h"
-#include "PkgFilter.h"
-#include "FormatUtil.h"
 
 
 namespace QDirStat
 {
-    class DirTree;
     class DirInfo;
+    class PkgFilter;
     class SelectionModel;
 
     enum CustomRoles
@@ -125,7 +125,8 @@ namespace QDirStat
 	/**
 	 * Return 'true' if the application uses a dark widget theme.
 	 **/
-	static bool usingDarkTheme();
+	static bool usingDarkTheme()
+		{ return QGuiApplication::palette().color( QPalette::Active, QPalette::Base ).lightness() < 128; }
 
 	/**
 	 * Return 'true' if the application uses a light widget theme.
@@ -133,22 +134,14 @@ namespace QDirStat
 	static bool usingLightTheme() { return ! usingDarkTheme(); }
 
 	/**
-	 * Return 'true' if dominant tree items should be shown in bold font,
-	 * 'false' if not.
+	 * Return the color configured for directories with a read error.
 	 **/
-	bool useBoldForDominantItems() const { return _useBoldForDominantItems; }
-
-	/**
-	 * Set to 'true' if dominant tree items should be shown in bold font,
-	 * 'false' if not.
-	 **/
-	void setUseBoldForDominantItems( bool val )
-	    { _useBoldForDominantItems = val; }
+	const QColor & dirReadErrColor() const { return _dirReadErrColor; }
 
 	/**
 	 * Return the font used for bold items.
 	 **/
-	QFont boldItemFont() const { return _boldItemFont; }
+//	QFont boldItemFont() const { return _boldItemFont; }
 
 	/**
 	 * Set the font used for bold items.
@@ -161,8 +154,6 @@ namespace QDirStat
          **/
         QIcon itemTypeIcon( FileInfo * item ) const;
 
-
-    public slots:
 	/**
 	 * Open a directory URL.
 	 **/
@@ -195,6 +186,48 @@ namespace QDirStat
 	void dumpPersistentIndexList() const;
 
 	/**
+	 * Return the setting for CrossFilesystems.  This is the value
+	 * from the configuration file, potentially updated from the
+	 * general config page.  It will be written to the settings when
+	 * the program closes.  There is another crossFilesystems flag
+	 * held by DirTree, which is used for reading and may be updated
+	 * by the user, but won't be written to the settings.
+	 **/
+	bool crossFilesystems() const { return _crossFilesystems; }
+
+	/**
+	 * Return 'true' if dominant tree items should be shown in bold font,
+	 * 'false' if not.
+	 **/
+	bool useBoldForDominantItems() const { return _useBoldForDominantItems; }
+
+	/**
+	 * Set to 'true' if dominant tree items should be shown in bold font,
+	 * 'false' if not.
+	 **/
+	void setUseBoldForDominantItems( bool val )
+	    { _useBoldForDominantItems = val; }
+
+	/**
+	 * Return the setting for UpdateTimerMillisec
+	 **/
+	int updateTimerMillisec() const { return _updateTimerMillisec; }
+
+	/**
+	 * Return the setting for TreeIconDir
+	 **/
+	const QString & treeIconDir() const { return _treeIconDir; }
+
+	/**
+	 * Update internal settings from the general configuration page.
+	 * Any changes will be saved to the conf file in the destructor.
+	 **/
+	void updateSettings( bool crossFilesystems,
+			     bool useBoldForDominant,
+			     const QString & treeIconDir,
+			     int updateTimerMillisec );
+
+	/**
 	 * Read parameters from settings file.
 	 **/
 	void readSettings();
@@ -210,7 +243,13 @@ namespace QDirStat
 	 * The data model doesn't strictly need a selection model, but certain
 	 * operations it provides (like refreshSelected()) do.
 	 **/
-	SelectionModel * selectionModel() const { return _selectionModel; }
+//	SelectionModel * selectionModel() const { return _selectionModel; }
+
+	/**
+	 * Refresh the selected items: Re-read their contents from disk.
+	 * This requires a selection model to be set.
+	 **/
+	void refreshSelected();
 
 	/**
 	 * Set the selection model. This is required for all methods with
@@ -220,23 +259,14 @@ namespace QDirStat
 	    { _selectionModel = selModel; }
 
 	/**
-	 * Refresh the selected items: Re-read their contents from disk.
-	 * This requires a selection model to be set.
+	 * Set the update speed to slow (default 3 sec instead of 250 millisec).
 	 **/
-	void refreshSelected();
-
-	/**
-	 * Set the update speed to slow (3 sec instead of 333 millisec).
-	 **/
-	void setSlowUpdate( bool slow = true );
+	void setSlowUpdate();
 
 	/**
 	 * Return the slow update flag.
 	 **/
-	bool slowUpdate() const { return _slowUpdate; }
-
-
-    public:
+//	bool slowUpdate() const { return _slowUpdate; }
 
 	// Mapping of tree items to model rows and vice versa.
 	//
@@ -251,18 +281,6 @@ namespace QDirStat
 	 * is invalid.
 	 **/
 	FileInfo * itemFromIndex( const QModelIndex & index );
-
-	/**
-	 * Find the child number 'childNo' among the children of 'parent'.
-	 * Return 0 if not found.
-	 **/
-	FileInfo * findChild( DirInfo * parent, int childNo ) const;
-
-	/**
-	 * Find the row number (the index, starting with 0) of 'child' among
-	 * its parent's children.
-	 **/
-	int rowNumber( FileInfo * child ) const;
 
 	/**
 	 * Return a model index for 'item' and 'column'.
@@ -280,19 +298,22 @@ namespace QDirStat
 	 **/
 	Qt::SortOrder sortOrder() const { return _sortOrder; }
 
-	//
-	// Reimplemented from QAbstractItemModel:
-	//
+	/**
+	 * Return the formatted tooltip for the size column.
+	 **/
+	QVariant sizeColTooltip( FileInfo * item ) const;
 
 	/**
-	 * Return the number of rows (direct tree children) for 'parent'.
+	 * For plain files that have multiple hard links or that are sparse
+	 * files or both, return a text describing the size: "20.0 MB / 4
+	 * Links", "1 GB (allocated: 2 kB)". For everything else, return an
+	 * empty string.
+	 *
+	 * 'fmtSz' is a pointer to a formatting function that takes a FileSize
+	 * argument and returns a QString.
 	 **/
-	virtual int rowCount   ( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
-
-	/**
-	 * Return the number of columns for 'parent'.
-	 **/
-	virtual int columnCount( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
+	static QString specialSizeText( FileInfo * item,
+					QString (*fmtSz)(FileSize) );
 
 	/**
 	 * Return data to be displayed for the specified model index and role.
@@ -333,30 +354,20 @@ namespace QDirStat
 			   Qt::SortOrder order = Qt::AscendingOrder ) Q_DECL_OVERRIDE;
 
 	/**
-	 * For plain files that have multiple hard links or that are sparse
-	 * files or both, return a text describing the size: "20.0 MB / 4
-	 * Links", "1 GB (allocated: 2 kB)". For everything else, return an
-	 * empty string.
-	 *
-	 * 'fmtSz' is a pointer to a formatting function that takes a FileSize
-	 * argument and returns a QString.
-	 **/
-	static QString sizeText( FileInfo * item,
-				 QString (*fmtSz)(FileSize) = formatSize );
-
-	/**
-	 * Format a small size for a plain file for with both size and
-	 * allocated size: "137 Bytes (4k)"
-	 *
-	 * This returns an empty text if this item is not a plain file.
-	 **/
-	static QString smallSizeText( FileInfo * item );
-
-	/**
 	 * Return 'true' if this is considered a small file or symlink,
 	 * i.e. non-null, but 2 clusters allocated or less.
 	 **/
 	static bool isSmallFileOrSymLink( FileInfo * item );
+
+	/**
+	 * Return the resource path of the directory icon.
+	 **/
+	const QIcon & dirIcon() const { return _dirIcon; }
+
+	/**
+	 * Return the resource path of the unreadable directory icon.
+	 **/
+	const QIcon & unreadableDirIcon() const { return _unreadableDirIcon; }
 
 
 
@@ -387,15 +398,6 @@ namespace QDirStat
 	void readingFinished();
 
 	/**
-	 * Delayed update of the data fields in the view for 'dir':
-	 * Store 'dir' and all its ancestors in _pendingUpdates.
-	 *
-	 * The updates will be sent several times per second to the views with
-	 * 'sendPendingUpdates()'.
-	 **/
-	void delayedUpdate( DirInfo * dir );
-
-	/**
 	 * Send all pending updates to the connected views.
 	 * This is triggered by the update timer.
 	 **/
@@ -421,14 +423,8 @@ namespace QDirStat
 	 **/
 	void subtreeCleared( DirInfo * subtree );
 
-	/**
-	 * Invalidate all persistent indexes in 'subtree'. 'includeParent'
-	 * indicates if 'subtree' itself will become invalid.
-	 **/
-	void invalidatePersistent( FileInfo * subtree,
-				   bool	      includeParent );
-
     protected:
+
 	/**
 	 * Create a new tree (and delete the old one if there is one)
 	 **/
@@ -457,11 +453,27 @@ namespace QDirStat
 	void updatePersistentIndexes();
 
 	/**
+	 * Delayed update of the data fields in the view for 'dir':
+	 * Store 'dir' and all its ancestors in _pendingUpdates.
+	 *
+	 * The updates will be sent several times per second to the views with
+	 * 'sendPendingUpdates()'.
+	 **/
+	void delayedUpdate( DirInfo * dir );
+
+	/**
 	 * Return 'true' if 'item' or any ancestor (parent or parent's parent
 	 * etc.) is still busy, i.e. the read job for the directory itself (not
 	 * any children!) is still queued or currently reading.
 	 **/
 	bool anyAncestorBusy( FileInfo * item ) const;
+
+	/**
+	 * Invalidate all persistent indexes in 'subtree'. 'includeParent'
+	 * indicates if 'subtree' itself will become invalid.
+	 **/
+	void invalidatePersistent( FileInfo * subtree,
+				   bool	      includeParent );
 
 
 	//
@@ -470,7 +482,7 @@ namespace QDirStat
 
 	QVariant columnText	       ( FileInfo * item, int col ) const;
 	QVariant columnIcon	       ( FileInfo * item, int col ) const;
-	QVariant columnAlignment       ( FileInfo * item, int col ) const;
+	QVariant columnAlignment   ( FileInfo * item, int col ) const;
 	QVariant columnFont	       ( FileInfo * item, int col ) const;
 	QVariant dominantItemColumnFont( FileInfo * item, int col ) const;
 
@@ -498,6 +510,26 @@ namespace QDirStat
 	QVariant formatPercent( float percent ) const;
 
 	/**
+	 * Format a small size for a plain file for with both size and
+	 * allocated size: "137 Bytes (4k)"
+	 *
+	 * This returns an empty text if this item is not a plain file.
+	 **/
+	static QString smallSizeText( FileInfo * item );
+
+	/**
+	 * Find the child number 'childNo' among the children of 'parent'.
+	 * Return 0 if not found.
+	 **/
+	FileInfo * findChild( DirInfo * parent, int childNo ) const;
+
+	/**
+	 * Find the row number (the index, starting with 0) of 'child' among
+	 * its parent's children.
+	 **/
+	int rowNumber( FileInfo * child ) const;
+
+	/**
 	 * Start removing rows.
 	 **/
 	void beginRemoveRows( const QModelIndex & parent, int first, int last );
@@ -515,12 +547,27 @@ namespace QDirStat
 	 **/
 	void endRemoveRows();
 
+	//
+	// Reimplemented from QAbstractItemModel:
+	//
+
+	/**
+	 * Return the number of rows (direct tree children) for 'parent'.
+	 **/
+	virtual int rowCount   ( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
+
+	/**
+	 * Return the number of columns for 'parent'.
+	 **/
+	virtual int columnCount( const QModelIndex & ) const Q_DECL_OVERRIDE { return DataColumns::instance()->colCount(); }
+
 
 	//
 	// Data members
 	//
 
 	DirTree *	 _tree;
+	bool		 _crossFilesystems;
 	SelectionModel * _selectionModel;
 	QString		 _treeIconDir;
 	int		 _readJobsCol;

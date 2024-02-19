@@ -10,7 +10,6 @@
 #define FileSearchFilter_h
 
 #include <QString>
-#include <QRegExp>
 #include <QTextStream>
 
 #include "SearchFilter.h"
@@ -26,6 +25,11 @@ namespace QDirStat
     class FileSearchFilter: public SearchFilter
     {
     public:
+
+        /** Default constructor, constructs a filter with no tree and an
+         * empty search pattern.
+         **/
+        FileSearchFilter();
 
         /**
          * Constructor: Create a search filter with the specified pattern and
@@ -44,7 +48,8 @@ namespace QDirStat
          **/
         FileSearchFilter( DirInfo *       subtree,
                           const QString & pattern,
-                          FilterMode      filterMode = Auto );
+                          FilterMode      filterMode,
+                          bool            caseSensitive );
 
         /**
          * Flags which node types to find

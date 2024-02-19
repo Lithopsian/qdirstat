@@ -19,7 +19,6 @@ namespace QDirStat
     class DirTree;
     class SelectionModel;
     class CleanupCollection;
-    class BookmarksManager;
     class QDirStatApp;
     class FileInfo;
 
@@ -53,14 +52,14 @@ namespace QDirStat
          * Explicitly create the singleton instance of this class if it isn't
          * created yet. Do nothing if it already exists.
          **/
-        static void createInstance();
+//        static void createInstance();
 
         /**
          * Delete the singleton instance of this class and all the key objects
          * that it manages. It is important that the widgets that need any of
          * them are deleted BEFORE deleting this app instance.
          **/
-        static void deleteInstance();
+//        static void deleteInstance();
 
         /**
          * Access the singleton instance of the QDirStatApp class. If no
@@ -120,24 +119,10 @@ namespace QDirStat
          **/
         CleanupCollection * cleanupCollection() const { return _cleanupCollection; }
 
-        /**
-         * Return the BookmarksManager, i.e. the collection of bookmarks for
-         * navigation in the directory tree from the "Go" -> "Bookmarks" menu.
-         *
-         * Each bookmark is just a string with the path (the URL) to navigate
-         * to. The user can add a bookmark by toggling the yellow bookmark icon
-         * to the left of the breadcrumbs navigator above the tree view.
-         *
-         * Bookmarks are stored in a plain text file in
-         * ~/.config/QDirStat/bookmarks.txt .
-         **/
-        BookmarksManager * bookmarksManager() const { return _bookmarksManager; }
-
 
         //
         // Convenience methods
         //
-
 
         /**
          * Return the (first) MainWindow instance of the running program that
@@ -155,6 +140,17 @@ namespace QDirStat
         FileInfo * root() const;
 
         /**
+         * Return the current item in the selection model.
+         **/
+        FileInfo * currentItem() const;
+
+        /**
+         * Return the first selected directory from the SelectionModel or 0 if
+         * no directory is selected.
+         **/
+        FileInfo * selectedDir() const;
+
+        /**
          * Return the first selected DirInfo (which may also be a PkgInfo,
          * Attic or DotEntry) from the SelectionModel or 0 if no DirInfo is
          * selected.
@@ -162,9 +158,8 @@ namespace QDirStat
         FileInfo * selectedDirInfo() const;
 
         /**
-         * Return the first selected (which may also be a PkgInfo, Attic or
-         * DotEntry) from the SelectionModel or, if none is selected, the
-         * DirTree's root directory.
+         * Return the first selected directory from the SelectionModel or, if
+         * none is selected, the DirTree's root directory.
          *
          * Notice that this might still return 0 if the tree is completely
          * empty.
@@ -192,10 +187,6 @@ namespace QDirStat
         DirTreeModel            * _dirTreeModel;
         SelectionModel          * _selectionModel;
         CleanupCollection       * _cleanupCollection;
-        BookmarksManager        * _bookmarksManager;
-
-        static QDirStatApp      * _instance;
-
     };  // class QDirStatApp
 
 }       // namespace QDirStat

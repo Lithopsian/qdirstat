@@ -15,13 +15,12 @@
 
 #include "ui_file-age-stats-window.h"
 #include "FileAgeStats.h"
-#include "FileInfo.h"
 #include "Subtree.h"
-#include "PercentBar.h"
 
 
 namespace QDirStat
 {
+    class PercentBarDelegate;
     class YearListItem;
 
     /**
@@ -156,7 +155,7 @@ namespace QDirStat
          * Return the currently selected item in the tree widget or 0
          * if there is none or if it is the wrong type.
          **/
-        YearListItem * selectedItem() const;
+        const YearListItem * selectedItem() const;
 
 
 	//

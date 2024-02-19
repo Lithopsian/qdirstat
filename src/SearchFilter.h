@@ -10,7 +10,7 @@
 #define SearchFilter_h
 
 #include <QString>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QTextStream>
 
 
@@ -48,8 +48,9 @@ namespace QDirStat
          * - If it's empty, it uses "SelectAll".
          **/
         SearchFilter( const QString & pattern,
-                      FilterMode      filterMode        = Auto,
-                      FilterMode      defaultFilterMode = StartsWith );
+                      FilterMode      filterMode,
+                      FilterMode      defaultFilterMode,
+                      bool            caseSensitive );
 
         /**
          * Check if a string matches this filter.
@@ -65,7 +66,7 @@ namespace QDirStat
          * Return the regexp. This is only meaningful in filter modes RegExp
          * and Wildcard.
          **/
-        const QRegExp & regexp() const { return _regexp; }
+//        const QRegularExpression & regexp() const { return _regexp; }
 
         /**
          * Return the filter mode.
@@ -75,14 +76,13 @@ namespace QDirStat
         /**
          * Return 'true' if the matching is case sensitive, 'false if not.
          **/
-        bool isCaseSensitive() const
-            { return _regexp.caseSensitivity() == Qt::CaseSensitive; }
+        bool isCaseSensitive() const { return _caseSensitive; }
 
         /**
          * Set the match to case sensitive ('true') or case insensitive
          * ('false'). The default is case insensitive.
          **/
-        void setCaseSensitive( bool sensitive = true );
+//        void setCaseSensitive( bool sensitive = true );
 
         /**
          * Convert a filter mode to a string.
@@ -100,10 +100,11 @@ namespace QDirStat
 
         // Data members
 
-        QString         _pattern;
-        QRegExp         _regexp;
-        FilterMode      _filterMode;
-        FilterMode      _defaultFilterMode;
+        QString             _pattern;
+        QRegularExpression  _regexp;
+        FilterMode          _filterMode;
+        FilterMode          _defaultFilterMode;
+        bool                _caseSensitive;
 
     };  // class SearchFilter
 

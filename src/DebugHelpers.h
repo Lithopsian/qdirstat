@@ -26,7 +26,7 @@ namespace Debug
     /**
      * Dump the direct children of 'dir' to the log.
      **/
-    void dumpDirectChildren( FileInfo * dir );
+    void dumpDirectChildren( const FileInfo * dir );
 
     /**
      * Dump the direct children of 'dir' sorted by size to the log.
@@ -38,7 +38,7 @@ namespace Debug
      * directory name for the heading line. This mostly makes sense with an
      * unnamed directory like the DirTreeModel's pseudo root.
      **/
-    void dumpChildrenList( FileInfo	      * dir,
+    void dumpChildrenList( const FileInfo     * dir,
 			   const FileInfoList & children );
 
     /**

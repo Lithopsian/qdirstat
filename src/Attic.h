@@ -51,8 +51,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isAttic() const Q_DECL_OVERRIDE
-	    { return true; }
+	virtual bool isAttic() const Q_DECL_OVERRIDE { return true; }
 
 	/**
 	 * Return the attic of this tree node. Since this already is an attic,
@@ -68,14 +67,15 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual DirReadState readState() const Q_DECL_OVERRIDE;
+	virtual DirReadState readState() const Q_DECL_OVERRIDE
+	    { return  _parent ? _parent->readState() : _readState; }
 
 	/**
 	 * Returns true if this entry has any children.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool hasChildren() const Q_DECL_OVERRIDE;
+	virtual bool hasChildren() const Q_DECL_OVERRIDE { return firstChild(); }
 
 	/**
 	 * Check the 'ignored' state of this item and set the '_isIgnored' flag
@@ -83,7 +83,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual void checkIgnored() Q_DECL_OVERRIDE;
+//	virtual void checkIgnored() Q_DECL_OVERRIDE {}
 
 	/**
 	 * Locate a child somewhere in this subtree whose URL (i.e. complete

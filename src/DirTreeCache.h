@@ -11,8 +11,11 @@
 #define DirTreeCache_h
 
 
-#include <zlib.h>    // gzFile
-#include "DirTree.h"
+#include <zlib.h>
+
+#include <QRegularExpression>
+
+#include "FileSize.h"
 
 
 #define DEFAULT_CACHE_NAME	".qdirstat.cache.gz"
@@ -23,6 +26,11 @@
 
 namespace QDirStat
 {
+	class DirInfo;
+	class DirTree;
+	class FileInfo;
+
+
     class CacheWriter
     {
     public:
@@ -32,51 +40,53 @@ namespace QDirStat
 	 *
 	 * Check CacheWriter::ok() to see if writing the cache file went OK.
 	 **/
-	CacheWriter( const QString & fileName, DirTree *tree );
+	CacheWriter( const QString & fileName, DirTree *tree ):
+	    _ok { writeCache( fileName, tree ) }
+	{}
 
 	/**
 	 * Destructor
 	 **/
-	virtual ~CacheWriter();
+	virtual ~CacheWriter() {}
 
 	/**
 	 * Returns true if writing the cache file went OK.
 	 **/
 	bool ok() const { return _ok; }
 
+
+    protected:
+
 	/**
 	 * Format a file size as string - with trailing "G", "M", "K" for
 	 * "Gigabytes", "Megabytes, "Kilobytes", respectively (provided there
 	 * is no fractional part - 27M is OK, 27.2M is not).
 	 **/
-	QString formatSize( FileSize size );
-
-
-    protected:
+	static QString formatSize( FileSize size );
 
 	/**
 	 * Write cache file in gzip format.
 	 * Returns 'true' if OK, 'false' upon error.
 	 **/
-	bool writeCache( const QString & fileName, DirTree *tree );
+	static bool writeCache( const QString & fileName, const DirTree *tree );
 
 	/**
 	 * Write 'item' recursively to cache file 'cache'.
 	 * Uses zlib to write gzip-compressed files.
 	 **/
-	void writeTree( gzFile cache, FileInfo * item );
+	static void writeTree( gzFile cache, const FileInfo * item );
 
 	/**
 	 * Write 'item' to cache file 'cache' without recursion.
 	 * Uses zlib to write gzip-compressed files.
 	 **/
-	void writeItem( gzFile cache, FileInfo * item );
+	static void writeItem( gzFile cache, const FileInfo * item );
 
-        /**
-         * Return the 'path' in an URL-encoded form, i.e. with some special
-         * characters escaped in percent notation (" " -> "%20").
-         **/
-        QByteArray urlEncoded( const QString & path );
+	/**
+	 * Return the 'path' in an URL-encoded form, i.e. with some special
+	 * characters escaped in percent notation (" " -> "%20").
+	 **/
+	static QByteArray urlEncoded( const QString & path );
 
 	//
 	// Data members
@@ -118,10 +128,10 @@ namespace QDirStat
 	 * Returns true if the end of the cache file is reached (or if there
 	 * was an error).
 	 **/
-	bool eof();
+	bool eof() const;
 
 	/**
-	 * Returns true if writing the cache file went OK.
+	 * Returns true if reading the cache file went OK.
 	 **/
 	bool ok() const { return _ok; }
 
@@ -150,6 +160,27 @@ namespace QDirStat
 	 **/
 	DirTree * tree() const { return _tree; }
 
+
+    signals:
+
+	/**
+	 * Emitted when a child has been added.
+	 **/
+	void childAdded( FileInfo *newChild );
+
+	/**
+	 * Emitted when reading this cache is finished.
+	 **/
+	void finished();
+
+	/**
+	 * Emitted if there is a read error.
+	 **/
+	void error();
+
+
+    protected:
+
 	/**
 	 * Skip leading whitespace from a string.
 	 * Returns a pointer to the first character that is non-whitespace.
@@ -171,27 +202,6 @@ namespace QDirStat
 	 * Returns the new string length.
 	 **/
 	static void killTrailingWhiteSpace( char * cptr );
-
-
-    signals:
-
-	/**
-	 * Emitted when a child has been added.
-	 **/
-	void childAdded( FileInfo *newChild );
-
-	/**
-	 * Emitted when reading this cache is finished.
-	 **/
-	void finished();
-
-	/**
-	 * Emitted if there is a read error.
-	 **/
-	void error();
-
-
-    protected:
 
 	/**
 	 * Check this cache's header (see if it is a QDirStat cache at all)
@@ -220,7 +230,7 @@ namespace QDirStat
 	 * Returns the start of field no. 'no' in the current input line
 	 * after splitLine().
 	 **/
-	char * field( int no );
+	const char * field( int no ) const;
 
 	/**
 	 * Split up a file name with path into its path and its name component
@@ -263,11 +273,11 @@ namespace QDirStat
 	 **/
 	void finalizeRecursive( DirInfo * dir );
 
-        /**
-         * Cascade a read error up to the toplevel directory node read by this
-         * cache file.
-         **/
-        void setReadError( DirInfo * dir );
+	/**
+	 * Cascade a read error up to the toplevel directory node read by this
+	 * cache file.
+	 **/
+	void setReadError( DirInfo * dir ) const;
 
 
 	//
@@ -288,7 +298,8 @@ namespace QDirStat
 	DirInfo *	_lastDir;
 	DirInfo *	_lastExcludedDir;
 	QString		_lastExcludedDirUrl;
-        QRegExp         _multiSlash;
+
+        QRegularExpression	_multiSlash;
     };
 
 }	// namespace QDirStat

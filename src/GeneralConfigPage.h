@@ -35,32 +35,20 @@ namespace QDirStat
     public slots:
 
 	/**
-	 * Populate the widgets.
+	 * Populate the widgets from the values held in MainWindow and DirTreeModel.
 	 **/
 	void setup();
 
 	/**
-	 * Write changes back to the settings.
+	 * Apply changes to the settings.  The values are sent directly to MainWindow
+	 * and DirTreeModel, the two classes that use the settings on this page.
 	 **/
 	void applyChanges();
 
 	/**
-	 * Abandon changes and revert everything to the original settings.
+	 * Abandon changes.  Currently a no-op since all changes are local until applied.
 	 **/
 	void discardChanges();
-
-
-    protected slots:
-
-        /**
-         * Read the values for this page from the QSettings.
-         **/
-        void readSettings();
-
-        /**
-         * Write the values of this page to the QSettings.
-         **/
-        void writeSettings();
 
 
     protected:

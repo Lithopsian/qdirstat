@@ -11,10 +11,7 @@
 #define DirTree_h
 
 
-#include <QList>
-
 #include "DirReadJob.h"
-#include "PkgFilter.h"
 
 
 namespace QDirStat
@@ -24,6 +21,7 @@ namespace QDirStat
     class FileInfoSet;
     class ExcludeRules;
     class DirTreeFilter;
+    class PkgFilter;
 
 
     /**
@@ -38,8 +36,6 @@ namespace QDirStat
      * invisible root item to support multiple toplevel items.
      *
      * @short Directory tree global data and infrastructure
-     *
-     * See also FileInfo, DirInfo.
      **/
     class DirTree: public QObject
     {
@@ -119,7 +115,7 @@ namespace QDirStat
 	 * Return the URL of this tree if it has any elements or an empty
 	 * string if it doesn't.
 	 **/
-	QString url() const;
+	const QString & url() const { return _url; }
 
 	/**
 	 * Return the root item of this tree. Notice that this is a pseudo root
@@ -142,12 +138,12 @@ namespace QDirStat
 	 * Return 'true' if 'item' is a toplevel item, i.e. a direct child of
 	 * the root item.
 	 **/
-	bool isToplevel( FileInfo *item ) const;
+	bool isTopLevel( FileInfo *item ) const;
 
 	/**
 	 * Return the device of this tree's root item ("/dev/sda3" etc.).
 	 **/
-	QString device() const { return _device; }
+	const QString & device() const { return _device; }
 
 	/**
 	 * Clear all items of this tree.
@@ -169,7 +165,7 @@ namespace QDirStat
 	 * 'findPseudoDirs' specifies if locating pseudo directories like "dot
 	 * entries" (".../<Files>") or "attics" (".../<Ignored>") is desired.
 	 **/
-	FileInfo * locate( QString url, bool findPseudoDirs = false );
+	FileInfo * locate( const QString & url, bool findPseudoDirs = false ) const;
 
 	/**
 	 * Add a new directory read job to the queue.
@@ -190,19 +186,20 @@ namespace QDirStat
 	void unblock( DirReadJob * job );
 
 	/**
-	 * Should directory scans cross filesystems?
+	 * Returns whether reads should cross filesystem boundaries.
 	 *
 	 * Notice: This can only be avoided with local directories where the
 	 * device number a file resides on can be obtained.
-	 * Remember, that's what this QDirStat business is all about.  ;-)
+	 *
+	 * This flag may be modified in the Open dialog or Unpkg dialog.
 	 **/
 	bool crossFilesystems() const { return _crossFilesystems; }
 
 	/**
 	 * Set or unset the "cross filesystems" flag.
 	 **/
-	void setCrossFilesystems( bool doCross )
-	    { _crossFilesystems = doCross; }
+	void setCrossFilesystems( bool crossFilesystems )
+	    { _crossFilesystems = crossFilesystems; }
 
 	/**
 	 * Notification that a child has been added.
@@ -228,7 +225,7 @@ namespace QDirStat
 	 * deletingChild() signal. For multiple deletions (e.g. entire
 	 * subtrees) this should only happen once at the end.
 	 **/
-	virtual void childDeletedNotify();
+//	virtual void childDeletedNotify();
 
 	/**
 	 * Send a startingReading() signal.
@@ -243,12 +240,12 @@ namespace QDirStat
 	/**
 	 * Send a aborted() signal.
 	 **/
-	void sendAborted();
+//	void sendAborted();
 
 	/**
 	 * Send a startingReading( DirInfo * ) signal.
 	 **/
-	void sendStartingReading( DirInfo * dir );
+//	void sendStartingReading( DirInfo * dir );
 
 	/**
 	 * Send a readJobFinished( DirInfo * ) signal.
@@ -270,7 +267,7 @@ namespace QDirStat
 	/**
 	 * Read a cache file.
 	 **/
-	void readCache( const QString & cacheFileName );
+	bool readCache( const QString & cacheFileName );
 
 	/**
 	 * Clear the tree and read a cache file.
@@ -339,22 +336,22 @@ namespace QDirStat
 	 **/
 	bool beingDestroyed() const { return _beingDestroyed; }
 
-        /**
-         * Return the number of 512-bytes blocks per cluster.
-         *
-         * This may be 0 if no small file (< 512 bytes) was found in this tree
-         * yet.
-         **/
-        int blocksPerCluster() const { return _blocksPerCluster; }
+	/**
+	 * Return the number of 512-bytes blocks per cluster.
+	 *
+	 * This may be 0 if no small file (< 512 bytes) was found in this tree
+	 * yet.
+	 **/
+	int blocksPerCluster() const { return _blocksPerCluster; }
 
-        /**
-         * Return the cluster size of this tree, i.e. the disk space allocation
-         * unit. No non-zero file can have an allocated size smaller than this.
-         *
-         * This may be 0 if no small file (< 512 bytes) was found in this tree
-         * yet.
-         **/
-        FileSize clusterSize() const { return _blocksPerCluster * STD_BLOCK_SIZE; }
+	/**
+	 * Return the cluster size of this tree, i.e. the disk space allocation
+	 * unit. No non-zero file can have an allocated size smaller than this.
+	 *
+	 * This may be 0 if no small file (< 512 bytes) was found in this tree
+	 * yet.
+	 **/
+	FileSize clusterSize() const { return _blocksPerCluster * STD_BLOCK_SIZE; }
 
 
     signals:

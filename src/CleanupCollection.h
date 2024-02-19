@@ -14,7 +14,6 @@
 #include <QPointer>
 #include <QStringList>
 
-#include "ListMover.h"
 #include "Cleanup.h"
 
 
@@ -54,17 +53,6 @@ namespace QDirStat
 	void addStdCleanups();
 
 	/**
-	 * Add a cleanup to this collection. The collection assumes ownerwhip
-	 * of this cleanup.
-	 **/
-	void add( Cleanup * cleanup );
-
-	/**
-	 * Remove a cleanup from this collection and delete it.
-	 **/
-	void remove( Cleanup * cleanup );
-
-	/**
 	 * Add all actions to the specified menu.
 	 *
 	 * If 'keepUpdated' is false, the cleanup collection will keep the
@@ -76,15 +64,15 @@ namespace QDirStat
 	 **/
 	void addToMenu( QMenu * menu, bool keepUpdated = false );
 
-        /**
-         * Add all currently enabled actions to a menu.
-         *
-         * Unlike addToMenu(), this does not do any bookkeeping to update and
-         * rearrange menu items as they are changed in the cleanup
-         * configuration. This method is intended for context menus that are
-         * created for just one menu selection and then immediately discarded.
-         **/
-	void addEnabledToMenu( QMenu * menu );
+	/**
+	 * Add all currently enabled actions to a menu.
+	 *
+	 * Unlike addToMenu(), this does not do any bookkeeping to update and
+	 * rearrange menu items as they are changed in the cleanup
+	 * configuration. This method is intended for context menus that are
+	 * created for just one menu selection and then immediately discarded.
+	 **/
+	void addEnabledToMenu( QMenu * menu ) const;
 
 	/**
 	 * Add all actions that have an icon to the specified tool bar.
@@ -124,13 +112,6 @@ namespace QDirStat
 	 **/
 	const CleanupList & cleanupList() const { return _cleanupList; }
 
-	/**
-	 * Return the ListMover for this object that takes care of moving
-	 * cleanups up, down, to the top, or to the bottom of this cleanup
-	 * list.
-	 **/
-	ListMover<Cleanup *> * listMover() { return &_listMover; }
-
     signals:
 
 	/**
@@ -139,12 +120,22 @@ namespace QDirStat
 	void startingCleanup( const QString & cleanupName );
 
 	/**
-	 * Emitted when the last process of a cleanup is finished.
+	 * Emitted when the last process of a cleanup is finished, but before any refresh.
 	 *
 	 * 'errorCount' is the total number of errors reported by all processes
 	 * that were started.
 	 **/
 	void cleanupFinished( int errorCount );
+
+	/**
+	 * Emitted after a cleanup is completed when the refresh policy
+	 * is AssumeDeleted.  There will be no refresh, so this is the only
+	 * indication that the tree is now stable.  The childDeleted signal
+	 * from DirTree is also emitted when a cache file is read in the middle
+	 * of a tree read, so is not a reliable indicator that the tree is
+	 * complete and stable.
+	 **/
+	void assumedDeleted();
 
     public slots:
 
@@ -157,22 +148,22 @@ namespace QDirStat
 	/**
 	 * Move a cleanup one position up in the list.
 	 **/
-	void moveUp( Cleanup * cleanup );
+//	void moveUp( Cleanup * cleanup );
 
 	/**
 	 * Move a cleanup one position down in the list.
 	 **/
-	void moveDown( Cleanup * cleanup );
+//	void moveDown( Cleanup * cleanup );
 
 	/**
 	 * Move a cleanup to the top of the list.
 	 **/
-	void moveToTop( Cleanup * cleanup );
+//	void moveToTop( Cleanup * cleanup );
 
 	/**
 	 * Move a cleanup to the bottom of the list.
 	 **/
-	void moveToBottom( Cleanup * cleanup );
+//	void moveToBottom( Cleanup * cleanup );
 
 	/**
 	 * Read configuration for all cleanups.
@@ -182,7 +173,7 @@ namespace QDirStat
 	/**
 	 * Write configuration for all cleanups.
 	 **/
-	void writeSettings();
+	void writeSettings( const CleanupList & newCleanups );
 
 
     protected slots:
@@ -195,6 +186,17 @@ namespace QDirStat
 
 
     protected:
+
+	/**
+	 * Add a cleanup to this collection. The collection assumes ownerwhip
+	 * of this cleanup.
+	 **/
+	void add( Cleanup * cleanup );
+
+	/**
+	 * Remove a cleanup from this collection and delete it.
+	 **/
+//	void remove( Cleanup * cleanup );
 
 	/**
 	 * Ask user for confirmation to execute a cleanup action for
@@ -236,7 +238,6 @@ namespace QDirStat
 
 	SelectionModel *	   _selectionModel;
 	CleanupList		   _cleanupList;
-	ListMover<Cleanup *>	   _listMover;
 	QList<QPointer<QMenu> >	   _menus;
 	QList<QPointer<QToolBar> > _toolBars;
     };

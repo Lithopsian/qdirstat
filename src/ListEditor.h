@@ -53,12 +53,24 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	ListEditor( QWidget * parent );
+	ListEditor( QWidget * parent ):
+	    QWidget { parent },
+	    _listWidget {0 },
+	    _firstRow {0 },
+	    _updatesLocked {false },
+	    _moveUpButton {0 },
+	    _moveDownButton { 0 },
+	    _moveToTopButton { 0 },
+	    _moveToBottomButton { 0 },
+	    _addButton { 0 },
+	    _removeButton { 0}
+	{}
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~ListEditor();
+	virtual ~ListEditor()
+	{}
 
 
     protected:
@@ -103,8 +115,7 @@ namespace QDirStat
 	/**
 	 * Remove a value from the internal list and delete it.
 	 *
-	 * This is called when the 'Remove' button is clicked and the user
-	 * confirms the confirmation pop-up.
+	 * This is called when the 'Remove' button is clicked.
 	 *
 	 * Derived classes are required to implement this.
 	 **/
@@ -119,26 +130,12 @@ namespace QDirStat
 
 	/**
 	 * Return the message for the 'really delete?' message for the current
-	 * item ('value'). If this returns an empty string, the item cannot be
-	 * deleted.
+	 * item ('value'). If this returns an empty string, the item is deleted
+	 * without confirmation.
 	 *
 	 * Derived classes are required to implement this.
 	 **/
-	virtual QString deleteConfirmationMessage( void * value ) = 0;
-
-	/**
-	 * Move a value in the internal list. This is called from moveUp(),
-	 * moveDown() etc.; 'operation' is one of 'moveUp()', moveDown()
-	 * etc. that can be called with QMetaObject::invokeMethod().
-	 *
-	 * Derived classes that should implement this if the move operations
-	 * are to be supported. They should cast 'value' to the proper type and
-	 * pass it to the operation that is invoked.
-	 *
-	 * This is a kludge - a workaround of not being able to use C++
-	 * templates.
-	 **/
-	virtual void moveValue( void * value, const char * operation );
+//	virtual QString deleteConfirmationMessage( void * value ) = 0;
 
 
 	//--------------------------------------------------------------------
@@ -192,7 +189,7 @@ namespace QDirStat
 	void setRemoveButton	  ( QAbstractButton * button );
 
 
-    public slots:
+    protected slots:
 
 	/**
 	 * Move the current list item one position up.
@@ -217,15 +214,12 @@ namespace QDirStat
 	/**
 	 * Create a new list item.
 	 **/
-	void add();
+	virtual void add();
 
 	/**
 	 * Remove the current list item.
 	 **/
 	void remove();
-
-
-    protected slots:
 
 	/**
 	 * Enable or disable buttons depending on internal status.

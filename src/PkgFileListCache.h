@@ -47,13 +47,17 @@ namespace QDirStat
 	 * Constructor. 'lookupType' indicates what type of lookup to prepare
 	 * for. This has significant impact on the memory footprint.
 	 **/
-	PkgFileListCache( PkgManager * pkgManager,
-			  LookupType   lookupType = LookupByPkg );
+	PkgFileListCache( const PkgManager * pkgManager,
+			  LookupType         lookupType = LookupByPkg ):
+	    _pkgManager( pkgManager ),
+	    _lookupType( lookupType )
+	{}
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PkgFileListCache();
+	virtual ~PkgFileListCache()
+	{}
 
 	/**
 	 * Return the sorted file list for a package.
@@ -96,7 +100,7 @@ namespace QDirStat
 	/**
 	 * Return the package manager parent of this cache.
 	 **/
-	PkgManager * pkgManager() const { return _pkgManager; }
+	const PkgManager * pkgManager() const { return _pkgManager; }
 
 	/**
 	 * Return the type of lookup this cache is set up for.
@@ -106,7 +110,7 @@ namespace QDirStat
 
     protected:
 
-	PkgManager *		    _pkgManager;
+	const PkgManager *	    _pkgManager;
 	LookupType		    _lookupType;
 	QMultiMap<QString, QString> _pkgFileNames;
 	QSet<QString>		    _fileNames;

@@ -13,21 +13,21 @@
 #include <sys/types.h> // uid_t
 
 #include <QString>
-#include <QRegExp>
+#include <QRegularExpression>
 
 
 // Override these before #include
 
 #ifndef LOG_COMMANDS
-#  define LOG_COMMANDS	true
+#  define LOG_COMMANDS true
 #endif
 
 #ifndef LOG_OUTPUT
-#  define LOG_OUTPUT	false
+#  define LOG_OUTPUT false
 #endif
 
 #ifndef COMMAND_TIMEOUT_SEC
-#  define COMMAND_TIMEOUT_SEC	15
+#  define COMMAND_TIMEOUT_SEC 15
 #endif
 
 
@@ -45,10 +45,10 @@ namespace QDirStat
 	 * Log the command that is executed if 'logCommand' is 'true',
 	 * log the command's output if 'logOutput' is 'true'.
 	 **/
-	bool tryRunCommand( const QString & commandLine,
-			    const QRegExp & expectedResult,
-			    bool	    logCommand	= LOG_COMMANDS,
-			    bool	    logOutput	= LOG_OUTPUT   );
+	bool tryRunCommand( const QString		& commandLine,
+			    const QRegularExpression	& expectedResult,
+			    bool	    		logCommand	= LOG_COMMANDS,
+			    bool	    		logOutput	= LOG_OUTPUT   );
 
 	/**
 	 * Run a command line and return its output. If exitCode_ret is
@@ -133,7 +133,7 @@ namespace QDirStat
 	 * Check if this program runs as the real root user, with root
 	 * permissions, but not with 'sudo'.
 	 **/
-	bool runningAsTrueRoot();
+//	bool runningAsTrueRoot();
 
 	/**
 	 * Return the home directory of the user with the specified user ID.
@@ -155,7 +155,7 @@ namespace QDirStat
          * Return 'true' if a symbolic link is broken, i.e. the (first level)
          * target of the symlink does not exist in the filesystem.
          **/
-        bool isBrokenSymLink( const QString & path );
+//        bool isBrokenSymLink( const QString & path );
 
         /**
          * Read the (first level) target of a symbolic link, assuming UTF-8
@@ -169,7 +169,7 @@ namespace QDirStat
         /**
          * Read the (first level) target of a symbolic link.
          * Unlike readLink( const QString & ) above, this does not make any
-         * assumptions of name encoding in the filesystem; it just uses bytes.
+         * assumptions of name encoding in the filessytem; it just uses bytes.
          *
          * This is a more user-friendly version of readlink(2).
          *

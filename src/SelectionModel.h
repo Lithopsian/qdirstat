@@ -196,14 +196,13 @@ namespace QDirStat
 	 * Propagate the QModelIndex based selectionChanged() signal to
 	 * the FileInfo * based one
 	 **/
-	void propagateSelectionChanged( const QItemSelection & selected,
-					const QItemSelection & deselected );
+	void propagateSelectionChanged( const QItemSelection &,
+					const QItemSelection & );
 
 	/**
 	 * Clear all old contents.
 	 **/
 	void clear();
-
 	/**
 	 * Notification that a child is about to be deleted.
 	 **/
@@ -272,7 +271,7 @@ namespace QDirStat
 
 	// From QItemSelectionModel
 
-	void selectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
+	void selectionChanged	 ( const QItemSelection & selected, const QItemSelection & deselected );
 	void currentChanged	 ( const QModelIndex & current, const QModelIndex & previous );
 	void currentColumnChanged( const QModelIndex & current, const QModelIndex & previous );
 	void currentRowChanged	 ( const QModelIndex & current, const QModelIndex & previous );

@@ -9,22 +9,25 @@
 #ifndef FileSizeLabel_h
 #define FileSizeLabel_h
 
+#include <QLabel>
 
-#include "PopupLabel.h"
-#include "FileInfo.h"	// FileSize
+#include "FileSize.h"
 
-class QMouseEvent;
+
+#define ALLOCATED_FAT_PERCENT	33
 
 
 namespace QDirStat
 {
+    class FileInfo;
+
     /**
      * Widget to display a file size in human readable form (i.e. "123.4 MB")
      * and with a context menu that displays the exact byte size.
      *
      * This is just a thin wrapper around PopupLabel / QLabel.
      **/
-    class FileSizeLabel: public PopupLabel
+    class FileSizeLabel: public QLabel
     {
 	Q_OBJECT
 
@@ -33,55 +36,78 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	FileSizeLabel( QWidget * parent = 0 );
+	FileSizeLabel( QWidget * parent = 0 ):
+	    QLabel { parent }
+	{}
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~FileSizeLabel();
+	virtual ~FileSizeLabel()
+	{}
 
 	/**
-	 * Set the value. This will also format the value and display it in
-	 * human-readable format, i.e. something like "123.4 MB".
+	 * Set the text of a file size label including special handling for
+	 * sparse files and files with multiple hard links.
+	 **/
+	void setSize( const FileInfo * file );
+
+	/**
+	 * Set the text of an allocated size label including special handling
+	 * for sparse files and files with multiple hard links.
+	 *
+	 * Notice that this is only useful for plain files, not for
+	 * directories, packages or multiple selected files.
+	 **/
+	void setAllocated( const FileInfo * file );
+
+	/**
+	 * Set the label text and tooltip. This will format the value and display
+	 * it in human-readable format, i.e. something like "123.4 MB".  Values of
+	 * zero or -1 will be formatted as an empty string.
 	 *
 	 * 'prefix' is an optional text prefix like "> " to indicate that the
 	 * exact value is unknown (e.g. because of insuficcient permissions in
-	 * a directory tree). The prefix is also displayed in the context menu.
+	 * a directory tree).
 	 *
-	 * The initial value is -1 which will be formatted as an empty string.
+	 * If the value is more than 1024, the label is given a tooltip containing
+	 * the exact value in bytes.
 	 **/
-	void setValue( FileSize val, const QString & prefix = "" );
+	void setValue( FileSize value, const QString & prefix );
 
 	/**
-	 * Return the value.
+	 * Set the label text and tooltip.  The label string is formatted in a
+	 * human-readable format, including the number of hard links (only when there
+	 * is more than one hard link).
 	 **/
-	FileSize value() const { return _value; }
+	void setValueWithLinks( FileSize size, nlink_t numLinks );
 
 	/**
-	 * Return the last used prefix.
-	 *
-	 * Notice that the prefix cannot be set separately, only together with
-	 * the value in setValue().
+	 * Set the tooltip for a value.  The value will be formatted as the exact
+	 * number of bytes with the unit "bytes".  For values below 1000 bytes (will
+	 * appear as 1.0kB), no tooltip will be shown since the exact number of bytes
+	 * are already visible.  The tooltip may have a prefix (eg. ">") and a suffix
+	 * (eg. "/ 3 links").
 	 **/
-	QString prefix() const { return _prefix; }
+	void setToolTip( FileSize size, const QString & prefix, const QString & suffix );
 
 	/**
-	 * Set a custom text. This text may or may not contain the value.
-	 *
-	 * The context menu is only displayed if the value is non-negative.
-	 *
-	 * The prefix is only used in the context menu. It is the caller's
-	 * responsibility to also add it to the custom text if that is desired.
+	 * Set a custom text. This text may or may not contain the value.  The
+	 * tooltip is disabled.
 	 **/
-	void setText( const QString &	newText,
-		      FileSize		newValue = -1,
-		      const QString &	prefix	 = "" );
+	void setText( const QString & text );
 
 	/**
-	 * Return the text for the context menu (that was set by
-	 * setContextText() ).
+	 * Set the label font to bold.
 	 **/
-	virtual QString contextText() const;
+	void setBold( bool bold );
+
+        /**
+         * Suppress the content of FileSizeLabel 'cloneLabel' if it has the
+         * same content as this label: clear its text and disable its caption
+         * 'caption'.
+         **/
+        void suppressIfSameContent( FileSizeLabel * cloneLabel, QLabel * caption ) const;
 
 	/**
 	 * Clear everything, including the visible text, the numeric value,
@@ -89,20 +115,6 @@ namespace QDirStat
 	 **/
 	virtual void clear();
 
-
-    protected:
-
-	/**
-	 * Return 'true' if there is anything that can be displayed in a
-	 * context menu.
-	 **/
-	bool haveContextMenu() const;
-
-
-	// Data members
-
-	FileSize _value;
-	QString	 _prefix;
     };
 
 } // namespace QDirStat

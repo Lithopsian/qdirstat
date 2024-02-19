@@ -10,7 +10,8 @@
 #ifndef HistogramView_h
 #define HistogramView_h
 
-
+#include <QFont>
+#include <QGraphicsItem>
 #include <QGraphicsView>
 #include <QList>
 
@@ -429,6 +430,19 @@ namespace QDirStat
          **/
         bool needOverflowPanel() const { return _startPercentile > 0 || _endPercentile < 100; }
 
+	/**
+	 * Make the item text bold.  Use a template since this applies to two different classes
+	 * not derived from the same base class.
+	 **/
+	template<typename T>
+	void setBold( T * item )
+	{
+	    QFont font( item->font() );
+	    font.setBold( true );
+	    item->setFont( font );
+	}
+	void setBold( QGraphicsTextItem * item ) { setBold<QGraphicsTextItem>( item ); }
+	void setBold( QGraphicsSimpleTextItem * item ) { setBold<QGraphicsSimpleTextItem>( item ); }
 
 	//
 	// Data Members

@@ -11,12 +11,13 @@
 #define Refresher_h
 
 #include <QObject>
+#include "FileInfo.h"
 #include "FileInfoSet.h"
 
 
 namespace QDirStat
 {
-    class FileInfo;
+    class DirTree;
 
 
     /**
@@ -44,7 +45,11 @@ namespace QDirStat
 	 *
 	 * All items are assumed to belong to the same DirTree.
 	 **/
-	Refresher( const FileInfoSet items, QObject * parent );
+	Refresher( QObject * parent, const FileInfoSet items ):
+	    QObject { parent },
+	    _items { items },
+	    _tree { _items.isEmpty() ? 0 : _items.first()->tree() }
+	{}
 
 	/**
 	 * Return a FileInfoSet of all parents of all items of 'children'.

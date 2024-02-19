@@ -10,13 +10,12 @@
 #ifndef ExcludeRules_h
 #define ExcludeRules_h
 
-#include <QObject>
 #include <QString>
-#include <QRegExp>
 #include <QList>
 #include <QTextStream>
 
-#include "ListMover.h"
+#include "Wildcard.h"
+#include "SettingsHelpers.h"
 
 
 namespace QDirStat
@@ -26,28 +25,30 @@ namespace QDirStat
     /**
      * One single exclude rule to check text (file names) against.
      **/
-    class ExcludeRule
+    class ExcludeRule: public QRegularExpression
     {
     public:
 
 	/**
-	 * Constructor from a QRegExp.
-	 *
-	 * 'useFullPath' indicates if this exclude rule uses the full path
-	 * ('true') or only the file name without path ('false') for matching.
-         *
-         * 'checkAnyFileChild' specifies whether the non-directory children of
-         * the directory should be used for matching rather than the path or
-         * name of the directory itself. That makes it possible to exclude a
-         * directory that contains a file ".nobackup".
+	 * Enum for the three supported types  of pattern.  These match the three
+	 * values from QRegExp::PatternSyntax for compatibility with existing
+	 * exclude rules configurations.
 	 **/
-	ExcludeRule( const QRegExp & regexp,
-                     bool            useFullPath       = false,
-                     bool            checkAnyFileChild = false );
+	enum PatternSyntax {
+	    RegExp = 0,
+	    Wildcard = 1,
+	    FixedString = 2
+	};
 
 	/**
 	 * Constructor from a QString. The string will be used as a regexp.
 	 *
+	 * 'patternSyntax' is a value from the PatternSyntax enum indicating the
+	 * way that 'pattern' should be interpreted for matching.
+	 *
+	 * 'caseSensitive' indicates whether the matching should be case-
+	 * sensitive or case-insensitive.
+	 *
 	 * 'useFullPath' indicates if this exclude rule uses the full path
 	 * ('true') or only the file name without path ('false') for matching.
          *
@@ -56,9 +57,11 @@ namespace QDirStat
          * name of the directory itself. That makes it possible to exclude a
          * directory that contains a file ".nobackup".
 	 **/
-	ExcludeRule( const QString & regexp,
-                     bool            useFullPath       = false,
-                     bool            checkAnyFileChild = false );
+	ExcludeRule( PatternSyntax   patternSyntax,
+	             const QString & pattern,
+		     bool            caseSensitive,
+                     bool            useFullPath,
+                     bool            checkAnyFileChild );
 
 	/**
 	 * Destructor.
@@ -85,16 +88,6 @@ namespace QDirStat
         bool matchDirectChildren( DirInfo * dir );
 
 	/**
-	 * Returns this rule's regular expression.
-	 **/
-	const QRegExp & regexp() const { return _regexp; }
-
-	/**
-	 * Change this rule's regular expression.
-	 **/
-	void setRegexp( const QRegExp & regexp ) { _regexp = regexp; }
-
-	/**
 	 * Return 'true' if this exclude rule uses the full path to match
 	 * against, 'false' if it only uses the file name without path.
 	 **/
@@ -117,11 +110,75 @@ namespace QDirStat
          **/
         void setCheckAnyFileChild( bool check ) { _checkAnyFileChild = check; }
 
+        /**
+         * Set the matching syntax for this rule.
+         **/
+        void setPatternSyntax( PatternSyntax patternSyntax );
+
+        /**
+         * Returns the matching syntax for this rule.
+         **/
+        PatternSyntax patternSyntax() const { return _patternSyntax; }
+
+        /**
+         * Set the pattern for this rule.
+         **/
+        void setPattern( const QString & pattern );
+
+        /**
+         * Return the pattern used to construct this rule.
+         **/
+        const QString & pattern() const { return _pattern; }
+
+        /**
+         * Set whether this rule is case-sensitive.
+         **/
+        void setCaseSensitive( bool caseSensitive );
+
+        /**
+         * Returns whether this rule is case-sensitive.
+         **/
+        bool caseSensitive() const { return !( patternOptions() & CaseInsensitiveOption ); }
+
+	/**
+	 * Return the enum mapping for the pattern syntax enum PatternSyntax.
+	 **/
+	static SettingsEnumMapping patternSyntaxMapping();
+
+
     private:
 
-	QRegExp _regexp;
-	bool	_useFullPath;
-        bool    _checkAnyFileChild;
+	/**
+	* Returns whether the given string matches this regular expression.
+	* Note that RegExp patterns are not automatically anchored and may match
+	* just a portion of the string, which differs from QRegExp::exactMatch().
+	* FixedString and Wildcard patterns in this class are automatically
+	* anchored and so all matches are "exact".
+	**/
+	bool isMatch( const QString string ) const
+	    { return QRegularExpression::match( string ).hasMatch(); }
+
+	/**
+	* Constructs the QRegularExpression::PatternOptions flags, currently just
+	* repesenting case-sensitivity.
+	**/
+	static PatternOptions makePatternOptions( bool caseSensitive )
+	    { return caseSensitive ? NoPatternOption : CaseInsensitiveOption; }
+
+	/**
+	* Formats a pattern string depending on the specified matching syntax.  Fixed
+	* string patterns are escaped and anchored, wildcard patterns are converted
+	* to an anchored regular expression, and regular expression patterns are
+	* unchnged.
+	**/
+	static QString formatPattern( PatternSyntax   patternSyntax,
+				      const QString & pattern );
+
+
+	PatternSyntax _patternSyntax;
+	QString       _pattern;
+	bool          _useFullPath;
+        bool          _checkAnyFileChild;
     };
 
 
@@ -135,32 +192,36 @@ namespace QDirStat
      *
      * Normal usage:
      *
-     *	   ExcludeRules::instance()->add( new ExcludeRule( ... ) );
-     *	   ...
      *	   if ( ExcludeRules::instance()->match( filename ) )
      *	   {
      *	       // exclude this file
      *	   }
      **/
-    class ExcludeRules: public QObject
+    class ExcludeRules
     {
-	Q_OBJECT
 
-    public:
+    private:
 	/**
-	 * Constructor.
+	 * Constructor that initialises the rule list from the settings.
 	 *
-	 * Most applications will want to use instance() instead to create
-	 * and use a singleton object of this class.
+	 * Applications will generally want to use instance() instead to create
+	 * and use a global object of this class.  MainWindowUnpkg creates and
+	 * uses a separate ExcludeRules object for its own set of exclude rules
+	 * each time it is called.
 	 **/
 	ExcludeRules();
 
-        /**
-         * Constructor from a QStringList: Create and add an exclude rule
-         * matching a full path for each path in the list with match mode
-         * "wildcard".
-         **/
-        ExcludeRules( const QStringList & paths );
+    public:
+	/**
+	 * Constructor that initialises the rules from a given list, with the
+	 * given syntax and options.  Thos is used by MainWindowUnpkg to
+	 * create its own temporary set of rules.
+	 */
+	ExcludeRules( const QStringList & paths,
+		      ExcludeRule::PatternSyntax patternSyntax,
+		      bool caseSensitive,
+		      bool useFullPath,
+		      bool checkAnyFileChild );
 
 	/**
 	 * Destructor.
@@ -172,30 +233,6 @@ namespace QDirStat
 	 * This will create one if there is none yet.
 	 **/
 	static ExcludeRules * instance();
-
-	/**
-	 * Add an exclude rule to this rule set.
-	 * This transfers ownership of that rule to this rule set;
-	 * it will be destroyed with 'delete' after use.
-	 **/
-	void add( ExcludeRule * rule );
-
-	/**
-	 * Remove an exclude rule from this rule set and delete it.
-	 **/
-	void remove( ExcludeRule * rule );
-
-	/**
-	 * Create a new rule with 'regexp', 'useFullPath' and
-	 * 'checkAnyFileChild' and add it to this rule set.
-	 **/
-	static void add( const QRegExp & regexp,
-                         bool            useFullPath       = false,
-                         bool            checkAnyFileChild = false );
-
-	static void add( const QString & regexp,
-                         bool            useFullPath       = false,
-                         bool            checkAnyFileChild = false );
 
 	/**
 	 * Check a file name against the exclude rules. Each exclude rule
@@ -223,14 +260,14 @@ namespace QDirStat
 	 *
 	 * This is intended to explain to the user which rule matched.
 	 **/
-	const ExcludeRule * matchingRule( const QString & fullPath,
-					  const QString & fileName );
+//	const ExcludeRule * matchingRule( const QString & fullPath,
+//					  const QString & fileName );
 
 	/**
 	 * Return the last matching rule or 0 if there was none.
 	 * Each call to match() will reset this.
 	 **/
-	ExcludeRule * lastMatchingRule() const { return _lastMatchingRule; }
+//	ExcludeRule * lastMatchingRule() const { return _lastMatchingRule; }
 
 	/**
 	 * Clear (delete) all exclude rules.
@@ -246,47 +283,62 @@ namespace QDirStat
 	/**
 	 * Return a const iterator for the first exclude rule.
 	 **/
-	ExcludeRuleListIterator begin() { return _rules.constBegin(); }
+	ExcludeRuleListIterator cbegin()	{ return _rules.constBegin(); }
 
 	/**
-	 * Return a const iterator for the last exclude rule.
+	 * Return a const iterator for past the last exclude rule.
 	 **/
-	ExcludeRuleListIterator end()	{ return _rules.constEnd(); }
+	ExcludeRuleListIterator cend()	{ return _rules.constEnd(); }
 
-    public slots:
+	/**
+	 * Write all exclude rules to the settings file.
+	 **/
+	void writeSettings( const ExcludeRuleList & rules );
+
+//    public slots:
 
 	/**
 	 * Move an exclude rule one position up in the list.
 	 **/
-	void moveUp( ExcludeRule * rule );
+//	void moveUp( ExcludeRule * rule );
 
 	/**
 	 * Move an exclude rule one position down in the list.
 	 **/
-	void moveDown( ExcludeRule * rule );
+//	void moveDown( ExcludeRule * rule );
 
 	/**
 	 * Move an exclude rule to the top of the list.
 	 **/
-	void moveToTop( ExcludeRule * rule );
+//	void moveToTop( ExcludeRule * rule );
 
 	/**
 	 * Move an exclude rule to the bottom of the list.
 	 **/
-	void moveToBottom( ExcludeRule * rule );
+//	void moveToBottom( ExcludeRule * rule );
+
+    protected:
+
+	/**
+	 * Create an exclude rule and add it to this rule set.
+	 **/
+//	void add( ExcludeRule * rule );
+	void add( ExcludeRule::PatternSyntax   patternSyntax,
+		  const QString              & pattern,
+		  bool                         caseSensitive,
+                  bool                         useFullPath,
+                  bool                         checkAnyFileChild );
+
+	/**
+	 * Remove an exclude rule from this rule set and delete it.
+	 **/
+//	void remove( ExcludeRule * rule );
 
 	/**
 	 * Clear all existing exclude rules and read exclude rules from the
 	 * settings file.
 	 **/
 	void readSettings();
-
-	/**
-	 * Write all exclude rules to the settings file.
-	 **/
-	void writeSettings();
-
-    protected:
 
         /**
          * Add some default rules.
@@ -295,10 +347,7 @@ namespace QDirStat
 
     private:
 
-	ExcludeRuleList		 _rules;
-	ListMover<ExcludeRule *> _listMover;
-	ExcludeRule *		 _lastMatchingRule;
-        bool                     _defaultRulesAdded;
+	ExcludeRuleList _rules;
     };
 
 
@@ -308,7 +357,7 @@ namespace QDirStat
     inline QTextStream & operator<< ( QTextStream & stream, const ExcludeRule * rule )
     {
 	if ( rule )
-	    stream << "<ExcludeRule \"" << rule->regexp().pattern() << "\""
+	    stream << "<ExcludeRule \"" << rule->pattern() << "\""
                    << ( rule->useFullPath() ? " (full path)" : "" )
                    << ">";
 	else

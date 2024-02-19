@@ -230,13 +230,13 @@ namespace QDirStat
 	 *
 	 * See also symbolicPermissions(), octalPermissions()
 	 **/
-	mode_t mode() const { return _mode;   }
+	mode_t mode() const { return _mode; }
 
 	/**
 	 * The number of hard links to this file. Relevant for size summaries
 	 * to avoid counting one file several times.
 	 **/
-	nlink_t links() const { return _links;	}
+	virtual nlink_t links() const { return _links; }
 
 	/**
 	 * User ID of the owner.

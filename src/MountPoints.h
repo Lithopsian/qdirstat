@@ -41,7 +41,14 @@ namespace QDirStat
 	MountPoint( const QString & device,
 		    const QString & path,
 		    const QString & filesystemType,
-		    const QString & mountOptions );
+		    const QString & mountOptions ):
+	    _storageInfo{ 0 },
+	    _device { device },
+	    _path { path },
+	    _filesystemType { filesystemType },
+	    _mountOptions { mountOptions.split( "," ) },
+	    _isDuplicate { false }
+	{}
 
         /**
          * Destructor.
@@ -73,23 +80,23 @@ namespace QDirStat
 	/**
 	 * Return the mount options as one comma-separated string.
 	 **/
-	QString mountOptionsStr() const;
+	QString mountOptionsStr() const { return _mountOptions.join( "," ); }
 
 	/**
 	 * Return 'true' if the filesystem is mounted read-only.
 	 **/
-	bool isReadOnly() const;
+	bool isReadOnly() const { return _mountOptions.contains( "ro" ); }
 
 	/**
 	 * Return 'true' if the filesystem type of this mount point is "btrfs".
 	 **/
-	bool isBtrfs() const;
+	bool isBtrfs() const { return _filesystemType.toLower() == "btrfs"; }
 
 	/**
 	 * Return 'true' if the filesystem type of this mount point starts with
 	 * "ntfs".
 	 **/
-        bool isNtfs() const;
+        bool isNtfs() const { return _filesystemType.toLower().startsWith( "ntfs" ); }
 
 	/**
 	 * Return 'true' if this is a network filesystem like NFS or Samba
@@ -108,12 +115,12 @@ namespace QDirStat
          * Return 'true' if this is an autofs, i.e. a filesystem managed by the
          * automounter.
          **/
-        bool isAutofs() const;
+        bool isAutofs() const { return _filesystemType.toLower() == "autofs"; }
 
         /**
          * Return 'true' if this is an autofs that is not currently mounted.
          **/
-        bool isUnmountedAutofs();
+        bool isUnmountedAutofs() { return isAutofs() && totalSize() == 0; }
 
 	/**
 	 * Return 'true' if this is a duplicate mount, i.e. either a bind mount
@@ -137,7 +144,11 @@ namespace QDirStat
 	 * Return 'true' if size information for this mount point is available.
 	 * This may depend on the build OS and the Qt version.
 	 **/
-	bool hasSizeInfo() const;
+#if HAVE_Q_STORAGE_INFO
+	bool hasSizeInfo() const { return true; }
+#else
+	bool hasSizeInfo() const { return false; }
+#endif
 
 	/**
 	 * Total size of the filesystem of this mount point.
@@ -177,6 +188,10 @@ namespace QDirStat
          * Lazy access to the QStorageInfo for this mount.
          **/
         QStorageInfo * storageInfo();
+
+	QStorageInfo * _storageInfo;
+#else
+	void * _storageInfo;
 #endif
 
 	QString	    _device;
@@ -184,10 +199,6 @@ namespace QDirStat
 	QString	    _filesystemType;
 	QStringList _mountOptions;
 	bool	    _isDuplicate;
-
-#if HAVE_Q_STORAGE_INFO
-	QStorageInfo * _storageInfo;
-#endif
     }; // class MountPoint
 
 
@@ -212,7 +223,7 @@ namespace QDirStat
 	 *
 	 * This does not create the singleton if it doesn't exist yet.
 	 **/
-	static void clear();
+//	static void clear();
 
 	/**
 	 * Return 'true' if there are no mount points at all.
@@ -243,13 +254,6 @@ namespace QDirStat
 	static bool hasBtrfs();
 
 	/**
-	 * Ensure the mount points are populated with the content of
-	 * /proc/mounts, falling back to /etc/mtab if /proc/mounts cannot be
-	 * read.
-	 **/
-	void ensurePopulated();
-
-	/**
 	 * Return a list of "normal" mount points, i.e. those that are not
 	 * system mounts, bind mounts or duplicate mounts.
 	 *
@@ -257,18 +261,6 @@ namespace QDirStat
 	 * mounted (the same as in /proc/mounts or in /etc/mtab).
 	 **/
 	static QList<MountPoint *> normalMountPoints();
-
-	/**
-	 * Dump all current mount points to the log. This does not call
-	 * ensurePopulated() first.
-	 **/
-	static void dump();
-
-	/**
-	 * Dump all normal mount points to the log, i.e. those that are not
-	 * system, bind or duplicate mount points.
-	 **/
-	static void dumpNormalMountPoints();
 
 	/**
 	 * Return 'true' if size information for mount points is available.
@@ -289,7 +281,11 @@ namespace QDirStat
 	 * Constructor. Not for public use. Use instance() or the static
 	 * methods instead.
 	 **/
-	MountPoints();
+	MountPoints():
+	    _isPopulated { false },
+	    _hasBtrfs { false },
+	    _checkedForBtrfs { false }
+	{}
 
 	/**
 	 * Destructor.
@@ -299,7 +295,14 @@ namespace QDirStat
 	/**
 	 * Clear the content of this class.
 	 **/
-	void init();
+//	void init();
+
+	/**
+	 * Ensure the mount points are populated with the content of
+	 * /proc/mounts, falling back to /etc/mtab if /proc/mounts cannot be
+	 * read.
+	 **/
+	void ensurePopulated();
 
 	/**
 	 * Read 'filename' (in /proc/mounts or /etc/mnt syntax) and populate
@@ -344,11 +347,21 @@ namespace QDirStat
 	 **/
 	bool isDeviceMounted( const QString & device );
 
+	/**
+	 * Dump all current mount points to the log. This does not call
+	 * ensurePopulated() first.
+	 **/
+	static void dump();
+
+	/**
+	 * Dump all normal mount points to the log, i.e. those that are not
+	 * system, bind or duplicate mount points.
+	 **/
+	static void dumpNormalMountPoints();
+
 	//
 	// Data members
 	//
-
-	static MountPoints * _instance;
 
 	QList<MountPoint *>	    _mountPointList;
 	QMap<QString, MountPoint *> _mountPointMap;

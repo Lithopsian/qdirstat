@@ -32,27 +32,28 @@ namespace QDirStat
 
     public:
 	/**
-	 * Constructor.
-	 *
-	 * Consider using the static methods instead.
+	 * Open an "open directory" dialog, wait for the user to select one and
+         * return that path. If the user cancelled the dialog, this returns an
+         * empty string.
+         *
+         * 'crossFilesystems' (if non-null) returns the "cross filesystems"
+         * flag of the dialog.
 	 **/
-	OpenDirDialog( QWidget * parent = 0 );
+	static QString askOpenDir( QWidget * parent, bool * crossFilesystems );
+
+
+    protected:
+	/**
+	 * Internal constructor.
+	 *
+	 * Use the static askOpenDir() instead.
+	 **/
+	OpenDirDialog( QWidget * parent, bool crossFilesystems );
 
 	/**
 	 * Destructor.
 	 **/
 	virtual ~OpenDirDialog();
-
-	/**
-	 * Open an "open directory" dialog, wait for the user to select one and
-         * return that path. If the user cancelled the dialog, this returns an
-         * empty string.
-         *
-         * 'crossFilesystems_ret' (if non-null) returns the "cross filesystems"
-         * flag of the dialog.
-	 **/
-	static QString askOpenDir( bool *    crossFilesystems_ret,
-                                   QWidget * parent = 0 );
 
 	/**
 	 * The path of the directory the user selected.
@@ -63,20 +64,25 @@ namespace QDirStat
          * The "cross filesystems" flag of this dialog (overriding the global
          * "cross filesystems" setting" from the config dialog).
          **/
-        bool crossFilesystems() const;
+        bool crossFilesystems() const { return _ui->crossFilesystemsCheckBox->isChecked(); }
 
         /**
          * Return this dialog's path selector so it can be populated.
          **/
         PathSelector * pathSelector() const { return _ui->pathSelector; }
 
-
-    public slots:
+	/**
+	 * Read settings from the config file
+	 **/
+	void readSettings();
 
         /**
          * Set a path in the dirTree.
          **/
         void setPath( const QString & path );
+
+
+    protected slots:
 
         /**
          * Set a path in the dirTree and expand (open) that branch.
@@ -94,19 +100,11 @@ namespace QDirStat
         void goUp();
 
 	/**
-	 * Read settings from the config file
-	 **/
-	void readSettings();
-
-	/**
 	 * Write settings to the config file
 	 **/
 	void writeSettings();
 
-
-    protected slots:
-
-        /**
+       /**
          * Notification that the user selected a directory in the tree
          **/
         void treeSelection( const QModelIndex & newCurrentItem,
@@ -140,9 +138,6 @@ namespace QDirStat
         ExistingDirValidator *  _validator;
         bool                    _settingPath;
         QString                 _lastPath;
-
-        static bool             _crossFilesystems;
-        static bool             _firstRun;
 
     };	// class OpenDirDialog
 

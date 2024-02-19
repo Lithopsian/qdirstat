@@ -11,14 +11,14 @@
 
 #include <QDialog>
 #include <QList>
+#include <QProcess>
 #include <QTextStream>
 #include <QStringList>
 
 #include "ui_output-window.h"
-#include "Process.h"
+
 
 class QCloseEvent;
-using QDirStat::Process;
 
 
 /**
@@ -31,7 +31,7 @@ using QDirStat::Process;
  * selected item one after another, or even multiple processes running in
  * parallel (which may make the output a bit messy, of course).
  *
- * If this dialog is created, but now shown, it will (by default) show itself
+ * If this dialog is created, but not shown, it will (by default) show itself
  * as soon as there is any output on stderr.
  **/
 class OutputWindow: public QDialog
@@ -55,7 +55,7 @@ public:
      * object. If the process is not started yet, it will be started as soon as
      * there is no other one running.
      **/
-    void addProcess( Process * process );
+    void addProcess( QProcess * process );
 
     /**
      * Tell this dialog that no more processes will be added, so when the last
@@ -70,16 +70,9 @@ public:
     int errorCount() const { return _errorCount; }
 
     /**
-     * Return 'true' if this dialog closes itself automatically after the last
-     * process finished successfully.
+     * Set the auto-close checkbox to the given state.
      **/
-    bool autoClose() const;
-
-    /**
-     * Set if this dialog should close itself automatically after the last
-     * process finished successfully.
-     **/
-    void setAutoClose( bool autoClose );
+    void setAutoClose( bool autoClose ) { _ui->autoCloseCheckBox->setChecked( autoClose ); }
 
     /**
      * Set if this dialog should show itself if there is any output on
@@ -166,7 +159,7 @@ public:
     /**
      * Return the internal process list.
      **/
-    const QList<Process *> & processList() const { return _processList; }
+    const QList<QProcess *> & processList() const { return _processList; }
 
     /**
      * Return 'true' if any process in the internal process is still active.
@@ -178,7 +171,7 @@ public:
      * a shell ("/bin/sh -c theRealCommand arg1 arg2 ..."), this is typically
      * not QProcess::program(), but the arguments minus the "-c".
      **/
-    static QString command( Process * process );
+    static QString command( QProcess * process );
 
 
 public slots:
@@ -311,24 +304,29 @@ protected:
      * Obtain the process to use from sender(). Return 0 if this is not a
      * QProcess.
      **/
-    Process * senderProcess( const char * callingFunctionName ) const;
+    QProcess * senderProcess( const char * callingFunctionName ) const;
 
     /**
      * Pick the next inactive process that can be started. Return 0 if there is
      * none.
      **/
-    Process * pickQueuedProcess();
+    QProcess * pickQueuedProcess();
 
     /**
      * Try to start the next inactive process, if there is any. Return that
      * process or 0 if there is none.
      **/
-    Process * startNextProcess();
+    QProcess * startNextProcess();
 
     /**
      * Zoom the terminal font by the specified factor.
      **/
-    void zoom( double factor = 1.0 );
+    void zoom( qreal factor );
+
+    /**
+     * Return whether the auto-close checkbox is checked.
+     **/
+    bool autoClose() const { return _ui->autoCloseCheckBox->isChecked(); }
 
 
     //
@@ -336,7 +334,7 @@ protected:
     //
 
     Ui::OutputWindow  * _ui;
-    QList<Process *>	_processList;
+    QList<QProcess *>	_processList;
     bool		_showOnStderr;
     bool		_noMoreProcesses;
     bool		_closed;
@@ -353,7 +351,7 @@ protected:
 };	// class OutputWindow
 
 
-inline QTextStream & operator<< ( QTextStream & stream, Process * process )
+inline QTextStream & operator<< ( QTextStream & stream, QProcess * process )
 {
     if ( process )
 	stream << OutputWindow::command( process );

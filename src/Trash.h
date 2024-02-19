@@ -10,10 +10,11 @@
 #ifndef Trash_h
 #define Trash_h
 
-#include <sys/types.h>  // dev_t
+#include <sys/stat.h>
 
 #include <QObject>
 #include <QMap>
+#include <QStringBuilder>
 
 class TrashDir;
 typedef QMap<dev_t, TrashDir *> TrashDirMap;
@@ -38,6 +39,14 @@ class Trash
 public:
 
     /**
+     * Return the singleton object for this class. The first use will create
+     * the singleton. Notice that the static methods all access the singleton,
+     * too, so the first call to any of those static methods will already
+     * create the singleton.
+     **/
+    static Trash * instance();
+
+    /**
      * Throw a file or directory into the trash.
      * Return 'true' on success, 'false' on error.
      **/
@@ -46,8 +55,6 @@ public:
     /**
      * Restore a file or directory from the trash to its original location.
      * Return 'true' on success, 'false' on error.
-     *
-     * This is currently not implemented; this function does nothing.
      **/
     static bool restore( const QString & path );
 
@@ -58,18 +65,8 @@ public:
      * this class, but everything in all known trash directories, i.e. all
      * trash directories that were used during the life time of the singleton
      * of this class.
-     *
-     * This is currently not implemented; this function does nothing.
      **/
     static void empty();
-
-    /**
-     * Return the singleton object for this class. The first use will create
-     * the singleton. Notice that the static methods all access the singleton,
-     * too, so the first call to any of those static methods will already
-     * create the singleton.
-     **/
-    static Trash * instance();
 
     /**
      * Return the device of file or directory 'path'.
@@ -151,12 +148,12 @@ public:
     /**
      * Return the path of the "files" subdirectory of this trash dir.
      **/
-    QString filesPath() const { return _path + "/files"; }
+    QString filesPath() const { return _path % "/files"; }
 
     /**
      * Return the path of the "info" subdirectory of this trash dir.
      **/
-    QString infoPath() const { return _path + "/info"; }
+    QString infoPath() const { return _path % "/info"; }
 
     /**
      * Create a name that is unique within this trash directory.

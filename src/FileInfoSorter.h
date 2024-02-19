@@ -10,12 +10,13 @@
 #define FileInfoSorter_h
 
 
-#include "FileInfo.h"
 #include "DataColumns.h"
 
 
 namespace QDirStat
 {
+    class FileInfo;
+
     /**
      * Functor class for sorting FileInfo objects with C++ STL sorting
      * algorithms like std::sort(), std::stable_sort().
@@ -51,7 +52,7 @@ namespace QDirStat
 	 * Overloaded operator() that does the comparison.
 	 * returns 'true' if a < b, false otherwise (i.e., if a >= b).
 	 **/
-	bool operator() ( FileInfo * a, FileInfo * b );
+	bool operator() ( FileInfo * a, FileInfo * b ) const;
 
     private:
 	DataColumn    _sortCol;

@@ -12,9 +12,10 @@
 
 
 #include <QGraphicsRectItem>
-#include <QRectF>
+#include <QTextStream>
+#include <QVector>
 
-#include "FileInfoIterator.h"
+#include "FileSize.h"
 
 
 class QGraphicsSceneMouseEvent;
@@ -24,16 +25,38 @@ class QGraphicsSceneHoverEvent;
 namespace QDirStat
 {
     class FileInfo;
+    class FileInfoSortedBySizeIterator;
+    class SelectedTileHighlighter;
     class TreemapView;
-    class HighlightRect;
 
     enum Orientation
     {
 	TreemapHorizontal,
 	TreemapVertical,
-	TreemapAuto
     };
 
+    /**
+     * Lightweight class so it can be forward declared in TreemapView.
+     **/
+    class CushionHeightSequence: public QVector<double>
+    {
+    public:
+	CushionHeightSequence():
+	    QVector<double>( 10 ),
+	    _constLast ( constEnd() - 1 )
+	{}
+
+	/**
+	 * Just a convenience function so we can easily stop iterating at the last
+	 * valid height.
+	 **/
+	CushionHeightSequence::const_iterator constLast() const { return _constLast; }
+
+    private:
+	CushionHeightSequence::const_iterator _constLast;
+    };
+
+//    typedef QVector<double> CushionHeightSequence;
 
     /**
      * Helper class for cushioned treemaps: This class holds the polynome
@@ -49,82 +72,100 @@ namespace QDirStat
     class CushionSurface
     {
     public:
-	/**
-	 * Constructor. All polynome coefficients are set to 0.
-	 **/
-	CushionSurface();
 
 	/**
-	 * Adds a ridge in dimension 'dim' within rectangle 'rect' to this
-	 * surface.
+	 * Root tile constructor. All coefficients are set to 0 and the
+	 * height to the start of the configured sequence.
+	 **/
+	CushionSurface( const CushionHeightSequence * heights ):
+	    _xx2 { 0.0 },
+	    _xx1 { 0.0 },
+	    _yy2 { 0.0 },
+	    _yy1 { 0.0 },
+	    _height { heights->constBegin() }
+	{}
+
+	/**
+	 * Constructor for simple tiling, or the row cushion; copies
+	 * the cushion from the parent tile and scales the height.
+	 **/
+	CushionSurface( const CushionSurface & parent, const CushionHeightSequence * heights ):
+	    _xx2 { parent._xx2 },
+	    _xx1 { parent._xx1 },
+	    _yy2 { parent._yy2 },
+	    _yy1 { parent._yy1 },
+	    _height { parent._height == heights->constLast() ? parent._height : parent._height + 1 }
+	{}
+
+	/**
+	 * Adds a ridge of the specified height in dimension 'dir' within
+	 * rectangle 'rect' to this surface. It's real voodo magic.
 	 *
-	 * See the paper about "cushion treemaps" by Jarke J. van Wiik and Huub
-	 * van de Wetering from the TU Eindhoven, NL for more details.
+	 * Just kidding - read the paper about "cushion treemaps" by Jarke
+	 * J. van Wiik and Huub van de Wetering from the TU Eindhoven, NL for
+	 * more details.
 	 *
 	 * If you don't want to get all that involved: The coefficients are
 	 * changed in some way.
 	 **/
-	void addRidge( Orientation dim, const QRectF & rect );
+	void addHorizontalRidge( double start, double end );
+	void addVerticalRidge( double start, double end );
 
 	/**
-	 * Returns the polynomal coefficient of the second order for the X
+	 * Returns the polynomal coefficient of the second order for X
 	 * direction.
 	 **/
 	double xx2() const { return _xx2; }
 
 	/**
-	 * Returns the polynomal coefficient of the first order for the X
-	 * direction.
+	 * Returns the polynomal coefficient of the first order for X direction.
 	 **/
 	double xx1() const { return _xx1; }
 
 	/**
-	 * Returns the polynomal coefficient of the second order for the Y
+	 * Returns the polynomal coefficient of the second order for Y
 	 * direction.
 	 **/
 	double yy2() const { return _yy2; }
 
 	/**
-	 * Returns the polynomal coefficient of the first order for the Y
-	 * direction.
+	 * Returns the polynomal coefficient of the first order for Y direction.
 	 **/
 	double yy1() const { return _yy1; }
 
-        /**
-         * Return the number of ridge pairs (square and linear) on this level.
-         **/
-        int ridgeCount() const { return _ridgeCount; }
 
-        /**
-         * Return a multiplication factor for both square and linear ridges,
-         * depending on the ridge count.
-         **/
-        double ridgeCoefficient() const;
-
-
-    protected:
+    private:
 
 	/**
-	 * Calculate a new square polynomal coefficient for adding a ridge of
-	 * specified height between x1 and x2.
+	 * Helper function for calculating the polynomial coefficients.
+	 * For speed, the reciprocal can be calculated just once for a pair of coefficients.
 	 **/
-	double squareRidge( double squareCoefficient, int x1, int x2 ) const;
+	double coefficientReciprocal( double start, double end ) const
+	    { return *_height / (end - start); }
 
 	/**
-	 * Calculate a new linear polynomal coefficient for adding a ridge of
-	 * specified height between x1 and x2.
+	 * Calculate a new square polynomal coefficient.
+	 * The full formula is -4h / (end - start)
+	 * Currently a no-op kept for clarity, should be inlined away.
 	 **/
-	double linearRidge( double linearCoefficient, int x1, int x2 ) const;
+	static double squareCoefficient( double reciprocal )
+	    { return reciprocal; }
 
+	/**
+	 * Calculate a new linear polynomal coefficient.
+	 * The full forumla is 4h * (start + end) / (end - start)
+	 **/
+	static double linearCoefficient( double start, double end, double reciprocal )
+	    { return (start + end) * reciprocal; }
 
 	// Data members
 
 	double _xx2, _xx1;
 	double _yy2, _yy1;
-        int    _ridgeCount;
+
+	CushionHeightSequence::const_iterator _height;
 
     }; // class CushionSurface
-
 
 
     /**
@@ -140,76 +181,122 @@ namespace QDirStat
     public:
 
 	/**
-	 * Constructor: Create a treemap tile from 'fileinfo' that fits into a
-	 * rectangle 'rect' inside 'parent'.
-	 *
-	 * 'orientation' is the direction for further subdivision. 'Auto'
-	 * selects the wider direction inside 'rect'.
+	 * Constructor: create a root treemap tile from 'orig' that fits into a
+	 * rectangle 'rect'.
 	 **/
 	TreemapTile( TreemapView  * parentView,
-		     TreemapTile  * parentTile,
 		     FileInfo	  * orig,
-		     const QRectF & rect,
-		     Orientation    orientation = TreemapAuto );
+		     const QRectF & rect );
 
-    protected:
-
-	/**
-	 * Alternate constructor: Like the above, but explicitly specify a
-	 * cushion surface rather than using the parent's.
-	 **/
-	TreemapTile( TreemapView	  * parentView,
-		     TreemapTile	  * parentTile,
-		     FileInfo		  * orig,
-		     const QRectF	  & rect,
-		     const CushionSurface & cushionSurface,
-		     Orientation	    orientation = TreemapAuto );
-
-    public:
 	/**
 	 * Destructor.
 	 **/
 	virtual ~TreemapTile();
 
+
+    protected:
+
 	/**
-	 * Returns the original FileInfo item that corresponds to this
-	 * treemap tile.
+	 * Constructor used for non-squarified children.  This is only
+	 * used for delegation from the HorizontalTreemapTile and
+	 * VerticalTreemapTile derived classes.
+	 **/
+	TreemapTile( TreemapTile	  * parentTile,
+		     FileInfo		  * orig,
+		     const QRectF	  & rect );
+
+	/**
+	 * Constructor used for squarified children
+	 **/
+	TreemapTile( TreemapTile		* parentTile,
+		     FileInfo			* orig,
+		     const QRectF		& rect,
+		     const CushionSurface	& cushionSurface );
+
+    public:
+
+	/**
+	 * Returns a pointer to the original FileInfo item that corresponds to
+	 * this treemap tile.
 	 **/
 	FileInfo * orig() const { return _orig; }
 
 	/**
-	 * Returns the parent TreemapView.
+	 * Returns a pointer to the parent TreemapTile or 0 if there is none.
 	 **/
-	TreemapView * parentView() const { return _parentView; }
+	const TreemapTile * parentTile() const { return static_cast<TreemapTile *>( parentItem() ); }
 
 	/**
-	 * Returns the parent TreemapTile or 0 if there is none.
+	 * Pre-calculates a map of cushion heights based on the configured
+	 * initial height and scale factor to avoid doing a multiplication for every
+	 * new tile.  The map key is the current height and the value is the next
+	 * height.  The heights include the 4.0 factor from the coefficient calculation
+	 * to avoid that multiplication in every ridge that gets added.
 	 **/
-	TreemapTile * parentTile() const { return _parentTile; }
+	static const CushionHeightSequence * calculateCushionHeights( double cushionHeight,
+								      double scaleFactor );
+
+	/**
+	 * Removes all the cushion surface pixmaps and plain tile brushes to force
+	 * them to be re-rendered.
+	 **/
+	void invalidateCushions();
 
 	/**
 	 * Returns this tile's cushion surface parameters.
 	 **/
 	CushionSurface & cushionSurface() { return _cushionSurface; }
 
+	/**
+	 * Sets a flag on the last tile that was constructed, for logging purposes.
+	 * The flag will be set by the view after the map has finished building.
+	 **/
+	void setLastTile() { _lastTile = true; }
+
 
     protected:
 
 	/**
-	 * Create children (sub-tiles) of this tile.
-	 **/
-	void createChildren( const QRectF & rect,
-			     Orientation    orientation );
-
-	/**
 	 * Create children (sub-tiles) using the simple treemap algorithm:
-	 * Alternate between horizontal and vertical subdivision in each
+	 * alternate between horizontal and vertical subdivision in each
 	 * level. Each child will get the entire height or width, respectively,
-	 * of the specified rectangle. This algorithm is very fast, but often
+	 * of the specified rectangle. This algorithm is fast, but often
 	 * results in very thin, elongated tiles.
 	 **/
-	void createChildrenSimple( const QRectF & rect,
-				   Orientation	  orientation );
+	void createChildrenHorizontal( const QRectF & rect );
+	void createChildrenVertical( const QRectF & rect );
+
+	/**
+	 * Create a thread for rendering the cushions of the children of this tile.
+	 *
+	 * The algorithm adds threads for the largest possible tiles up to a certain
+	 * threshold.  This attempts to balance having threads large enough to justify
+	 * the overhead of creating them while ensuring that rendering begins early
+	 * enough and in enough threads to speed up the whole process.  With more
+	 * processors, it is more effective to spawn larger threads later in the build
+	 * and have more of them running in parallel.  Very small tiles are also ignored
+	 * to avoid multiple threads with almost no work.  Such tiles will be very
+	 * quickly rendered in paint().
+	 *
+	 * The worst extremes are: small trees with only one child of the root, which
+	 * are rendered in a single thread spawned when the build is essntially complete;
+	 * they will be very fast with or without threading; and very "flat" trees such as
+	 * the packages view, where essentially every packages gets a thread. Even in
+	 * this last case, performance is good and despite the large number of threads
+	 * created, they complete quickly enough that there are only generally a small
+	 * number running in parallel.
+	 **/
+	void addRenderThread( TreemapTile *tile, int minThreadTileSize );
+
+	/**
+	 * Returns a pointer to the parent TreemapView.
+	 **/
+//	TreemapView * parentView() const { return _parentView; }
+
+	/**
+	 * Just a helper for an unwieldy common term
+	 **/
+	inline static FileSize itemTotalSize( FileInfo *it );
 
 	/**
 	 * Create children using the "squarified treemaps" algorithm as
@@ -242,23 +329,23 @@ namespace QDirStat
 	/**
 	 * Squarify as many children as possible: Try to squeeze members
 	 * referred to by 'it' into 'rect' until the aspect ratio doesn't get
-	 * better any more. Returns a list of children that should be laid out
-	 * in 'rect'. Moves 'it' until there is no more improvement or 'it'
-	 * runs out of items.
-	 *
-	 * 'scale' is the scaling factor between file sizes and pixels.
+	 * better any more. Returns the total size of the items for the row.
 	 **/
-	FileInfoList squarify( const QRectF & rect,
-			       FileSize       remainingTotal,
-			       FileInfoSortedBySizeIterator & it   );
+	static FileSize squarify( const QRectF & rect,
+				  FileInfoSortedBySizeIterator & it,
+				  FileSize remainingTotal );
 
 	/**
 	 * Lay out all members of 'row' within 'rect' along its longer side.
 	 * Returns the new rectangle with the layouted area subtracted.
 	 **/
-	QRectF layoutRow( const QRectF	& rect,
-			  FileSize	  remainingTotal,
-			  FileInfoList	& row );
+	void layoutRow( Orientation dir,
+			QRectF & rect,
+			FileInfoSortedBySizeIterator & it,
+			const FileInfo *rowEnd,
+			FileSize rowTotal,
+			double primary,
+			double secondary );
 
 	/**
 	 * Paint this tile.
@@ -269,10 +356,13 @@ namespace QDirStat
 			    const QStyleOptionGraphicsItem * option,
 			    QWidget			   * widget = 0) Q_DECL_OVERRIDE;
 
-        /**
-         * Paint a (yellow) selection rectangle for this tile.
-         **/
-        void paintSelectionRect( QPainter * painter );
+	/**
+	 * Draws a thin outline.  Only draw on the top and left sides to keep the outline as
+	 * thin as possible.  Lines on small tiles will be drawn barrower than 1 pixel.  Using
+	 * painter->drawLine() is relatively slow, but the quality of these sub-pixel lines is
+	 * high.
+	 **/
+	void drawOutline( QPainter * painter, const QRectF & rect, const QColor & color, int penScale );
 
 	/**
 	 * Notification that item attributes (such as the 'selected' state)
@@ -280,7 +370,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual QVariant itemChange( GraphicsItemChange	  change,
+	virtual QVariant itemChange( GraphicsItemChange	change,
 				     const QVariant	& value) Q_DECL_OVERRIDE;
 
 	/**
@@ -292,6 +382,11 @@ namespace QDirStat
 
 	/**
 	 * Mouse release event: Handle marking item selection.
+	 *	left    button selects tile
+	 *	right   button brings up context menu
+	 *	middle  button highlights tile parents
+	 *	back    button zooms out to the top level
+	 *	forward button zooms in to the lowest level
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
@@ -299,9 +394,9 @@ namespace QDirStat
 
 	/**
 	 * Mouse double click event:
-	 *	Left   button double-click zooms in,
-	 *	right  button double-click zooms out,
-	 *	middle button double-click rebuilds treemap.
+	 *	left    button double-click zooms in on the clicked tile,
+	 *	right   button click brings up context menu, so nothing here
+	 *	middle  button double-click zooms out one level
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
@@ -321,40 +416,61 @@ namespace QDirStat
 	 **/
 	virtual void contextMenuEvent( QGraphicsSceneContextMenuEvent * event ) Q_DECL_OVERRIDE;
 
-        /**
-         * Hover enter event.
+	/**
+	 * Hover enter event.
 	 *
 	 * Reimplemented from QGraphicsItem.
-         **/
-        virtual void hoverEnterEvent( QGraphicsSceneHoverEvent * event ) Q_DECL_OVERRIDE;
+	 **/
+	virtual void hoverEnterEvent( QGraphicsSceneHoverEvent * ) Q_DECL_OVERRIDE;
 
-        /**
-         * Hover leave event.
+	/**
+	 * Hover leave event.
 	 *
 	 * Reimplemented from QGraphicsItem.
-         **/
-        virtual void hoverLeaveEvent( QGraphicsSceneHoverEvent * event ) Q_DECL_OVERRIDE;
+	 **/
+	virtual void hoverLeaveEvent( QGraphicsSceneHoverEvent * ) Q_DECL_OVERRIDE;
 
 	/**
 	 * Render a cushion as described in "cushioned treemaps" by Jarke
 	 * J. van Wijk and Huub van de Wetering	 of the TU Eindhoven, NL.
 	 **/
-	QPixmap renderCushion();
+	QPixmap renderCushion( const QRectF & rect );
+
+	/**
+	 * Render a tile to a pixmap as a plain colour, usually with an outline.
+	 **/
+//		QPixmap renderPlainTile( const QRectF & rect );
+
+	/**
+	 * Render an outline on a pixmap image.  Fast, but sub-pixels lines are relatively
+	 * low quality compared to painter->drawLine().
+	 **/
+//		void renderOutline( QImage & image, int width, int height, const QColor & lineColor, const QColor & tileColor );
+
+	/**
+	 * Recursively iterate through all the children of this tile, rendering the cushions
+	 * of any leaf-level tiles.
+	 **/
+	void renderChildCushions();
+
+	/**
+	 * Returns a suitable color for 'file' based on a set of internal rules
+	 * (according to filename extension, MIME type or permissions).
+	 **/
+	inline const QColor & tileColor( FileInfo * file ) const;
 
 	/**
 	 * Check if the contrast of the specified image is sufficient to
 	 * visually distinguish an outline at the right and bottom borders
 	 * and add a grey line there, if necessary.
 	 **/
-	void enforceContrast( QImage & image );
+	static void enforceContrast( QImage & image );
 
 	/**
 	 * Returns a color that gives a reasonable contrast to 'col': Lighter
 	 * if 'col' is dark, darker if 'col' is light.
 	 **/
-	QRgb contrastingColor( QRgb col );
-
-    private:
+	static QRgb contrastingColor( QRgb col );
 
 	/**
 	 * Initialization common to all constructors.
@@ -366,30 +482,70 @@ namespace QDirStat
 
 	// Data members
 
-	TreemapView *	_parentView;
-	TreemapTile *	_parentTile;
-	FileInfo *	_orig;
-	CushionSurface	_cushionSurface;
-	QPixmap		_cushion;
-	HighlightRect * _highlighter;
+	TreemapView *		_parentView;
+//	const TreemapTile *	_parentTile;
+	FileInfo *		_orig;
+
+	CushionSurface		_cushionSurface;
+	QPixmap			_cushion;
+
+	SelectedTileHighlighter * _highlighter;
+
+	bool _firstTile;
+	bool _lastTile;
+	QElapsedTimer	_stopwatch;
 
     }; // class TreemapTile
 
-
-
-    inline QTextStream & operator<< ( QTextStream & stream, TreemapTile * tile )
+    /**
+     * Derived class for for tiles in the simple layout being laid out in the
+     * howizontal direction.  The constructor delegates to the similar TreemapTile
+     * constructor, the only difference being the createChildrenHorizontal() member
+     * function that ends up getting called to layout the children.
+     **/
+    class HorizontalTreemapTile: private TreemapTile
     {
-	if ( tile )
-	    stream << tile->orig();
-	else
-	    stream << "<NULL TreemapTile *>";
+    friend class TreemapTile;
 
-	return stream;
+    private:
+
+	/**
+	 * Constructor for tiles in the simple layout being laid out in the
+	 * horizontal direction.
+	 **/
+	HorizontalTreemapTile( TreemapTile * parentTile, FileInfo * orig, const QRectF & rect );
+    };
+
+    /**
+     * Derived class for for tiles in the simple layout being laid out in the
+     * vertical direction.  The constructor delegates to the similar TreemapTile
+     * constructor, the only difference being the createChildrenVerticak() member
+     * function that ends up getting called to layout the children.
+     **/
+    class VerticalTreemapTile: private TreemapTile
+    {
+	friend class TreemapTile;
+
+    private:
+
+	/**
+	 * Constructor for tiles in the simple layout being laid out in the
+	 * vertical direction.
+	 **/
+	VerticalTreemapTile( TreemapTile * parentTile, FileInfo * orig, const QRectF & rect );
+    };
+
+    static inline QTextStream & operator<< ( QTextStream & stream, TreemapTile * tile )
+    {
+	    if ( tile )
+		    stream << tile->orig();
+	    else
+		    stream << "<NULL TreemapTile *>";
+
+	    return stream;
     }
 
 }	// namespace QDirStat
 
 
-
 #endif // ifndef TreemapTile_h
-

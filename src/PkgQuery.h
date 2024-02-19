@@ -32,7 +32,8 @@ namespace QDirStat
 	 * Return the owning package of a file or directory with full path
 	 * 'path' or an empty string if it is not owned by any package.
 	 **/
-	static QString owningPkg( const QString & path );
+	static QString owningPkg( const QString & path )
+	    { return instance()->getOwningPackage( path ); }
 
 	/**
 	 * Return the singleton instance of this class.
@@ -42,41 +43,51 @@ namespace QDirStat
         /**
          * Return 'true' if any of the supported package managers was found.
          **/
-        static bool foundSupportedPkgManager();
+        static bool foundSupportedPkgManager()
+	    { return ! instance()->_pkgManagers.isEmpty(); }
 
         /**
          * Return the (first) primary package manager if there is one or 0 if
          * not.
          **/
-        static PkgManager * primaryPkgManager();
+        static const PkgManager * primaryPkgManager()
+	    { return instance()->_pkgManagers.isEmpty() ? 0 : instance()->_pkgManagers.first(); }
 
         /**
          * Return 'true' if any of the package managers has support for getting
          * the list of installed packages.
          **/
-        static bool haveGetInstalledPkgSupport();
+        static bool haveGetInstalledPkgSupport()
+	    { return instance()->checkGetInstalledPkgSupport(); }
 
         /**
          * Return the list of installed packages.
          *
          * Ownership of the list elements is transferred to the caller.
          **/
-        static PkgInfoList installedPkg();
+        static PkgInfoList installedPkg()
+	    { return instance()->getInstalledPkg(); }
 
         /**
          * Return 'true' if any of the package managers has support for getting
          * the the file list for a package.
          **/
-        static bool haveFileListSupport();
+        static bool haveFileListSupport()
+	    { return instance()->checkFileListSupport(); }
 
         /**
          * Return the list of files and directories owned by a package.
          **/
-        static QStringList fileList( PkgInfo * pkg );
+        static QStringList fileList( PkgInfo * pkg )
+	    { return instance()->getFileList( pkg ); }
+
+    protected:
 
 	/**
 	 * Return the owning package of a file or directory with full path
 	 * 'path' or an empty string if it is not owned by any package.
+	 *
+	 * The result is also inserted into the cache.
 	 **/
 	QString getOwningPackage( const QString & path );
 
@@ -85,27 +96,24 @@ namespace QDirStat
          *
          * Ownership of the list elements is transferred to the caller.
          **/
-        PkgInfoList getInstalledPkg();
+        PkgInfoList getInstalledPkg() const;
 
         /**
          * Return the list of files and directories owned by a package.
          **/
-        QStringList getFileList( PkgInfo * pkg );
+        QStringList getFileList( const PkgInfo * pkg ) const;
 
         /**
          * Return 'true' if any of the package managers has support for getting
          * the list of installed packages.
          **/
-        bool checkGetInstalledPkgSupport();
+        bool checkGetInstalledPkgSupport() const;
 
         /**
          * Return 'true' if any of the package managers has support for getting
          * the the file list for a package.
          **/
-        bool checkFileListSupport();
-
-
-    protected:
+        bool checkFileListSupport() const;
 
 	/**
 	 * Constructor. For internal use only; use the static methods instead.
@@ -127,14 +135,14 @@ namespace QDirStat
 	 * Check if a package manager is available; add it to one of the
 	 * internal lists if it is, or delete it if not.
 	 **/
-	void checkPkgManager( PkgManager * pkgManager );
+	void checkPkgManager( const PkgManager * pkgManager );
 
 
 	// Data members
 
-	static PkgQuery *	 _instance;
-	QList <PkgManager *>	 _pkgManagers;
-	QList <PkgManager *>	 _secondaryPkgManagers;
+	QList <const PkgManager *>	 _pkgManagers;
+	QList <const PkgManager *>	 _secondaryPkgManagers;
+
 	QCache<QString, QString> _cache;
 
     }; // class PkgQuery

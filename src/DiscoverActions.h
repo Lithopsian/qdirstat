@@ -44,8 +44,16 @@ namespace QDirStat
 
     public:
 
-        DiscoverActions( QObject * parent = 0 );
-        virtual ~DiscoverActions();
+        // Constructor
+        DiscoverActions( QObject * parent = 0 ):
+                QObject( parent )
+        {}
+
+	// Notice that _locateFilesWindow gets the main window as its widget
+	// parent, so it will automatically be destroyed when the main window and
+	// its child widgets are destroyed.
+        virtual ~DiscoverActions()
+        {}
 
     public slots:
 
@@ -69,7 +77,6 @@ namespace QDirStat
 
         void discoverFilesFromYear ( const QString & path, short year );
         void discoverFilesFromMonth( const QString & path, short year, short month );
-
 
         //
         // Other actions

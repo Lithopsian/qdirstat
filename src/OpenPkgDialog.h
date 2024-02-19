@@ -54,6 +54,15 @@ namespace QDirStat
 	 **/
 	PkgFilter pkgFilter();
 
+
+    public slots:
+
+	/**
+	 * To select the filter radio button if the user enters a pattern.
+	 **/
+	virtual void textEdited();
+
+
     protected:
 
 	Ui::OpenPkgDialog * _ui;

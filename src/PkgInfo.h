@@ -30,20 +30,44 @@ namespace QDirStat
         /**
          * Constructors
          **/
-        PkgInfo( const QString & name,
-                 const QString & version,
-                 const QString & arch,
-                 PkgManager    * pkgManager );
+        PkgInfo( DirTree          * tree,
+                 DirInfo          * parent,
+                 const QString    & name,
+                 const QString    & version,
+                 const QString    & arch,
+                 const PkgManager * pkgManager ):
+            DirInfo( parent,
+                     tree,
+                     name,
+                     0,   // mode
+                     0,   // size
+                     0 ), // mtime
+            _baseName( name ),
+            _version( version ),
+            _arch( arch ),
+            _pkgManager( pkgManager ),
+            _multiVersion( false ),
+            _multiArch( false )
+        {}
 
-        PkgInfo( DirTree *       tree,
-                 DirInfo *       parent,
-                 const QString & name,
-                 PkgManager    * pkgManager );
+        PkgInfo( const QString    & name,
+                 const QString    & version,
+                 const QString    & arch,
+                 const PkgManager * pkgManager ):
+            PkgInfo( 0, 0, name, version, arch, pkgManager )
+        {}
+
+        PkgInfo( DirTree          * tree,
+                 DirInfo          * parent,
+                 const QString    & name,
+                 const PkgManager * pkgManager ):
+            PkgInfo( tree, parent, name, QString(), QString(), pkgManager )
+        {}
 
         /**
          * Destructor.
          **/
-        virtual ~PkgInfo();
+        virtual ~PkgInfo() {}
 
         /**
          * Return the package's base name, i.e. the short name without any
@@ -76,7 +100,7 @@ namespace QDirStat
         /**
          * Return the package manager that this package is managed by.
          **/
-        PkgManager * pkgManager() const { return _pkgManager; }
+        const PkgManager * pkgManager() const { return _pkgManager; }
 
         /**
          * Set the parent DirTree for this pkg.
@@ -158,7 +182,7 @@ namespace QDirStat
         QString      _baseName;
         QString      _version;
         QString      _arch;
-        PkgManager * _pkgManager;
+        const PkgManager * _pkgManager;
 
         bool         _multiVersion :1;
         bool         _multiArch    :1;

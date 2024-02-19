@@ -11,7 +11,9 @@
 
 
 #include <QStyledItemDelegate>
-class QTreeView;
+#include <QTreeView>
+
+#include "DirTreeModel.h"
 
 
 namespace QDirStat
@@ -32,12 +34,16 @@ namespace QDirStat
         /**
          * Constructor.
          **/
-	SizeColDelegate( QTreeView * treeView );
+	SizeColDelegate( QTreeView * treeView ):
+	    QStyledItemDelegate { treeView },
+	    _treeView { treeView },
+	    _model { 0 }
+	{}
 
         /**
          * Destructor.
          **/
-        virtual ~SizeColDelegate();
+        virtual ~SizeColDelegate() {}
 
 	/**
 	 * Paint one cell in the view.
@@ -61,6 +67,19 @@ namespace QDirStat
          **/
         void ensureModel( const QModelIndex & index ) const;
 
+        /**
+         * Get the model from a model index and store it in _model.
+         **/
+        bool isDelegateItem( FileInfo * item ) const;
+
+        /**
+         * Determine the color to use for the highlighted (allocated) porition
+	 * of the delegate text size string.  This is based on the actual background
+	 * colour of the cell, to account for both dark themes and whether the item
+	 * is selected.
+         **/
+	QColor highlightedText( const QStyleOptionViewItem & option, FileInfo * item ) const;
+
 
         //
         // Data members
@@ -68,7 +87,6 @@ namespace QDirStat
 
         QTreeView *             _treeView;
         mutable DirTreeModel *  _model;
-        bool                    _usingDarkTheme;
 
     };  // class SizeColDelegate
 

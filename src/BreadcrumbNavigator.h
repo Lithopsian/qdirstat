@@ -13,12 +13,11 @@
 #include <QLabel>
 #include <QVector>
 
-#include "FileInfo.h"
-#include "DirTree.h"
-
 
 namespace QDirStat
 {
+    class FileInfo;
+
     /**
      * Helper class to represent one single breadcrumb
      **/
@@ -65,6 +64,11 @@ namespace QDirStat
 	 **/
 	virtual ~BreadcrumbNavigator();
 
+	/**
+	 * Explicitly clear the path.
+	 **/
+	void clear() { setPath( 0 ); }
+
 
     public slots:
 
@@ -74,10 +78,6 @@ namespace QDirStat
 	 **/
 	void setPath( FileInfo * item );
 
-        /**
-         * Explicitly clear the path.
-         **/
-        void clear() { setPath( 0 ); }
 
     signals:
 

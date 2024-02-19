@@ -29,7 +29,7 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	DirTreePkgFilter( PkgManager * pkgManager );
+	DirTreePkgFilter( const PkgManager * pkgManager );
 
 	/**
 	 * Destructor.

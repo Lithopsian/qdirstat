@@ -10,7 +10,6 @@
 #define PkgFilter_h
 
 #include <QString>
-#include <QRegExp>
 #include <QTextStream>
 
 #include "SearchFilter.h"
@@ -24,6 +23,14 @@ namespace QDirStat
     class PkgFilter: public SearchFilter
     {
     public:
+
+        /**
+         * Default constructor: create a package filter with an empty pattern
+         * and SelectAll filter mode.
+         **/
+        PkgFilter():
+            PkgFilter { "", SelectAll }
+            {}
 
         /**
          * Constructor: Create a package filter with the specified pattern and
@@ -52,7 +59,7 @@ namespace QDirStat
          * Check if a URL is a package URL, i.e. if it starts with "Pkg:" or
          * "pkg:".
          **/
-        static bool isPkgUrl( const QString & url );
+        static bool isPkgUrl( const QString & url ) { return url.startsWith( "Pkg:", Qt::CaseInsensitive ); }
 
         /**
          * Return the pattern without the leading "Pkg:/".
@@ -62,16 +69,16 @@ namespace QDirStat
         /**
          * Return the package URL including the leading "Pkg:/".
          **/
-        QString url() const;
+        QString url() const { return QString( "Pkg:/%1" ).arg( _pattern ); }
 
 
     protected:
 
         /**
-         * Normalize the pattern, i.e. remove any leading "Pkg:" or "Pkg:/" and
+         * Normalize a pattern, i.e. remove any leading "Pkg:" or "Pkg:/" and
          * any trailing part after any slashes.
          **/
-        void normalizePattern();
+        QString normalizedPattern( const QString & pattern );
 
     };  // class PkgFilter
 

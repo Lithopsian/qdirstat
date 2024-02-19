@@ -103,7 +103,7 @@ namespace QDirStat
 	/**
 	 * Post a context menu for the item at 'pos'.
 	 **/
-	void contextMenu( const QPoint & pos );
+//	void contextMenu( const QPoint & pos );
 
 
     protected:
@@ -112,7 +112,7 @@ namespace QDirStat
 	 * Post the common context menu with actions (cleanup and other) for
 	 * 'item' at 'pos'.
 	 **/
-	void actionContextMenu( const QPoint & pos, FileInfo * item );
+	void actionContextMenu( const QPoint & pos );
 
 	/**
 	 * Post the context menu for the size column for 'item' at 'pos'.
@@ -120,7 +120,7 @@ namespace QDirStat
          * This displays the exact byte size for that item (the column shows a
          * human-readable size like "4.31 MB").
 	 **/
-	void sizeContextMenu( const QPoint & pos, FileInfo * item );
+//	void sizeContextMenu( const QPoint & pos, FileInfo * item );
 
 	/**
 	 * Change the current item. Overwritten from QTreeView to make sure

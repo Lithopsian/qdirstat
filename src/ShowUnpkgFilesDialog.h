@@ -63,6 +63,22 @@ namespace QDirStat
          **/
         UnpkgSettings values() const;
 
+
+    protected slots:
+
+	/**
+	 * Write settings to the config file
+	 **/
+	void writeSettings();
+
+	/**
+	 * Reset the values in the dialog to the default values.
+	 **/
+	void restoreDefaults();
+
+
+    protected:
+
 	/**
 	 * Get the starting directory from the dialog's widgets or an empty
 	 * string if the dialog was cancelled.
@@ -72,38 +88,23 @@ namespace QDirStat
 	/**
 	 * Get the directories to exclude from the dialog's widgets.
 	 **/
-	QStringList excludeDirs() const;
+	QStringList excludeDirs() const { return cleanedLines( _ui->excludeDirsTextEdit ); }
 
 	/**
 	 * Get the wildcard patterns of files to ignore from the dialog's
 	 * widgets.
 	 **/
-	QStringList ignorePatterns() const;
+	QStringList ignorePatterns() const { return cleanedLines( _ui->ignorePatternsTextEdit ); }
 
-
-    public slots:
+	/**
+	 * Get whether the cross filesystems checkbox is checked,
+	 **/
+	bool crossFilesystems() const { return _ui->crossFilesystemsCheckBox->isChecked(); }
 
 	/**
 	 * Read settings from the config file
 	 **/
 	void readSettings();
-
-	/**
-	 * Write settings to the config file
-	 **/
-	void writeSettings();
-
-
-    protected slots:
-
-	/**
-	 * Reset the exclude directories etc. to the default values after a
-	 * confirmation.
-	 **/
-	void restoreDefaults();
-
-
-    protected:
 
         /**
          * Set all values at once.

@@ -51,13 +51,13 @@ namespace QDirStat
 	 * Return the first instance of this class that still exists or 0 if
 	 * there is none.
 	 **/
-	static MessagePanel * firstInstance();
+	static MessagePanel * firstInstance() { return _instances.isEmpty() ? 0 : _instances.first(); }
 
 	/**
 	 * Return the last instance of this class that still exists or 0 if
 	 * there is none.
 	 **/
-	static MessagePanel * lastInstance();
+	static MessagePanel * lastInstance() { return _instances.isEmpty() ? 0 : _instances.last(); }
 
 	/**
 	 * Return 'true' if there is an active instance of this class, 'false'

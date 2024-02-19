@@ -11,12 +11,12 @@
 #define FileMTimeStats_h
 
 #include "PercentileStats.h"
-#include "FileInfo.h"
-#include "HistogramView.h"
 
 
 namespace QDirStat
 {
+    class FileInfo;
+
     /**
      * Helper class for extended file mtime (modification time) statistics.
      * This is very similar to FileSizeStats.
@@ -38,7 +38,9 @@ namespace QDirStat
 	 * Constructor. If 'subtree' is non-null, immediately collect data from
 	 * that subtree.
 	 **/
-	FileMTimeStats( FileInfo * subtree = 0 );
+	FileMTimeStats( FileInfo * subtree );
+
+    protected:
 
 	/**
 	 * Recurse through all file elements in the subtree and append the

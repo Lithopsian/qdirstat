@@ -39,7 +39,7 @@ namespace QDirStat
 	 *
 	 * Implemented from PkgManager.
 	 **/
-	virtual bool isPrimaryPkgManager() Q_DECL_OVERRIDE;
+	virtual bool isPrimaryPkgManager() const Q_DECL_OVERRIDE;
 
 	/**
 	 * Check if the rpm command is available on the currently running
@@ -47,7 +47,7 @@ namespace QDirStat
 	 *
 	 * Implemented from PkgManager.
 	 **/
-	virtual bool isAvailable() Q_DECL_OVERRIDE;
+	virtual bool isAvailable() const Q_DECL_OVERRIDE;
 
 	/**
 	 * Return the owning package of a file or directory with full path
@@ -59,7 +59,7 @@ namespace QDirStat
 	 *
 	 *   /usr/bin/rpm -qf ${path}
 	 **/
-	virtual QString owningPkg( const QString & path ) Q_DECL_OVERRIDE;
+	virtual QString owningPkg( const QString & path ) const Q_DECL_OVERRIDE;
 
 
         //-----------------------------------------------------------------
@@ -72,7 +72,7 @@ namespace QDirStat
          *
 	 * Reimplemented from PkgManager.
          **/
-        virtual bool supportsGetInstalledPkg() Q_DECL_OVERRIDE
+        virtual bool supportsGetInstalledPkg() const Q_DECL_OVERRIDE
             { return true; }
 
         /**
@@ -82,7 +82,7 @@ namespace QDirStat
          *
 	 * Reimplemented from PkgManager.
          **/
-        virtual PkgInfoList installedPkg();
+        virtual PkgInfoList installedPkg() const Q_DECL_OVERRIDE;
 
         /**
          * Return 'true' if this package manager supports getting the file list
@@ -90,7 +90,7 @@ namespace QDirStat
          *
 	 * Reimplemented from PkgManager.
          **/
-        virtual bool supportsFileList() Q_DECL_OVERRIDE
+        virtual bool supportsFileList() const Q_DECL_OVERRIDE
             { return true; }
 
         /**
@@ -99,14 +99,16 @@ namespace QDirStat
          *
 	 * Reimplemented from PkgManager.
          **/
-        virtual QString fileListCommand( PkgInfo * pkg ) Q_DECL_OVERRIDE;
+        virtual QString fileListCommand( const PkgInfo * pkg ) const Q_DECL_OVERRIDE
+	    { return QString( "/usr/bin/pacman -Qlq %1" ).arg( pkg->baseName() ); }
 
         /**
          * Parse the output of the file list command.
          *
 	 * Reimplemented from PkgManager.
          **/
-        virtual QStringList parseFileList( const QString & output ) Q_DECL_OVERRIDE;
+        virtual QStringList parseFileList( const QString & output ) const Q_DECL_OVERRIDE
+	    { return output.split( "\n" ); }
 
 
     protected:
@@ -114,7 +116,7 @@ namespace QDirStat
         /**
          * Parse a package list as output by "dpkg-query --show --showformat".
          **/
-        PkgInfoList parsePkgList( const QString & output );
+        PkgInfoList parsePkgList( const QString & output ) const;
 
     }; // class PacManPkgManager
 

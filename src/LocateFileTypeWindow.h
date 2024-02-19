@@ -14,8 +14,8 @@
 #include <QTreeWidgetItem>
 
 #include "ui_locate-file-type-window.h"
-#include "FileInfo.h"
 #include "FileInfoSet.h"
+#include "FileSize.h"
 #include "Subtree.h"
 
 

@@ -18,6 +18,8 @@ class QSettings;
 
 namespace QDirStat
 {
+    typedef QMap<int, QString> SettingsEnumMapping;
+
     /**
      * Read a color in RGB format (#RRGGBB) from the settings.
      **/
@@ -72,7 +74,7 @@ namespace QDirStat
     int readEnumEntry( const QSettings & settings,
 		       const char      * entryName,
 		       int		 fallback,
-		       const QMap<int, QString> & enumMapping );
+		       const SettingsEnumMapping & enumMapping );
 
     /**
      * Write an enum value in string format to the settings.
@@ -81,12 +83,7 @@ namespace QDirStat
     void writeEnumEntry( QSettings  & settings,
 			 const char * entryName,
 			 int	      enumValue,
-			 const QMap<int, QString> & enumMapping );
-
-    /**
-     * Return the enum mapping for QRegExp::PatternSyntax.
-     **/
-    QMap<int, QString> patternSyntaxMapping();
+			 const SettingsEnumMapping & enumMapping );
 
     /**
      * Read window settings (size and position) from the settings and apply

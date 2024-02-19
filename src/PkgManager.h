@@ -10,14 +10,13 @@
 #ifndef PkgManager_h
 #define PkgManager_h
 
+#define LOG_COMMANDS	true
+#define LOG_OUTPUT	false
+
 #include <QString>
 
 #include "PkgInfo.h"
 #include "PkgFileListCache.h"
-
-
-#define LOG_COMMANDS	true
-#define LOG_OUTPUT	false
 #include "SysUtil.h"
 
 
@@ -72,7 +71,7 @@ namespace QDirStat
 	 * The PkgQuery class will only execute this once at its startup phase,
 	 * so this information does not need to be cached.
 	 **/
-	virtual bool isPrimaryPkgManager() = 0;
+	virtual bool isPrimaryPkgManager() const = 0;
 
 	/**
 	 * Check if this package manager is available on the currently running
@@ -91,7 +90,7 @@ namespace QDirStat
 	 * (albeit not itself) on such an Ubuntu system which might be useful
 	 * for the purposes of this PkgQuery class.
 	 **/
-	virtual bool isAvailable() = 0;
+	virtual bool isAvailable() const = 0;
 
 	/**
 	 * Return the owning package of a file or directory with full path
@@ -99,7 +98,7 @@ namespace QDirStat
 	 *
 	 * Derived classes are required to implement this.
 	 **/
-	virtual QString owningPkg( const QString & path ) = 0;
+	virtual QString owningPkg( const QString & path ) const = 0;
 
 
 	//-----------------------------------------------------------------
@@ -110,7 +109,7 @@ namespace QDirStat
 	 * Return 'true' if this package manager supports getting the list of
 	 * installed packages.
 	 **/
-	virtual bool supportsGetInstalledPkg() { return false; }
+	virtual bool supportsGetInstalledPkg() const { return false; }
 
 	/**
 	 * Return the list of installed packages.
@@ -122,12 +121,12 @@ namespace QDirStat
 	 *
 	 * This default implementation returns nothing.
 	 **/
-	virtual PkgInfoList installedPkg() { return PkgInfoList(); }
+	virtual PkgInfoList installedPkg() const { return PkgInfoList(); }
 
 	/**
 	 * Return the list of files and directories owned by a package.
 	 **/
-	virtual QStringList fileList( PkgInfo * pkg );
+	virtual QStringList fileList( const PkgInfo * pkg ) const;
 
 	/**
 	 * Return 'true' if this package manager supports getting the file list
@@ -135,7 +134,7 @@ namespace QDirStat
 	 *
 	 ** See also supportsFileListCache().
 	 **/
-	virtual bool supportsFileList() { return false; }
+	virtual bool supportsFileList() const { return false; }
 
 	/**
 	 * Return the command for getting the list of files and directories
@@ -146,26 +145,27 @@ namespace QDirStat
 	 *
 	 * This default implementation returns nothing.
 	 **/
-	virtual QString fileListCommand( PkgInfo * pkg )
-	    { Q_UNUSED( pkg ); return ""; }
+	virtual QString fileListCommand( const PkgInfo * ) const
+	    { return ""; }
 
 	/**
 	 * Parse the output of the file list command.
 	 *
 	 * This default implementation does nothing.
 	 **/
-	virtual QStringList parseFileList( const QString & output )
-	    { Q_UNUSED( output); return QStringList(); }
+	virtual QStringList parseFileList( const QString & ) const
+	    { return QStringList(); }
 
 	/**
 	 * Return 'true' if this package manager supports building a file list
 	 * cache for getting all file lists for all packages.
 	 **/
-	virtual bool supportsFileListCache() { return false; }
+	virtual bool supportsFileListCache() const { return false; }
 
 	/**
 	 * Create a file list cache with the specified lookup type for all
-	 * installed packages. This is an expensive operation.
+	 * installed packages. This is an expensive operation.  Must be
+	 * reimplemented by derived classes.
 	 *
 	 * This is a best-effort approach; the cache might still not contain
 	 * all desired packages. Check with PkgFileListCache::contains() and
@@ -174,13 +174,13 @@ namespace QDirStat
 	 * Ownership of the cache is transferred to the caller; make sure to
 	 * delete it when you are done with it.
 	 **/
-	virtual PkgFileListCache * createFileListCache( PkgFileListCache::LookupType lookupType = PkgFileListCache::LookupByPkg )
-	    { Q_UNUSED( lookupType ); return 0; }
+	virtual PkgFileListCache * createFileListCache( PkgFileListCache::LookupType ) const
+	    { return 0; }
 
 	/**
 	 * Return a name suitable for a detailed queries for 'pkg'.
 	 */
-	virtual QString queryName( PkgInfo * pkg )
+	virtual QString queryName( const PkgInfo * pkg ) const
 	    { return pkg->name(); }
 
     }; // class PkgManager

@@ -154,9 +154,7 @@ namespace QDirStat
 	/**
 	 * Set a file size label with a file size and an optional prefix.
 	 **/
-	static void setLabel( FileSizeLabel *	label,
-			      FileSize		size,
-			      const QString &	prefix = "" );
+	static void setLabel( FileSizeLabel * label, FileSize size, const QString & prefix = "" );
 
 	/**
 	 * Set a label with a text of limited size.
@@ -169,33 +167,10 @@ namespace QDirStat
 	QString limitText( const QString & longText ) const;
 
 	/**
-	 * Set the text of a file size label including special handling for
-	 * sparse files and files with multiple hard links.
-	 *
-	 * Notice that this is only useful for plain files, not for
-	 * directories, packages or multiple selected files.
+	 * Return a stylesheet string to set a label text to the configured
+	 * directory read error colour.
 	 **/
-	static void setFileSizeLabel( FileSizeLabel  * label,
-				      const FileInfo * file );
-
-        /**
-         * Suppress the content of FileSizeLabel 'cloneLabel' if it has the
-         * same content as 'origLabel': Clear its text and disable its caption
-         * 'caption'.
-         **/
-        static void suppressIfSameContent( const FileSizeLabel * origLabel,
-					   FileSizeLabel       * cloneLabel,
-					   QLabel              * caption );
-
-	/**
-	 * Set the text of an allocated size label including special handling
-	 * for sparse files and files with multiple hard links.
-	 *
-	 * Notice that this is only useful for plain files, not for
-	 * directories, packages or multiple selected files.
-	 **/
-	void setFileAllocatedLabel( FileSizeLabel  * label,
-				    const FileInfo * file );
+	QString errorStyleSheet() const;
 
 	/**
 	 * Return a stylesheet string to set the color of the directory permissions label.
@@ -215,6 +190,8 @@ namespace QDirStat
 	void setSystemFileWarningVisibility( bool visible );
 	void setFilePkgBlockVisibility( bool visible );
 	void setDirBlockVisibility( bool visible );
+
+	QString formatFilesystemObjectType( const FileInfo * file );
 
 
 	// Data members

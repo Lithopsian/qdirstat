@@ -123,7 +123,7 @@ namespace QDirStat
 	/**
 	 * Return the default model columns.
 	 **/
-	const DataColumnList defaultColumns() const;
+	static const DataColumnList defaultColumns();
 
         /**
          * Return all model columns in default order.
@@ -191,7 +191,6 @@ namespace QDirStat
 
 	// Data members
 
-	static DataColumns * _instance;
 	DataColumnList	     _columns;
 
     };	// class DataColumns
