@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 #include <QDateTime>
+#include <QFileInfo>
 
 #include "FileInfo.h"
 #include "DirInfo.h"
@@ -26,7 +27,6 @@
 #include "SysUtil.h"
 #include "Logger.h"
 #include "Exception.h"
-#include "BrokenLibc.h"     // ALLPERMS
 
 // Some filesystems (NTFS seems to be among them) may handle block fragments
 // well. Don't report files as "sparse" files if the block size is only a few
@@ -463,14 +463,13 @@ QString FileInfo::groupName() const
 
 QString FileInfo::symbolicPermissions() const
 {
-    return symbolicMode( _mode,
-			 true ); // omitTypeForRegularFiles
+    return symbolicMode( _mode ); // omitTypeForRegularFiles
 }
 
 
 QString FileInfo::octalPermissions() const
 {
-    return formatOctal( ALLPERMS & _mode );
+    return octalMode( _mode );
 }
 
 
@@ -565,7 +564,8 @@ bool FileInfo::isBrokenSymLink()
     if ( ! isSymLink() )
         return false;
 
-    return SysUtil::isBrokenSymLink( url() );
+    return !QFileInfo( QFileInfo( path() ).symLinkTarget() ).exists();
+//    return SysUtil::isBrokenSymLink( url() );
 }
 
 

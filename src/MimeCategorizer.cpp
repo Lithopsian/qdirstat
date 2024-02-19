@@ -6,6 +6,8 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <QElapsedTimer>
+
 #include "MimeCategorizer.h"
 #include "FileInfo.h"
 #include "Settings.h"
@@ -15,34 +17,23 @@
 
 using namespace QDirStat;
 
-
-MimeCategorizer * MimeCategorizer::_instance = 0;
-
-
 MimeCategorizer * MimeCategorizer::instance()
 {
-    if ( ! _instance )
-    {
-	_instance = new MimeCategorizer();
-	CHECK_NEW( _instance );
-    }
-
-    return _instance;
+    static MimeCategorizer _instance;
+    return &_instance;
 }
 
 
 MimeCategorizer::MimeCategorizer():
-    QObject( 0 ),
-    _mapsDirty( true )
+    QObject { 0 }
 {
-    // logDebug() << "Creating MimeCategorizer" << endl;
+    //logDebug() << "Creating MimeCategorizer" << Qt::endl;
     readSettings();
 }
 
 
 MimeCategorizer::~MimeCategorizer()
 {
-    writeSettings();
     clear();
 }
 
@@ -51,44 +42,73 @@ void MimeCategorizer::clear()
 {
     qDeleteAll( _categories );
     _categories.clear();
-    _mapsDirty = true;
 }
 
 
-QColor MimeCategorizer::color( FileInfo * item )
+const QString & MimeCategorizer::name( const FileInfo * item )
 {
-    MimeCategory *mimeCategory = category( item );
+    const QReadLocker locker( &_lock );
 
-    return mimeCategory ? mimeCategory->color() : Qt::white;
+    return category( item )->name();
 }
 
 
-MimeCategory * MimeCategorizer::category( FileInfo * item )
+const QColor & MimeCategorizer::color( const FileInfo * item )
 {
+    const QReadLocker locker( &_lock );
+
+    return category( item )->color();
+}
+
+
+const MimeCategory * MimeCategorizer::category( const FileInfo * item, QString * suffix_ret )
+{
+    if ( !item )
+	return 0;
+
     CHECK_PTR  ( item );
     CHECK_MAGIC( item );
 
+    const QReadLocker locker( &_lock );
+
+    return category( item->name(), suffix_ret );
+}
+
+/*
+const MimeCategory * MimeCategorizer::category( const QString & filename )
+{
+    const QReadLocker locker( &_lock );
+
+    return category( filename, 0 );
+}
+*/
+
+const MimeCategory * MimeCategorizer::category( const FileInfo * item ) const
+{
     if ( item->isSymLink() )
     {
-	return matchCategoryName( CATEGORY_SYMLINKS );
+	return _symlinkCategory;
     }
     else if ( item->isFile() )
     {
-	MimeCategory *matchedCategory = category( item->name() );
-	if ( ! matchedCategory && ( item->mode() & S_IXUSR  ) == S_IXUSR )
-	    return matchCategoryName( CATEGORY_EXECUTABLES );
+	const MimeCategory *matchedCategory = category( item->name(), 0 );
+	if ( matchedCategory )
+	    return matchedCategory;
 
-	return matchedCategory;
+	if ( ( item->mode() & S_IXUSR ) == S_IXUSR )
+	    return _executableCategory;
+	else
+	    return &_emptyCategory;
     }
     else
     {
-	return 0;
+	return &_emptyCategory;
     }
 }
 
 
-MimeCategory * MimeCategorizer::category( const QString & filename,
-					  QString	* suffix_ret )
+const MimeCategory * MimeCategorizer::category( const QString & filename,
+						QString	* suffix_ret ) const
 {
     if ( suffix_ret )
 	*suffix_ret = "";
@@ -96,74 +116,102 @@ MimeCategory * MimeCategorizer::category( const QString & filename,
     if ( filename.isEmpty() )
 	return 0;
 
-    // Build suffix maps for fast lookup
+    const MimeCategory *category = 0;
 
-    if ( _mapsDirty )
-	buildMaps();
+    // Whole filename exact matching will be relatively rare, so quickly check if it is
+    // possible to produce any matches before doing the actual case-sensitive and insensitive
+    // tests.  There are a finite set of pattern lengths and only filenames of these lengths
+    // can match.
+    const int length = filename.size();
 
-    MimeCategory * category = 0;
-
-    // Find the filename suffix: Section #1
-    // (ignoring any leading '.' separator)
-    QString suffix = filename.section( '.', 1 );
-
-    while ( ! suffix.isEmpty() && ! category )
+    if ( length < _caseSensitiveLengths.size() && _caseSensitiveLengths.testBit( length ) )
     {
-        // logVerbose() << "Checking " << suffix << endl;
+	category = _caseSensitiveExact.value( filename, 0 );
+	if ( category )
+	    return category;
+    }
 
-	// Try case sensitive first
+    if ( length < _caseInsensitiveLengths.size() && _caseInsensitiveLengths.testBit( length ) && !filename.isLower() )
+    {
+	// A lowercased filename will have been detected already because there is a pattern
+	// in the case-sensitive map, so only filenames which are not lowercase are of
+	// interest here.
+	category = _caseInsensitiveExact.value( filename.toLower(), 0 );
+	if ( category )
+	    return category;
+    }
 
-	category = _caseSensitiveSuffixMap.value( suffix, 0 );
+    // Find the filename suffix, ignoring any leading '.' separator
+    // Ignore an initial dot and treat repeated dots as a single separator
+    QString suffix = filename.section( '.', 1, -1, QString::SectionSkipEmpty );
 
-	if ( ! category )
-	    category = _caseInsensitiveSuffixMap.value( suffix.toLower(), 0 );
+    while ( ! suffix.isEmpty() )
+    {
+        // logVerbose() << "Checking " << suffix << Qt::endl;
+
+	// Try case sensitive first (also ncludes upper- and lower-cased suffixes
+	// from the case-insensitive lists)
+	category = matchWildcardSuffix( _caseSensitiveSuffixes, filename, suffix );
+
+	if ( !category && suffix.size() > 1 && !suffix.isLower() && !suffix.isUpper() )
+	    category = matchWildcardSuffix( _caseInsensitiveSuffixes, filename, suffix.toLower() );
 
 	if ( category ) // success
         {
             if ( suffix_ret )
                 *suffix_ret = suffix;
-        }
-        else
-        {
-            // No match so far? Try the next suffix. Some files might have more
-            // than one, e.g., "tar.bz2" - if there is no match for "tar.bz2",
-            // there might be one for just "bz2".
 
-            suffix = suffix.section( '.', 1 );
+	    return category;
         }
+
+	// No match so far? Try the next suffix. Some files might have more
+	// than one, e.g., "tar.bz2" - if there is no match for "tar.bz2",
+	// there might be one for just "bz2".
+
+	suffix = suffix.section( '.', 1, -1, QString::SectionSkipEmpty );
     }
 
-    if ( ! category ) // No match yet?
-	category = matchPatterns( filename );
+    // Go through all the plain regular expressions one by one
+    category = matchWildcard( filename );
 
 #if 0
     if ( category )
-	logVerbose() << "Found " << category << " for " << filename << endl;
+	logVerbose() << "Found " << category << " for " << filename << Qt::endl;
 #endif
 
     return category;
 }
 
 
-MimeCategory * MimeCategorizer::matchPatterns( const QString & filename ) const
+const MimeCategory * MimeCategorizer::matchWildcardSuffix( const QMultiHash<QString, WildcardPair> & map,
+							   const QString & filename,
+							   const QString & suffix ) const
 {
-    foreach ( MimeCategory * category, _categories )
+    auto rangeIts = map.equal_range( suffix );
+    for ( auto it = rangeIts.first; it != rangeIts.second && it.key() == suffix; ++it )
     {
-	if ( category )
-	{
-	    foreach ( const QRegExp & pattern, category->patternList() )
-	    {
-		if ( pattern.exactMatch( filename ) )
-		    return category;
-	    }
-	}
+	WildcardPair pair = it.value();
+	if ( pair.first.isEmpty() || pair.first.isMatch( filename ) )
+	    return pair.second;
+    }
+
+    return 0;
+}
+
+
+const MimeCategory * MimeCategorizer::matchWildcard( const QString & filename ) const
+{
+    foreach ( const WildcardPair & pair, _wildcards )
+    {
+	if ( pair.first.isMatch( filename ) )
+	    return pair.second;
     }
 
     return 0; // No match
 }
 
 
-MimeCategory * MimeCategorizer::matchCategoryName( const QString & categoryName ) const
+const MimeCategory * MimeCategorizer::findCategoryByName( const QString & categoryName ) const
 {
     foreach ( MimeCategory * category, _categories )
     {
@@ -175,64 +223,171 @@ MimeCategory * MimeCategorizer::matchCategoryName( const QString & categoryName 
 }
 
 
-void MimeCategorizer::add( MimeCategory * category )
+MimeCategory * MimeCategorizer::create( const QString & name, const QColor & color )
 {
-    CHECK_PTR( category );
+    MimeCategory * category = new MimeCategory( name, color );
+    CHECK_NEW( category );
 
     _categories << category;
-    _mapsDirty = true;
-}
 
-
-void MimeCategorizer::remove( MimeCategory * category )
-{
-    CHECK_PTR( category );
-
-    _categories.removeAll( category );
-    delete category;
-    _mapsDirty = true;
+    return category;
 }
 
 
 void MimeCategorizer::buildMaps()
 {
-    _caseInsensitiveSuffixMap.clear();
-    _caseSensitiveSuffixMap.clear();
+    QElapsedTimer stopwatch;
+    stopwatch.start();
+
+    _caseInsensitiveExact.clear();
+    _caseSensitiveExact.clear();
+    _caseInsensitiveSuffixes.clear();
+    _caseSensitiveSuffixes.clear();
+    _wildcards.clear();
+    _caseInsensitiveLengths.clear();
+    _caseSensitiveLengths.clear();
 
     foreach ( MimeCategory * category, _categories )
     {
 	CHECK_PTR( category );
 
-	addSuffixes( _caseInsensitiveSuffixMap, category, category->caseInsensitiveSuffixList() );
-	addSuffixes( _caseSensitiveSuffixMap,	category, category->caseSensitiveSuffixList()	);
+	addExactKeys( category );
+	addSuffixKeys( category );
+	addWildcardKeys( category );
+	buildWildcardLists( category );
     }
 
-    _mapsDirty = false;
+    logDebug() << "maps built in " << stopwatch.restart() << "ms - " << _wildcards.size() << " regular expressions" << Qt::endl;
 }
 
 
-void MimeCategorizer::addSuffixes( QMap<QString, MimeCategory *> & suffixMap,
-				   MimeCategory			 * category,
-				   const QStringList		 & suffixList  )
+void MimeCategorizer::addExactKeys( MimeCategory * category )
 {
-    foreach ( const QString & suffix, suffixList )
+    //logDebug() << "adding " << keyList << " to " << category << Qt::endl;
+    foreach ( const QString & key, category->caseSensitiveExactList() )
+	// Add key to the case-sensitive map and record this length
+	addExactKey( _caseSensitiveExact, _caseSensitiveLengths, key, category );
+
+    foreach ( const QString & key, category->caseInsensitiveExactList() )
     {
-	if ( suffixMap.contains( suffix ) )
-	{
-	    logError() << "Duplicate suffix: " << suffix << " for "
-		       << suffixMap.value( suffix ) << " and " << category
-		       << endl;
-	}
-	else
-	{
-	    suffixMap[ suffix ] = category;
-	}
+	// Add key to the case-insensitive map and record this length.  Also add
+	// the lowercased name to the case-sensitive map as a common case that
+	// will get picked up earlier and prevent the filename string having to
+	// be copied when it is converted to lowercase.
+	const QString lower = key.toLower();
+	addExactKey( _caseInsensitiveExact, _caseInsensitiveLengths, lower, category );
+	addExactKey( _caseSensitiveExact, _caseSensitiveLengths, lower, category );
     }
+}
+
+
+void MimeCategorizer::addExactKey( QHash<QString, MimeCategory *> & keys,
+				   QBitArray & lengths,
+				   const QString & key,
+				   MimeCategory * category )
+{
+    //logDebug() << "adding " << keyList << " to " << category << Qt::endl;
+    if ( keys.contains( key ) )
+    {
+	logError() << "Duplicate key: " << key << " for "
+		   << keys.value( key ) << " and " << category
+		   << Qt::endl;
+    }
+    else
+    {
+	// Add this pattern with no wildcards into a hash map
+	keys.insert( key, category );
+
+	// Mark the length pf this pattern so we only try to match filenames wih the right length
+	const int length = key.size();
+	if ( length >= lengths.size() )
+	    lengths.resize( length + 1 );
+	lengths.setBit( length );
+    }
+}
+
+
+void MimeCategorizer::addWildcardKeys( MimeCategory * category )
+{
+    //logDebug() << "adding " << patternList << " to " << category << Qt::endl;
+
+    // Add any case-insensitive regular expression, plus a case-sensitive lowercased version
+    foreach ( QString pattern, category->caseInsensitiveWildcardSuffixList() )
+    {
+	const QString suffix = pattern.section( "*.", -1 ).toLower();
+	const auto pair = WildcardPair( CaseInsensitiveWildcard( pattern ), category );
+	_caseInsensitiveSuffixes.insert( suffix, pair );
+	_caseSensitiveSuffixes.insert( suffix, pair );
+    }
+
+    // Add any case-sensitive regular expressions last so they are retrieved first
+    foreach ( const QString pattern, category->caseSensitiveWildcardSuffixList() )
+    {
+	const QString suffix = pattern.section( "*.", -1 );
+	_caseSensitiveSuffixes.insert( suffix, { CaseSensitiveWildcard( pattern ), category } );
+    }
+}
+
+
+void MimeCategorizer::addSuffixKeys( MimeCategory * category )
+{
+    //logDebug() << "adding " << keyList << " to " << category << Qt::endl;
+
+    // Add simple suffix matches into case-sensitive and case-insensitive hash maps
+    foreach ( const QString & suffix, category->caseInsensitiveSuffixList() )
+    {
+	const QString lowercaseSuffix = suffix.toLower();
+	const QString uppercaseSuffix = suffix.toUpper();
+	addSuffixKey( _caseInsensitiveSuffixes, suffix, category );
+
+	// Add a lowercased and an uppercased version of the suffix into tyhe case-sensitive map
+	addSuffixKey( _caseSensitiveSuffixes, lowercaseSuffix, category );
+	if ( lowercaseSuffix != uppercaseSuffix)
+	    addSuffixKey( _caseSensitiveSuffixes, uppercaseSuffix, category );
+    }
+
+    // Add any case-sensitive regular expressions last so they are retrieved first
+    foreach ( const QString & suffix, category->caseSensitiveSuffixList() )
+	addSuffixKey( _caseSensitiveSuffixes, suffix, category );
+}
+
+
+void MimeCategorizer::addSuffixKey( QMultiHash<QString, WildcardPair> & suffixes,
+					const QString & suffix,
+					MimeCategory * category )
+{
+    if ( suffixes.contains( suffix ) )
+    {
+	logError() << "Duplicate suffix: " << suffix << " for "
+		   << suffixes.value( suffix ).first.pattern() << " and " << category
+		   << Qt::endl;
+    }
+    else
+    {
+	suffixes.insert( suffix, { Wildcard(), category } );
+    }
+}
+
+
+void MimeCategorizer::buildWildcardLists( MimeCategory * category )
+{
+    //logDebug() << "adding " << keyList << " to " << category << Qt::endl;
+    foreach ( const QString & pattern, category->caseSensitiveWildcardList() )
+	_wildcards << WildcardPair( { CaseSensitiveWildcard( pattern ), category } );
+
+    foreach ( const QString & pattern, category->caseInsensitiveWildcardList() )
+	_wildcards << WildcardPair( { CaseInsensitiveWildcard( pattern ), category } );
 }
 
 
 void MimeCategorizer::readSettings()
 {
+    //logDebug() << Qt::endl;
+
+    Settings generalSettings;
+    generalSettings.beginGroup( "MimeCategorizer" );
+    generalSettings.endGroup();
+
     MimeCategorySettings settings;
     QStringList mimeCategoryGroups = settings.findGroups( settings.groupPrefix() );
 
@@ -249,10 +404,8 @@ void MimeCategorizer::readSettings()
 	QStringList patternsCaseInsensitive = settings.value( "PatternsCaseInsensitive" ).toStringList();
 	QStringList patternsCaseSensitive   = settings.value( "PatternsCaseSensitive"	).toStringList();
 
-	MimeCategory * category = new MimeCategory( name, color );
-	CHECK_NEW( category );
-
-	add( category );
+	//logDebug() << name << Qt::endl;
+	MimeCategory * category = create( name, color );
 	category->addPatterns( patternsCaseInsensitive, Qt::CaseInsensitive );
 	category->addPatterns( patternsCaseSensitive,	Qt::CaseSensitive   );
 
@@ -263,25 +416,42 @@ void MimeCategorizer::readSettings()
 	addDefaultCategories();
 
     ensureMandatoryCategories();
+
+    buildMaps();
 }
 
 
-void MimeCategorizer::writeSettings()
+void MimeCategorizer::replaceCategories( const MimeCategoryList & categories )
 {
-    // logDebug() << endl;
+//    const QWriteLocker locker( &_lock );
+
+   _lock.lockForWrite();
+    writeSettings( categories );
+    readSettings();
+    _lock.unlock();
+
+    // Unlock before the signal to avoid deadlocks
+    emit categoriesChanged();
+}
+
+
+void MimeCategorizer::writeSettings( const MimeCategoryList & categoryList )
+{
+    //logDebug() << Qt::endl;
+
     MimeCategorySettings settings;
 
     // Remove all leftover cleanup descriptions
     settings.removeGroups( settings.groupPrefix() );
 
-    for ( int i=0; i < _categories.size(); ++i )
+    for ( int i=0; i < categoryList.size(); ++i )
     {
 	settings.beginGroup( "MimeCategory", i+1 );
 
-	MimeCategory * category = _categories.at(i);
+	MimeCategory * category = categoryList.at(i);
 
 	settings.setValue( "Name", category->name() );
-	// logDebug() << "Adding " << groupName << ": " << category->name() << endl;
+	//logDebug() << "Adding " << category->name() << Qt::endl;
 	writeColorEntry( settings, "Color", category->color() );
 
 	QStringList patterns = category->humanReadablePatternList( Qt::CaseInsensitive );
@@ -306,268 +476,158 @@ void MimeCategorizer::writeSettings()
 void MimeCategorizer::ensureMandatoryCategories()
 {
     // Remember this category so we don't have to search for it every time
-
-    _executableCategory = matchCategoryName( CATEGORY_EXECUTABLES );
+    _executableCategory = findCategoryByName( CATEGORY_EXECUTABLE );
     if ( !_executableCategory )
     {
-	// Special catch-all category for files that don't match anything else.
-        // This category cannot be deleted.
-
-	_executableCategory = new MimeCategory( tr( CATEGORY_EXECUTABLES ), Qt::magenta );
-	CHECK_NEW( _executableCategory );
-	add( _executableCategory );
+	// Special catchall category for files that don't match anything else, cannot be deleted
+	_executableCategory = create( tr( CATEGORY_EXECUTABLE ), Qt::magenta );
+	writeSettings( _categories );
     }
 
     // Remember this category so we don't have to search for it every time
-    _symlinkCategory = matchCategoryName( CATEGORY_SYMLINKS );
-
+    _symlinkCategory = findCategoryByName( CATEGORY_SYMLINK );
     if ( !_symlinkCategory )
     {
-	// Special category for symlinks regardless of the filename.
-        // This category cannot be deleted.
-
-	_symlinkCategory = new MimeCategory( tr( CATEGORY_SYMLINKS ), Qt::blue );
-	CHECK_NEW( _symlinkCategory );
-	add( _symlinkCategory );
+	// Special category for symlinks regardless of the filename, cannot be deleted
+	_symlinkCategory = create( tr( CATEGORY_SYMLINK ), Qt::blue );
+	writeSettings( _categories );
     }
 }
 
 
 void MimeCategorizer::addDefaultCategories()
 {
-    MimeCategory * junk = new MimeCategory( tr( "Junk" ), Qt::red );
-    CHECK_NEW( junk );
-    add( junk );
+    MimeCategory * archives = create( tr( "archive (compressed)" ), "#00ff00" );
+    archives->addSuffixes( { "7z", "arj", "bz2", "cab", "cpio.gz", "gz", "jmod", "jsonlz4", "lz",
+	                     "lzo", "rar", "tar.bz2", "tar.gz", "tar.lz", "tar.lzo", "tar.xz",
+			     "tar.zst", "tbz2", "tgz", "txz", "tz2", "tzst", "xz", "zip", "zst" },
+			   Qt::CaseInsensitive );
+    archives->addPatterns( { "pack-*.pack" },
+                           Qt::CaseSensitive );      // Git archive
 
-    junk->addSuffix( "~"   );
-    junk->addSuffix( "bak" );
-    junk->addPattern( "core", Qt::CaseSensitive );
+    MimeCategory * uncompressedArchives = create( tr( "archive (uncompressed)" ), "#88ff88" );
+    uncompressedArchives->addSuffixes( { "cpio", "tar" },
+				       Qt::CaseInsensitive );
 
+    MimeCategory * compressed = create( tr( "configuration file" ), "#aabbff" );
+    compressed->addSuffixes( { "alias", "cfg", "conf", "conffiles", "config", "dep", "desktop",
+	                       "ini", "kmap", "lang", "my", "page", "properties", "rc", "service",
+			       "shlibs", "symbols", "templates", "theme", "triggers", "xcd", "xsl" },
+			     Qt::CaseSensitive );
+    compressed->addPatterns( { ".config", ".gitignore", "Kconfig", "control", "gtkrc" },
+			     Qt::CaseSensitive );
 
-    MimeCategory * archives = new MimeCategory( tr( "Compressed Archives" ), Qt::green );
-    CHECK_NEW( archives );
-    add( archives );
+    MimeCategory * database = create( tr( "database" ), "#22aaff" );
+    database->addSuffixes( { "alias.bin", "builtin.bin", "dat", "db", "dep.bin", "enc", "hwdb",
+	                       "idx", "lm", "md5sums", "odb", "order", "sbstore", "sqlite",
+			       "sqlite-wal", "symbols.bin", "tablet", "vlpset", "yaml" },
+			   Qt::CaseSensitive );
+    database->addPatterns( { "magic.mgc" },
+			   Qt::CaseSensitive );
 
-    archives->addSuffixes( QStringList()
-			   << "7z"
-			   << "arj"
-			   << "cab"
-			   << "cpio.gz"
-			   << "deb"
-			   << "fsa"
-			   << "jar"
-			   << "rar"
-			   << "rpm"
-			   << "tar.bz2"
-			   << "tar.gz"
-			   << "tar.lz"
-			   << "tar.lzo"
-			   << "tar.xz"
-			   << "tar.zst"
-			   << "tbz2"
-			   << "tgz"
-			   << "txz"
-			   << "tz2"
-			   << "tzst"
-			   << "zip"
-			   );
+    MimeCategory * diskImage = create( tr( "disk image" ), "#aaaaaa" );
+    diskImage->addSuffixes( { "fsa", "iso" },
+			    Qt::CaseSensitive );
+    diskImage->addSuffixes( { "BIN", "img" },
+			    Qt::CaseInsensitive );
 
-    archives->addPattern( "pack-*.pack" );      // Git archive
+    MimeCategory * doc = create( tr( "document" ), "#66ccff" );
+    doc->addSuffixes( { "list", "log.0", "log.1", "odc", "odg", "odp", "ods", "odt", "otc",
+	                "otp", "ots", "ott" },
+		      Qt::CaseSensitive );
+    doc->addSuffixes( { "css", "csv", "doc", "docbook", "docx", "dotx", "dvi", "dvi.bz2", "epub", "htm",
+	                "html", "json", "latex", "log", "md", "pdf", "pod", "potx", "ppsx", "ppt",
+			"pptx", "ps", "readme", "rst", "sav", "sdc", "sdc.gz", "sdd", "sdp", "sdw",
+			"sla", "sla.gz", "slaz", "sxi", "tex", "txt", "xls", "xlsx", "xlt", "xml" },
+		      Qt::CaseInsensitive );
+    database->addPatterns( { "copyright", "readme.*" },
+			   Qt::CaseInsensitive );
 
+    MimeCategory * executable = create( tr( "executable" ), "#ff00ff" );
+    executable->addPatterns( { "lft.db", "traceproto.db", "traceroute.db" },
+			     Qt::CaseSensitive );
+    executable->addSuffixes( { "jsa", "ucode" },
+			     Qt::CaseSensitive );
 
-    MimeCategory * uncompressedArchives = new MimeCategory( tr( "Uncompressed Archives" ), QColor( 128, 128, 0 ) );
-    CHECK_NEW( uncompressedArchives );
-    add( uncompressedArchives );
+    MimeCategory * font = create( tr( "font" ), "#44ddff" );
+    font->addSuffixes( { "afm", "bdf", "cache-7", "cache-8", "otf", "pcf", "pcf.gz", "pf1",
+	                 "pf2", "pfa", "pfb", "t1", "ttf" },
+		       Qt::CaseSensitive );
 
-    uncompressedArchives->addSuffix( "tar"  );
-    uncompressedArchives->addSuffix( "cpio" );
+    MimeCategory * game = create( tr( "game file" ), "#ff88dd" );
+    game->addSuffixes( { "NHK", "bsp", "mdl", "pak", "wad" },
+		       Qt::CaseSensitive );
 
+    MimeCategory * image = create( tr( "image" ), "#00ffff" );
+    image->addSuffixes( { "gif", "jpeg", "jpg", "jxl", "mng", "png", "tga", "tif", "tiff",
+	                  "webp", "xcf.bz2", "xcf.gz" },
+			Qt::CaseInsensitive );
 
-    MimeCategory * compressed = new MimeCategory( tr( "Compressed Files" ), Qt::green );
-    CHECK_NEW( compressed );
-    add( compressed );
+    MimeCategory * uncompressedImage = create( tr( "image (uncompressed)" ), "#88ffff" );
+    uncompressedImage->addSuffixes( { "bmp", "pbm", "pgm", "pnm", "ppm", "spr", "svg", "xcf" },
+				    Qt::CaseInsensitive );
 
-    compressed->addSuffixes( QStringList()
-             << "bz2"
-             << "gz"
-             << "lz"
-             << "lzo"
-             << "xz"
-             << "zst"
-             );
+    MimeCategory * junk = create( tr( "junk" ), "#ff0000" );
+    junk->addSuffixes( { "~", "bak", "keep", "old" },
+		       Qt::CaseInsensitive );
+    junk->addPatterns( { "core" },
+		       Qt::CaseSensitive );
 
+    MimeCategory * music = create( tr( "music" ), "#ffff00" );
+    music->addSuffixes( { "aac", "ape", "f4a", "f4b", "flac", "m4a", "m4b", "mid", "mka", "mp3",
+			  "oga", "ogg", "opus", "ra", "rax", "wav", "wma" },
+			Qt::CaseInsensitive );
 
-    MimeCategory * images = new MimeCategory( tr( "Images" ), Qt::cyan );
-    CHECK_NEW( images );
-    add( images );
+    MimeCategory * obj = create( tr( "object file" ), "#ee8822" );
+    obj->addSuffixes( { "Po", "a.cmd", "al", "elc", "go", "gresource", "ko", "ko.cmd", "ko.xz",
+	                "ko.zst", "la", "lo", "mo", "moc", "o", "o.cmd", "pyc", "qrc", "typelib" },
+                      Qt::CaseSensitive );
+    obj->addPatterns( { "built-in.a", "vmlinux.a" },
+                      Qt::CaseSensitive );
+    obj->addPatterns( { "lib*.a" },
+                      Qt::CaseInsensitive );
 
-    images->addSuffixes( QStringList()
-			 << "gif"
-			 << "jpeg"
-			 << "jpg"
-                         << "jxl"
-			 << "png"
-                         << "mng"
-			 << "svg"
-			 << "tif"
-			 << "tiff"
-                         << "webp"
-			 << "xcf.bz2"
-			 << "xcf.gz"
-			 << "xpm"	 // uncompressed, but typically tiny
-			 );
+    MimeCategory * program = create( tr( "packaged program" ), "#88aa66" );
+    program->addSuffixes( { "deb", "ja", "jar", "sfi", "tm" },
+		       Qt::CaseSensitive );
+    program->addSuffixes( { "rpm", "xpi" },
+		       Qt::CaseInsensitive );
 
+    MimeCategory * script = create( tr( "script" ), "#ff8888" );
+    script->addSuffixes( { "BAT", "bash", "bashrc", "csh", "js", "ksh", "m4", "pl", "pm", "postinst",
+	                   "postrm", "preinst", "prerm", "sh", "tcl", "tmac", "xba", "zsh" },
+		         Qt::CaseSensitive );
 
-    MimeCategory * uncompressedImages = new MimeCategory( tr( "Uncompressed Images" ), Qt::red );
-    CHECK_NEW( uncompressedImages );
-    add( uncompressedImages );
+    MimeCategory * source = create( tr( "source file" ), "#ffbb44" );
+    source->addSuffixes( { "S", "S_shipped", "asm", "c", "cc", "cmake", "cpp", "cxx", "dts",
+	                   "dtsi", "el", "f", "fuc3", "fuc3.h", "fuc5", "fuc5.h", "gir", "h",
+			   "h_shipped", "hpp", "java", "msg", "ph", "php", "po", "pot", "pro",
+			   "pxd", "py", "pyi", "pyx", "rb", "scm" },
+		         Qt::CaseSensitive );
+    source->addPatterns( { "Kbuild", "Makefile" },
+		         Qt::CaseSensitive );
 
-    uncompressedImages->addSuffixes( QStringList()
-				     << "bmp"
-				     << "pbm"
-				     << "pgm"
-				     << "pnm"
-				     << "ppm"
-				     << "xcf"
-				     );
+    MimeCategory * generated = create( tr( "source file (generated)" ), "#ffaa22" );
+    generated->addSuffixes( { "f90", "mod.c", "qm", "qml", "ui" },
+			    Qt::CaseSensitive );
+    generated->addPatterns( { "moc_*.cpp", "qrc_*.cpp", "ui_*.h" },
+			    Qt::CaseSensitive );
 
+    create( tr( "symlink" ), "#0000ff" );
 
-    MimeCategory * videos = new MimeCategory( tr( "Videos" ), QColor( 0xa0, 0xff, 0x00 ) );
-    CHECK_NEW( videos );
-    add( videos );
+    MimeCategory * shared = create( tr( "shared object" ), "#ff7722" );
+    shared->addSuffixes( { "so.,0", "so.1" },
+		         Qt::CaseSensitive );
+    shared->addSuffixes( { "dll", "so" },
+                         Qt::CaseInsensitive );
+    shared->addPatterns( { "*.so.*" },
+		         Qt::CaseSensitive );
 
-    videos->addSuffixes( QStringList()
-			 << "asf"
-			 << "avi"
-			 << "divx"
-			 << "flc"
-			 << "fli"
-			 << "flv"
-			 << "m2ts"
-			 << "m4v"
-			 << "mk3d"
-			 << "mkv"
-			 << "mov"
-			 << "mp2"
-			 << "mp4"
-			 << "mpeg"
-			 << "mpg"
-			 << "ogm"
-			 << "ogv"
-			 << "rm"
-			 << "vdr"
-			 << "vob"
-			 << "webm"
-			 << "wmp"
-			 << "wmv"
-			 );
+    MimeCategory * videos = create( tr( "video" ), "#aa44ff" );
+    videos->addSuffixes( { "asf", "avi", "divx", "flc", "fli", "flv", "m2ts", "m4v", "mk3d",
+			   "mkv", "mov", "mp2", "mp4", "mpeg", "mpg", "ogm", "ogv",
+			   "rm", "vdr", "vob", "webm", "wmp", "wmv" },
+			 Qt::CaseInsensitive );
 
-
-    MimeCategory * music = new MimeCategory( tr( "Music" ), Qt::yellow );
-    CHECK_NEW( music );
-    add( music );
-
-    music->addSuffixes( QStringList()
-			<< "aac"
-			<< "ape"
-			<< "f4a"
-			<< "f4b"
-			<< "flac"
-			<< "m4a"
-			<< "m4b"
-			<< "mid"
-			<< "mka"
-			<< "mp3"
-			<< "oga"
-			<< "ogg"
-			<< "opus"
-			<< "ra"
-			<< "rax"
-			<< "wav"
-			<< "wma"
-			);
-
-
-    MimeCategory * doc = new MimeCategory( tr( "Documents" ), Qt::blue );
-    CHECK_NEW( doc );
-    add( doc );
-
-    doc->addSuffixes( QStringList()
-		      << "doc"
-		      << "docx"
-		      << "dotx"
-		      << "dvi"
-		      << "dvi.bz2"
-		      << "epub"
-		      << "htm"
-		      << "html"
-		      << "md"
-		      << "odb"
-		      << "odc"
-		      << "odg"
-		      << "odp"
-		      << "ods"
-		      << "odt"
-		      << "otc"
-		      << "otp"
-		      << "ots"
-		      << "pdf"
-		      << "potx"
-		      << "ppsx"
-		      << "ppt"
-		      << "pptx"
-		      << "ps"
-		      << "sdc"
-		      << "sdc.gz"
-		      << "sdd"
-		      << "sdp"
-		      << "sdw"
-		      << "sla"
-		      << "sla.gz"
-		      << "slaz"
-		      << "sxi"
-		      << "txt"
-		      << "xls"
-		      << "xlsx"
-		      << "xlt"
-		      << "css"
-		      << "csv"
-		      << "latex"
-		      << "tex"
-		      << "xml"
-		      );
-
-
-    MimeCategory * src = new MimeCategory( tr( "Source Files" ), Qt::cyan );
-    CHECK_NEW( src );
-    add( src );
-    src->addSuffixes( QStringList()
-		      << "c" << "cpp" << "cc" << "cxx" << "h" << "hpp" << "ui"
-		      << "pl" << "py" << "rb" << "el" << "js" << "php" << "java"
-		      << "pro" << "cmake"
-		      , Qt::CaseSensitive );
-
-
-    MimeCategory * obj = new MimeCategory( tr( "Object or Generated Files" ), QColor( 0xff, 0xa0, 0x00 ) );
-    CHECK_NEW( obj );
-    add( obj );
-
-    obj->addSuffixes( QStringList()
-		      << "o" << "lo" << "ko" << "Po" << "al" << "la" << "moc" << "elc" << "pyc"
-		      , Qt::CaseSensitive );
-
-    obj->addPatterns( QStringList()
-		      << "moc_*.cpp" << "ui_*.cpp" << "qrc_*.cpp"
-		      , Qt::CaseSensitive );
-
-
-    MimeCategory * libs = new MimeCategory( tr( "Libraries" ), QColor( 0xff, 0xa0, 0x00 ) );
-    CHECK_NEW( libs );
-    add( libs );
-
-    libs->addPattern( "lib*.so.*", Qt::CaseSensitive );
-    libs->addPattern( "lib*.so",   Qt::CaseSensitive );
-    libs->addPattern( "lib*.a",	   Qt::CaseSensitive );
-    libs->addSuffix ( "dll" );
-    libs->addSuffix ( "so" );
+    writeSettings( _categories );
 }

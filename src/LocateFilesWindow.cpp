@@ -89,13 +89,13 @@ void LocateFilesWindow::refresh()
 
 void LocateFilesWindow::initWidgets()
 {
-    QFont font = _ui->heading->font();
-    font.setBold( true );
-    _ui->heading->setFont( font );
+//    QFont font = _ui->heading->font();
+//    font.setBold( true );
+//    _ui->heading->setFont( font );
 
     _ui->treeWidget->setColumnCount( LocateListColumnCount );
     _ui->treeWidget->setHeaderLabels( { tr( "Size" ), tr( "Last Modified" ), tr( "Path" ) } );
-    _ui->treeWidget->header()->setStretchLastSection( false );
+//    _ui->treeWidget->header()->setStretchLastSection( false );
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
     _ui->resultsLabel->setText( "" );
     addCleanupHotkeys();

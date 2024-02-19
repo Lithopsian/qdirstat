@@ -19,6 +19,7 @@
 #include <QSizeF>
 #include <QSize>
 #include <QStringList>
+#include <QRegularExpression>
 
 #include <stdio.h>	// stderr, fprintf()
 #include <stdlib.h>	// abort(), mkdtemp()
@@ -33,13 +34,9 @@
 
 static LogSeverity toLogSeverity( QtMsgType msgType );
 
-#if (QT_VERSION < QT_VERSION_CHECK( 5, 0, 0 ))
-static void qt_logger( QtMsgType msgType, const char *msg);
-#else
 static void qt_logger( QtMsgType msgType,
 		       const QMessageLogContext & context,
 		       const QString & msg );
-#endif
 
 
 Logger * Logger::_defaultLogger = 0;
@@ -65,8 +62,8 @@ Logger::Logger( const QString & rawLogDir,
     init();
     createNullStream();
 
+    const QString filename = expandVariables( rawFilename );
     QString logDir   = expandVariables( rawLogDir   );
-    QString filename = expandVariables( rawFilename );
 
     logDir = createLogDir( logDir );
 
@@ -81,18 +78,14 @@ Logger::~Logger()
 {
     if ( _logFile.isOpen() )
     {
-	logInfo() << "-- Log End --\n" << endl;
+	logInfo() << "-- Log End --\n" << Qt::endl;
 	_logFile.close();
     }
 
     if ( this == _defaultLogger )
     {
 	_defaultLogger = 0;
-#if (QT_VERSION < QT_VERSION_CHECK( 5, 0, 0 ))
-	qInstallMsgHandler(0);
-#else
 	qInstallMessageHandler(0); // Restore default message handler
-#endif
     }
 }
 
@@ -141,7 +134,7 @@ void Logger::openLogFile( const QString & filename )
 	    _logStream.setDevice( &_logFile );
 	    _logStream << "\n\n";
 	    log( __FILE__, __LINE__, __FUNCTION__, LogSeverityInfo )
-		<< "-- Log Start --" << endl;
+		<< "-- Log Start --" << Qt::endl;
 	}
 	else
 	{
@@ -154,11 +147,7 @@ void Logger::openLogFile( const QString & filename )
 void Logger::setDefaultLogger()
 {
     _defaultLogger = this;
-#if (QT_VERSION < QT_VERSION_CHECK( 5, 0, 0 ))
-    qInstallMsgHandler( qt_logger );
-#else
     qInstallMessageHandler( qt_logger );
-#endif
 }
 
 
@@ -256,7 +245,7 @@ void Logger::setLogLevel( Logger *logger, LogSeverity newLevel )
 
 void Logger::newline()
 {
-    _logStream << endl;
+    _logStream << Qt::endl;
 }
 
 
@@ -269,7 +258,7 @@ QString Logger::timeStamp()
 QString Logger::prefixLines( const QString &prefix,
 			     const QString &multiLineText )
 {
-    QStringList lines = multiLineText.split( "\n" );
+    const QStringList lines = multiLineText.split( "\n" );
     QString result = lines.isEmpty() ? QString() : prefix;
     result += lines.join( QString( "\n" ) + prefix );
 
@@ -280,7 +269,7 @@ QString Logger::prefixLines( const QString &prefix,
 QString Logger::indentLines( int indentWidth,
 			     const QString &multiLineText )
 {
-    QString prefix( indentWidth, ' ' );
+    const QString prefix( indentWidth, ' ' );
 
     return prefixLines( prefix, multiLineText );
 }
@@ -289,53 +278,26 @@ QString Logger::indentLines( int indentWidth,
 
 static LogSeverity toLogSeverity( QtMsgType msgType )
 {
-    LogSeverity severity = LogSeverityVerbose;
-
     switch ( msgType )
     {
-	case QtDebugMsg:    severity = LogSeverityVerbose; break;
-	case QtWarningMsg:  severity = LogSeverityWarning; break;
-	case QtCriticalMsg: severity = LogSeverityError;   break;
-	case QtFatalMsg:    severity = LogSeverityError;   break;
+	case QtDebugMsg:    return LogSeverityVerbose;
+	case QtWarningMsg:  return LogSeverityWarning;
+	case QtCriticalMsg: return LogSeverityError;
+	case QtFatalMsg:    return LogSeverityError;
 #if QT_VERSION >= 0x050500
-	case QtInfoMsg:	    severity = LogSeverityInfo;	   break;
+	case QtInfoMsg:	    return LogSeverityInfo;
 #endif
     }
 
-    return severity;
+    return LogSeverityVerbose;
 }
 
-
-#if (QT_VERSION < QT_VERSION_CHECK( 5, 0, 0 )) // Qt 4.x
-
-static void qt_logger( QtMsgType msgType, const char *msg)
-{
-    Logger::log( 0, // use default logger
-		 "[Qt]", 0, "", // file, line, function
-		 toLogSeverity( msgType ) )
-	<< msg << endl;
-
-    if ( msgType == QtFatalMsg )
-    {
-	fprintf( stderr, "FATAL: %s\n", msg );
-	abort();
-    }
-
-    if ( msgType == QtWarningMsg &&
-	 QString( msg ).contains( "cannot connect to X server" ) )
-    {
-	fprintf( stderr, "FATAL: %s\n", msg );
-	exit( 1 );
-    }
-}
-
-#else // Qt 5.x
 
 static void qt_logger( QtMsgType msgType,
 		       const QMessageLogContext & context,
 		       const QString & msg )
 {
-    QStringList lines = msg.split("\n");
+    const QStringList lines = msg.split("\n");
 
     foreach ( QString line, msg.split( "\n" ) )
     {
@@ -350,7 +312,7 @@ static void qt_logger( QtMsgType msgType,
             Logger::log( 0, // use default logger
                          context.file, context.line, context.function,
                          toLogSeverity( msgType ) )
-                << "[Qt] " << line << endl;
+                << "[Qt] " << line << Qt::endl;
         }
     }
 
@@ -401,28 +363,26 @@ static void qt_logger( QtMsgType msgType,
                 // designed by a committee of clueless product managers and
                 // marketing people.
 
-                QString text = "FATAL: Could not connect to the display.";
+                const QString text = "FATAL: Could not connect to the display.";
                 fprintf( stderr, "\n%s\n", qPrintable( text ) );
-                logError() << text << endl;
+                logError() << text << Qt::endl;
             }
             else
             {
                 fprintf( stderr, "FATAL: %s\n", qPrintable( msg ) );
             }
 
-            logInfo() << "-- Exiting --\n" << endl;
+            logInfo() << "-- Exiting --\n" << Qt::endl;
 	    exit( 1 ); // Don't dump core, just exit
         }
 	else
         {
             fprintf( stderr, "FATAL: %s\n", qPrintable( msg ) );
-            logInfo() << "-- Aborting with core dump --\n" << endl;
+            logInfo() << "-- Aborting with core dump --\n" << Qt::endl;
 	    abort(); // Exit with core dump (it might contain a useful backtrace)
         }
     }
 }
-
-#endif // Qt 5.x
 
 
 QString Logger::userName()
@@ -434,19 +394,16 @@ QString Logger::userName()
     // - The user owning the controlling terminal may or may not be the one
     //	 starting this program.
 
-    struct passwd * pw = getpwuid( getuid() );
+    const struct passwd * pw = getpwuid( getuid() );
 
-    if ( pw )
-	return pw->pw_name;
-    else
-	return QString::number( getuid() );
+    return pw ? pw->pw_name : QString::number( getuid() );
 }
 
 
 QString Logger::createLogDir( const QString & rawLogDir )
 {
     QString logDir( rawLogDir );
-    QDir rootDir( "/" );
+    const QDir rootDir( "/" );
     bool created = false;
 
     if ( ! rootDir.exists( logDir ) )
@@ -455,15 +412,15 @@ QString Logger::createLogDir( const QString & rawLogDir )
 	created = true;
     }
 
-    QFileInfo dirInfo( logDir );
+    const QFileInfo dirInfo( logDir );
 
     if ( (uid_t) dirInfo.ownerId()  != getuid() )
     {
 	logError() << "ERROR: Directory " << logDir
-		   << " is not owned by " << userName() << endl;
+		   << " is not owned by " << userName() << Qt::endl;
 
 	QByteArray nameTemplate( QString( logDir + "-XXXXXX" ).toUtf8() );
-	char * result = mkdtemp( nameTemplate.data() );
+	const char * result = mkdtemp( nameTemplate.data() );
 
 	if ( result )
 	{
@@ -473,7 +430,7 @@ QString Logger::createLogDir( const QString & rawLogDir )
 	else
 	{
 	    logError() << "Could not create log dir " << nameTemplate
-		       << ": " << formatErrno() << endl;
+		       << ": " << formatErrno() << Qt::endl;
 
 	    logDir = "/";
 	    // No permissions to write to /,
@@ -498,7 +455,7 @@ QString Logger::oldName( const QString & filename, int no )
     QString oldName = filename;
 
     if ( oldName.endsWith( ".log" ) )
-	oldName.remove( QRegExp( "\\.log$" ) );
+	oldName.remove( QRegularExpression( "\\.log$" ) );
 
     oldName += QString( "-%1.old" ).arg( no, 2, 10, QChar( '0' ) );
 
@@ -511,7 +468,7 @@ QString Logger::oldNamePattern( const QString & filename )
     QString pattern = filename;
 
     if ( pattern.endsWith( ".log" ) )
-	pattern.remove( QRegExp( "\\.log$" ) );
+	pattern.remove( QRegularExpression( "\\.log$" ) );
 
     pattern += "-??.old";
 
@@ -529,46 +486,41 @@ void Logger::logRotate( const QString & logDir,
 
     for ( int i = logRotateCount - 1; i >= 0; --i )
     {
-	QString currentName = i > 0 ? oldName( filename, i-1 ) : filename;
+	const QString currentName = i > 0 ? oldName( filename, i-1 ) : filename;
 	QString newName	    = oldName( filename, i );
 
 	if ( dir.exists( newName ) )
 	{
-	    bool success = dir.remove( newName );
-#if VERBOSE_ROTATE
-	    logDebug() << "Removing " << newName << ( success ? "" : " FAILED" ) << endl;
-#else
+	    const bool success = dir.remove( newName );
 	    Q_UNUSED( success );
+#if VERBOSE_ROTATE
+	    logDebug() << "Removing " << newName << ( success ? "" : " FAILED" ) << Qt::endl;
 #endif
 	}
 
 	if ( dir.exists( currentName ) )
 	{
-	    bool success = dir.rename( currentName, newName );
+	    const bool success = dir.rename( currentName, newName );
+	    Q_UNUSED( success );
 #if VERBOSE_ROTATE
 	    logDebug() << "Renaming " << currentName << " to " << newName
 		       << ( success ? "" : " FAILED" )
-		       << endl;
-#else
-	    Q_UNUSED( success );
+		       << Qt::endl;
 #endif
 
 	    keepers << newName;
 	}
     }
 
-    QStringList matches = dir.entryList( QStringList() << oldNamePattern( filename ),
-					 QDir::Files );
-
+    const QStringList matches = dir.entryList( QStringList() << oldNamePattern( filename ), QDir::Files );
     foreach ( const QString & match, matches )
     {
 	if ( ! keepers.contains( match ) )
 	{
-	    bool success = dir.remove( match );
-#if VERBOSE_ROTATE
-	    logDebug() << "Removing leftover " << match << ( success ? "" : " FAILED" ) << endl;
-#else
+	    const bool success = dir.remove( match );
 	    Q_UNUSED( success );
+#if VERBOSE_ROTATE
+	    logDebug() << "Removing leftover " << match << ( success ? "" : " FAILED" ) << Qt::endl;
 #endif
 	}
     }

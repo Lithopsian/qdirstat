@@ -17,13 +17,13 @@
 using namespace QDirStat;
 
 
-bool isSystemUid( uid_t uid )
+static bool isSystemUid( uid_t uid )
 {
     return uid < (uid_t) MIN_NON_SYSTEM_UID;
 }
 
 
-bool isSystemPath( const QString & path )
+static bool isSystemPath( const QString & path )
 {
     if ( path.startsWith( "/boot/"  ) ||
          path.startsWith( "/bin/"   ) ||
@@ -76,7 +76,7 @@ bool isSystemPath( const QString & path )
 }
 
 
-bool mightBeSystemPath( const QString & path )
+static bool mightBeSystemPath( const QString & path )
 {
     if ( path.contains  ( "/lost+found/" ) ||   // Also on other mounted filesystems!
          path.startsWith( "/run/"        ) ||

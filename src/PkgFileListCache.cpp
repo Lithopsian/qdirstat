@@ -23,21 +23,6 @@ do {									  \
 
 
 
-PkgFileListCache::PkgFileListCache( PkgManager * pkgManager,
-				    LookupType	 lookupType ) :
-    _pkgManager( pkgManager ),
-    _lookupType( lookupType )
-{
-
-}
-
-
-PkgFileListCache::~PkgFileListCache()
-{
-    logDebug() << "Destroying the file list cache." << endl;
-}
-
-
 QStringList PkgFileListCache::fileList( const QString & pkgName )
 {
     CHECK_LOOKUP_TYPE( LookupByPkg );

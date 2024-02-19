@@ -8,9 +8,10 @@
 
 
 #include <QMenu>
-#include <QMouseEvent>
+#include <QObject>
 
 #include "FileSizeLabel.h"
+#include "FileInfo.h"
 #include "FormatUtil.h"
 #include "Logger.h"
 
@@ -19,63 +20,55 @@ using namespace QDirStat;
 
 void FileSizeLabel::clear()
 {
-    _value = -1;
-    _prefix.clear();
-    setToolTip( QString() );
+    QLabel::setToolTip( QString() );
     QLabel::clear();
-//    PopupLabel::clear();
 }
 
 
-void FileSizeLabel::setValue( FileSize val, const QString & prefix )
+void FileSizeLabel::setSize( const FileInfo * file )
 {
-    _value  = val;
-    _prefix = prefix;
-    setToolTip( "" );
-
-    if ( _value < 0 )
-    {
-	QLabel::setText( "" );
-    }
-    else
-    {
-	QLabel::setText( _prefix + formatSize( _value ) );
-
-	if ( _value > 1024 )
-	    setToolTip( _prefix + formatByteSize( _value ) );
-    }
+    setValueWithLinks( file->rawByteSize(), file->links() );
 }
 
 
-void FileSizeLabel::setText( const QString & newText,
-			     FileSize	     newValue,
-			     const QString & newPrefix )
+void FileSizeLabel::setAllocated( const FileInfo * file )
 {
-    _value  = newValue;
-    _prefix = newPrefix;
-    setToolTip( "" );
+    setValueWithLinks( file->rawAllocatedSize(), file->links() );
 
-    QLabel::setText( newText );
-    if ( _value > 1024 )
-        setToolTip( _prefix + formatByteSize( _value ) );
+    setBold( file->isSparseFile() ||
+             ( file->rawAllocatedSize() > 4096 && file->usedPercent() < ALLOCATED_FAT_PERCENT ) );
 }
 
-/*
-bool FileSizeLabel::haveContextMenu() const
+
+void FileSizeLabel::setValue( FileSize value, const QString & prefix )
 {
-    if ( ! _contextText.isEmpty() )
-	return true;
-
-    return _value >= 1024; // Doesn't make sense below 1 kB
+    QLabel::setText( prefix + formatSize( value ) );
+    setToolTip( value, prefix, "" );
 }
 
 
-QString FileSizeLabel::contextText() const
+void FileSizeLabel::setValueWithLinks( FileSize size, nlink_t numLinks )
 {
-    return _contextText.isEmpty() ?
-	_prefix + formatByteSize( _value ) : _contextText;
+    const QString & text = formatSize( size );
+    QLabel::setText( text + formatLinksInline( numLinks ) );
+    setToolTip( size, "", formatLinksRichText( numLinks ) );
 }
-*/
+
+
+void FileSizeLabel::setToolTip( FileSize size, const QString & prefix, const QString & suffix )
+{
+    if ( size < 1000 ) // not useful below (rounded) 1 kB
+	QLabel::setToolTip( QString() );
+
+    QLabel::setToolTip( whitespacePre( prefix + formatByteSize( size ) + suffix ) );
+}
+
+
+void FileSizeLabel::setText( const QString & text )
+{
+    QLabel::setText( text );
+    QLabel::setToolTip( QString() );
+}
 
 
 void FileSizeLabel::setBold( bool bold )
@@ -83,4 +76,18 @@ void FileSizeLabel::setBold( bool bold )
     QFont textFont = font();
     textFont.setBold( bold );
     setFont( textFont );
+}
+
+
+void FileSizeLabel::suppressIfSameContent( FileSizeLabel * cloneLabel, QLabel * caption ) const
+{
+    if ( text() == cloneLabel->text() )
+    {
+	cloneLabel->clear();
+	caption->setEnabled( false );
+    }
+    else
+    {
+	caption->setEnabled( true );
+    }
 }

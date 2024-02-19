@@ -7,6 +7,9 @@
  */
 
 
+#include <math.h>       // ceil()
+#include <algorithm>
+
 #include "FileMTimeStats.h"
 #include "FileInfoIterator.h"
 #include "DirTree.h"
@@ -44,15 +47,11 @@ void FileMTimeStats::collect( FileInfo * subtree )
     {
 	FileInfo * item = *it;
 
-	if ( item->hasChildren() )
-	{
-	    collect( item );
-	}
-	else if ( item->isFile() )
-	{
-            _data << item->mtime();
-	}
 	// Disregard symlinks, block devices and other special files
+	if ( item->hasChildren() )
+	    collect( item );
+	else if ( item->isFile() )
+            _data << item->mtime();
 
 	++it;
     }

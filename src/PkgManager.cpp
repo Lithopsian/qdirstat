@@ -27,22 +27,21 @@ PkgManager::~PkgManager()
 }
 
 
-QStringList PkgManager::fileList( PkgInfo * pkg )
+QStringList PkgManager::fileList( const PkgInfo * pkg ) const
 {
-    QStringList fileList;
-    QString     command = fileListCommand( pkg );
+    const QString command = fileListCommand( pkg );
 
     if ( ! command.isEmpty() )
     {
         int exitCode = -1;
-        QString output = runCommand( command,
-                                     &exitCode,
-                                     true,          // logCommand
-                                     false );       // logOutput
+        const QString output = runCommand( command,
+                                           &exitCode,
+                                           true,          // logCommand
+                                           false );       // logOutput
         if ( exitCode == 0 )
-            fileList = parseFileList( output );
+            return parseFileList( output );
     }
 
-    return fileList;
+    return QStringList();
 }
 

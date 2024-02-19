@@ -16,37 +16,31 @@
 using namespace QDirStat;
 
 
-UnpkgSettings::UnpkgSettings( InitPolicy initPolicy )
+UnpkgSettings::UnpkgSettings()
 {
-    switch ( initPolicy )
-    {
-	case ReadFromConfig:
-	    read();
-	    break;
+    read();
+}
 
-	case DefaultValues:
-	    startingDir	   = defaultStartingDir();
-	    excludeDirs	   = defaultExcludeDirs();
-	    ignorePatterns = defaultIgnorePatterns();
-	    break;
 
-	case Empty:
-	    break;
-    }
+UnpkgSettings::UnpkgSettings( const QString & startingDir ):
+    UnpkgSettings { }
+{
+    _startingDir = startingDir;
 }
 
 
 void UnpkgSettings::read()
 {
-    // logDebug() << endl;
+    // logDebug() << Qt::endl;
 
     QDirStat::Settings settings;
 
     settings.beginGroup( "UnpkgSettings" );
 
-    startingDir	   = settings.value( "StartingDir",    defaultStartingDir()    ).toString();
-    excludeDirs	   = settings.value( "ExcludeDirs",    defaultExcludeDirs()    ).toStringList();
-    ignorePatterns = settings.value( "IgnorePatterns", defaultIgnorePatterns() ).toStringList();
+    _startingDir      = settings.value( "StartingDir",      defaultStartingDir()      ).toString();
+    _excludeDirs      = settings.value( "ExcludeDirs",      defaultExcludeDirs()      ).toStringList();
+    _ignorePatterns   = settings.value( "IgnorePatterns",   defaultIgnorePatterns()   ).toStringList();
+    _crossFilesystems = settings.value( "CrossFilesystems", defaultCrossFilesystems() ).toBool();
 
     settings.endGroup();
 }
@@ -54,49 +48,33 @@ void UnpkgSettings::read()
 
 void UnpkgSettings::write()
 {
-    // logDebug() << endl;
+    // logDebug() << Qt::endl;
 
     QDirStat::Settings settings;
 
     settings.beginGroup( "UnpkgSettings" );
 
-    settings.setValue( "StartingDir",	 startingDir	);
-    settings.setValue( "ExcludeDirs",	 excludeDirs	);
-    settings.setValue( "IgnorePatterns", ignorePatterns );
+    settings.setValue( "StartingDir",	   _startingDir      );
+    settings.setValue( "ExcludeDirs",	   _excludeDirs      );
+    settings.setValue( "IgnorePatterns",   _ignorePatterns   );
+    settings.setValue( "CrossFilesystems", _crossFilesystems );
 
     settings.endGroup();
 }
 
 
+UnpkgSettings UnpkgSettings::defaultSettings()
+{
+    return UnpkgSettings( defaultStartingDir(), defaultExcludeDirs(), defaultIgnorePatterns(), defaultCrossFilesystems() );
+}
+
+
 void UnpkgSettings::dump() const
 {
-    logDebug() << "startingDir:    " << startingDir << endl;
-    logDebug() << "excludeDirs:    " << excludeDirs << endl;
-    logDebug() << "ignorePatterns: " << ignorePatterns << endl;
+#if 0
+    logDebug() << "startingDir:      " << _startingDir << Qt::endl;
+    logDebug() << "excludeDirs:      " << _excludeDirs << Qt::endl;
+    logDebug() << "ignorePatterns:   " << _ignorePatterns << Qt::endl;
+    logDebug() << "crossFilesystems: " << _crossFilesystems << Qt::endl;
+#endif
 }
-
-
-QString UnpkgSettings::defaultStartingDir()
-{
-    return "/";
-}
-
-
-QStringList UnpkgSettings::defaultExcludeDirs()
-{
-    return QStringList()
-	<< "/home"
-	<< "/root"
-	<< "/tmp"
-	<< "/var"
-        << "/snap"
-	<< "/usr/lib/sysimage/rpm"
-	<< "/usr/local";
-}
-
-
-QStringList UnpkgSettings::defaultIgnorePatterns()
-{
-    return QStringList() << "*.pyc";
-}
-

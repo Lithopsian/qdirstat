@@ -10,62 +10,15 @@
 #include "PkgInfo.h"
 #include "DirTree.h"
 #include "FileInfoIterator.h"
+#include "Logger.h"
+
 
 using namespace QDirStat;
 
 
-PkgInfo::PkgInfo( const QString & name,
-                  const QString & version,
-                  const QString & arch,
-                  PkgManager    * pkgManager ):
-    DirInfo( 0,   // tree,
-             0,   // parent
-             name,
-             0,   // mode
-             0,   // size
-             0 ), // mtime
-    _baseName( name ),
-    _version( version ),
-    _arch( arch ),
-    _pkgManager( pkgManager ),
-    _multiVersion( false ),
-    _multiArch( false )
-{
-    // logDebug() << "Creating " << this << endl;
-}
-
-
-PkgInfo::PkgInfo( DirTree *       tree,
-                  DirInfo *       parent,
-                  const QString & name,
-                  PkgManager    * pkgManager ):
-    DirInfo( tree,
-             parent,
-             name,
-             0,   // mode
-             0,   // size
-             0 ), // mtime
-    _baseName( name ),
-    _pkgManager( pkgManager ),
-    _multiVersion( false ),
-    _multiArch( false )
-{
-    // logDebug() << "Creating " << this << endl;
-}
-
-
-PkgInfo::~PkgInfo()
-{
-    // NOP
-}
-
-
 QString PkgInfo::url() const
 {
-    QString name = _name;
-
-    if ( isPkgUrl( name ) )
-        name = "";
+    const QString name = isPkgUrl( _name ) ? "" : _name;
 
     return QString( "Pkg:/%1" ).arg( name );
 }
@@ -88,7 +41,7 @@ QString PkgInfo::pkgUrl( const QString & path ) const
 
 FileInfo * PkgInfo::locate( const QString & path )
 {
-    QStringList components = path.split( "/", QString::SkipEmptyParts );
+    QStringList components = path.split( "/", Qt::SkipEmptyParts );
 
     if ( isPkgUrl( path ) )
     {
@@ -101,7 +54,7 @@ FileInfo * PkgInfo::locate( const QString & path )
 
         if ( pkgName != _name )
         {
-            logError() << "Path " << path << " does not belong to " << this << endl;
+            logError() << "Path " << path << " does not belong to " << this << Qt::endl;
             return 0;
         }
 
@@ -122,25 +75,25 @@ FileInfo * PkgInfo::locate( const QStringList & pathComponents )
 FileInfo * PkgInfo::locate( DirInfo *           subtree,
                             const QStringList & pathComponents )
 {
-    // logDebug() << "Locating /" << pathComponents.join( "/" ) << " in " << subtree << endl;
+    // logDebug() << "Locating /" << pathComponents.join( "/" ) << " in " << subtree << Qt::endl;
 
     if ( ! subtree || pathComponents.isEmpty() )
         return 0;
 
-    QStringList components = pathComponents;
-    QString     wanted     = components.takeFirst();
+    QStringList   components = pathComponents;
+    const QString wanted     = components.takeFirst();
 
     FileInfoIterator it( subtree );
 
     while ( *it )
     {
-        // logDebug() << "Checking " << (*it)->name() << " in " << subtree << " for " << wanted << endl;
+        // logDebug() << "Checking " << (*it)->name() << " in " << subtree << " for " << wanted << Qt::endl;
 
         if ( (*it)->name() == wanted )
         {
             if ( components.isEmpty() )
             {
-                // logDebug() << "  Found " << *it << endl;
+                // logDebug() << "  Found " << *it << Qt::endl;
                 return *it;
             }
             else

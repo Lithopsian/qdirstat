@@ -8,12 +8,14 @@
 
 
 #include <algorithm>    // std::swap()
+
 #include "FileInfoSorter.h"
+#include "FileInfo.h"
 
 using namespace QDirStat;
 
 
-bool FileInfoSorter::operator() ( FileInfo * a, FileInfo * b )
+bool FileInfoSorter::operator() ( FileInfo * a, FileInfo * b ) const
 {
     if ( !a || !b ) return false;
 
@@ -36,15 +38,9 @@ bool FileInfoSorter::operator() ( FileInfo * a, FileInfo * b )
 	case PercentBarCol:
 	case PercentNumCol:
 	case SizeCol:
-            {
-                if ( a->totalAllocatedSize() == b->totalAllocatedSize() )
-                {
-                    // This is a common case because of cluster-wise allocation
-                    return a->totalSize() < b->totalSize();
-                }
-                else
-                    return a->totalAllocatedSize() < b->totalAllocatedSize();
-            }
+	    return a->totalSize() == b->totalSize() ?
+		a->totalAllocatedSize() < b->totalAllocatedSize() :
+		a->totalSize() < b->totalSize();
 
 	case TotalItemsCol:	  return a->totalItems()      < b->totalItems();
 	case TotalFilesCol:	  return a->totalFiles()      < b->totalFiles();

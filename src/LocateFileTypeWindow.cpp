@@ -10,6 +10,7 @@
 #include "LocateFileTypeWindow.h"
 #include "QDirStatApp.h"        // SelectionModel
 #include "DirTree.h"
+#include "DirTreeModel.h"
 #include "DotEntry.h"
 #include "SelectionModel.h"
 #include "SettingsHelpers.h"
@@ -25,7 +26,7 @@ LocateFileTypeWindow::LocateFileTypeWindow( QWidget * parent ):
     QDialog( parent ),
     _ui( new Ui::LocateFileTypeWindow )
 {
-    // logDebug() << "init" << endl;
+    // logDebug() << "init" << Qt::endl;
 
     CHECK_NEW( _ui );
     _ui->setupUi( this );
@@ -43,7 +44,7 @@ LocateFileTypeWindow::LocateFileTypeWindow( QWidget * parent ):
 
 LocateFileTypeWindow::~LocateFileTypeWindow()
 {
-    // logDebug() << "destroying" << endl;
+    // logDebug() << "destroying" << Qt::endl;
     writeWindowSettings( this, "LocateFileTypeWindow" );
     delete _ui;
 }
@@ -64,15 +65,12 @@ void LocateFileTypeWindow::refresh()
 
 void LocateFileTypeWindow::initWidgets()
 {
-    QFont font = _ui->heading->font();
-    font.setBold( true );
-    _ui->heading->setFont( font );
+//    QFont font = _ui->heading->font();
+//    font.setBold( true );
+//    _ui->heading->setFont( font );
 
     _ui->treeWidget->setColumnCount( SSR_ColumnCount );
-    _ui->treeWidget->setHeaderLabels( QStringList()
-				      << tr( "Number" )
-				      << tr( "Total Size" )
-				      << tr( "Directory" ) );
+    _ui->treeWidget->setHeaderLabels( { tr( "Number" ), tr( "Total Size" ), tr( "Directory" ) } );
     _ui->treeWidget->header()->setStretchLastSection( false );
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
 }
@@ -103,12 +101,12 @@ void LocateFileTypeWindow::populate( const QString & suffix, FileInfo * newSubtr
     if ( ! _searchSuffix.startsWith( '.' ) )
 	_searchSuffix.prepend( '.' );
 
-    _ui->heading->setText( tr( "Directories with %1 Files below %2" )
+    _ui->heading->setText( tr( "Directories with %1 files below %2" )
                            .arg( searchSuffix() )
                            .arg( _subtree.url() ) );
 
     logDebug() << "Locating all files ending with \""
-	       << _searchSuffix << "\" below " << _subtree.url() << endl;
+	       << _searchSuffix << "\" below " << _subtree.url() << Qt::endl;
 
     // For better Performance: Disable sorting while inserting many items
     _ui->treeWidget->setSortingEnabled( false );
@@ -117,7 +115,7 @@ void LocateFileTypeWindow::populate( const QString & suffix, FileInfo * newSubtr
 
     _ui->treeWidget->setSortingEnabled( true );
     _ui->treeWidget->sortByColumn( SSR_PathCol, Qt::AscendingOrder );
-    logDebug() << _ui->treeWidget->topLevelItemCount() << " directories" << endl;
+    logDebug() << _ui->treeWidget->topLevelItemCount() << " directories" << Qt::endl;
 
     // Make sure something is selected, even if this window is not the active
     // one (for example because the user just clicked on another suffix in the
@@ -224,7 +222,7 @@ void LocateFileTypeWindow::selectResult( QTreeWidgetItem * item )
     FileInfo * dir = _subtree.tree()->locate( searchResult->path() );
     FileInfoSet matches = matchingFiles( dir );
 
-    // logDebug() << "Selecting " << searchResult->path() << " with " << matches.size() << " matches" << endl;
+    // logDebug() << "Selecting " << searchResult->path() << " with " << matches.size() << " matches" << Qt::endl;
 
     if ( ! matches.isEmpty() )
 	app()->selectionModel()->setCurrentItem( matches.first(), true );
@@ -248,7 +246,7 @@ SuffixSearchResultItem::SuffixSearchResultItem( const QString & path,
     setText( SSR_CountCol,	QString( "%1" ).arg( count ) );
     setText( SSR_TotalSizeCol,	formatSize( totalSize ) );
     setText( SSR_PathCol,	path );
-    setIcon( SSR_PathCol,       QIcon( ":/icons/tree-medium/dir.png" ) );
+    setIcon( SSR_PathCol,       QIcon( app()->dirTreeModel()->dirIcon() ) );
 
     setTextAlignment( SSR_CountCol,	 Qt::AlignRight );
     setTextAlignment( SSR_TotalSizeCol,	 Qt::AlignRight );

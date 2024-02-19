@@ -9,23 +9,28 @@
 
 #include "MimeCategory.h"
 #include "Logger.h"
-#include "Exception.h"
+//#include "Exception.h"
 
 using namespace QDirStat;
 
 
-MimeCategory::MimeCategory( const QString & name, const QColor & color ):
-    _name( name ),
-    _color( color )
+void MimeCategory::addExactMatch( const QString & rawPattern,
+				  Qt::CaseSensitivity caseSensitivity )
 {
-    if ( ! _color.isValid() )
-	_color = Qt::white;
-}
+    QString pattern = rawPattern.trimmed();
 
+    if ( caseSensitivity == Qt::CaseInsensitive )
+	pattern = pattern.toLower();
 
-MimeCategory::~MimeCategory()
-{
-    // NOP
+    // Pick the correct suffix list
+
+    QStringList & patternList =
+	caseSensitivity == Qt::CaseSensitive ?_caseSensitiveExactList : _caseInsensitiveExactList;
+
+    // Append pattern if not empty and not already there
+
+    if ( ! pattern.isEmpty() && ! patternList.contains( pattern ) )
+	patternList << pattern;
 }
 
 
@@ -46,9 +51,8 @@ void MimeCategory::addSuffix( const QString &	  rawSuffix,
 
     // Pick the correct suffix list
 
-    QStringList & suffixList = caseSensitivity == Qt::CaseSensitive ?
-	_caseSensitiveSuffixList : _caseInsensitiveSuffixList;
-
+    QStringList & suffixList =
+	caseSensitivity == Qt::CaseSensitive ? _caseSensitiveSuffixList : _caseInsensitiveSuffixList;
 
     // Append suffix if not empty and not already there
 
@@ -57,37 +61,81 @@ void MimeCategory::addSuffix( const QString &	  rawSuffix,
 }
 
 
-bool MimeCategory::isSuffixPattern( const QString & pattern )
+void MimeCategory::addWildcardSuffix( const QString & rawPattern,
+				      Qt::CaseSensitivity caseSensitivity )
+{
+    QString pattern = rawPattern.trimmed();
+
+    if ( caseSensitivity == Qt::CaseInsensitive )
+	pattern = pattern.toLower();
+
+    // Pick the correct suffix list
+
+    QStringList & wildcardSuffixList =
+	caseSensitivity == Qt::CaseSensitive ? _caseSensitiveWildcardSuffixList : _caseInsensitiveWildcardSuffixList;
+
+    // Append suffix if not empty and not already there
+
+    if ( ! pattern.isEmpty() && ! wildcardSuffixList.contains( pattern ) )
+	wildcardSuffixList << pattern;
+}
+
+
+void MimeCategory::addWildcard( const QString & rawPattern,
+				Qt::CaseSensitivity caseSensitivity )
+{
+    const QString pattern = rawPattern.trimmed();
+
+    // Pick the correct wildcard list
+
+    QStringList & wildcardList =
+	caseSensitivity == Qt::CaseSensitive ? _caseSensitiveWildcardList : _caseInsensitiveWildcardList;
+
+    // Append wildcard if not empty and not already there
+
+//    if ( ! pattern.isEmpty() && ! wildcardList.contains( pattern ) )
+	wildcardList << pattern;
+}
+
+
+bool MimeCategory::isWildcard( const QString & pattern ) const
+{
+    return pattern.contains( '*' ) || pattern.contains( '?' ) || pattern.contains( '[' );
+}
+
+
+bool MimeCategory::isSuffixPattern( const QString & pattern ) const
 {
     if ( ! pattern.startsWith( "*." ) )
 	return false;
 
-    QString rest = pattern.mid( 2, -1 ); // Without leading "*."
+    const QString rest = pattern.mid( 2, -1 ); // Without leading "*."
 
-    if ( rest.contains( '*' ) ||
-	 rest.contains( '?' ) ||
-	 rest.contains( '[' )	) // No use to check for "]", too, if there is no "["
-    {
-	return false;
-    }
-    else
-	return true;
+    return ( !isWildcard( rest ) );
+}
+
+
+bool MimeCategory::isWildcardWithSuffix( const QString & pattern ) const
+{
+    const QStringList list = pattern.split( "*.", Qt::SkipEmptyParts );
+
+    return list.size() > 1 && !isWildcard( list.last() );
 }
 
 
 void MimeCategory::addPattern( const QString &	   rawPattern,
 			       Qt::CaseSensitivity caseSensitivity )
 {
-    QString pattern = rawPattern.trimmed();
+    const QString pattern = rawPattern.trimmed();
 
-    if ( isSuffixPattern( pattern ) )
+    if ( !isWildcard( pattern ) )
+	addExactMatch( pattern, caseSensitivity );
+    else if ( isSuffixPattern( pattern ) )
 	addSuffix( pattern, caseSensitivity );
+    else if ( isWildcardWithSuffix( pattern ) )
+	addWildcardSuffix( pattern, caseSensitivity );
     else
-    {
-	_patternList << QRegExp ( ( caseSensitivity == Qt::CaseInsensitive ?
-				    pattern.toLower() : pattern ),
-				  caseSensitivity, QRegExp::Wildcard );
-    }
+	addWildcard( pattern, caseSensitivity );
 }
 
 
@@ -119,24 +167,35 @@ void MimeCategory::addSuffixes( const QStringList & suffixes,
 
 void MimeCategory::clear()
 {
+    _caseInsensitiveExactList.clear();
+    _caseSensitiveExactList.clear();
     _caseInsensitiveSuffixList.clear();
     _caseSensitiveSuffixList.clear();
-    _patternList.clear();
+    _caseInsensitiveWildcardSuffixList.clear();
+    _caseSensitiveWildcardSuffixList.clear();
+    _caseInsensitiveWildcardList.clear();
+    _caseSensitiveWildcardList.clear();
 }
 
 
-QStringList MimeCategory::humanReadablePatternList( Qt::CaseSensitivity caseSensitivity )
+QStringList MimeCategory::humanReadablePatternList( Qt::CaseSensitivity caseSensitivity ) const
 {
-    QStringList result = caseSensitivity == Qt::CaseSensitive ?
-	_caseSensitiveSuffixList : _caseInsensitiveSuffixList;
-
-    result = humanReadableSuffixList( result );
-    result << humanReadablePatternList( _patternList, caseSensitivity );
-#if (QT_VERSION < QT_VERSION_CHECK( 5, 0, 0 ))
-    result.sort();
-#else
+    QStringList result =
+	caseSensitivity == Qt::CaseSensitive ? _caseSensitiveExactList : _caseInsensitiveExactList;
     result.sort( caseSensitivity );
-#endif
+
+    QStringList list =
+	caseSensitivity == Qt::CaseSensitive ? _caseSensitiveWildcardSuffixList : _caseInsensitiveWildcardSuffixList;
+    list.sort( caseSensitivity );
+    result << list;
+
+    list = caseSensitivity == Qt::CaseSensitive ? _caseSensitiveSuffixList : _caseInsensitiveSuffixList;
+    list.sort( caseSensitivity );
+    result << humanReadableSuffixList( list );
+
+    list = caseSensitivity == Qt::CaseSensitive ? _caseSensitiveWildcardList : _caseInsensitiveWildcardList;
+    list.sort( caseSensitivity );
+    result << list;
 
     return result;
 }
@@ -148,21 +207,6 @@ QStringList MimeCategory::humanReadableSuffixList( const QStringList & suffixLis
 
     foreach ( const QString & suffix, suffixList )
 	result << ( "*." + suffix );
-
-    return result;
-}
-
-
-QStringList MimeCategory::humanReadablePatternList( const QRegExpList & patternList,
-						    Qt::CaseSensitivity caseSensitivity )
-{
-    QStringList result;
-
-    foreach ( const QRegExp & pattern, patternList )
-    {
-	if ( pattern.caseSensitivity() == caseSensitivity )
-	    result << pattern.pattern();
-    }
 
     return result;
 }

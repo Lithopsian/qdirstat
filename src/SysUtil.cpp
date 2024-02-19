@@ -173,12 +173,12 @@ bool SysUtil::runningWithSudo()
     return ! qgetenv( "SUDO_USER" ).isEmpty();
 }
 
-
+/*
 bool SysUtil::runningAsTrueRoot()
 {
     return runningAsRoot() && ! runningWithSudo();
 }
-
+*/
 
 QString SysUtil::homeDir( uid_t uid )
 {
@@ -193,7 +193,7 @@ QString SysUtil::symLinkTarget( const QString & path )
     return QString::fromUtf8( readLink( path ) );
 }
 
-
+/*
 bool SysUtil::isBrokenSymLink( const QString & path )
 {
     const QByteArray target = readLink( path );
@@ -239,7 +239,7 @@ bool SysUtil::isBrokenSymLink( const QString & path )
         }
     }
 }
-
+*/
 
 QByteArray SysUtil::readLink( const QString & path )
 {
@@ -249,29 +249,30 @@ QByteArray SysUtil::readLink( const QString & path )
 
 QByteArray SysUtil::readLink( const QByteArray & path )
 {
-    QByteArray targetBuf( PATH_MAX, 0 );
-    const ssize_t len = ::readlink( path, targetBuf.data(), targetBuf.size() );
+#ifndef PATH_MAX
+    const int maxLen = PATH_MAX;
+#else
+    // no max path, just pick a big number that isn't too out of control
+    const int maxLen = 1024 * 1024;
+#endif
 
-    if ( len == 0 )
-    {
-        logWarning() << QString::fromUtf8( path ) << " is not a symlink" << Qt::endl;
-    }
-    else if ( len == targetBuf.size() )
-    {
-        // Buffer overflow. Yes, this can actually happen:
-        //   http://insanecoding.blogspot.com/2007/11/pathmax-simply-isnt.html
-        //
-        // Since this is a very pathological case, we won't attempt any crazy
-        // workarounds and simply fail with an error in the log.
+    // 99+% of symlinks will fit in a small buffer
+    QByteArray buf( 256, Qt::Uninitialized );
 
-        logError() << "Symlink target of " << QString::fromUtf8( path )
-                   << " is longer than " << PATH_MAX << " bytes" << Qt::endl;
-        targetBuf.clear();
-    }
-    else
-    {
-        targetBuf.resize( len );
+    ssize_t len = ::readlink( path, buf.data(), buf.size() );
+    while ( len == buf.size() ) {
+        // readlink(2) will fill our buffer and not necessarily terminate with NUL;
+        if ( buf.size() >= maxLen )
+            return QByteArray();
+
+        // double the size and try again
+        buf.resize( buf.size() * 2 );
+        len = ::readlink( path, buf.data(), buf.size() );
     }
 
-    return targetBuf;
+    if (len == -1)
+        return QByteArray();
+
+    buf.resize( len );
+    return buf;
 }

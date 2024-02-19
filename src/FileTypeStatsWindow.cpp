@@ -96,24 +96,14 @@ void FileTypeStatsWindow::clear()
 
 void FileTypeStatsWindow::initWidgets()
 {
-    QFont font = _ui->heading->font();
-    font.setBold( true );
-    _ui->heading->setFont( font );
+//    QFont font = _ui->heading->font();
+//    font.setBold( true );
+//    _ui->heading->setFont( font );
 
     _ui->treeWidget->setColumnCount( FT_ColumnCount );
     _ui->treeWidget->setHeaderLabels( { tr( "Name" ), tr( "Number" ), tr( "Total Size" ), tr( "Percentage" ) } );
     _ui->treeWidget->header()->setStretchLastSection( false );
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
-
-
-    // Create the menu for the menu button
-/*
-    QMenu * menu = new QMenu( this );
-    CHECK_NEW( menu );
-    menu->addAction( _ui->actionLocate    );
-    menu->addAction( _ui->actionSizeStats );
-    _ui->menuButton->setMenu( menu );
-*/
 }
 
 
@@ -151,8 +141,7 @@ void FileTypeStatsWindow::populate( FileInfo * newSubtree )
     _subtree = newSubtree;
     _stats->calc( newSubtree ? newSubtree : _subtree() );
 
-    _ui->heading->setText( tr( "File type statistics for %1" )
-                           .arg( _subtree.url() ) );
+    _ui->heading->setText( tr( "File type statistics for %1" ).arg( _subtree.url() ) );
 
     // Don't sort until all items are added
     _ui->treeWidget->setSortingEnabled( false );
@@ -247,6 +236,7 @@ void FileTypeStatsWindow::populate( FileInfo * newSubtree )
     _ui->treeWidget->setSortingEnabled( true );
     _ui->treeWidget->sortByColumn( FT_TotalSizeCol, Qt::DescendingOrder );
 }
+
 
 CategoryFileTypeItem * FileTypeStatsWindow::addCategoryItem( const QString & name, int count, FileSize sum )
 {

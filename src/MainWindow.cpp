@@ -85,8 +85,6 @@ MainWindow::MainWindow( bool slowUpdate ):
 
     ActionManager::instance()->addWidgetTree( this );
 
-    readSettings();
-
     _updateTimer.setInterval( UPDATE_MILLISEC );
     _treeExpandTimer.setSingleShot( true );
 
@@ -108,6 +106,8 @@ MainWindow::MainWindow( bool slowUpdate ):
     _futureSelection.setTree( app()->dirTree() );
     _futureSelection.setUseRootFallback( false );
     _futureSelection.setUseParentFallback( true );
+
+    readSettings();
 
     // Set the boldItemFont for the DirTreeModel.
     //
@@ -380,6 +380,8 @@ void MainWindow::writeSettings()
     settings.setValue( "LongStatusBarTimeout"    , _longStatusBarTimeout );
     settings.setValue( "UrlInWindowTitle"	 , _urlInWindowTitle );
     settings.setValue( "UseTreemapHover"	 , _ui->treemapView->useTreemapHover() );
+
+    settings.setValue( "State"	 , saveState() );
 
     settings.endGroup();
 

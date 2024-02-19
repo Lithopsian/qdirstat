@@ -91,9 +91,10 @@ void FileSizeStatsWindow::clear()
 
 void FileSizeStatsWindow::initWidgets()
 {
-    QFont font = _ui->heading->font();
-    font.setBold( true );
-    _ui->heading->setFont( font );
+//    QFont font = _ui->heading->font();
+//    font.setBold( true );
+//    _ui->heading->setFont( font );
+
     _ui->optionsPanel->hide();
 
     connect( _ui->percentileFilterCheckBox, SIGNAL( stateChanged( int ) ),
@@ -165,8 +166,7 @@ void FileSizeStatsWindow::populate( FileInfo * subtree, const QString & suffix )
     if ( _suffix.isEmpty() )
 	_ui->heading->setText( tr( "File size statistics for %1" ).arg( url ) );
     else
-	_ui->heading->setText( tr( "File size statistics for %1 in %2" )
-			       .arg( suffix ).arg( url ) );
+	_ui->heading->setText( tr( "File size statistics for %1 in %2" ).arg( suffix ).arg( url ) );
     calc();
 
     fillHistogram();

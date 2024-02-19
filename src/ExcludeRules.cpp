@@ -13,40 +13,74 @@
 #include "FileInfoIterator.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
+//#include "DebugHelpers.h"
 #include "Logger.h"
 #include "Exception.h"
 
 
-#define VERBOSE_EXCLUDE_MATCHES	1
+#define VERBOSE_EXCLUDE_MATCHES	0
 
 using namespace QDirStat;
 
 
-ExcludeRule::ExcludeRule( const QRegExp & regexp,
-                          bool            useFullPath,
-                          bool            checkAnyFileChild ):
-    _regexp( regexp ),
-    _useFullPath( useFullPath ),
-    _checkAnyFileChild( checkAnyFileChild )
+ExcludeRule::ExcludeRule( PatternSyntax   patternSyntax,
+			  const QString & pattern,
+			  bool            caseSensitive,
+			  bool            useFullPath,
+			  bool            checkAnyFileChild ):
+    QRegularExpression { formatPattern( patternSyntax, pattern ), makePatternOptions( caseSensitive ) },
+    _patternSyntax { patternSyntax },
+    _pattern { pattern },
+    _useFullPath { useFullPath },
+    _checkAnyFileChild { checkAnyFileChild }
 {
-    // NOP
-}
-
-
-ExcludeRule::ExcludeRule( const QString & regexp,
-                          bool            useFullPath,
-                          bool            checkAnyFileChild ):
-    _regexp( QRegExp( regexp ) ),
-    _useFullPath( useFullPath ),
-    _checkAnyFileChild( checkAnyFileChild )
-{
+#if VERBOSE_EXCLUDE_MATCHES
+    logDebug() << _patternSyntax << " " << _pattern << ( caseSensitive ? ", case-sensitive" : ", case-insensitive" << Qt::endl;
+#endif
     // NOP
 }
 
 
 ExcludeRule::~ExcludeRule()
 {
+    //logDebug() << "ExcludeRule " << _pattern << " destructor" << Qt::endl;
     // NOP
+}
+
+
+void ExcludeRule::setCaseSensitive( bool caseSensitive )
+{
+    setPatternOptions( makePatternOptions( caseSensitive ) );
+}
+
+
+QString ExcludeRule::formatPattern( PatternSyntax patternSyntax,
+				    const QString &    pattern )
+{
+    // Anchor and escape all special characters so a regexp match behaves like a simple comparison
+    if ( patternSyntax == FixedString )
+	return Wildcard::anchoredPattern( Wildcard::escape( pattern ) );
+
+    // Convert the *, ?, and [] wildcards to regexp equivalents and anchor the pattern
+    if ( patternSyntax == Wildcard )
+	return Wildcard::wildcardToRegularExpression( pattern );
+
+    // Note: unanchored for regexp!
+    return pattern;
+}
+
+
+void ExcludeRule::setPatternSyntax( PatternSyntax patternSyntax )
+{
+    _patternSyntax = patternSyntax;
+    setPattern( formatPattern( patternSyntax, _pattern ) );
+}
+
+
+void ExcludeRule::setPattern( const QString & pattern )
+{
+    _pattern = pattern;
+    QRegularExpression::setPattern( formatPattern( _patternSyntax, pattern ) );
 }
 
 
@@ -55,15 +89,15 @@ bool ExcludeRule::match( const QString & fullPath, const QString & fileName )
     if ( _checkAnyFileChild )  // use matchDirectChildren() for those rules
         return false;
 
-    QString matchText = _useFullPath ? fullPath : fileName;
+    const QString matchText = _useFullPath ? fullPath : fileName;
 
     if ( matchText.isEmpty() )
 	return false;
 
-    if ( _regexp.pattern().isEmpty() )
+    if ( _pattern.isEmpty() )
 	return false;
 
-    return _regexp.exactMatch( matchText );
+    return isMatch( matchText );
 }
 
 
@@ -72,18 +106,15 @@ bool ExcludeRule::matchDirectChildren( DirInfo * dir )
     if ( ! _checkAnyFileChild || ! dir )
         return false;
 
-    if ( _regexp.pattern().isEmpty() )
+    if ( _pattern.isEmpty() )
         return false;
 
     FileInfoIterator it( dir->dotEntry() ? dir->dotEntry() : dir );
 
     while ( *it )
     {
-        if ( ! (*it)->isDir() )
-        {
-            if ( _regexp.exactMatch( (*it)->name() ) )
+        if ( ! (*it)->isDir() && isMatch( (*it)->name() ) )
                 return true;
-        }
 
         ++it;
     }
@@ -92,37 +123,42 @@ bool ExcludeRule::matchDirectChildren( DirInfo * dir )
 }
 
 
+SettingsEnumMapping ExcludeRule::patternSyntaxMapping()
+{
+    static SettingsEnumMapping mapping;
+
+    if ( mapping.isEmpty() )
+    {
+	mapping[ RegExp      ] = "RegExp";
+	mapping[ Wildcard    ] = "Wildcard";
+	mapping[ FixedString ] = "FixedString";
+    }
+
+    return mapping;
+}
+
+
 //
 //---------------------------------------------------------------------------
 //
 
-
-ExcludeRules::ExcludeRules():
-    QObject(),
-    _listMover( _rules )
+ExcludeRules::ExcludeRules()
 {
-    _lastMatchingRule  = 0;
-    _defaultRulesAdded = false;
+    readSettings();
+#if VERBOSE_EXCLUDE_MATCHES
+    Debug::dumpExcludeRules();
+#endif
 }
 
 
-ExcludeRules::ExcludeRules( const QStringList & paths ):
-    QObject(),
-    _listMover( _rules )
+ExcludeRules::ExcludeRules( const QStringList & paths,
+			    ExcludeRule::PatternSyntax patternSyntax,
+			    bool caseSensitive,
+			    bool useFullPath,
+			    bool checkAnyFileChild )
 {
-    _lastMatchingRule  = 0;
-    _defaultRulesAdded = false;
-
     foreach ( const QString & path, paths )
-    {
-        QRegExp regexp( path );
-        regexp.setPatternSyntax( QRegExp::Wildcard );
-        ExcludeRule * rule = new ExcludeRule( regexp,
-                                              true,    // useFullPath
-                                              false ); // checkAnyFileChild
-        CHECK_NEW( rule );
-        _rules << rule;
-    }
+        add( patternSyntax, path, caseSensitive, useFullPath, checkAnyFileChild );
 }
 
 
@@ -132,17 +168,11 @@ ExcludeRules::~ExcludeRules()
 }
 
 
-
 ExcludeRules * ExcludeRules::instance()
 {
-    static ExcludeRules * singleton = 0;
+    static ExcludeRules _instance;
 
-    if ( ! singleton )
-    {
-	singleton = new ExcludeRules();
-    }
-
-    return singleton;
+    return &_instance;
 }
 
 
@@ -150,36 +180,32 @@ void ExcludeRules::clear()
 {
     qDeleteAll( _rules );
     _rules.clear();
-    _lastMatchingRule = 0;
 }
 
-
+/*
 void ExcludeRules::add( ExcludeRule * rule )
 {
-    CHECK_PTR( rule );
+    CHECK_NEW( rule );
     _rules << rule;
+    logInfo() << "Added " << rule << Qt::endl;
 }
+*/
 
-
-void ExcludeRules::add( const QRegExp & regexp,
-                        bool            useFullPath,
-                        bool            checkAnyFileChild )
+void ExcludeRules::add( ExcludeRule::PatternSyntax   patternSyntax,
+			const QString              & pattern,
+			bool                         caseSensitive,
+                        bool                         useFullPath,
+                        bool                         checkAnyFileChild )
 {
-    ExcludeRule * rule = new ExcludeRule( regexp, useFullPath, checkAnyFileChild );
+    ExcludeRule * rule = new ExcludeRule( patternSyntax, pattern, caseSensitive, useFullPath, checkAnyFileChild );
     CHECK_NEW( rule );
 
-    instance()->add( rule );
+    _rules << rule;
+
+    logInfo() << "Added " << rule << Qt::endl;
 }
 
-
-void ExcludeRules::add( const QString & regexp,
-                        bool            useFullPath,
-                        bool            checkAnyFileChild )
-{
-    add( QRegExp( regexp ), useFullPath, checkAnyFileChild );
-}
-
-
+/*
 void ExcludeRules::remove( ExcludeRule * rule )
 {
     CHECK_PTR( rule );
@@ -187,11 +213,10 @@ void ExcludeRules::remove( ExcludeRule * rule )
     _rules.removeAll( rule );
     delete rule;
 }
-
+*/
 
 bool ExcludeRules::match( const QString & fullPath, const QString & fileName )
 {
-    _lastMatchingRule = 0;
     if ( fullPath.isEmpty() || fileName.isEmpty() )
 	return false;
 
@@ -199,11 +224,8 @@ bool ExcludeRules::match( const QString & fullPath, const QString & fileName )
     {
 	if ( rule->match( fullPath, fileName ) )
 	{
-	    _lastMatchingRule = rule;
 #if VERBOSE_EXCLUDE_MATCHES
-
-	    logDebug() << fullPath << " matches " << rule << endl;
-
+	    logDebug() << fullPath << " matches " << rule << Qt::endl;
 #endif
 	    return true;
 	}
@@ -215,7 +237,6 @@ bool ExcludeRules::match( const QString & fullPath, const QString & fileName )
 
 bool ExcludeRules::matchDirectChildren( DirInfo * dir )
 {
-    _lastMatchingRule = 0;
     if ( ! dir )
 	return false;
 
@@ -223,11 +244,8 @@ bool ExcludeRules::matchDirectChildren( DirInfo * dir )
     {
 	if ( rule->matchDirectChildren( dir ) )
 	{
-	    _lastMatchingRule = rule;
 #if VERBOSE_EXCLUDE_MATCHES
-
-	    logDebug() << dir << " matches " << rule << endl;
-
+	    logDebug() << dir << " matches " << rule << Qt::endl;
 #endif
 	    return true;
 	}
@@ -236,7 +254,7 @@ bool ExcludeRules::matchDirectChildren( DirInfo * dir )
     return false;
 }
 
-
+/*
 const ExcludeRule * ExcludeRules::matchingRule( const QString & fullPath,
 						const QString & fileName )
 {
@@ -251,8 +269,8 @@ const ExcludeRule * ExcludeRules::matchingRule( const QString & fullPath,
 
     return 0;
 }
-
-
+*/
+/*
 void ExcludeRules::moveUp( ExcludeRule * rule )
 {
     _listMover.moveUp( rule );
@@ -275,31 +293,30 @@ void ExcludeRules::moveToBottom( ExcludeRule * rule )
 {
     _listMover.moveToBottom( rule );
 }
-
+*/
 
 void ExcludeRules::addDefaultRules()
 {
-    logInfo() << "Adding default exclude rules" << endl;
+    //logInfo() << "Adding default exclude rules" << Qt::endl;
 
-    QRegExp regexp( ".snapshot", Qt::CaseSensitive, QRegExp::FixedString );
-    ExcludeRule * rule = new ExcludeRule( regexp );
-    CHECK_NEW( rule );
-    add( rule );
-    _defaultRulesAdded = true;
+    add( ExcludeRule::FixedString, "/timeshift", true, true, false );
 
-    logInfo() << "Added " << rule << endl;
+    ExcludeRuleSettings settings;
+    settings.setValue( "DefaultExcludeRulesAdded", true );
+
+    writeSettings( _rules );
 }
 
 
 void ExcludeRules::readSettings()
 {
+    clear();
+
     ExcludeRuleSettings settings;
-    QStringList excludeRuleGroups = settings.findGroups( settings.groupPrefix() );
+    const QStringList excludeRuleGroups = settings.findGroups( settings.groupPrefix() );
 
-    if ( ! excludeRuleGroups.isEmpty() ) // Keep defaults if settings empty
+    if ( ! excludeRuleGroups.isEmpty() )
     {
-	clear();
-
 	// Read all settings groups [ExcludeRule_xx] that were found
 
 	foreach ( const QString & groupName, excludeRuleGroups )
@@ -308,39 +325,42 @@ void ExcludeRules::readSettings()
 
 	    // Read one exclude rule
 
-	    QString pattern        = settings.value( "Pattern"	                ).toString();
-	    bool caseSensitive     = settings.value( "CaseSensitive",     true  ).toBool();
-	    bool useFullPath       = settings.value( "UseFullPath",	  false ).toBool();
-            bool checkAnyFileChild = settings.value( "CheckAnyFileChild", false ).toBool();
-	    int syntax = readEnumEntry( settings, "Syntax",
-					QRegExp::RegExp,
-					patternSyntaxMapping() );
+	    const QString pattern        = settings.value( "Pattern"	              ).toString();
+	    const bool caseSensitive     = settings.value( "CaseSensitive",     true  ).toBool();
+	    const bool useFullPath       = settings.value( "UseFullPath",	false ).toBool();
+            const bool checkAnyFileChild = settings.value( "CheckAnyFileChild", false ).toBool();
+	    const int syntax = readEnumEntry( settings,
+					      "Syntax",
+					      ExcludeRule::RegExp,
+					      ExcludeRule::patternSyntaxMapping() );
 
-	    QRegExp regexp( pattern,
-			    caseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive,
-			    static_cast<QRegExp::PatternSyntax>( syntax ) );
+	    ExcludeRule * rule = new ExcludeRule( ( ExcludeRule::PatternSyntax )syntax,
+						  pattern,
+						  caseSensitive,
+						  useFullPath,
+						  checkAnyFileChild );
+	    CHECK_NEW( rule );
 
-	    if ( ! pattern.isEmpty() && regexp.isValid() )
-		add( regexp, useFullPath, checkAnyFileChild );
+	    if ( ! pattern.isEmpty() && rule->isValid() )
+		_rules << rule;
 	    else
 	    {
-		logError() << "Invalid regexp: \"" << regexp.pattern()
-			   << "\": " << regexp.errorString()
-			   << endl;
+		logError() << "Invalid regexp: \"" << rule->pattern()
+			   << "\": " << rule->errorString()
+			   << Qt::endl;
+		delete rule;
 	    }
 
 	    settings.endGroup(); // [ExcludeRule_01], [ExcludeRule_02], ...
 	}
     }
 
-    _defaultRulesAdded = settings.value( "DefaultExcludeRulesAdded", false ).toBool();
-
-    if ( isEmpty() && ! _defaultRulesAdded )
-        addDefaultRules();
+    if ( isEmpty() && !settings.value( "DefaultExcludeRulesAdded", false ).toBool() )
+	addDefaultRules();
 }
 
 
-void ExcludeRules::writeSettings()
+void ExcludeRules::writeSettings( const ExcludeRuleList & newRules )
 {
     ExcludeRuleSettings settings;
 
@@ -350,28 +370,27 @@ void ExcludeRules::writeSettings()
     // Similar to CleanupCollection::writeSettings(), using a separate group
     // for each exclude rule for better readability in the settings file.
 
-    for ( int i=0; i < _rules.size(); ++i )
+    for ( int i=0; i < newRules.size(); ++i )
     {
-	ExcludeRule * rule = _rules.at(i);
-	QRegExp regexp = rule->regexp();
+	const ExcludeRule * rule = newRules.at(i);
 
-	if ( ! regexp.pattern().isEmpty() )
+	if ( rule && ! rule->pattern().isEmpty() )
 	{
 	    settings.beginGroup( "ExcludeRule", i+1 );
 
-	    settings.setValue( "Pattern",	    regexp.pattern() );
-	    settings.setValue( "CaseSensitive",     regexp.caseSensitivity() == Qt::CaseSensitive );
+	    settings.setValue( "Pattern",	    rule->pattern()           );
+	    settings.setValue( "CaseSensitive",	    rule->caseSensitive()     );
 	    settings.setValue( "UseFullPath",	    rule->useFullPath()       );
 	    settings.setValue( "CheckAnyFileChild", rule->checkAnyFileChild() );
 
 	    writeEnumEntry( settings, "Syntax",
-			    regexp.patternSyntax(),
-			    patternSyntaxMapping() );
+			    rule->patternSyntax(),
+			    ExcludeRule::patternSyntaxMapping() );
 
 	    settings.endGroup(); // [ExcludeRule_01], [ExcludeRule_02], ...
 	}
     }
 
-    if ( _defaultRulesAdded )
-        settings.setValue( "DefaultExcludeRulesAdded", true );
+    // Now replace the previous settings with the new ones
+    readSettings();
 }

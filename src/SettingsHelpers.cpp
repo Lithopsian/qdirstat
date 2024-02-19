@@ -9,7 +9,6 @@
 
 #include <QSettings>
 #include <QColor>
-#include <QRegExp>
 #include <QWidget>
 
 #include "SettingsHelpers.h"
@@ -24,7 +23,7 @@ namespace QDirStat
 			   const char	   * entryName,
 			   const QColor	   & fallback )
     {
-	QString colorName = settings.value( entryName ).toString();
+	const QString colorName = settings.value( entryName ).toString();
 	QColor color( colorName );
 
 	if ( ! color.isValid() )
@@ -32,7 +31,7 @@ namespace QDirStat
 	    color = fallback;
 #if 0
 	    logDebug() << "Using fallback for " << entryName
-		       << ": " << color.name() << endl;
+		       << ": " << color.name() << Qt::endl;
 #endif
 	}
 
@@ -52,7 +51,7 @@ namespace QDirStat
 				      const char	  * entryName,
 				      const QList<QColor> & fallback )
     {
-	QStringList strList = settings.value( entryName ).toStringList();
+	const QStringList strList = settings.value( entryName ).toStringList();
 	QList<QColor> colorList;
 
 	colorList.clear();
@@ -66,7 +65,7 @@ namespace QDirStat
 	    else
 	    {
 		logError() << "ERROR in " << entryName << ": \""
-			   << rgb << "\" is not a valid color" << endl;
+			   << rgb << "\" is not a valid color" << Qt::endl;
 	    }
 	}
 
@@ -98,7 +97,7 @@ namespace QDirStat
     {
 	if ( settings.contains( entryName ) )
 	{
-	    QString fontName = settings.value( entryName ).toString();
+	    const QString fontName = settings.value( entryName ).toString();
 	    QFont font;
 
 	    if ( font.fromString( fontName ) )
@@ -121,12 +120,12 @@ namespace QDirStat
     int readEnumEntry( const QSettings & settings,
 		       const char      * entryName,
 		       int		 fallback,
-		       const QMap<int, QString> & enumMapping )
+		       const SettingsEnumMapping & enumMapping )
     {
 	if ( ! settings.contains( entryName ) )
 	    return fallback;
 
-	QString str = settings.value( entryName ).toString();
+	const QString str = settings.value( entryName ).toString();
 	QMap<int, QString>::const_iterator it = enumMapping.constBegin();
 
 	while ( it != enumMapping.constEnd() )
@@ -138,7 +137,7 @@ namespace QDirStat
 	}
 
 	logError() << "Invalid value for " << entryName
-		   << ": \"" << str << "\"" << endl;
+		   << ": \"" << str << "\"" << Qt::endl;
 
 	return fallback;
     }
@@ -147,33 +146,15 @@ namespace QDirStat
     void writeEnumEntry( QSettings  & settings,
 			 const char * entryName,
 			 int	      enumValue,
-			 const QMap<int, QString> & enumMapping )
+			 const SettingsEnumMapping & enumMapping )
     {
 	if ( ! enumMapping.contains( enumValue ) )
 	{
-	    logError() << "No string for enum value " << enumValue << endl;
+	    logError() << "No string for enum value " << enumValue << Qt::endl;
 	    return;
 	}
 
 	settings.setValue( entryName, enumMapping.value( enumValue ) );
-    }
-
-
-    QMap<int, QString> patternSyntaxMapping()
-    {
-	static QMap<int, QString> mapping;
-
-	if ( mapping.isEmpty() )
-	{
-	    mapping[ QRegExp::RegExp	     ] = "RegExp";
-	    mapping[ QRegExp::Wildcard	     ] = "Wildcard";
-	    mapping[ QRegExp::FixedString    ] = "FixedString";
-	    mapping[ QRegExp::RegExp2	     ] = "RegExp2";
-	    mapping[ QRegExp::WildcardUnix   ] = "WildcardUnix";
-	    mapping[ QRegExp::W3CXmlSchema11 ] = "W3CXmlSchema11";
-	}
-
-	return mapping;
     }
 
 
@@ -182,8 +163,8 @@ namespace QDirStat
         QDirStat::Settings settings;
         settings.beginGroup( settingsGroup );
 
-        QPoint winPos	 = settings.value( "WindowPos" , QPoint( -99, -99 ) ).toPoint();
-        QSize  winSize	 = settings.value( "WindowSize", QSize (   0,   0 ) ).toSize();
+        const QPoint winPos	 = settings.value( "WindowPos" , QPoint( -99, -99 ) ).toPoint();
+        const QSize  winSize	 = settings.value( "WindowSize", QSize (   0,   0 ) ).toSize();
 
         if ( winSize.height() > 100 && winSize.width() > 100 )
             widget->resize( winSize );

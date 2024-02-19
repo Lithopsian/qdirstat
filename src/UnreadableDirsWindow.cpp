@@ -10,6 +10,7 @@
 #include "UnreadableDirsWindow.h"
 #include "QDirStatApp.h"        // SelectionModel
 #include "DirTree.h"
+#include "DirTreeModel.h"
 #include "Attic.h"
 #include "SelectionModel.h"
 #include "SettingsHelpers.h"
@@ -27,7 +28,7 @@ UnreadableDirsWindow::UnreadableDirsWindow( QWidget * parent ):
     QDialog( parent ),
     _ui( new Ui::UnreadableDirsWindow )
 {
-    // logDebug() << "init" << endl;
+    // logDebug() << "init" << Qt::endl;;
 
     CHECK_NEW( _ui );
     _ui->setupUi( this );
@@ -42,7 +43,7 @@ UnreadableDirsWindow::UnreadableDirsWindow( QWidget * parent ):
 
 UnreadableDirsWindow::~UnreadableDirsWindow()
 {
-    // logDebug() << "destroying" << endl;
+    // logDebug() << "destroying" << Qt::endl;;
     writeWindowSettings( this, "UnreadableDirsWindow" );
     delete _ui;
 }
@@ -68,16 +69,11 @@ void UnreadableDirsWindow::clear()
 
 void UnreadableDirsWindow::initWidgets()
 {
-    QFont font = _ui->heading->font();
-    font.setBold( true );
-    _ui->heading->setFont( font );
+//    QFont font = _ui->heading->font();
+//    font.setBold( true );
+//    _ui->heading->setFont( font );
 
-    QStringList headerLabels;
-    headerLabels << tr( "Directory"   )
-		 << tr( "User"	      )
-		 << tr( "Group"	      )
-		 << tr( "Permissions" )
-		 << tr( "Perm."	      );
+    const QStringList headerLabels = { tr( "Directory" ), tr( "User" ), ( "Group" ), tr( "Permissions" ), tr( "Perm." ) };
 
     _ui->treeWidget->setColumnCount( headerLabels.size() );
     _ui->treeWidget->setHeaderLabels( headerLabels );
@@ -117,14 +113,14 @@ void UnreadableDirsWindow::populate( FileInfo * newSubtree )
     clear();
     _subtree = newSubtree;
 
-    logDebug() << "Locating all unreadable dirs below " << _subtree.url() << endl;
+    //logDebug() << "Locating all unreadable dirs below " << _subtree.url() << Qt::endl;;
 
     populateRecursive( newSubtree ? newSubtree : _subtree() );
     _ui->treeWidget->sortByColumn( 0, Qt::AscendingOrder );
 
     int count = _ui->treeWidget->topLevelItemCount();
     _ui->totalLabel->setText( QString( "Total: %1" ).arg( count ) );
-    logDebug() << count << " directories" << endl;
+    //logDebug() << count << " directories" << Qt::endl;;
 
     // Make sure something is selected, even if this window is not the active
     // one (for example because the user just clicked on another suffix in the
@@ -153,7 +149,7 @@ void UnreadableDirsWindow::populateRecursive( FileInfo * subtree )
     if ( ! subtree || ! subtree->isDirInfo() )
 	return;
 
-    DirInfo * dir = subtree->toDirInfo();
+    const DirInfo * dir = subtree->toDirInfo();
 
     if ( dir->readError() )
     {
@@ -201,7 +197,7 @@ void UnreadableDirsWindow::selectResult( QTreeWidgetItem * item )
 
     FileInfo * dir = _subtree.tree()->locate( searchResult->path() );
 
-    // logDebug() << "Selecting " << searchResult->path() << ": " << dir << endl;
+    // logDebug() << "Selecting " << searchResult->path() << ": " << dir << Qt::endl;;
 
     app()->selectionModel()->setCurrentItem( dir,
                                              true ); // select
@@ -225,7 +221,7 @@ UnreadableDirListItem::UnreadableDirListItem( const QString & path,
     int col = -1;
 
     setText( ++col, path + "    "	);  setTextAlignment( col, Qt::AlignLeft    );
-    setIcon( col, lockedDirIcon );
+    setIcon( col, app()->dirTreeModel()->unreadableDirIcon() );
 
     setText( ++col, userName		);  setTextAlignment( col, Qt::AlignLeft    );
     setText( ++col, groupName		);  setTextAlignment( col, Qt::AlignLeft    );

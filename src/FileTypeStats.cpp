@@ -47,60 +47,6 @@ void FileTypeStats::clear()
 }
 
 
-int FileTypeStats::suffixCount( const QString & suffix ) const
-{
-    return _suffixCount.value( suffix, 0 );
-}
-
-
-FileSize FileTypeStats::suffixSum( const QString & suffix ) const
-{
-    return _suffixSum.value( suffix, 0LL );
-}
-
-
-int FileTypeStats::categoryCount( MimeCategory * category ) const
-{
-    return _categoryCount.value( category, 0 );
-}
-
-
-FileSize FileTypeStats::categorySum( MimeCategory * category ) const
-{
-    return _categorySum.value( category, 0LL );
-}
-
-
-int FileTypeStats::categoryNonSuffixRuleCount( MimeCategory * category ) const
-{
-    return _categoryNonSuffixRuleCount.value( category, 0 );
-
-}
-
-
-FileSize FileTypeStats::categoryNonSuffixRuleSum( MimeCategory * category ) const
-{
-    return _categoryNonSuffixRuleSum.value( category, 0LL );
-}
-
-
-MimeCategory * FileTypeStats::category( const QString & suffix ) const
-{
-    return _mimeCategorizer->category( "x." + suffix );
-}
-
-
-double FileTypeStats::percentage( FileSize size ) const
-{
-    FileSize total = totalSize();
-
-    if ( total == 0LL )
-	return 0.0;
-    else
-	return (100.0 * size) / (double) total;
-}
-
-
 void FileTypeStats::calc( FileInfo * subtree )
 {
     clear();
@@ -151,17 +97,17 @@ void FileTypeStats::collect( FileInfo * dir )
 	    // hand-crafted, so if it knows anything about a suffix, it's the
 	    // best choice.
 
-	    MimeCategory * category = _mimeCategorizer->category( item->name(), &suffix );
+	    const MimeCategory * category = _mimeCategorizer->category( item, &suffix );
 
-            if ( category )
+	    if ( category )
             {
                 addCategorySum( category, item );
 
-                if ( suffix.isEmpty() )
+		if ( suffix.isEmpty() )
                     addNonSuffixRuleSum( category, item );
                 else
-                    addSuffixSum( suffix, item );
-            }
+                    addSuffixSum( suffix, category, item );
+	    }
             else // ! category
             {
                 addCategorySum( _otherCategory, item );
@@ -188,34 +134,36 @@ void FileTypeStats::collect( FileInfo * dir )
                 if ( suffix.isEmpty() )
                     suffix = NO_SUFFIX;
 
-                addSuffixSum( suffix, item );
+		addSuffixSum( suffix, _otherCategory, item );
             }
-            // Disregard symlinks, block devices and other special files
-        }
+
+	    // Disregard symlinks, block devices and other special files
+	}
 
 	++it;
     }
 }
 
 
-void FileTypeStats::addCategorySum( MimeCategory * category, FileInfo * item )
+void FileTypeStats::addCategorySum( const MimeCategory * category, const FileInfo * item )
 {
     _categorySum[ category ] += item->size();
     ++_categoryCount[ category ];
 }
 
 
-void FileTypeStats::addSuffixSum( const QString & suffix, FileInfo * item )
-{
-    _suffixSum[ suffix ] += item->size();
-    ++_suffixCount[ suffix ];
-}
-
-
-void FileTypeStats::addNonSuffixRuleSum( MimeCategory * category, FileInfo * item )
+void FileTypeStats::addNonSuffixRuleSum( const MimeCategory * category, const FileInfo * item )
 {
     _categoryNonSuffixRuleSum[ category ] += item->size();
     ++_categoryNonSuffixRuleCount[ category ];
+}
+
+
+void FileTypeStats::addSuffixSum( const QString & suffix, const MimeCategory * category, const FileInfo * item )
+{
+    const MapCategory mapCategory = { suffix, category };
+    _suffixSum[ mapCategory ] += item->size();
+    ++_suffixCount[ mapCategory ];
 }
 
 
@@ -224,36 +172,35 @@ void FileTypeStats::removeCruft()
     // Make sure those two already exist to avoid confusing the iterator
     // (QMap::operator[] auto-inserts with default ctor if not already there)
 
-    _suffixSum	[ NO_SUFFIX ] += 0LL;
-    _suffixCount[ NO_SUFFIX ] += 0;
+    const MapCategory cruftMapCategory = { NO_SUFFIX, _otherCategory };
+    _suffixSum	[ cruftMapCategory ] += 0LL;
+    _suffixCount[ cruftMapCategory ] += 0;
 
     FileSize totalMergedSum   = 0LL;
     int	     totalMergedCount = 0;
 
     QStringList cruft;
-    QMap<QString, int>::iterator it = _suffixCount.begin();
+    StringIntMap::iterator it = _suffixCount.begin();
 
     while ( it != _suffixCount.end() )
     {
-	QString suffix = it.key();
-	bool merge = false;
+	const QString suffix = it.key().first;
+	const MimeCategory * category = it.key().second;
 
-	if ( isCruft( suffix ) )
+	if ( isCruft( suffix, category ) )
 	{
-	    cruft << "*." + suffix;
-	    merge = true;
-	}
+	    const MapCategory mapCategory = { suffix, category };
 
-	if ( merge )
-	{
-	    _suffixSum	[ NO_SUFFIX ] += _suffixSum  [ suffix ];
-	    _suffixCount[ NO_SUFFIX ] += _suffixCount[ suffix ];
+	    _suffixSum	[ cruftMapCategory ] += _suffixSum  [ mapCategory ];
+	    _suffixCount[ cruftMapCategory ] += _suffixCount[ mapCategory ];
 
-	    totalMergedSum   += _suffixSum  [ suffix ];
-	    totalMergedCount += _suffixCount[ suffix ];
+	    totalMergedSum   += _suffixSum  [ mapCategory ];
+	    totalMergedCount += _suffixCount[ mapCategory ];
 
 	    it = _suffixCount.erase( it );
-	    _suffixSum.remove( suffix );
+	    _suffixSum.remove( { suffix, category } );
+
+	    cruft << "*." + suffix;
 	}
 	else
 	{
@@ -263,29 +210,31 @@ void FileTypeStats::removeCruft()
 
 #if 1
     logDebug() << "Merged " << cruft.size() << " suffixes to <NO SUFFIX>: "
-	       << cruft.join( ", " ) << endl;
+	       << cruft.join( ", " ) << Qt::endl;
 #endif
     logDebug() << "Merged: " << totalMergedCount << " files "
 	       << "(" << formatSize( totalMergedSum ) << ")"
-	       << endl;
+	       << Qt::endl;
 }
 
 
 void FileTypeStats::removeEmpty()
 {
-    QMap<QString, int>::iterator it = _suffixCount.begin();
+    StringIntMap::iterator it = _suffixCount.begin();
 
     while ( it != _suffixCount.end() )
     {
-	QString suffix = it.key();
-	int	count  = it.value();
-	bool	remove = count == 0;
+	const int	count  = it.value();
+	const bool	remove = count == 0;
+
+	const QString suffix = it.key().first;
+	const MimeCategory * category = it.key().second;
 
 	if ( remove )
 	{
-	    logDebug() << "Removing empty suffix *." << suffix << endl;
+	    logDebug() << "Removing empty suffix *." << suffix << Qt::endl;
 	    it = _suffixCount.erase( it );
-	    _suffixSum.remove( suffix );
+	    _suffixSum.remove( { suffix, category } );
 	}
 	else
 	{
@@ -295,36 +244,30 @@ void FileTypeStats::removeEmpty()
 }
 
 
-bool FileTypeStats::isCruft( const QString & suffix ) const
+bool FileTypeStats::isCruft( const QString & suffix, const MimeCategory * category ) const
 {
-    if ( suffix == NO_SUFFIX )
+    // Unknown category should all have been marked in _otherCategory already
+    if ( suffix == NO_SUFFIX || category != _otherCategory )
 	return false;
-
-    // Whatever the MIME categorizer knows is good enough for us:
-    // It is a preconfigured suffix for a well-known file type.
-
-    if ( _mimeCategorizer->category( "x." + suffix ) )
-	return false;
-
-    int count	 = _suffixCount[ suffix ];
-    int len	 = suffix.size();
-    int letters	 = suffix.count( QRegExp( "[a-zA-Z]" ) );
-    float lettersPercent = len > 0 ? (100.0 * letters) / len : 0.0;
-
-    if ( letters == 0 )
-	return true;
 
     if ( suffix.contains( ' ' ) )
 	return true;
 
+    const int letters = suffix.count( QRegularExpression( "[a-zA-Z]" ) );
+    if ( letters == 0 )
+	return true;
+
     // The most common case: 3-letter suffix
+    const int len = suffix.size();
     if ( len == 3 && letters == 3 )
 	return false;
 
+    const int count = _suffixCount[ { suffix, category } ];
     if ( len > 6 && count < len )
 	return true;
 
     // Forget long suffixes with mostly non-letters
+    const float lettersPercent = len > 0 ? (100.0 * letters) / len : 0.0;
     if ( lettersPercent < 70.0 && count < len )
 	return true;
 
@@ -336,13 +279,13 @@ void FileTypeStats::sanityCheck()
 {
     FileSize categoryTotal = 0LL;
 
-    foreach ( FileSize sum, _categorySum )
+    foreach ( const FileSize sum, _categorySum )
 	categoryTotal += sum;
 
-    FileSize missing = totalSize() - categoryTotal;
+    const FileSize missing = totalSize() - categoryTotal;
 
     logDebug() << "Unaccounted in categories: " << formatSize( missing )
 	       << " of " << formatSize( totalSize() )
 	       << " (" << QString::number( percentage( missing ), 'f', 2 ) << "%)"
-	       << endl;
+	       << Qt::endl;
 }

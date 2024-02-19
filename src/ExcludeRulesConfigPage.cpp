@@ -8,6 +8,8 @@
 
 
 #include "ExcludeRulesConfigPage.h"
+#include "ConfigDialog.h"
+#include "ExcludeRules.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -16,12 +18,13 @@
 // classes. Yes, this is ugly.
 #define EXCLUDE_RULE_CAST(VOID_PTR) (static_cast<ExcludeRule *>(VOID_PTR))
 
+
 using namespace QDirStat;
 
 
 ExcludeRulesConfigPage::ExcludeRulesConfigPage( QWidget * parent ):
-    ListEditor( parent ),
-    _ui( new Ui::ExcludeRulesConfigPage )
+    ListEditor { parent },
+    _ui { new Ui::ExcludeRulesConfigPage }
 {
     CHECK_NEW( _ui );
 
@@ -37,14 +40,22 @@ ExcludeRulesConfigPage::ExcludeRulesConfigPage( QWidget * parent ):
 
     enableEditRuleWidgets( false );
 
-    connect( _ui->patternLineEdit, SIGNAL( textChanged	 ( QString ) ),
-	     this,		   SLOT	 ( patternChanged( QString ) ) );
+    connect( _ui->patternLineEdit,	&QLineEdit::textChanged,
+	     this,			&ExcludeRulesConfigPage::patternChanged );
+
+//    connect( (ConfigDialog *)parent,	&ConfigDialog::finished,
+//	     this,			&ExcludeRulesConfigPage::finished );
 }
 
 
 ExcludeRulesConfigPage::~ExcludeRulesConfigPage()
 {
-    // logDebug() << "ExcludeRulesConfigPage destructor" << endl;
+    //logDebug() << "ExcludeRulesConfigPage destructor" << Qt::endl;
+
+    // Delete the working rules
+    for ( int i = 0; i < listWidget()->count(); ++i )
+	delete EXCLUDE_RULE_CAST( value( listWidget()->item( i ) ) );
+
     delete _ui;
 }
 
@@ -58,20 +69,39 @@ void ExcludeRulesConfigPage::setup()
 
 void ExcludeRulesConfigPage::applyChanges()
 {
-    // logDebug() << endl;
-
+    // The values for the current rule might have been modified and not yet saved
     save( value( listWidget()->currentItem() ) );
-    ExcludeRules::instance()->writeSettings();
+
+    // Build a list of the working rules to write out to the settings file
+    ExcludeRuleList rules;
+    for ( int i = 0; i < listWidget()->count(); ++i )
+    {
+	ExcludeRule * rule = EXCLUDE_RULE_CAST( value( listWidget()->item( i ) ) );
+	rules << rule;
+    }
+
+    // Check if anything changed before writing, just for fun
+    ExcludeRuleListIterator it = ExcludeRules::instance()->cbegin();
+    for ( int i = 0; i < rules.size() || it != ExcludeRules::instance()->cend(); ++i, ++it )
+    {
+	// If we ran past the end of either list, or the rules don't match ...
+	if ( it == ExcludeRules::instance()->cend() || i == rules.size() || !equal( *it, rules.at( i ) ) )
+	{
+	    ExcludeRules::instance()->writeSettings( rules );
+	    return;
+	}
+    }
 }
 
 
 void ExcludeRulesConfigPage::discardChanges()
 {
-    // logDebug() << endl;
+    // Will clear on the finished signal
+//    listWidget()->clear();
 
-    listWidget()->clear();
-    ExcludeRules::instance()->clear();
-    ExcludeRules::instance()->readSettings();
+    // Haven't touched the live rules
+//    ExcludeRules::instance()->clear();
+//    ExcludeRules::instance()->readSettings();
 }
 
 
@@ -79,11 +109,15 @@ void ExcludeRulesConfigPage::fillListWidget()
 {
     listWidget()->clear();
 
-    for ( ExcludeRuleListIterator it = ExcludeRules::instance()->begin();
-	  it != ExcludeRules::instance()->end();
+    for ( ExcludeRuleListIterator it = ExcludeRules::instance()->cbegin();
+	  it != ExcludeRules::instance()->cend();
 	  ++it )
     {
-	QListWidgetItem * item = new ListEditorItem( (*it)->regexp().pattern(), (*it) );
+	// Make a deep copy so the config dialog can work without disturbing the real rules
+	ExcludeRule * rule = new ExcludeRule( *( *it ) );
+	CHECK_NEW( rule );
+
+	QListWidgetItem * item = new ListEditorItem( rule->pattern(), rule );
 	CHECK_NEW( item );
 	listWidget()->addItem( item );
     }
@@ -100,13 +134,7 @@ void ExcludeRulesConfigPage::patternChanged( const QString & newPattern )
     QListWidgetItem * currentItem = listWidget()->currentItem();
 
     if ( currentItem )
-    {
-	ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value( currentItem ) );
-	QRegExp regexp = excludeRule->regexp();
-	regexp.setPattern( newPattern );
-	excludeRule->setRegexp( regexp );
-	currentItem->setText( excludeRule->regexp().pattern() );
-    }
+	currentItem->setText( newPattern );
 }
 
 
@@ -119,23 +147,21 @@ void ExcludeRulesConfigPage::enableEditRuleWidgets( bool enable )
 void ExcludeRulesConfigPage::save( void * value )
 {
     ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value );
-    // logDebug() << excludeRule << endl;
 
     if ( ! excludeRule || updatesLocked() )
 	return;
 
-    QRegExp regexp;
-
     if ( _ui->regexpRadioButton->isChecked() )
-	regexp.setPatternSyntax( QRegExp::RegExp );
+	excludeRule->setPatternSyntax( ExcludeRule::RegExp );
     else if ( _ui->wildcardsRadioButton->isChecked() )
-	regexp.setPatternSyntax( QRegExp::Wildcard );
+	excludeRule->setPatternSyntax( ExcludeRule::Wildcard );
     else if ( _ui->fixedStringRadioButton->isChecked() )
-	regexp.setPatternSyntax( QRegExp::FixedString );
+	excludeRule->setPatternSyntax( ExcludeRule::FixedString );
 
-    regexp.setPattern( _ui->patternLineEdit->text() );
+    excludeRule->setCaseSensitive( _ui->caseSensitiveCheckBox->isChecked() );
 
-    excludeRule->setRegexp( regexp );
+    excludeRule->setPattern( _ui->patternLineEdit->text() );
+
     excludeRule->setUseFullPath( _ui->fullPathRadioButton->isChecked() );
     excludeRule->setCheckAnyFileChild( _ui->checkAnyFileChildRadioButton->isChecked() );
 }
@@ -143,8 +169,7 @@ void ExcludeRulesConfigPage::save( void * value )
 
 void ExcludeRulesConfigPage::load( void * value )
 {
-    ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value );
-    // logDebug() << excludeRule << endl;
+    const ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value );
 
     if ( updatesLocked() )
         return;
@@ -158,15 +183,22 @@ void ExcludeRulesConfigPage::load( void * value )
     }
 
     enableEditRuleWidgets( true );
-    _ui->patternLineEdit->setText( excludeRule->regexp().pattern() );
+    _ui->patternLineEdit->setText( excludeRule->pattern() );
 
-    switch ( excludeRule->regexp().patternSyntax() )
+    _ui->caseSensitiveCheckBox->setChecked( excludeRule->caseSensitive() );
+
+    switch ( excludeRule->patternSyntax() )
     {
-	case QRegExp::RegExp:	   _ui->regexpRadioButton->setChecked( true );
+	case ExcludeRule::RegExp:
+	    _ui->regexpRadioButton->setChecked( true );
 	    break;
-	case QRegExp::Wildcard:	   _ui->wildcardsRadioButton->setChecked( true );
+
+	case ExcludeRule::Wildcard:
+	    _ui->wildcardsRadioButton->setChecked( true );
 	    break;
-	case QRegExp::FixedString: _ui->fixedStringRadioButton->setChecked( true );
+
+	case ExcludeRule::FixedString:
+	    _ui->fixedStringRadioButton->setChecked( true );
 	    break;
 
 	default:
@@ -175,20 +207,19 @@ void ExcludeRulesConfigPage::load( void * value )
 
     if ( excludeRule->useFullPath() )
 	_ui->fullPathRadioButton->setChecked( true );
+    else if ( excludeRule->checkAnyFileChild() )
+        _ui->checkAnyFileChildRadioButton->setChecked( true );
     else
 	_ui->dirNameWithoutPathRadioButton->setChecked( true );
-
-    if ( excludeRule->checkAnyFileChild() )
-        _ui->checkAnyFileChildRadioButton->setChecked( true );
 }
 
 
 void * ExcludeRulesConfigPage::createValue()
 {
-    QRegExp regExp( "", Qt::CaseSensitive, QRegExp::Wildcard );
-    ExcludeRule * excludeRule = new ExcludeRule( regExp );
+    // "Empty" rule, but set the options that we want to start with:
+    // wildcard, case-sensitive, and directory name without path
+    ExcludeRule * excludeRule = new ExcludeRule( ExcludeRule::Wildcard, "", true, false, false );
     CHECK_NEW( excludeRule );
-    ExcludeRules::instance()->add( excludeRule );
 
     return excludeRule;
 }
@@ -199,32 +230,43 @@ void ExcludeRulesConfigPage::removeValue( void * value )
     ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value );
     CHECK_PTR( excludeRule );
 
-    ExcludeRules::instance()->remove( excludeRule );
+    delete excludeRule;
 }
 
 
 QString ExcludeRulesConfigPage::valueText( void * value )
 {
-    ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value );
+    const ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value );
     CHECK_PTR( excludeRule );
 
-    return excludeRule->regexp().pattern();
+    return excludeRule->pattern();
 }
 
 
-QString ExcludeRulesConfigPage::deleteConfirmationMessage( void * value )
+void ExcludeRulesConfigPage::add()
 {
-    ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value );
-    return tr( "Really delete exclude rule \"%1\"?" ).arg( excludeRule->regexp().pattern() );
+    ListEditor::add();
+    _ui->patternLineEdit->setFocus();
 }
 
 
-void ExcludeRulesConfigPage::moveValue( void * value, const char * operation )
+bool ExcludeRulesConfigPage::equal ( const ExcludeRule * rule1, const ExcludeRule * rule2 )
 {
-    ExcludeRule * excludeRule = EXCLUDE_RULE_CAST( value );
+    if ( !rule1 || !rule2 )
+        return false;
 
-    QMetaObject::invokeMethod( ExcludeRules::instance(),
-			       operation,
-			       Qt::DirectConnection,
-			       Q_ARG( ExcludeRule *, excludeRule ) );
+    if ( rule1 == rule2 )
+        return true;
+
+    if ( rule1->patternSyntax()     != rule2->patternSyntax() ||
+	 rule1->pattern()           != rule2->pattern()       ||
+	 rule1->caseSensitive()     != rule2->caseSensitive() ||
+	 rule1->useFullPath()       != rule2->useFullPath()   ||
+         rule1->checkAnyFileChild() != rule2->checkAnyFileChild() )
+    {
+        return false;
+    }
+
+    return true;
 }
+

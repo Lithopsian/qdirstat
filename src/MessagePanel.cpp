@@ -57,15 +57,3 @@ void MessagePanel::clear()
     foreach ( PanelMessage * msg, findChildren<PanelMessage *>() )
 	delete msg;
 }
-
-
-MessagePanel * MessagePanel::firstInstance()
-{
-    return _instances.isEmpty() ? 0 : _instances.first();
-}
-
-
-MessagePanel * MessagePanel::lastInstance()
-{
-    return _instances.isEmpty() ? 0 : _instances.last();
-}

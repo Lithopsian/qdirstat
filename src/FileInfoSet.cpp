@@ -40,7 +40,7 @@ FileInfoSet FileInfoSet::normalized() const
 	    normalized << item;
 #if 0
 	else
-	    logDebug() << "Removing " << item << " with ancestors in the set" << endl;
+	    logDebug() << "Removing " << item << " with ancestors in the set" << Qt::endl;
 #endif
     }
 
@@ -56,12 +56,12 @@ FileInfoSet FileInfoSet::invalidRemoved() const
     {
 	if ( item && item->checkMagicNumber() )
 	{
-	    // logDebug() << "Keeping " << item << endl;
+	    // logDebug() << "Keeping " << item << Qt::endl;
 	    result << item;
 	}
 	else
 	{
-	    logWarning() << "Removing invalid item" << endl;
+	    logWarning() << "Removing invalid item" << Qt::endl;
 	}
     }
 
@@ -80,9 +80,9 @@ FileInfo * FileInfoSet::first() const
 
 bool FileInfoSet::containsPseudoDir() const
 {
-    foreach ( FileInfo * item, *this )
+    foreach ( const FileInfo * item, *this )
     {
-	if ( item  && item->isPseudoDir() )
+	if ( item && item->isPseudoDir() )
 	    return true;
     }
 
@@ -92,9 +92,9 @@ bool FileInfoSet::containsPseudoDir() const
 
 bool FileInfoSet::containsDotEntry() const
 {
-    foreach ( FileInfo * item, *this )
+    foreach ( const FileInfo * item, *this )
     {
-	if ( item  && item->isDotEntry() )
+	if ( item && item->isDotEntry() )
 	    return true;
     }
 
@@ -104,9 +104,9 @@ bool FileInfoSet::containsDotEntry() const
 
 bool FileInfoSet::containsAttic() const
 {
-    foreach ( FileInfo * item, *this )
+    foreach ( const FileInfo * item, *this )
     {
-	if ( item  && item->isAttic() )
+	if ( item && item->isAttic() )
 	    return true;
     }
 
@@ -116,9 +116,9 @@ bool FileInfoSet::containsAttic() const
 
 bool FileInfoSet::containsDir() const
 {
-    foreach ( FileInfo * item, *this )
+    foreach ( const FileInfo * item, *this )
     {
-	if ( item  && item->isDir() )
+	if ( item && item->isDir() )
 	    return true;
     }
 
@@ -128,9 +128,9 @@ bool FileInfoSet::containsDir() const
 
 bool FileInfoSet::containsFile() const
 {
-    foreach ( FileInfo * item, *this )
+    foreach ( const FileInfo * item, *this )
     {
-	if ( item  && item->isFile() )
+	if ( item && item->isFile() )
 	    return true;
     }
 
@@ -140,9 +140,9 @@ bool FileInfoSet::containsFile() const
 
 bool FileInfoSet::containsSpecial() const
 {
-    foreach ( FileInfo * item, *this )
+    foreach ( const FileInfo * item, *this )
     {
-	if ( item  && item->isSpecial() )
+	if ( item && item->isSpecial() )
 	    return true;
     }
 
@@ -152,9 +152,9 @@ bool FileInfoSet::containsSpecial() const
 
 bool FileInfoSet::containsPkg() const
 {
-    foreach ( FileInfo * item, *this )
+    foreach ( const FileInfo * item, *this )
     {
-	if ( item  && item->isPkgInfo() )
+	if ( item && item->isPkgInfo() )
 	    return true;
     }
 
@@ -164,9 +164,9 @@ bool FileInfoSet::containsPkg() const
 
 bool FileInfoSet::containsBusyItem() const
 {
-    foreach ( FileInfo * item, *this )
+    foreach ( const FileInfo * item, *this )
     {
-	if ( item  && item->isBusy() )
+	if ( item && item->isBusy() )
 	    return true;
     }
 

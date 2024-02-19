@@ -7,7 +7,7 @@
  */
 
 
-#include <algorithm>    // std::stable_sort()
+#include <algorithm>
 
 #include "FileInfoIterator.h"
 #include "FileInfoSorter.h"
@@ -18,29 +18,13 @@ using namespace QDirStat;
 
 
 
-FileInfoIterator::FileInfoIterator( FileInfo * parent )
+FileInfoIterator::FileInfoIterator( const FileInfo * parent,
+				    bool       callNext ) :
+    _parent { parent },
+    _current { 0 },
+    _directChildrenProcessed { false },
+    _dotEntryProcessed { false }
 {
-    init( parent,
-	  true ); // callNext
-}
-
-
-FileInfoIterator::FileInfoIterator( FileInfo * parent,
-				    bool       callNext )
-{
-    init( parent, callNext );
-}
-
-
-void FileInfoIterator::init( FileInfo * parent,
-			     bool	callNext )
-{
-    _parent  = parent;
-    _current = 0;
-
-    _directChildrenProcessed = false;
-    _dotEntryProcessed	     = false;
-
     if ( callNext )
 	next();
 }
@@ -76,7 +60,7 @@ void FileInfoIterator::next()
     }
 }
 
-
+/*
 int FileInfoIterator::count()
 {
     int cnt = 0;
@@ -99,39 +83,40 @@ int FileInfoIterator::count()
 
     return cnt;
 }
+*/
 
-
-FileInfoSortedBySizeIterator::FileInfoSortedBySizeIterator( FileInfo	  * parent,
-							    FileSize	    minSize,
-							    Qt::SortOrder   sortOrder )
+FileInfoSortedBySizeIterator::FileInfoSortedBySizeIterator( FileInfo		* parent,
+							    FileSize		( *itemTotalSize )( FileInfo * ),
+							    Qt::SortOrder	sortOrder ) :
+    _totalSize { 0 }
+//    _currentIndex { 0 }
 {
-    _currentIndex = 0;
-    FileInfoIterator it( parent );
-
-    while ( *it )
+    _sortedChildren.reserve( parent->directChildrenCount() );
+    for ( FileInfoIterator it( parent ); *it; ++it )
     {
-	if ( (*it)->totalSize() >= minSize )
-	    _sortedChildren << *it;
+	_sortedChildren << *it;
 
-	++it;
+	if ( itemTotalSize )
+	    _totalSize += ( *itemTotalSize )( *it );
     }
 
     std::stable_sort( _sortedChildren.begin(),
 		      _sortedChildren.end(),
 		      FileInfoSorter( SizeCol, sortOrder ) );
 
+    _currentIt = _sortedChildren.cbegin();
 }
 
-
-FileInfo * FileInfoSortedBySizeIterator::current()
+/*
+FileInfo * FileInfoSortedBySizeIterator::current() const
 {
     if ( _currentIndex >= 0 && _currentIndex < _sortedChildren.size() )
 	return _sortedChildren.at( _currentIndex );
     else
 	return 0;
 }
-
-
+*/
+/*
 void FileInfoSortedBySizeIterator::next()
 {
     // Intentionally letting _currentIndex move one position after the last so
@@ -140,4 +125,4 @@ void FileInfoSortedBySizeIterator::next()
     if ( _currentIndex < _sortedChildren.size() )
 	_currentIndex++;
 }
-
+*/

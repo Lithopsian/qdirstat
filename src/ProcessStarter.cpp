@@ -15,27 +15,17 @@
 using namespace QDirStat;
 
 
-ProcessStarter::ProcessStarter( QObject * parent ):
-    QObject( parent ),
-    _maxParallel( 8 ),
-    _autoDelete( false ),
-    _started( false )
-{
-
-}
-
-
 void ProcessStarter::start()
 {
-    logDebug() << "Starting. Processes in queue: " << _waiting.count() << endl;
-    logDebug() << "Maximum parallel processes: " << _maxParallel << endl;
+    logDebug() << "Starting. Processes in queue: " << _waiting.count() << Qt::endl;
+//    logDebug() << "Maximum parallel processes: " << _maxParallel << Qt::endl;
 
     _started = true;
     startProcesses();
 }
 
 
-void ProcessStarter::add( Process * process )
+void ProcessStarter::add( QProcess * process )
 {
     _waiting.append( process );
 
@@ -54,7 +44,7 @@ void ProcessStarter::startProcesses()
         if ( _waiting.isEmpty() )
             return;
 
-        Process * process = _waiting.takeFirst();
+        QProcess * process = _waiting.takeFirst();
 
         if ( process )
         {
@@ -65,17 +55,14 @@ void ProcessStarter::startProcesses()
 }
 
 
-void ProcessStarter::processFinished( int                  exitCode,
-                                      QProcess::ExitStatus exitStatus )
+void ProcessStarter::processFinished( int,
+                                      QProcess::ExitStatus )
 {
-    Q_UNUSED( exitCode   );
-    Q_UNUSED( exitStatus );
-
-    Process * process = qobject_cast<Process *>( sender() );
+    QProcess * process = qobject_cast<QProcess *>( sender() );
 
     if ( ! process )
     {
-        logError() << "Ignoring non-process QObject " << (void *) sender() << endl;
+        logError() << "Ignoring non-process QObject " << (void *) sender() << Qt::endl;
         return;
     }
 
@@ -86,7 +73,7 @@ void ProcessStarter::processFinished( int                  exitCode,
     {
         if ( _waiting.isEmpty() )
         {
-            // logDebug() << "All processes started." << endl;
+            // logDebug() << "All processes started." << Qt::endl;
 
             if ( _autoDelete )
                 deleteLater();

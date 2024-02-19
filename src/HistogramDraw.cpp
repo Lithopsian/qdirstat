@@ -7,7 +7,7 @@
  */
 
 
-#include <math.h>       // log2()
+#include <math.h>
 
 #include "HistogramView.h"
 #include "HistogramItems.h"
@@ -36,10 +36,10 @@ void HistogramView::addHistogram()
 
 void HistogramView::addHistogramBackground()
 {
-    QRectF rect( -_leftBorder,
-		 _bottomBorder,
-		 _histogramWidth   + _leftBorder + _rightBorder,
-		 -( _histogramHeight + _topBorder  + _bottomBorder ) );
+    const QRectF rect(	-_leftBorder,
+			_bottomBorder,
+			_histogramWidth   + _leftBorder + _rightBorder,
+			-( _histogramHeight + _topBorder  + _bottomBorder ) );
 
     _histogramPanel = scene()->addRect( rect, QPen( Qt::NoPen ), _panelBackground );
     _histogramPanel->setZValue( PanelBackgroundLayer );
@@ -60,7 +60,7 @@ void HistogramView::addAxes()
 
 void HistogramView::addYAxisLabel()
 {
-    QString labelText = _useLogHeightScale ? "log<sub>2</sub>(n)   -->" : "n";
+    const QString labelText = _useLogHeightScale ? "log<sub>2</sub>(n)   -->" : "n";
 
     QGraphicsTextItem * item = scene()->addText( "" );
     item->setHtml( labelText );
@@ -69,9 +69,9 @@ void HistogramView::addYAxisLabel()
     font.setBold( true );
     item->setFont( font );
 
-    qreal   textWidth	= item->boundingRect().width();
-    qreal   textHeight	= item->boundingRect().height();
-    QPointF labelCenter = QPoint( -_leftBorder / 2, -_histogramHeight / 2 );
+    const qreal   textWidth	= item->boundingRect().width();
+    const qreal   textHeight	= item->boundingRect().height();
+    const QPointF labelCenter = QPoint( -_leftBorder / 2, -_histogramHeight / 2 );
 
     if ( _useLogHeightScale )
     {
@@ -91,7 +91,7 @@ void HistogramView::addYAxisLabel()
 
 void HistogramView::addXAxisLabel()
 {
-    QString labelText = tr( "File Size" ) + "  -->";
+    const QString labelText = tr( "File Size" ) + "  -->";
 
     QGraphicsSimpleTextItem * item = scene()->addSimpleText( labelText );
 
@@ -99,9 +99,9 @@ void HistogramView::addXAxisLabel()
     font.setBold( true );
     item->setFont( font );
 
-    qreal   textWidth	= item->boundingRect().width();
-    qreal   textHeight	= item->boundingRect().height();
-    QPointF labelCenter = QPoint( _histogramWidth / 2, _bottomBorder );
+    const qreal   textWidth	= item->boundingRect().width();
+    const qreal   textHeight	= item->boundingRect().height();
+    const QPointF labelCenter	= QPoint( _histogramWidth / 2, _bottomBorder );
 
     item->setPos( labelCenter.x() - textWidth / 2,
 		  labelCenter.y() - textHeight ); // Align bottom
@@ -119,20 +119,20 @@ void HistogramView::addXStartEndLabels()
 
     startLabel += "\n" + formatSize( percentile( _startPercentile ) );
 
-    QString endLabel = _endPercentile == 100 ?
+    const QString endLabel = _endPercentile == 100 ?
 	tr( "Max" ) :
 	QString( "P%1" ).arg( _endPercentile );
 
-    QString endSizeLabel = formatSize( percentile( _endPercentile ) );
+    const QString endSizeLabel = formatSize( percentile( _endPercentile ) );
 
     QGraphicsSimpleTextItem * startItem	  = scene()->addSimpleText( startLabel );
     QGraphicsSimpleTextItem * endItem	  = scene()->addSimpleText( endLabel );
     QGraphicsSimpleTextItem * endSizeItem = scene()->addSimpleText( endSizeLabel );
 
-    qreal endTextHeight = endItem->boundingRect().height();
-    qreal endTextWidth	= endItem->boundingRect().width();
-    qreal endSizeWidth	= endSizeItem->boundingRect().width();
-    qreal y		= _bottomBorder - 2 * endTextHeight;
+    const qreal endTextHeight = endItem->boundingRect().height();
+    const qreal endTextWidth	= endItem->boundingRect().width();
+    const qreal endSizeWidth	= endSizeItem->boundingRect().width();
+    const qreal y		= _bottomBorder - 2 * endTextHeight;
 
     startItem->setPos( 0, _bottomBorder - startItem->boundingRect().height() );
     endItem->setPos( _histogramWidth - endTextWidth, y );
@@ -146,18 +146,18 @@ void HistogramView::addXStartEndLabels()
 
 void HistogramView::addQuartileText()
 {
-    qreal textBorder  = 10.0;
-    qreal textSpacing = 30.0;
+    const qreal textBorder  = 10.0;
+    const qreal textSpacing = 30.0;
 
     qreal x = 0;
     qreal y = -_histogramHeight - _topBorder - textBorder;
-    qreal n = bucketsTotalSum();
+    const qreal n = bucketsTotalSum();
 
     if ( n > 0 ) // Only useful if there are any data at all
     {
-	QString q1Text = tr( "Q1: %1" ).arg( formatSize( percentile( 25 ) ) );
-	QString q3Text = tr( "Q3: %1" ).arg( formatSize( percentile( 75 ) ) );
-	QString medianText = tr( "Median: %1" ).arg( formatSize( percentile( 50 ) ) );
+	const QString q1Text = tr( "Q1: %1" ).arg( formatSize( percentile( 25 ) ) );
+	const QString q3Text = tr( "Q3: %1" ).arg( formatSize( percentile( 75 ) ) );
+	const QString medianText = tr( "Median: %1" ).arg( formatSize( percentile( 50 ) ) );
 
 	QGraphicsSimpleTextItem * q1Item     = scene()->addSimpleText( q1Text );
 	QGraphicsSimpleTextItem * q3Item     = scene()->addSimpleText( q3Text );
@@ -176,9 +176,9 @@ void HistogramView::addQuartileText()
 
 	y -= medianItem->boundingRect().height();
 
-	qreal q1Width	  = q1Item->boundingRect().width();
-	qreal q3Width	  = q3Item->boundingRect().width();
-	qreal medianWidth = medianItem->boundingRect().width();
+	const qreal q1Width	  = q1Item->boundingRect().width();
+	const qreal q3Width	  = q3Item->boundingRect().width();
+	const qreal medianWidth = medianItem->boundingRect().width();
 
 	q1Item->setPos( x, y );	     x += q1Width     + textSpacing;
 	medianItem->setPos( x, y );  x += medianWidth + textSpacing;
@@ -194,15 +194,15 @@ void HistogramView::addQuartileText()
     // Add text for the total number of files
     //
 
-    QString nText = tr( "Files (n): %1" ).arg( n );
+    const QString nText = tr( "Files (n): %1" ).arg( n );
     QGraphicsSimpleTextItem * nTextItem = scene()->addSimpleText( nText );
 
     QFont font( nTextItem->font() );
     font.setBold( true );
     nTextItem->setFont( font );
 
-    QFontMetrics metrics( font );
-    QChar sigma( UnicodeMathSigma );
+    const QFontMetrics metrics( font );
+    const QChar sigma( UnicodeMathSigma );
 
     if ( metrics.inFont( sigma ) )
 	nTextItem->setText( QString( "%1n: %2" ).arg( sigma ).arg( n ) );
@@ -217,7 +217,7 @@ void HistogramView::addQuartileText()
 
 void HistogramView::addHistogramBars()
 {
-    qreal barWidth = _histogramWidth / _buckets.size();
+    const qreal barWidth = _histogramWidth / _buckets.size();
     qreal maxVal   = _bucketMaxValue;
 
     if ( _useLogHeightScale )
@@ -225,7 +225,7 @@ void HistogramView::addHistogramBars()
 
     for ( int i=0; i < _buckets.size(); ++i )
     {
-	// logDebug() << "Adding bar #" << i << " with value " << _buckets[ i ] << endl;
+	// logDebug() << "Adding bar #" << i << " with value " << _buckets[ i ] << Qt::endl;
 	QRectF rect;
 	rect.setX( i * barWidth );
 	rect.setY( 0 );
@@ -237,9 +237,7 @@ void HistogramView::addHistogramBars()
 	if ( _useLogHeightScale && val > 1.0 )
 	    val = log2( val );
 
-	qreal fillHeight = maxVal == 0 ?
-	    0.0 :
-	    val / maxVal * _histogramHeight;
+	const qreal fillHeight = maxVal == 0 ? 0.0 : val / maxVal * _histogramHeight;
 
 	HistogramBar * bar = new HistogramBar( this, i, rect, fillHeight );
 	CHECK_NEW( bar );
@@ -249,15 +247,12 @@ void HistogramView::addHistogramBars()
 
 void HistogramView::addMarkers()
 {
-    qreal totalWidth =
-	_percentiles[ _endPercentile   ] -
-	_percentiles[ _startPercentile ];
+    const qreal totalWidth = _percentiles[ _endPercentile   ] - _percentiles[ _startPercentile ];
 
     if ( totalWidth < 1 )
 	return;
 
-    QLineF zeroLine( 0, _markerExtraHeight,
-		     0, -( _histogramHeight + _markerExtraHeight ) );
+    const QLineF zeroLine( 0, _markerExtraHeight, 0, -( _histogramHeight + _markerExtraHeight ) );
 
     // Show ordinary percentiles (all except Q1, Median, Q3)
 
@@ -294,7 +289,7 @@ void HistogramView::addMarkers()
 	if ( _percentileStep != 0 && _percentileStep != 5 && i % 10 == 0 )
 	    pen = _decilePen;
 
-	// logDebug() << "Adding marker for P" << i << endl;
+	// logDebug() << "Adding marker for P" << i << Qt::endl;
 	new PercentileMarker( this, i, "", zeroLine, pen );
     }
 

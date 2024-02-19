@@ -20,10 +20,10 @@
 #include "SysUtil.h"
 
 
-#define CACHE_SIZE		500
+#define CACHE_SIZE		5000
 #define CACHE_COST		1
 
-#define VERBOSE_PKG_QUERY	1
+#define VERBOSE_PKG_QUERY	0
 
 
 using namespace QDirStat;
@@ -33,18 +33,10 @@ using SysUtil::tryRunCommand;
 using SysUtil::haveCommand;
 
 
-PkgQuery * PkgQuery::_instance = 0;
-
-
 PkgQuery * PkgQuery::instance()
 {
-    if ( ! _instance )
-    {
-	_instance = new PkgQuery();
-	CHECK_PTR( _instance );
-    }
-
-    return _instance;
+    static PkgQuery _instance;
+    return &_instance;
 }
 
 
@@ -63,7 +55,7 @@ PkgQuery::~PkgQuery()
 
 void PkgQuery::checkPkgManagers()
 {
-    logInfo() << "Checking available supported package managers..." << endl;
+    logInfo() << "Checking available supported package managers..." << Qt::endl;
 
     checkPkgManager( new DpkgPkgManager()   );
     checkPkgManager( new RpmPkgManager()    );
@@ -73,68 +65,37 @@ void PkgQuery::checkPkgManagers()
     _secondaryPkgManagers.clear();
 
     if ( _pkgManagers.isEmpty() )
-        logInfo() << "No supported package manager found." << endl;
+        logInfo() << "No supported package manager found." << Qt::endl;
     else
     {
         QStringList available;
 
-        foreach ( PkgManager * pkgManager, _pkgManagers )
+        foreach ( const PkgManager * pkgManager, _pkgManagers )
             available << pkgManager->name();
 
-        logInfo() << "Found " << available.join( ", " )  << endl;
+        logInfo() << "Found " << available.join( ", " )  << Qt::endl;
     }
 }
 
 
-void PkgQuery::checkPkgManager( PkgManager * pkgManager )
+void PkgQuery::checkPkgManager( const PkgManager * pkgManager )
 {
     CHECK_PTR( pkgManager );
 
     if ( pkgManager->isPrimaryPkgManager() )
     {
-	logInfo() << "Found primary package manager " << pkgManager->name() << endl;
+	logInfo() << "Found primary package manager " << pkgManager->name() << Qt::endl;
 	_pkgManagers << pkgManager;
     }
     else if ( pkgManager->isAvailable() )
     {
-	logInfo() << "Found secondary package manager " << pkgManager->name() << endl;
+	logInfo() << "Found secondary package manager " << pkgManager->name() << Qt::endl;
 	_secondaryPkgManagers << pkgManager;
     }
     else
     {
 	delete pkgManager;
     }
-}
-
-
-bool PkgQuery::foundSupportedPkgManager()
-{
-    return ! instance()->_pkgManagers.isEmpty();
-}
-
-
-PkgManager * PkgQuery::primaryPkgManager()
-{
-    return instance()->_pkgManagers.isEmpty() ?
-        0 : instance()->_pkgManagers.first();
-}
-
-
-QString PkgQuery::owningPkg( const QString & path )
-{
-    return instance()->getOwningPackage( path );
-}
-
-
-PkgInfoList PkgQuery::installedPkg()
-{
-    return instance()->getInstalledPkg();
-}
-
-
-QStringList PkgQuery::fileList( PkgInfo * pkg )
-{
-    return instance()->getFileList( pkg );
 }
 
 
@@ -154,7 +115,7 @@ QString PkgQuery::getOwningPackage( const QString & path )
 
     if ( ! haveResult )
     {
-	foreach ( PkgManager * pkgManager, _pkgManagers )
+	foreach ( const PkgManager * pkgManager, _pkgManagers )
 	{
 	    pkg = pkgManager->owningPkg( path );
 
@@ -175,20 +136,20 @@ QString PkgQuery::getOwningPackage( const QString & path )
 
 #if VERBOSE_PKG_QUERY
     if ( pkg.isEmpty() )
-	logDebug() << foundBy << ": No package owns " << path << endl;
+	logDebug() << foundBy << ": No package owns " << path << Qt::endl;
     else
-	logDebug() << foundBy << ": Package " << pkg << " owns " << path << endl;
+	logDebug() << foundBy << ": Package " << pkg << " owns " << path << Qt::endl;
 #endif
 
     return pkg;
 }
 
 
-PkgInfoList PkgQuery::getInstalledPkg()
+PkgInfoList PkgQuery::getInstalledPkg() const
 {
     PkgInfoList pkgList;
 
-    foreach ( PkgManager * pkgManager, _pkgManagers )
+    foreach ( const PkgManager * pkgManager, _pkgManagers )
     {
         pkgList.append( pkgManager->installedPkg() );
     }
@@ -197,11 +158,11 @@ PkgInfoList PkgQuery::getInstalledPkg()
 }
 
 
-QStringList PkgQuery::getFileList( PkgInfo * pkg )
+QStringList PkgQuery::getFileList( const PkgInfo * pkg ) const
 {
-    foreach ( PkgManager * pkgManager, _pkgManagers )
+    foreach ( const PkgManager * pkgManager, _pkgManagers )
     {
-        QStringList fileList = pkgManager->fileList( pkg );
+        const QStringList fileList = pkgManager->fileList( pkg );
 
         if ( ! fileList.isEmpty() )
             return fileList;
@@ -211,21 +172,9 @@ QStringList PkgQuery::getFileList( PkgInfo * pkg )
 }
 
 
-bool PkgQuery::haveGetInstalledPkgSupport()
+bool PkgQuery::checkGetInstalledPkgSupport() const
 {
-    return instance()->checkGetInstalledPkgSupport();
-}
-
-
-bool PkgQuery::haveFileListSupport()
-{
-    return instance()->checkFileListSupport();
-}
-
-
-bool PkgQuery::checkGetInstalledPkgSupport()
-{
-    foreach ( PkgManager * pkgManager, _pkgManagers )
+    foreach ( const PkgManager * pkgManager, _pkgManagers )
     {
         if ( pkgManager->supportsGetInstalledPkg() )
             return true;
@@ -235,9 +184,9 @@ bool PkgQuery::checkGetInstalledPkgSupport()
 }
 
 
-bool PkgQuery::checkFileListSupport()
+bool PkgQuery::checkFileListSupport() const
 {
-    foreach ( PkgManager * pkgManager, _pkgManagers )
+    foreach ( const PkgManager * pkgManager, _pkgManagers )
     {
         if ( pkgManager->supportsFileList() )
             return true;

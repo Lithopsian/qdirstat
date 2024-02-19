@@ -8,7 +8,7 @@
 
 
 #include <QFile>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QFileInfo>
 
 #include "MountPoints.h"
@@ -22,75 +22,21 @@
 using namespace QDirStat;
 
 
-MountPoint::MountPoint( const QString & device,
-			const QString & path,
-			const QString & filesystemType,
-			const QString & mountOptions ) :
-    _device( device ),
-    _path( path ),
-    _filesystemType( filesystemType ),
-    _isDuplicate( false )
-#if HAVE_Q_STORAGE_INFO
-    , _storageInfo( 0 )
-#endif
-{
-    _mountOptions = mountOptions.split( "," );
-}
-
-
 MountPoint::~MountPoint()
 {
-#if HAVE_Q_STORAGE_INFO
     if ( _storageInfo )
         delete _storageInfo;
-#endif
-}
-
-
-QString MountPoint::mountOptionsStr() const
-{
-    return _mountOptions.join( "," );
-}
-
-
-bool MountPoint::isReadOnly() const
-{
-    return _mountOptions.contains( "ro" );
-}
-
-
-bool MountPoint::isBtrfs() const
-{
-    return _filesystemType.toLower() == "btrfs";
-}
-
-
-bool MountPoint::isNtfs() const
-{
-    return _filesystemType.toLower().startsWith( "ntfs" );
 }
 
 
 bool MountPoint::isNetworkMount() const
 {
-    QString fsType = _filesystemType.toLower();
+    const QString fsType = _filesystemType.toLower();
 
     if ( fsType.startsWith( "nfs"  ) ) return true;
     if ( fsType.startsWith( "cifs" ) ) return true;
 
     return false;
-}
-
-
-bool MountPoint::isAutofs() const
-{
-    return _filesystemType.toLower() == "autofs";
-}
-
-
-bool MountPoint::isUnmountedAutofs()
-{
-    return isAutofs() && totalSize() == 0;
 }
 
 
@@ -126,19 +72,13 @@ QStorageInfo * MountPoint::storageInfo()
     if ( ! _storageInfo )
     {
         if ( isNetworkMount() )
-            logDebug() << "Creating QStorageInfo for " << _path << endl;
+            logDebug() << "Creating QStorageInfo for " << _path << Qt::endl;
 
         _storageInfo = new QStorageInfo( _path );
         CHECK_NEW( _storageInfo );
     }
 
     return _storageInfo;
-}
-
-
-bool MountPoint::hasSizeInfo() const
-{
-    return true;
 }
 
 
@@ -176,7 +116,6 @@ FileSize MountPoint::freeSizeForRoot()
 // Qt before 5.4 does not have QStorageInfo,
 // and statfs() is Linux-specific (not POSIX).
 
-bool	 MountPoint::hasSizeInfo() const { return false; }
 FileSize MountPoint::totalSize()	 { return -1; }
 FileSize MountPoint::usedSize()		 { return -1; }
 FileSize MountPoint::reservedSize()	 { return -1; }
@@ -188,48 +127,19 @@ FileSize MountPoint::freeSizeForRoot()   { return -1; }
 
 
 
-MountPoints * MountPoints::_instance = 0;
-
-
 MountPoints * MountPoints::instance()
 {
-    if ( ! _instance )
-    {
-	_instance = new MountPoints();
-	CHECK_NEW( _instance );
-    }
+    static MountPoints _instance;
 
-    return _instance;
-}
-
-
-MountPoints::MountPoints()
-{
-    init();
+    return &_instance;
 }
 
 
 MountPoints::~MountPoints()
 {
-    init();
-}
-
-
-void MountPoints::init()
-{
     qDeleteAll( _mountPointList );
     _mountPointList.clear();
     _mountPointMap.clear();
-    _isPopulated     = false;
-    _hasBtrfs	     = false;
-    _checkedForBtrfs = false;
-}
-
-
-void MountPoints::clear()
-{
-    if ( _instance )
-	_instance->init();
 }
 
 
@@ -251,17 +161,17 @@ MountPoint * MountPoints::findByPath( const QString & path )
 
 MountPoint * MountPoints::findNearestMountPoint( const QString & startPath )
 {
-    QFileInfo fileInfo( startPath );
+    const QFileInfo fileInfo( startPath );
     QString path = fileInfo.canonicalFilePath(); // absolute path without symlinks or ..
 
     if ( path != startPath )
-	logDebug() << startPath << " canonicalized is " << path << endl;
+	logDebug() << startPath << " canonicalized is " << path << Qt::endl;
 
     MountPoint * mountPoint = findByPath( path );
 
     if ( ! mountPoint )
     {
-	QStringList pathComponents = startPath.split( "/", QString::SkipEmptyParts );
+	QStringList pathComponents = startPath.split( "/", Qt::SkipEmptyParts );
 
 	while ( ! mountPoint && ! pathComponents.isEmpty() )
 	{
@@ -273,7 +183,7 @@ MountPoint * MountPoints::findNearestMountPoint( const QString & startPath )
 	}
     }
 
-    // logDebug() << "Nearest mount point for " << startPath << " is " << mountPoint << endl;
+    // logDebug() << "Nearest mount point for " << startPath << " is " << mountPoint << Qt::endl;
 
     return mountPoint;
 }
@@ -284,7 +194,7 @@ bool MountPoints::isDeviceMounted( const QString & device )
     // Do NOT call ensurePopulated() here: This would cause a recursion in the
     // populating process!
 
-    foreach ( MountPoint * mountPoint, instance()->_mountPointList )
+    foreach ( const MountPoint * mountPoint, instance()->_mountPointList )
     {
 	if ( mountPoint->device() == device )
 	    return true;
@@ -298,13 +208,13 @@ bool MountPoints::hasBtrfs()
 {
     instance()->ensurePopulated();
 
-    if ( ! _instance->_checkedForBtrfs )
+    if ( ! instance()->_checkedForBtrfs )
     {
-	_instance->_hasBtrfs = _instance->checkForBtrfs();
-	_instance->_checkedForBtrfs = true;
+	instance()->_hasBtrfs = instance()->checkForBtrfs();
+	instance()->_checkedForBtrfs = true;
     }
 
-    return _instance->_hasBtrfs;
+    return instance()->_hasBtrfs;
 }
 
 
@@ -318,7 +228,7 @@ void MountPoints::ensurePopulated()
     read( "/proc/mounts" ) || read( "/etc/mtab" );
 
     if ( ! _isPopulated )
-	logError() << "Could not read either /proc/mounts or /etc/mtab" << endl;
+	logError() << "Could not read either /proc/mounts or /etc/mtab" << Qt::endl;
 
 #endif
 
@@ -340,13 +250,11 @@ bool MountPoints::read( const QString & filename )
 
     if ( ! file.open( QIODevice::ReadOnly | QIODevice::Text ) )
     {
-	logWarning() << "Can't open " << filename << endl;
+	logWarning() << "Can't open " << filename << Qt::endl;
 	return false;
     }
 
     findNtfsDevices();
-    logDebug() << "Reading " << filename << endl;
-
     QTextStream in( &file );
     int lineNo = 0;
     int count  = 0;
@@ -355,14 +263,14 @@ bool MountPoints::read( const QString & filename )
     while ( ! line.isNull() ) // in.atEnd() always returns true for /proc/*
     {
 	++lineNo;
-	QStringList fields = line.split( QRegExp( "\\s+" ), QString::SkipEmptyParts );
+	const QStringList fields = line.split( QRegularExpression( "\\s+" ), Qt::SkipEmptyParts );
 
 	if ( fields.isEmpty() ) // allow empty lines
 	    continue;
 
 	if ( fields.size() < 4 )
 	{
-	    logError() << "Bad line " << filename << ":" << lineNo << ": " << line << endl;
+	    logError() << "Bad line " << filename << ":" << lineNo << ": " << line << Qt::endl;
 	    continue;
 	}
 
@@ -372,10 +280,10 @@ bool MountPoints::read( const QString & filename )
 	//   /dev/sda7 /work ext4 rw,relatime,data=ordered 0 0
 	//   nas:/share/work /nas/work nfs rw,local_lock=none 0 0
 
-	QString device	  = fields[0];
-	QString path	  = fields[1];
-	QString fsType	  = fields[2];
-	QString mountOpts = fields[3];
+	const QString device	  = fields[0];
+	QString path		  = fields[1];
+	QString fsType		  = fields[2];
+	const QString mountOpts	  = fields[3];
 	// ignoring fsck and dump order (0 0)
 
         path.replace( "\\040", " " );
@@ -389,20 +297,20 @@ bool MountPoints::read( const QString & filename )
         postProcess( mountPoint );
         add( mountPoint );
 
-        if ( ! mountPoint->isDuplicate() )
-            ++count;
+	if ( !mountPoint->isDuplicate() )
+	    ++count;
 
 	line = in.readLine();
     }
 
     if ( count < 1 )
     {
-	logWarning() << "Not a single mount point in " << filename << endl;
+//	logWarning() << "Not a single mount point in " << filename << Qt::endl;
 	return false;
     }
     else
     {
-        // logDebug() << "Read " << _mountPointList.size() << " mount points from " << filename << endl;
+        // logDebug() << "Read " << _mountPointList.size() << " mount points from " << filename << Qt::endl;
 	_isPopulated = true;
 	return true;
     }
@@ -413,19 +321,21 @@ void MountPoints::postProcess( MountPoint * mountPoint )
 {
     CHECK_PTR( mountPoint );
 
+//    logDebug() << mountPoint << Qt::endl;
+
     if ( ( ! mountPoint->isSystemMount() ) && isDeviceMounted( mountPoint->device() ) )
     {
         mountPoint->setDuplicate();
 
-        logInfo() << "Found duplicate mount of " << mountPoint->device()
-                  << " at " << mountPoint->path()
-                  << endl;
+//        logInfo() << "Found duplicate mount of " << mountPoint->device()
+//                  << " at " << mountPoint->path()
+//                  << Qt::endl;
     }
 
     if ( mountPoint->isSnapPackage() )
     {
-        QString pkgName = mountPoint->path().section( "/", 1, 1, QString::SectionSkipEmpty );
-        logInfo() << "Found snap package \"" << pkgName << "\" at " << mountPoint->path() << endl;
+	const QString pkgName = mountPoint->path().section( "/", 1, 1, QString::SectionSkipEmpty );
+        logInfo() << "Found snap package \"" << pkgName << "\" at " << mountPoint->path() << Qt::endl;
     }
 }
 
@@ -445,9 +355,9 @@ bool MountPoints::readStorageInfo()
 {
     findNtfsDevices();
 
-    foreach ( QStorageInfo mount, QStorageInfo::mountedVolumes() )
+    foreach ( const QStorageInfo mount, QStorageInfo::mountedVolumes() )
     {
-        QString device( QString::fromUtf8( mount.device() ) );
+        const QString device( QString::fromUtf8( mount.device() ) );
         QString fsType( QString::fromUtf8( mount.fileSystemType() ) );
         QString mountOptions;
 
@@ -469,12 +379,12 @@ bool MountPoints::readStorageInfo()
 
     if ( _mountPointList.isEmpty() )
     {
-	logWarning() << "Not a single mount point found with QStorageInfo" << endl;
+	logWarning() << "Not a single mount point found with QStorageInfo" << Qt::endl;
 	return false;
     }
     else
     {
-        // logDebug() << "Read " << _mountPointList.size() << " mount points from QStorageInfo" << endl;
+        // logDebug() << "Read " << _mountPointList.size() << " mount points from QStorageInfo" << Qt::endl;
 	_isPopulated = true;
 	return true;
     }
@@ -487,7 +397,7 @@ bool MountPoints::checkForBtrfs()
 {
     ensurePopulated();
 
-    foreach ( MountPoint * mountPoint, _mountPointMap )
+    foreach ( const MountPoint * mountPoint, _mountPointMap )
     {
 	if ( mountPoint && mountPoint->isBtrfs() )
 	    return true;
@@ -506,38 +416,34 @@ void MountPoints::findNtfsDevices()
         lsblkCommand = "/usr/bin/lsblk";
     if ( ! SysUtil::haveCommand( lsblkCommand ) )
     {
-        logInfo() << "No lsblk command available" << endl;
+        logInfo() << "No lsblk command available" << Qt::endl;
 
         return;
     }
 
     int exitCode;
-    QString output = SysUtil::runCommand( lsblkCommand,
-                                          QStringList()
-                                          << "--noheading"
-                                          << "--list"
-                                          << "--output"
-                                          << "name,fstype",
-                                          &exitCode,
-                                          LSBLK_TIMEOUT_SEC,
-                                          false,        // logCommand
-                                          false,        // logOutput
-                                          false );      // ignoreErrCode
+    const QString output = SysUtil::runCommand( lsblkCommand,
+                                                QStringList() << "--noheading" << "--list" << "--output" << "name,fstype",
+                                                &exitCode,
+                                                LSBLK_TIMEOUT_SEC,
+                                                false,        // logCommand
+                                                false,        // logOutput
+                                                false );      // ignoreErrCode
     if ( exitCode == 0 )
     {
-        QStringList lines = output.split( "\n" )
-            .filter( QRegExp( "\\s+ntfs", Qt::CaseInsensitive ) );
+        const QStringList lines = output.split( "\n" )
+            .filter( QRegularExpression( "\\s+ntfs", QRegularExpression::CaseInsensitiveOption ) );
 
-        foreach ( QString line, lines )
+        foreach ( const QString line, lines )
         {
-            QString device = "/dev/" + line.split( QRegExp( "\\s+" ) ).first();
-            logDebug() << "NTFS on " << device << endl;
+            QString device = "/dev/" + line.split( QRegularExpression( "\\s+" ) ).first();
+            logDebug() << "NTFS on " << device << Qt::endl;
             _ntfsDevices << device;
         }
     }
 
-    if ( _ntfsDevices.isEmpty() )
-        logDebug() << "No NTFS devices found" << endl;
+//    if ( _ntfsDevices.isEmpty() )
+//        logDebug() << "No NTFS devices found" << Qt::endl;
 }
 
 
@@ -563,23 +469,20 @@ QList<MountPoint *> MountPoints::normalMountPoints()
 
 void MountPoints::dumpNormalMountPoints()
 {
-    foreach ( MountPoint * mountPoint, normalMountPoints() )
-	logDebug() << mountPoint << endl;
+    foreach ( const MountPoint * mountPoint, normalMountPoints() )
+	logDebug() << mountPoint << Qt::endl;
 }
 
 
 void MountPoints::dump()
 {
-    foreach ( MountPoint * mountPoint, instance()->_mountPointList )
-    {
-	logDebug() << mountPoint << endl;
-    }
+    foreach ( const MountPoint * mountPoint, instance()->_mountPointList )
+	logDebug() << mountPoint << Qt::endl;
 }
 
 
 void MountPoints::reload()
 {
-    instance()->clear();
     instance()->ensurePopulated();
 }
 

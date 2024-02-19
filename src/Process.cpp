@@ -13,13 +13,6 @@
 using namespace QDirStat;
 
 
-Process::Process( QObject *parent ):
-    QProcess( parent )
-{
-    // NOP
-}
-
-
 #if (QT_VERSION < QT_VERSION_CHECK( 5, 1, 0))
 
 void Process::start()

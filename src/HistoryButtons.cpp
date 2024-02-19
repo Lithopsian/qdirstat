@@ -21,11 +21,11 @@ using namespace QDirStat;
 
 HistoryButtons::HistoryButtons( QAction * actionGoBack,
                                 QAction * actionGoForward ):
-    QObject(),
-    _actionGoBack   ( actionGoBack ),
-    _actionGoForward( actionGoForward )
+    QObject { },
+    _history { new History() },
+    _actionGoBack    { actionGoBack },
+    _actionGoForward { actionGoForward }
 {
-    _history = new History();
     CHECK_NEW( _history );
 
     initHistoryButtons();

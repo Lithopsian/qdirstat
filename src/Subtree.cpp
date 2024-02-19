@@ -9,6 +9,9 @@
 
 #include "Subtree.h"
 #include "DirInfo.h"
+#include "DirTree.h"
+#include "Logger.h"
+
 
 using namespace QDirStat;
 
@@ -17,24 +20,9 @@ FileInfo * Subtree::subtree()
 {
     FileInfo * item = locate();
 
-    if ( ! item && _useParentFallback && _tree )
-    {
-        // logDebug() << "Trying parent URL: " << _parentUrl << endl;
-
-        if ( ! _parentUrl.isEmpty() )
-        {
-            item = _tree->locate( _parentUrl,
-                                  true ); // findPseudoDirs
-        }
-    }
-
     if ( ! item && _useRootFallback && _tree )
-    {
 	item = _tree->firstToplevel();
-        // logDebug() << "Falling back to first toplevel item: " << item << endl;
-    }
 
-    // logDebug() << "Result: " << item << endl;
     return item;
 }
 
@@ -58,21 +46,12 @@ DirInfo * Subtree::dir()
 }
 
 
-QString Subtree::url() const
+const QString & Subtree::url() const
 {
     if ( _url == "<root>" && _tree )
 	return _tree->url();
     else
 	return _url;
-}
-
-
-void Subtree::setUrl( const QString & newUrl )
-{
-    _url = newUrl;
-
-    if ( ! _tree )
-        logWarning() << "NULL tree!" << endl;
 }
 
 
@@ -85,13 +64,23 @@ void Subtree::set( FileInfo * subtree )
 	_tree = subtree->tree();
 	_url  = subtree->debugUrl();
 
-        if ( subtree->parent() )
+	if ( subtree->parent() )
             _parentUrl = subtree->parent()->debugUrl();
     }
     else
     {
 	_url.clear();
     }
+}
+
+
+void Subtree::setUrl( const QString & newUrl )
+{
+    //logDebug() << "URL: " << newUrl << Qt::endl;
+    _url = newUrl;
+
+    if ( ! _tree )
+        logWarning() << "NULL tree!" << Qt::endl;
 }
 
 

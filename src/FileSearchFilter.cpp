@@ -14,23 +14,23 @@
 using namespace QDirStat;
 
 
+FileSearchFilter::FileSearchFilter():
+    FileSearchFilter { 0, "", Auto, true }
+{
+}
+
 FileSearchFilter::FileSearchFilter( DirInfo *       subtree,
                                     const QString & pattern,
-                                    FilterMode      filterMode ):
+                                    FilterMode      filterMode,
+                                    bool            caseSensitive ):
     SearchFilter( pattern,
                   filterMode,
-                  Contains ),   // defaultFilterMode
+                  Contains, // defaultFilterMode
+                  caseSensitive ),  // case-insensitive
     _subtree( subtree ),
     _findFiles( true ),
     _findDirs( true ),
     _findSymLinks( true ),
     _findPkg( true )
 {
-    if ( _filterMode == Auto )
-        guessFilterMode();
-
-    if ( _filterMode == Wildcard )
-        _regexp.setPatternSyntax( QRegExp::Wildcard );
-
-    _regexp.setCaseSensitivity( Qt::CaseInsensitive );
 }

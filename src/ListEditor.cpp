@@ -17,36 +17,12 @@
 using namespace QDirStat;
 
 
-ListEditor::ListEditor( QWidget * parent ):
-    QWidget( parent ),
-    _listWidget(0),
-    _firstRow(0),
-    _updatesLocked(false),
-    _moveUpButton(0),
-    _moveDownButton(0),
-    _moveToTopButton(0),
-    _moveToBottomButton(0),
-    _addButton(0),
-    _removeButton(0)
-{
-
-}
-
-
-ListEditor::~ListEditor()
-{
-
-}
-
-
 void ListEditor::setListWidget( QListWidget * listWidget )
 {
     _listWidget = listWidget;
 
-    connect( _listWidget, SIGNAL( currentItemChanged( QListWidgetItem *,
-						      QListWidgetItem *	 ) ),
-	     this,	  SLOT	( currentItemChanged( QListWidgetItem *,
-						      QListWidgetItem *	 ) ) );
+    connect( _listWidget, SIGNAL( currentItemChanged( QListWidgetItem *, QListWidgetItem * ) ),
+	     this,	  SLOT( currentItemChanged( QListWidgetItem *, QListWidgetItem * ) ) );
 }
 
 
@@ -98,7 +74,7 @@ void ListEditor::setRemoveButton( QAbstractButton * button )
 void ListEditor::moveUp()
 {
     QListWidgetItem * currentItem = _listWidget->currentItem();
-    int currentRow		  = _listWidget->currentRow();
+    const int currentRow	  = _listWidget->currentRow();
 
     if ( ! currentItem )
 	return;
@@ -109,7 +85,7 @@ void ListEditor::moveUp()
 	_listWidget->takeItem( currentRow );
 	_listWidget->insertItem( currentRow - 1, currentItem );
 	_listWidget->setCurrentItem( currentItem );
-        moveValue( value( currentItem ), "moveUp" );
+//        moveValue( value( currentItem ), "moveUp" );
 	_updatesLocked = false;
     }
 }
@@ -118,7 +94,7 @@ void ListEditor::moveUp()
 void ListEditor::moveDown()
 {
     QListWidgetItem * currentItem = _listWidget->currentItem();
-    int currentRow		  = _listWidget->currentRow();
+    const int currentRow	  = _listWidget->currentRow();
 
     if ( ! currentItem )
 	return;
@@ -129,7 +105,7 @@ void ListEditor::moveDown()
 	_listWidget->takeItem( currentRow );
 	_listWidget->insertItem( currentRow + 1, currentItem );
 	_listWidget->setCurrentItem( currentItem );
-        moveValue( value( currentItem ), "moveDown" );
+//        moveValue( value( currentItem ), "moveDown" );
 	_updatesLocked = false;
     }
 }
@@ -149,7 +125,7 @@ void ListEditor::moveToTop()
 	_listWidget->takeItem( currentRow );
 	_listWidget->insertItem( 0, currentItem );
 	_listWidget->setCurrentItem( currentItem );
-        moveValue( value( currentItem ), "moveToTop" );
+//        moveValue( value( currentItem ), "moveToTop" );
 	_updatesLocked = false;
     }
 }
@@ -158,7 +134,7 @@ void ListEditor::moveToTop()
 void ListEditor::moveToBottom()
 {
     QListWidgetItem * currentItem = _listWidget->currentItem();
-    int currentRow		  = _listWidget->currentRow();
+    const int currentRow	  = _listWidget->currentRow();
 
     if ( ! currentItem )
 	return;
@@ -169,7 +145,7 @@ void ListEditor::moveToBottom()
 	_listWidget->takeItem( currentRow );
 	_listWidget->addItem( currentItem );
 	_listWidget->setCurrentItem( currentItem );
-        moveValue( value( currentItem ), "moveToBottom" );
+//        moveValue( value( currentItem ), "moveToBottom" );
 	_updatesLocked = false;
     }
 }
@@ -191,40 +167,22 @@ void ListEditor::add()
 void ListEditor::remove()
 {
     QListWidgetItem * currentItem = _listWidget->currentItem();
-    int currentRow		  = _listWidget->currentRow();
+    const int currentRow	  = _listWidget->currentRow();
 
     if ( ! currentItem )
 	return;
 
     void * value = this->value( currentItem );
 
-    //
-    // Confirmation popup
-    //
+    // Delete current item
+    _updatesLocked = true;
+    _listWidget->takeItem( currentRow );
+    delete currentItem;
+    removeValue( value );
+    updateActions();
+    _updatesLocked = false;
 
-    QString msg = deleteConfirmationMessage( value );
-
-    if ( ! msg.isEmpty() )
-    {
-	int ret = QMessageBox::question( window(),
-					 tr( "Please Confirm" ), // title
-					 msg );
-	if ( ret == QMessageBox::Yes )
-	{
-	    //
-	    // Delete current item
-	    //
-
-	    _updatesLocked = true;
-	    _listWidget->takeItem( currentRow );
-	    delete currentItem;
-	    removeValue( value );
-            updateActions();
-	    _updatesLocked = false;
-
-	    load( this->value( _listWidget->currentItem() ) );
-	}
-    }
+    load( this->value( _listWidget->currentItem() ) );
 }
 
 
@@ -279,9 +237,10 @@ void ListEditor::enableButton( QAbstractButton * button, bool enabled )
 	button->setEnabled( enabled );
 }
 
-
+/*
 void ListEditor::moveValue( void * value, const char * operation )
 {
     Q_UNUSED( value );
     Q_UNUSED( operation );
 }
+*/

@@ -634,9 +634,7 @@ void HistogramView::addYAxisLabel()
     QGraphicsTextItem * item = scene()->addText( "" );
     item->setHtml( labelText );
 
-    QFont font( item->font() );
-    font.setBold( true );
-    item->setFont( font );
+    setBold( item );
 
     const qreal   textWidth	= item->boundingRect().width();
     const qreal   textHeight	= item->boundingRect().height();
@@ -664,9 +662,7 @@ void HistogramView::addXAxisLabel()
 
     QGraphicsSimpleTextItem * item = scene()->addSimpleText( labelText );
 
-    QFont font( item->font() );
-    font.setBold( true );
-    item->setFont( font );
+    setBold( item );
 
     const qreal   textWidth	= item->boundingRect().width();
     const qreal   textHeight	= item->boundingRect().height();
@@ -733,12 +729,9 @@ void HistogramView::addQuartileText()
 	q3Item->setBrush( _quartilePen.color() );
 	medianItem->setBrush( _medianPen.color() );
 
-	QFont font( medianItem->font() );
-	font.setBold( true );
-
-	medianItem->setFont( font );
-	q1Item->setFont( font );
-	q3Item->setFont( font );
+	setBold( medianItem);
+	setBold( q1Item);
+	setBold( q3Item);
 
 	y -= medianItem->boundingRect().height();
 
@@ -762,14 +755,10 @@ void HistogramView::addQuartileText()
 
     const QString nText = tr( "Files (n): %1" ).arg( n );
     QGraphicsSimpleTextItem * nTextItem = scene()->addSimpleText( nText );
+    setBold( nTextItem );
 
-    QFont font( nTextItem->font() );
-    font.setBold( true );
-    nTextItem->setFont( font );
-
-    const QFontMetrics metrics( font );
+    const QFontMetrics metrics( nTextItem->font() );
     const QChar sigma( UnicodeMathSigma );
-
     if ( metrics.inFont( sigma ) )
 	nTextItem->setText( QString( "%1n: %2" ).arg( sigma ).arg( n ) );
 
@@ -885,9 +874,7 @@ QPointF HistogramView::addBoldText( const QPointF & pos, const QString & text )
     QGraphicsTextItem * textItem = scene()->addText( text );
     textItem->setPos( pos );
 
-    QFont boldFont( textItem->font() );
-    boldFont.setBold( true );
-    textItem->setFont( boldFont );
+    setBold( textItem );
     textItem->setDefaultTextColor( Qt::black );
 
     return QPoint( pos.x(), pos.y() + textItem->boundingRect().height() );
@@ -1048,3 +1035,20 @@ QPointF HistogramView::addPie( const QRectF & rect,
     return QPoint( rect.x(), rect.y() + pie->boundingRect().height() );
 }
 
+/*
+void HistogramView::setBold( QGraphicsTextItem * item )
+{
+    QFont font( item->font() );
+    font.setBold( true );
+    item->setFont( font );
+}
+
+
+void HistogramView::setBold( QGraphicsSimpleTextItem * item )
+{
+    QFont font( item->font() );
+    font.setBold( true );
+    item->setFont( font );
+}
+
+*/

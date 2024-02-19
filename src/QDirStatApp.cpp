@@ -16,7 +16,6 @@
 #include "FileInfoSet.h"
 #include "SelectionModel.h"
 #include "CleanupCollection.h"
-#include "BookmarksManager.h"
 #include "MainWindow.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -25,32 +24,10 @@
 using namespace QDirStat;
 
 
-QDirStatApp * QDirStatApp::_instance = 0;
-
-
 QDirStatApp * QDirStatApp::instance()
 {
-    if ( ! _instance )
-        _instance = new QDirStatApp();
-
-    return _instance;
-}
-
-
-void QDirStatApp::createInstance()
-{
-    if ( ! _instance )
-        _instance = new QDirStatApp();
-}
-
-
-void QDirStatApp::deleteInstance()
-{
-    if ( _instance )
-    {
-        delete _instance;
-        _instance = 0;
-    }
+    static QDirStatApp _instance;
+    return &_instance;
 }
 
 
@@ -62,7 +39,7 @@ DirTree * QDirStatApp::dirTree() const
 
 QDirStatApp::QDirStatApp()
 {
-    // logDebug() << "Creating app" << endl;
+    // logDebug() << "Creating app" << Qt::endl;
 
     _dirTreeModel = new DirTreeModel();
     CHECK_NEW( _dirTreeModel );
@@ -74,29 +51,25 @@ QDirStatApp::QDirStatApp()
 
     _cleanupCollection = new CleanupCollection( _selectionModel );
     CHECK_NEW( _cleanupCollection );
-
-    _bookmarksManager = new BookmarksManager();
-    CHECK_NEW( _bookmarksManager );
 }
 
 
 QDirStatApp::~QDirStatApp()
 {
-    // logDebug() << "Destroying app" << endl;
+    // logDebug() << "Destroying app" << Qt::endl;
 
-    delete _bookmarksManager;
     delete _cleanupCollection;
     delete _selectionModel;
     delete _dirTreeModel;
 
-    // logDebug() << "App destroyed." << endl;
+    // logDebug() << "App destroyed." << Qt::endl;
 }
 
 
 QWidget * QDirStatApp::findMainWindow() const
 {
     QWidget * mainWin = 0;
-    QWidgetList toplevel = QApplication::topLevelWidgets();
+    const QWidgetList toplevel = QApplication::topLevelWidgets();
 
     for ( QWidgetList::const_iterator it = toplevel.constBegin();
           it != toplevel.constEnd() && ! mainWin;
@@ -106,7 +79,7 @@ QWidget * QDirStatApp::findMainWindow() const
     }
 
     if ( ! mainWin )
-        logWarning() << "NULL mainWin for shared instance" << endl;
+        logWarning() << "NULL mainWin for shared instance" << Qt::endl;
 
     return mainWin;
 }
@@ -118,9 +91,15 @@ FileInfo * QDirStatApp::root() const
 }
 
 
+FileInfo * QDirStatApp::currentItem() const
+{
+    return _selectionModel->currentItem();
+}
+
+
 FileInfo * QDirStatApp::selectedDirInfo() const
 {
-    FileInfoSet selectedItems = selectionModel()->selectedItems();
+    const FileInfoSet selectedItems = _selectionModel->selectedItems();
     FileInfo * sel = selectedItems.first();
 
     return sel && sel->isDirInfo() ? sel : 0;
@@ -133,6 +112,8 @@ FileInfo * QDirStatApp::selectedDirInfoOrRoot() const
 
     return sel ? sel : root();
 }
+
+
 
 
 QDirStatApp * QDirStat::app()

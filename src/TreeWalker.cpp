@@ -103,9 +103,7 @@ void OldFilesTreeWalker::prepare( FileInfo * subtree )
 
 bool BrokenSymLinksTreeWalker::check( FileInfo * item )
 {
-    return item &&
-           item->isSymLink() &&
-           SysUtil::isBrokenSymLink( item->url() );
+    return item && item->isSymLink() && item->isBrokenSymLink();
 }
 
 

@@ -8,13 +8,13 @@
 
 
 #include <QPushButton>
+#include <QLineEdit>
 #include <QMessageBox>
 
-#include "Qt4Compat.h"
+//#include "Qt4Compat.h"
 
 #include "ShowUnpkgFilesDialog.h"
-#include "ExistingDirCompleter.h"
-#include "ExistingDirValidator.h"
+#include "ExistingDir.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
 #include "Logger.h"
@@ -25,8 +25,8 @@ using namespace QDirStat;
 
 
 ShowUnpkgFilesDialog::ShowUnpkgFilesDialog( QWidget * parent ):
-    QDialog( parent ),
-    _ui( new Ui::ShowUnpkgFilesDialog )
+    QDialog { parent },
+    _ui { new Ui::ShowUnpkgFilesDialog }
 {
     CHECK_NEW( _ui );
     _ui->setupUi( this );
@@ -39,23 +39,26 @@ ShowUnpkgFilesDialog::ShowUnpkgFilesDialog( QWidget * parent ):
 
     _ui->startingDirComboBox->setCompleter( completer );
 
-    QValidator * validator = new ExistingDirValidator( this );
+    ExistingDirValidator * validator = new ExistingDirValidator( this );
     CHECK_NEW( validator );
 
     _ui->startingDirComboBox->setValidator( validator );
-    qEnableClearButton( _ui->startingDirComboBox );
 
-    connect( validator, SIGNAL( isOk	  ( bool ) ),
-	     _okButton, SLOT  ( setEnabled( bool ) ) );
+    QLineEdit * lineEdit = _ui->startingDirComboBox->lineEdit();
+    if ( lineEdit )
+        lineEdit->setClearButtonEnabled( true );
 
-    connect( this, SIGNAL( accepted()	   ),
-	     this, SLOT	 ( writeSettings() ) );
+    connect( validator, SIGNAL( isOk( bool ) ),
+	     _okButton, SLOT( setEnabled( bool ) ) );
+
+    connect( this, SIGNAL( accepted() ),
+	     this, SLOT( writeSettings() ) );
 
     QPushButton * resetButton = _ui->buttonBox->button( QDialogButtonBox::RestoreDefaults );
     CHECK_PTR( resetButton );
 
-    connect( resetButton, SIGNAL( clicked()	    ),
-	     this,	  SLOT	( restoreDefaults() ) );
+    connect( resetButton, SIGNAL( clicked() ),
+	     this,	  SLOT( restoreDefaults() ) );
 
     readSettings();
 }
@@ -69,29 +72,14 @@ ShowUnpkgFilesDialog::~ShowUnpkgFilesDialog()
 
 QString ShowUnpkgFilesDialog::startingDir() const
 {
-    if ( result() == QDialog::Accepted )
-	return _ui->startingDirComboBox->currentText();
-    else
-	return "";
-}
-
-
-QStringList ShowUnpkgFilesDialog::excludeDirs() const
-{
-    return cleanedLines( _ui->excludeDirsTextEdit );
-}
-
-
-QStringList ShowUnpkgFilesDialog::ignorePatterns() const
-{
-    return cleanedLines( _ui->ignorePatternsTextEdit );
+    return result() == QDialog::Accepted ? _ui->startingDirComboBox->currentText() : "";
 }
 
 
 QStringList ShowUnpkgFilesDialog::cleanedLines( QPlainTextEdit *widget ) const
 {
-    QString	text  = widget->toPlainText();
-    QStringList lines = text.split( '\n', QString::SkipEmptyParts );
+    const QString text = widget->toPlainText();
+    const QStringList lines  = text.split( '\n', Qt::SkipEmptyParts );
     QStringList result;
 
     foreach ( QString line, lines )
@@ -108,25 +96,14 @@ QStringList ShowUnpkgFilesDialog::cleanedLines( QPlainTextEdit *widget ) const
 
 void ShowUnpkgFilesDialog::restoreDefaults()
 {
-    QString msg = tr( "Really reset all values to default?" );
-    int ret = QMessageBox::question( qApp->activeWindow(),
-				     tr( "Please Confirm" ), // title
-				     msg,		     // text
-				     QMessageBox::Yes | QMessageBox::No );
-
-    if ( ret == QMessageBox::Yes )
-        setValues( UnpkgSettings( UnpkgSettings::DefaultValues ) );
+    setValues( UnpkgSettings::defaultSettings() );
 }
 
 
 UnpkgSettings ShowUnpkgFilesDialog::values() const
 {
-    UnpkgSettings settings( UnpkgSettings::Empty );
-
-    settings.startingDir    = startingDir();
-    settings.excludeDirs    = excludeDirs();
-    settings.ignorePatterns = ignorePatterns();
-    // settings.dump();
+    UnpkgSettings settings( startingDir(), excludeDirs(), ignorePatterns(), crossFilesystems() );
+    settings.dump();
 
     return settings;
 }
@@ -135,24 +112,25 @@ UnpkgSettings ShowUnpkgFilesDialog::values() const
 void ShowUnpkgFilesDialog::setValues( const UnpkgSettings & settings )
 {
     // settings.dump();
-    qSetComboBoxText( _ui->startingDirComboBox, settings.startingDir );
-    _ui->excludeDirsTextEdit->setPlainText( settings.excludeDirs.join( "\n" ) );
-    _ui->ignorePatternsTextEdit->setPlainText( settings.ignorePatterns.join( "\n" ) );
+    _ui->startingDirComboBox->setCurrentText( settings.startingDir() );
+    _ui->excludeDirsTextEdit->setPlainText( settings.excludeDirs().join( "\n" ) );
+    _ui->ignorePatternsTextEdit->setPlainText( settings.ignorePatterns().join( "\n" ) );
+    _ui->crossFilesystemsCheckBox->setChecked( settings.crossFilesystems() );
 }
 
 
 void ShowUnpkgFilesDialog::readSettings()
 {
-    // logDebug() << endl;
+    // logDebug() << Qt::endl;
 
-    setValues( UnpkgSettings( UnpkgSettings::ReadFromConfig ) );;
+    setValues( UnpkgSettings() );
     readWindowSettings( this, "ShowUnkpgFilesDialog" );
 }
 
 
 void ShowUnpkgFilesDialog::writeSettings()
 {
-    // logDebug() << endl;
+    // logDebug() << Qt::endl;
 
     UnpkgSettings settings = values();
     settings.write();

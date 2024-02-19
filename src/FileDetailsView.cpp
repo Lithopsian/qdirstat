@@ -22,7 +22,6 @@
 #include "Logger.h"
 #include "Exception.h"
 
-#define ALLOCATED_FAT_PERCENT	33
 #define MAX_SYMLINK_TARGET_LEN	25
 
 using namespace QDirStat;
@@ -117,9 +116,9 @@ void FileDetailsView::showDetails( FileInfo * file )
 
     // logDebug() << "Showing file details about " << file << Qt::endl;
 
-    setCurrentPage( _ui->fileDetailsPage );
     showFilePkgInfo( file );
     showFileInfo( file );
+    setCurrentPage( _ui->fileDetailsPage );
 }
 
 
@@ -128,14 +127,14 @@ void FileDetailsView::showFileInfo( FileInfo * file )
     CHECK_PTR( file );
 
     setLabelLimited(_ui->fileNameLabel, file->baseName() );
-    _ui->fileTypeLabel->setText( formatFilesystemObjectType( file->mode() ) );
+    _ui->fileTypeLabel->setText( formatFilesystemObjectType( file ) );
     _ui->symlinkIcon->setVisible( file->isSymLink() );
     _ui->fileIcon->setVisible( file->isFile() );
     _ui->blockIcon->setVisible( file->isBlockDevice() );
     _ui->charIcon->setVisible( file->isCharDevice() );
     _ui->specialIcon->setVisible( file->isFifo() || file->isSocket() );
 
-    _ui->fileSymLinkBrokenWarning->setVisible( file->isBrokenSymLink() );
+//    _ui->fileSymLinkBrokenWarning->setVisible( file->isBrokenSymLink() );
 
     if ( file->isSymLink() )
     {
@@ -149,17 +148,27 @@ void FileDetailsView::showFileInfo( FileInfo * file )
 	    shortTarget = ".../" + baseName( shortTarget );
 	_ui->fileMimeOrLinkLabel->setText( shortTarget );
 
-	const QString tooltipText = shortTarget != fullTarget ? fullTarget : QString();
+	QString tooltipText;
+	QString styleSheet;
+	if ( file->isBrokenSymLink() )
+	{
+	    styleSheet = errorStyleSheet();
+	    tooltipText = fullTarget + tr( " (broken)" );
+	}
+	else if (shortTarget != fullTarget )
+	{
+	    tooltipText = fullTarget;
+	}
+	_ui->fileMimeOrLinkLabel->setStyleSheet( styleSheet );
 	_ui->fileMimeOrLinkLabel->setToolTip( tooltipText );
-
     }
     else // ! isSymLink
     {
 	setMimeCategory( file );
     }
 
-    setFileSizeLabel( _ui->fileSizeLabel, file );
-    setFileAllocatedLabel( _ui->fileAllocatedLabel, file );
+    _ui->fileSizeLabel->setSize( file );
+    _ui->fileAllocatedLabel->setAllocated( file );
 
     _ui->fileUserLabel->setText( file->userName() );
     _ui->fileGroupLabel->setText( file->groupName() );
@@ -167,60 +176,27 @@ void FileDetailsView::showFileInfo( FileInfo * file )
     _ui->fileMTimeLabel->setText( formatTime( file->mtime() ) );
 
     if ( ! file->isSparseFile() )
-	suppressIfSameContent( _ui->fileSizeLabel, _ui->fileAllocatedLabel, _ui->fileAllocatedCaption );
+	_ui->fileSizeLabel->suppressIfSameContent( _ui->fileAllocatedLabel, _ui->fileAllocatedCaption );
 }
 
 
-void FileDetailsView::setFileSizeLabel( FileSizeLabel *  label,
-					const FileInfo * file )
+QString FileDetailsView::formatFilesystemObjectType( const FileInfo * file )
 {
-    CHECK_PTR( file );
+    if ( file->isFile() )
+	return tr( "file" );
+    else if ( file->isSymLink() )
+	return tr( "symbolic link" );
+    else if ( file->isBlockDevice() )
+	return ( "block device"	);
+    else if ( file->isCharDevice() )
+	return tr( "character device" );
+    else if ( file->isFifo() )
+	return ( "named pipe" );
+    else if ( file->isSocket() )
+	return tr( "socket" );
 
-    if ( file->links() > 1 )
-    {
-	label->setText( tr( "%1 / %2 links" )
-			.arg( formatSize( file->rawByteSize() ) )
-			.arg( file->links() ) );
-
-	if ( file->rawByteSize() >= 1024 ) // Not useful below 1 kB
-	{
-	    label->setToolTip( tr( "%1 / %2 links" )
-			      .arg( formatByteSize( file->rawByteSize() ) )
-			      .arg( file->links() ) );
-	}
-    }
-    else
-    {
-	label->setValue( file->rawByteSize() );
-    }
-}
-
-
-void FileDetailsView::setFileAllocatedLabel( FileSizeLabel *  label,
-					     const FileInfo * file )
-{
-    CHECK_PTR( file );
-
-    if ( file->links() > 1 )
-    {
-	label->setText( tr( "%1 / %2 Links" )
-			.arg( formatSize( file->rawAllocatedSize() ) )
-			.arg( file->links() ) );
-
-	label->setToolTip( tr( "%1 / %2 Links" )
-			   .arg( formatByteSize( file->rawAllocatedSize() ) )
-			   .arg( file->links() ) );
-    }
-    else
-    {
-	label->setValue( file->allocatedSize() );
-    }
-
-    if ( file->isSparseFile() ||
-         ( file->rawAllocatedSize() > 4096 && file->usedPercent() < ALLOCATED_FAT_PERCENT ) )
-	_ui->fileAllocatedLabel->setBold( true );
-    else
-	_ui->fileAllocatedLabel->setBold( false );
+    logWarning() << " unexpected mode: " << file->mode() << Qt::endl;
+    return QString();
 }
 
 
@@ -365,7 +341,7 @@ void FileDetailsView::showSubtreeInfo( DirInfo * dir )
 	setLabel( _ui->dirSubDirCountLabel, dir->totalSubDirs(),       prefix );
 	_ui->dirLatestMTimeLabel->setText( formatTime( dir->latestMtime() ) );
 
-	suppressIfSameContent( _ui->dirTotalSizeLabel, _ui->dirAllocatedLabel, _ui->dirAllocatedCaption );
+	_ui->dirTotalSizeLabel->suppressIfSameContent( _ui->dirAllocatedLabel, _ui->dirAllocatedCaption );
 	_ui->dirAllocatedLabel->setBold( dir->totalUsedPercent() < ALLOCATED_FAT_PERCENT );
     }
     else  // Special msg -> show it and clear all summary fields
@@ -380,12 +356,15 @@ void FileDetailsView::showSubtreeInfo( DirInfo * dir )
 }
 
 
+QString FileDetailsView::errorStyleSheet() const
+{
+    return QString( "QLabel { color:" + app()->dirTreeModel()->dirReadErrColor().name() + " }" );
+}
+
+
 QString FileDetailsView::dirColorStyle( const DirInfo * dir ) const
 {
-    if ( dir->readState() == DirPermissionDenied )
-	return QString( "color:" + app()->dirTreeModel()->dirReadErrColor().name() );
-
-    return "";
+    return dir->readState() == DirPermissionDenied ? errorStyleSheet() : "";
 }
 
 
@@ -483,8 +462,6 @@ void FileDetailsView::showDetails( PkgInfo * pkg )
 	return;
     }
 
-    setCurrentPage( _ui->pkgDetailsPage );
-
     setLabelLimited( _ui->pkgNameLabel, pkg->name() );
     _ui->pkgVersionLabel->setText( pkg->version() );
     _ui->pkgArchLabel->setText( pkg->arch() );
@@ -499,7 +476,7 @@ void FileDetailsView::showDetails( PkgInfo * pkg )
 	setLabel( _ui->pkgFileCountLabel,   pkg->totalFiles()	      );
 	setLabel( _ui->pkgSubDirCountLabel, pkg->totalSubDirs()	      );
 
-	suppressIfSameContent( _ui->pkgTotalSizeLabel, _ui->pkgAllocatedLabel, _ui->pkgAllocatedCaption );
+	_ui->pkgTotalSizeLabel->suppressIfSameContent( _ui->pkgAllocatedLabel, _ui->pkgAllocatedCaption );
     }
     else
     {
@@ -512,6 +489,8 @@ void FileDetailsView::showDetails( PkgInfo * pkg )
     }
 
     _ui->pkgLatestMTimeLabel->setText( formatTime( pkg->latestMtime() ) );
+
+    setCurrentPage( _ui->pkgDetailsPage );
 }
 
 
@@ -525,8 +504,6 @@ void FileDetailsView::showPkgSummary( PkgInfo * pkg )
 	return;
     }
 
-    setCurrentPage( _ui->pkgSummaryPage );
-
     setLabel( _ui->pkgSummaryPkgCountLabel, pkg->directChildrenCount() );
 
     if ( ! pkg->isBusy() && pkg->readState() == DirFinished )
@@ -537,9 +514,8 @@ void FileDetailsView::showPkgSummary( PkgInfo * pkg )
 	setLabel( _ui->pkgSummaryFileCountLabel,   pkg->totalFiles()	     );
 	setLabel( _ui->pkgSummarySubDirCountLabel, pkg->totalSubDirs()	     );
 
-	suppressIfSameContent( _ui->pkgSummaryTotalSizeLabel,
-			       _ui->pkgSummaryAllocatedLabel,
-			       _ui->pkgSummaryAllocatedCaption );
+	_ui->pkgSummaryTotalSizeLabel->suppressIfSameContent( _ui->pkgSummaryAllocatedLabel,
+							      _ui->pkgSummaryAllocatedCaption );
     }
     else
     {
@@ -556,14 +532,14 @@ void FileDetailsView::showPkgSummary( PkgInfo * pkg )
     }
 
     _ui->pkgSummaryLatestMTimeLabel->setText( formatTime( pkg->latestMtime() ) );
+
+    setCurrentPage( _ui->pkgSummaryPage );
 }
 
 
 void FileDetailsView::showSelectionSummary( const FileInfoSet & selectedItems )
 {
     // logDebug() << "Showing selection summary" << Qt::endl;
-
-    setCurrentPage( _ui->selectionSummaryPage );
 
     int fileCount	 = 0;
     int dirCount	 = 0;
@@ -602,7 +578,9 @@ void FileDetailsView::showSelectionSummary( const FileInfoSet & selectedItems )
     setLabel( _ui->selDirCountLabel,	     dirCount		      );
     setLabel( _ui->selSubtreeFileCountLabel, subtreeFileCount	      );
 
-    suppressIfSameContent( _ui->selTotalSizeLabel, _ui->selAllocatedLabel, _ui->selAllocatedCaption );
+    _ui->selTotalSizeLabel->suppressIfSameContent( _ui->selAllocatedLabel, _ui->selAllocatedCaption );
+
+    setCurrentPage( _ui->selectionSummaryPage );
 }
 
 
@@ -642,22 +620,6 @@ QString FileDetailsView::limitText( const QString & text ) const
     logDebug() << "Limiting \"" << text << "\"" << Qt::endl;
 
     return limited;
-}
-
-
-void FileDetailsView::suppressIfSameContent( const FileSizeLabel * origLabel,
-					     FileSizeLabel       * cloneLabel,
-					     QLabel	         * caption )
-{
-    if ( origLabel->text() == cloneLabel->text() )
-    {
-	cloneLabel->clear();
-	caption->setEnabled( false );
-    }
-    else
-    {
-	caption->setEnabled( true );
-    }
 }
 
 /*

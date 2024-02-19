@@ -16,34 +16,18 @@
 using namespace QDirStat;
 
 
-Refresher::Refresher( const FileInfoSet items, QObject * parent ):
-    QObject( parent ),
-    _items( items ),
-    _tree( 0 )
-{
-    // logDebug() << "Creating refresher for " <<  _items.size() << " items" << endl;
-
-    // Storing the tree right now in a separate variable because by the time we
-    // need it (in refresh()) any (or even all) of the items might have become
-    // invalid already, so any attempt to dereference them to obtain the tree
-    // from there might result in a segfault.
-
-    if ( ! _items.isEmpty() )
-	_tree = _items.first()->tree();
-}
-
 
 void Refresher::refresh()
 {
     if ( ! _items.isEmpty() && _tree )
     {
-	logDebug() << "Refreshing " << _items.size() << " items" << endl;
+	logDebug() << "Refreshing " << _items.size() << " items" << Qt::endl;
 
 	_tree->refresh( _items );
     }
     else
     {
-	logWarning() << "No items to refresh" << endl;
+	logWarning() << "No items to refresh" << Qt::endl;
     }
 
     this->deleteLater();

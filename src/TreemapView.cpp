@@ -47,9 +47,9 @@ TreemapView::TreemapView( QWidget * parent ):
 
     readSettings();
 
-    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-    setVerticalScrollBarPolicy  ( Qt::ScrollBarAlwaysOff );
-    setOptimizationFlags( DontSavePainterState | DontAdjustForAntialiasing );
+//    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+//    setVerticalScrollBarPolicy  ( Qt::ScrollBarAlwaysOff );
+//    setOptimizationFlags( DontSavePainterState | DontAdjustForAntialiasing );
     QThreadPool::globalInstance()->setMaxThreadCount(100);
 /*
     _rebuilder = new DelayedRebuilder( this );

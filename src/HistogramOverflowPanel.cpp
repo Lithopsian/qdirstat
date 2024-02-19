@@ -24,9 +24,9 @@ void HistogramView::addOverflowPanel()
 
     // Panel for the overflow area
 
-    QRectF histPanelRect = _histogramPanel->boundingRect().normalized();
+    const QRectF histPanelRect = _histogramPanel->boundingRect().normalized();
 
-    QRectF rect( histPanelRect.topRight().x() + _overflowSpacing,
+    const QRectF rect( histPanelRect.topRight().x() + _overflowSpacing,
 		 histPanelRect.topRight().y(),
 		 _overflowWidth + _overflowLeftBorder + _overflowRightBorder,
 		 histPanelRect.height() );
@@ -44,12 +44,11 @@ void HistogramView::addOverflowPanel()
 
     // Text about cut-off percentiles and size
 
-    qreal filesInHistogram = bucketsTotalSum();
-    qreal totalFiles = bucketsTotalSum() / ( _endPercentile - _startPercentile ) * 100.0;
-    int missingFiles = totalFiles - filesInHistogram;
+    const qreal filesInHistogram = bucketsTotalSum();
+    const qreal totalFiles = bucketsTotalSum() / ( _endPercentile - _startPercentile ) * 100.0;
+    const int missingFiles = totalFiles - filesInHistogram;
 
     QStringList lines;
-
     if ( _startPercentile > 0 )
     {
         lines << "";
@@ -58,7 +57,6 @@ void HistogramView::addOverflowPanel()
             .arg( formatSize( percentile( 0 ) ) )
             .arg( formatSize( percentile( _startPercentile ) ) );
     }
-
     if ( _endPercentile < 100 )
     {
         lines << "";
@@ -67,40 +65,34 @@ void HistogramView::addOverflowPanel()
             .arg( formatSize( percentile( _endPercentile ) ) )
             .arg( formatSize( percentile( 100 ) ) );
     }
-
     nextPos = addText( nextPos, lines );
 
-
     // Upper pie chart: Number of files cut off
-
     nextPos.setY( nextPos.y() + _pieSliceOffset );
     QRectF pieRect( QRectF( nextPos, QSizeF( _pieDiameter, _pieDiameter ) ) );
 
-    int cutoff = _startPercentile + 100 - _endPercentile;
+    const int cutoff = _startPercentile + 100 - _endPercentile;
     nextPos = addPie( pieRect,
 		      100 - cutoff, cutoff,
 		      _barBrush, _overflowSliceBrush );
 
     // Caption for the upper pie chart
-
-    lines.clear();
-    lines << tr( "%1% of all files" ).arg( cutoff );
-    lines << ( missingFiles == 1 ?
-	       tr( "1 file total" ) :
-	       tr( "%1 files total" ).arg( missingFiles ) );
-    lines << "";
-    nextPos = addText( nextPos, lines );
+    const QStringList pieCaption = { tr( "%1% of all files" ).arg( cutoff ),
+                                     ( missingFiles == 1 ? tr( "1 file total" ) : tr( "%1 files total" ).arg( missingFiles ) ),
+                                     ""
+                                   };
+    nextPos = addText( nextPos, pieCaption );
 
 
     // Lower pie chart: Disk space disregarded
 
-    qreal histogramDiskSpace = percentileSum( _startPercentile, _endPercentile );
+    const qreal histogramDiskSpace = percentileSum( _startPercentile, _endPercentile );
     qreal cutoffDiskSpace    = percentileSum( 0, _startPercentile );
 
     if ( _endPercentile < 100 )
         cutoffDiskSpace += percentileSum( _endPercentile, 100 );
 
-    qreal cutoffSpacePercent = 100.0 * cutoffDiskSpace / ( histogramDiskSpace + cutoffDiskSpace );
+    const qreal cutoffSpacePercent = 100.0 * cutoffDiskSpace / ( histogramDiskSpace + cutoffDiskSpace );
 
     nextPos.setY( nextPos.y() + _pieSliceOffset );
     pieRect = QRectF( nextPos, QSizeF( _pieDiameter, _pieDiameter ) );
@@ -120,16 +112,13 @@ void HistogramView::addOverflowPanel()
 
 
     // Caption for the lower pie chart
-
-    lines.clear();
-    lines << tr( "%1% of disk space" ).arg( cutoffSpacePercent, 0, 'f', 1 );
-    lines << tr( "%1 total" ).arg( formatSize( cutoffDiskSpace ) );
-    lines << "";
-    nextPos = addText( nextPos, lines );
-
+    const QStringList pieCaption2 = { tr( "%1% of disk space" ).arg( cutoffSpacePercent, 0, 'f', 1 ),
+                                      tr( "%1 total" ).arg( formatSize( cutoffDiskSpace ) ),
+                                      ""
+                                    };
+    nextPos = addText( nextPos, pieCaption2 );
 
     // Make sure the panel is tall enough to fit everything in
-
     if ( nextPos.y() > cutoffPanel->rect().bottom() )
     {
 	QRectF rect( cutoffPanel->rect() );
@@ -149,8 +138,8 @@ QPointF HistogramView::addPie( const QRectF & rect,
 	return rect.topLeft();
 
     const qreal FullCircle = 360.0 * 16.0; // Qt uses 1/16 degrees
-    qreal angle1 = val1 / ( val1 + val2 ) * FullCircle;
-    qreal angle2 = FullCircle - angle1;
+    const qreal angle1 = val1 / ( val1 + val2 ) * FullCircle;
+    const qreal angle2 = FullCircle - angle1;
 
     QGraphicsEllipseItem * slice1 = scene()->addEllipse( rect );
 
@@ -172,7 +161,7 @@ QPointF HistogramView::addPie( const QRectF & rect,
     slices << slice1 << slice2;
 
     QGraphicsItemGroup * pie = scene()->createItemGroup( slices );
-    QPointF pieCenter = rect.center();
+    const QPointF pieCenter = rect.center();
 
     // Figuring out the following arcane sequence took me well over 2 hours.
     //

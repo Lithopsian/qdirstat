@@ -10,7 +10,7 @@
 #include <QMenu>
 #include <QAction>
 
-#include "Qt4Compat.h"
+//#include "Qt4Compat.h"
 
 #include "HeaderTweaker.h"
 #include "DirTreeView.h"
@@ -64,7 +64,7 @@ void HeaderTweaker::initHeader()
     // empty. It is only populated when the tree view model requests header
     // data from the data model.
 
-    // logDebug() << "Header count: " << _header->count() << endl;
+    // logDebug() << "Header count: " << _header->count() << Qt::endl;
     readSettings();
 }
 
@@ -72,48 +72,44 @@ void HeaderTweaker::initHeader()
 void HeaderTweaker::createColumnLayouts()
 {
     // Layout L1: Short
-
     ColumnLayout * layout = new ColumnLayout( "L1" );
     CHECK_PTR( layout );
+    layout->columns = { NameCol,
+                        PercentBarCol,
+                        PercentNumCol,
+                        SizeCol,
+                        LatestMTimeCol
+		      };
+    layout->defaultColumns = layout->columns;
     _layouts[ "L1" ] = layout;
-
-    layout->columns << NameCol
-                    << PercentBarCol
-                    << PercentNumCol
-                    << SizeCol
-                    << LatestMTimeCol;
 
     // L2: Classic QDirStat Style
 
     layout = new ColumnLayout( "L2" );
     CHECK_PTR( layout );
+    layout->columns = { NameCol,
+                        PercentBarCol,
+                        PercentNumCol,
+                        SizeCol,
+                        TotalItemsCol,
+                        TotalFilesCol,
+                        TotalSubDirsCol,
+                        LatestMTimeCol
+		      };
+    layout->defaultColumns = layout->columns;
     _layouts[ "L2" ] = layout;
 
-    layout->columns << NameCol
-                    << PercentBarCol
-                    << PercentNumCol
-                    << SizeCol
-                    << TotalItemsCol
-                    << TotalFilesCol
-                    << TotalSubDirsCol
-                    << LatestMTimeCol;
-
     // L3: Full
-
     layout = new ColumnLayout( "L3" );
     CHECK_PTR( layout );
-    _layouts[ "L3" ] = layout;
-
     layout->columns = DataColumns::instance()->allColumns();
-
-    foreach ( layout, _layouts )
-	layout->defaultColumns = layout->columns;
+    layout->defaultColumns = layout->columns;
+    _layouts[ "L3" ] = layout;
 }
 
 
 #define CONNECT_ACTION(ACTION, RECEIVER, RCVR_SLOT) \
     connect( (ACTION), SIGNAL( triggered() ), (RECEIVER), SLOT( RCVR_SLOT ) )
-
 
 void HeaderTweaker::createActions()
 {
@@ -216,7 +212,7 @@ QString HeaderTweaker::colName( int section ) const
 						   Qt::Horizontal,
 						   Qt::DisplayRole ).toString();
     if ( col == UndefinedCol )
-	logError() << "No column at section " << section << endl;
+	logError() << "No column at section " << section << Qt::endl;
 
     return name;
 }
@@ -232,7 +228,7 @@ void HeaderTweaker::hideCurrentCol()
 {
     if ( _currentSection >= 0 )
     {
-	logDebug() << "Hiding column \"" << colName( _currentSection ) << "\"" << endl;
+	logDebug() << "Hiding column \"" << colName( _currentSection ) << "\"" << Qt::endl;
 	_header->setSectionHidden( _currentSection, true );
     }
 
@@ -250,7 +246,7 @@ void HeaderTweaker::autoSizeCurrentCol()
 		       QHeaderView::Interactive );
     }
     else
-	logWarning() << "No current section" << endl;
+	logWarning() << "No current section" << Qt::endl;
 
     _currentSection = -1;
 }
@@ -282,7 +278,7 @@ void HeaderTweaker::showHiddenCol()
     if ( ! action )
     {
 	logError() << "Wrong sender type: "
-		   << sender()->metaObject()->className() << endl;
+		   << sender()->metaObject()->className() << Qt::endl;
 	return;
     }
 
@@ -292,15 +288,15 @@ void HeaderTweaker::showHiddenCol()
 
 	if ( section >= 0 && section < _header->count() )
 	{
-	    logDebug() << "Showing column \"" << colName( section ) << "\"" << endl;
+	    logDebug() << "Showing column \"" << colName( section ) << "\"" << Qt::endl;
 	    _header->setSectionHidden( section, false );
 	}
 	else
-	    logError() << "Section index out of range: " << section << endl;
+	    logError() << "Section index out of range: " << section << Qt::endl;
     }
     else
     {
-	logError() << "No data() set for this QAction" << endl;
+	logError() << "No data() set for this QAction" << Qt::endl;
     }
 }
 
@@ -311,7 +307,7 @@ void HeaderTweaker::showAllHiddenColumns()
     {
 	if ( _header->isSectionHidden( section ) )
 	{
-	    logDebug() << "Showing column \"" << colName( section ) << "\"" << endl;
+	    logDebug() << "Showing column \"" << colName( section ) << "\"" << Qt::endl;
 	    _header->setSectionHidden( section, false );
 	}
     }
@@ -339,11 +335,11 @@ void HeaderTweaker::setColumnOrder( const DataColumnList & columns )
     {
 	if ( visualIndex < _header->count() )
 	{
-	    // logDebug() << "Moving " << col << " to position " << visualIndex << endl;
+	    // logDebug() << "Moving " << col << " to position " << visualIndex << Qt::endl;
 	    _header->moveSection( _header->visualIndex( col ), visualIndex++ );
 	}
 	else
-	    logWarning() << "More columns than header sections" << endl;
+	    logWarning() << "More columns than header sections" << Qt::endl;
     }
 }
 
@@ -471,11 +467,11 @@ void HeaderTweaker::changeLayout( const QString & name )
 {
     if ( ! _layouts.contains( name ) )
     {
-	logError() << "No layout " << name << endl;
+	logError() << "No layout " << name << Qt::endl;
 	return;
     }
 
-    // logDebug() << "Changing to layout " << name << endl;
+    // logDebug() << "Changing to layout " << name << Qt::endl;
 
     if ( _currentLayout )
 	saveLayout( _currentLayout );
@@ -518,7 +514,7 @@ void HeaderTweaker::fixupLayout( ColumnLayout * layout )
 
     if ( layout->columns.isEmpty() )
     {
-	logDebug() << "Falling back to default visible columns" << endl;
+	logDebug() << "Falling back to default visible columns" << Qt::endl;
 	layout->columns = layout->defaultColumns;
     }
 

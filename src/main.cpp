@@ -21,10 +21,9 @@
 
 using std::cerr;
 static const char * progName = "qdirstat";
-static bool fatal = false;
 
 
-void usage( const QStringList & argList )
+void usage()
 {
     cerr << "\n"
 	 << "Usage: \n"
@@ -48,10 +47,6 @@ void usage( const QStringList & argList )
          << "See also   man qdirstat"
 	 << "\n"
 	 << std::endl;
-
-    logError() << "FATAL: Bad command line args: " << argList.join( " " ) << endl;
-    // Simply exit(1) here results in a segfault (?).
-    fatal = true;
 }
 
 
@@ -59,12 +54,12 @@ void logVersion()
 {
     logInfo() << "QDirStat-" << QDIRSTAT_VERSION
               << " built with Qt " << QT_VERSION_STR
-              << endl;
+              << Qt::endl;
 
 #if (QT_VERSION < QT_VERSION_CHECK( 5, 2, 0 ))
     logWarning() << "WARNING: You are using Qt " << QT_VERSION_STR
-                 << ". This may or may not work." << endl;
-    logWarning() << "The supported Qt version for QDirStat is Qt 5.2 or newer." << endl;
+                 << ". This may or may not work." << Qt::endl;
+    logWarning() << "The supported Qt version for QDirStat is Qt 5.2 or newer." << Qt::endl;
 #endif
 }
 
@@ -82,19 +77,70 @@ bool commandLineSwitch( const QString & longName,
     {
 	argList.removeAll( longName  );
 	argList.removeAll( shortName );
-        logDebug() << "Found " << longName << endl;
+        //logDebug() << "Found " << longName << Qt::endl;
 	return true;
     }
     else
     {
-        // logDebug() << "No " << longName << endl;
+        // logDebug() << "No " << longName << Qt::endl;
 	return false;
     }
 }
 
 
+/**
+ * Output a message about an invalid set of command line arguments.
+ * Will appear on stderr since logging is not yet started.
+ **/
+void reportFatalError()
+{
+    QStringList argList = QCoreApplication::arguments();
+    argList.removeFirst(); // Remove program name
+    cerr << "FATAL: Bad command line args: " << qPrintable( argList.join( " " ) ) << std::endl;
+}
+
+
 int main( int argc, char *argv[] )
 {
+    QApplication qtApp( argc, argv );
+    QStringList argList = QCoreApplication::arguments();
+    argList.removeFirst(); // Remove program name
+
+    // Take out acceptable switches
+    const bool dontAsk = commandLineSwitch( "--dont-ask", "-d", argList );
+    const bool slowUpdate = commandLineSwitch( "--slow-update", "-s", argList );
+    const bool openCache = commandLineSwitch( "--cache", "-c", argList );
+
+    // treat --help anywhere as valid, even combined with other arguments
+    if ( commandLineSwitch( "--help", "-h", argList ) )
+    {
+	usage();
+	return 0;
+    }
+    // --cache must be the only (remaining) argument and must have one value
+    else if ( openCache )
+    {
+	if ( argList.size() != 1 || argList.first().startsWith( "-" ) )
+	{
+	    reportFatalError();
+	    usage();
+	    return 1;
+	}
+    }
+    // Any option other than -d, -c, -h, or -s is invalid,
+    // -d can only be combined with -s and nothing else
+    // More than one non-option argument is invalid
+    else if ( !argList.isEmpty() )
+    {
+	if ( dontAsk || argList.first().startsWith( "-" ) || argList.size() > 1 )
+	{
+	    reportFatalError();
+	    usage();
+	    return 1;
+	}
+    }
+
+    // We are definitely going to start the application now
     Logger logger( "/tmp/qdirstat-$USER", "qdirstat.log" );
     logVersion();
 
@@ -102,51 +148,24 @@ int main( int argc, char *argv[] )
     QCoreApplication::setOrganizationName( "QDirStat" );
     QCoreApplication::setApplicationName ( "QDirStat" );
 
-    QApplication qtApp( argc, argv);
-    QStringList argList = QCoreApplication::arguments();
-    argList.removeFirst(); // Remove program name
-
-    MainWindow * mainWin = new MainWindow();
+    MainWindow * mainWin = new MainWindow( slowUpdate );
     CHECK_PTR( mainWin );
     mainWin->show();
 
-    bool dont_ask = commandLineSwitch( "--dont-ask", "-d", argList );
-
-    if ( commandLineSwitch( "--slow-update", "-s", argList ) )
-        QDirStat::app()->dirTreeModel()->setSlowUpdate();
-
     if ( argList.isEmpty() )
     {
-        if ( ! dont_ask )
+        if ( !dontAsk )
             mainWin->askOpenDir();
     }
     else
     {
-	QString arg = argList.first();
-
-	if ( arg == "--cache" || arg == "-c" )
-	{
-	    if ( argList.size() == 2 )
-	    {
-		QString cacheFileName = argList.at(1);
-		logDebug() << "Reading cache file " << cacheFileName << endl;
-		mainWin->readCache( cacheFileName );
-	    }
-	    else
-		usage( argList );
-	}
-	else if ( arg == "--help" || arg == "-h" )
-	    usage( argList );
-	else if ( arg.startsWith( "-" ) || argList.size() > 1 )
-	    usage( argList );
-	else if ( ! arg.isEmpty() )
-	{
-            mainWin->openUrl( arg );
-	}
+	if ( openCache )
+	    mainWin->readCache( argList.at(1) );
+	else
+	    mainWin->openUrl( argList.first() );
     }
 
-    if ( ! fatal )
-	qtApp.exec();
+    qtApp.exec();
 
     delete mainWin;
 
@@ -156,5 +175,5 @@ int main( int argc, char *argv[] )
     // our config files if possible.
     QDirStat::Settings::fixFileOwners();
 
-    return fatal ? 1 : 0;
+    return 0;
 }

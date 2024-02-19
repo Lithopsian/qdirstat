@@ -7,9 +7,9 @@
  */
 
 
-#include <sys/stat.h>   // struct stat
-#include <unistd.h>     // getuid()
-#include <errno.h>      // ENOENT
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include <QDir>
 #include <QDateTime>
@@ -21,18 +21,10 @@
 #include "Exception.h"
 
 
-Trash * Trash::_instance = 0;
-
-
 Trash * Trash::instance()
 {
-    if ( ! _instance )
-    {
-	_instance = new Trash();
-	CHECK_NEW( _instance );
-    }
-
-    return _instance;
+    static Trash _instance;
+    return &_instance;
 }
 
 
@@ -41,13 +33,12 @@ Trash::Trash():
 {
     _homeDevice = device( QDir::homePath() );
 
-    QByteArray xdg_data_home = qgetenv( "XDG_DATA_HOME" );
-    QString homeTrash = xdg_data_home.isEmpty() ?
-	QDir::homePath() + "/.local/share" :
-	QString::fromUtf8( xdg_data_home );
-    homeTrash += "/Trash";
+    const QByteArray xdg_data_home = qgetenv( "XDG_DATA_HOME" );
 
-    _homeTrashDir = new TrashDir( homeTrash, _homeDevice );
+    const QString homeTrash =
+	xdg_data_home.isEmpty() ? QDir::homePath() + "/.local/share" : QString::fromUtf8( xdg_data_home );
+
+    _homeTrashDir = new TrashDir( homeTrash + "/Trash", _homeDevice );
     CHECK_NEW( _homeTrashDir );
 
     _trashDirs[ _homeDevice ] = _homeTrashDir;
@@ -64,13 +55,13 @@ dev_t Trash::device( const QString & path )
 {
     dev_t dev = 0;
     struct stat statBuf;
-    int result = stat( path.toUtf8(), &statBuf );
+    const int result = stat( path.toUtf8(), &statBuf );
     dev = statBuf.st_dev;
 
     if ( result < 0 )
     {
 	logError() << "stat( " << path << " ) failed: "
-		   << formatErrno() << endl;
+		   << formatErrno() << Qt::endl;
 
 	dev = static_cast<dev_t>( -1 );
     }
@@ -81,10 +72,10 @@ dev_t Trash::device( const QString & path )
 
 QString Trash::toplevel( const QString & rawPath )
 {
-    dev_t dev = device( rawPath );
-    QFileInfo fileInfo( rawPath );
+    const dev_t dev = device( rawPath );
+    const QFileInfo fileInfo( rawPath );
     QString path = fileInfo.canonicalPath();
-    QStringList components = path.split( "/", QString::SkipEmptyParts );
+    QStringList components = path.split( "/", Qt::SkipEmptyParts );
     QString lastPath;
 
     // Go one directory level up as long as we are on the same device
@@ -105,12 +96,12 @@ QString Trash::toplevel( const QString & rawPath )
 
 TrashDir * Trash::trashDir( const QString & path )
 {
-    dev_t dev = device( path );
+    const dev_t dev = device( path );
 
     if ( _trashDirs.contains( dev ) )
 	return _trashDirs[ dev ];
 
-    QString topDir = toplevel( path );
+    const QString topDir = toplevel( path );
 
     try
     {
@@ -119,15 +110,15 @@ TrashDir * Trash::trashDir( const QString & path )
 	QString trashPath = topDir + "/.Trash";
 
 	struct stat statBuf;
-	int result = stat( trashPath.toUtf8(), &statBuf );
+	const int result = stat( trashPath.toUtf8(), &statBuf );
 
 	if ( result < 0 && errno == ENOENT ) // No such file or directory
 	{
 	    // No $TOPDIR/.Trash: Use $TOPDIR/.Trash-$UID
 
-	    logInfo() << "No " << trashPath << endl;
+	    logInfo() << "No " << trashPath << Qt::endl;
 	    trashPath = topDir + QString( "/.Trash-%1" ).arg( getuid() );
-	    logInfo() << "Using " << trashPath << endl;
+	    logInfo() << "Using " << trashPath << Qt::endl;
 	}
 	else if ( result < 0 )
 	{
@@ -138,7 +129,7 @@ TrashDir * Trash::trashDir( const QString & path )
 	}
 	else // stat() was successful
 	{
-	    mode_t mode = statBuf.st_mode;
+	    const mode_t mode = statBuf.st_mode;
 
 	    if ( S_ISDIR( mode ) &&
 		 ( mode & S_ISVTX	) ) // Check sticky bit
@@ -146,7 +137,7 @@ TrashDir * Trash::trashDir( const QString & path )
 		// Use $TOPDIR/.Trash/$UID
 
 		trashPath += QString( "/%1" ).arg( getuid() );
-		logInfo() << "Using " << trashPath << endl;
+		logInfo() << "Using " << trashPath << Qt::endl;
 	    }
 	    else // Not a directory or sticky bit not set
 	    {
@@ -167,7 +158,7 @@ TrashDir * Trash::trashDir( const QString & path )
     {
 	CAUGHT( ex );
 	logWarning() << "Falling back to home trash dir: "
-		     << _homeTrashDir->path() << endl;
+		     << _homeTrashDir->path() << Qt::endl;
 
 	return _homeTrashDir;
     }
@@ -183,19 +174,19 @@ bool Trash::trash( const QString & path )
 	if ( ! trashDir )
 	    return false;
 
-	QString targetName = trashDir->uniqueName( path );
+	const QString targetName = trashDir->uniqueName( path );
 	trashDir->createTrashInfo( path, targetName );
 	trashDir->move( path, targetName );
     }
     catch ( const FileException & ex )
     {
 	CAUGHT( ex );
-	logError() << "Move to trash failed for " << path << endl;
+	logError() << "Move to trash failed for " << path << Qt::endl;
 
 	return false;
     }
 
-    logInfo() << "Successfully moved to trash: " << path << endl;
+    logInfo() << "Successfully moved to trash: " << path << Qt::endl;
 
     return true;
 }
@@ -205,7 +196,9 @@ bool Trash::restore( const QString & path )
 {
     Q_UNUSED( path )
 
-    // Not implemented
+    // TO DO
+    // TO DO
+    // TO DO
 
     return true;
 }
@@ -213,7 +206,9 @@ bool Trash::restore( const QString & path )
 
 void Trash::empty()
 {
-    // Not implemented
+    // TO DO
+    // TO DO
+    // TO DO
 }
 
 
@@ -224,7 +219,7 @@ TrashDir::TrashDir( const QString & path, dev_t device ):
     _path( path ),
     _device( device )
 {
-    // logDebug() << "Created TrashDir " << path << endl;
+    // logDebug() << "Created TrashDir " << path << Qt::endl;
 
     ensureDirExists( path,	  0700, true );
     ensureDirExists( filesPath(), 0700, true );
@@ -234,11 +229,11 @@ TrashDir::TrashDir( const QString & path, dev_t device ):
 
 QString TrashDir::uniqueName( const QString & path )
 {
-    QFileInfo file( path );
-    QDir filesDir( filesPath() );
+    const QFileInfo file( path );
+    const QDir filesDir( filesPath() );
 
-    QString baseName  = file.baseName();
-    QString extension = file.completeSuffix();
+    const QString baseName  = file.baseName();
+    const QString extension = file.completeSuffix();
     int	    count     = 0;
     QString name      = baseName;
 
@@ -266,13 +261,13 @@ bool TrashDir::ensureDirExists( const QString & path,
 				mode_t		mode,
 				bool		doThrow )
 {
-    QDir dir( path );
+    const QDir dir( path );
 
     if ( dir.exists() )
 	return true;
 
-    logInfo() << "mkdir " << path << endl;
-    int result = mkdir( path.toUtf8(), mode );
+    logInfo() << "mkdir " << path << Qt::endl;
+    const int result = mkdir( path.toUtf8(), mode );
 
     if ( result < 0 && doThrow )
     {
@@ -294,9 +289,9 @@ void TrashDir::createTrashInfo( const QString & path,
 	THROW( FileException( trashInfo.fileName(), "Can't open " + trashInfo.fileName() ) );
 
     QTextStream str( &trashInfo );
-    str << "[Trash Info]" << endl;
-    str << "Path=" << path << endl;
-    str << "DeletionDate=" << QDateTime::currentDateTime().toString( Qt::ISODate ) << endl;
+    str << "[Trash Info]" << Qt::endl;
+    str << "Path=" << path << Qt::endl;
+    str << "DeletionDate=" << QDateTime::currentDateTime().toString( Qt::ISODate ) << Qt::endl;
 }
 
 
@@ -304,9 +299,9 @@ void TrashDir::move( const QString & path,
 		     const QString & targetName )
 {
     QFile file( path );
-    QString targetPath = filesPath() + "/" + targetName;
+    const QString targetPath = filesPath() + "/" + targetName;
 
-    bool success = file.rename( targetPath );
+    const bool success = file.rename( targetPath );
 
     if ( ! success )
 	THROW( FileException( path, "Could not move " + path + " to " + targetPath ) );

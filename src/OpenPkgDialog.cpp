@@ -7,8 +7,6 @@
  */
 
 
-#include "Qt4Compat.h"
-
 #include "OpenPkgDialog.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -21,11 +19,11 @@ OpenPkgDialog::OpenPkgDialog( QWidget * parent ):
     QDialog( parent ),
     _ui( new Ui::OpenPkgDialog )
 {
-    // logDebug() << "init" << endl;
+    // logDebug() << "init" << Qt::endl;
 
     CHECK_NEW( _ui );
     _ui->setupUi( this );
-    qEnableClearButton( _ui->pkgPatternField );
+    _ui->pkgPatternField->setClearButtonEnabled( true );
     _ui->pkgPatternField->setFocus();
 }
 
@@ -40,15 +38,15 @@ PkgFilter OpenPkgDialog::pkgFilter()
 {
     if ( _ui->allPkgRadioButton->isChecked() )
     {
-        logDebug() << "SelectAll" << endl;
-        return PkgFilter( "", PkgFilter::SelectAll );
+        // logDebug() << "SelectAll" << Qt::endl;
+        return PkgFilter();
     }
     else
     {
-        int mode        = _ui->filterModeComboBox->currentIndex();
-        QString pattern = _ui->pkgPatternField->text();
+        const int mode        = _ui->filterModeComboBox->currentIndex();
+        const QString pattern = _ui->pkgPatternField->text();
         PkgFilter filter( pattern, (PkgFilter::FilterMode) mode );
-        // logDebug() << filter << endl;
+        // logDebug() << filter << Qt::endl;
 
         return filter;
     }
@@ -59,10 +57,10 @@ PkgFilter OpenPkgDialog::askPkgFilter( bool    * canceled_ret,
                                        QWidget * parent )
 {
     OpenPkgDialog dialog( parent );
-    int result = dialog.exec();
+    const int result = dialog.exec();
 
-    PkgFilter pkgFilter( "" );
-    bool canceled = (result == QDialog::Rejected );
+    PkgFilter pkgFilter;
+    const bool canceled = (result == QDialog::Rejected );
 
     if ( ! canceled )
         pkgFilter = dialog.pkgFilter();
@@ -71,5 +69,11 @@ PkgFilter OpenPkgDialog::askPkgFilter( bool    * canceled_ret,
         *canceled_ret = canceled;
 
     return pkgFilter;
+}
+
+void OpenPkgDialog::textEdited()
+{
+    if ( !_ui->pkgPatternField->text().isEmpty() )
+        _ui->useFilterRadioButton->setChecked(true);
 }
 

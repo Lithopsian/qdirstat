@@ -16,43 +16,22 @@ using namespace QDirStat;
 
 PkgFilter::PkgFilter( const QString & pattern,
                       FilterMode      filterMode ):
-    SearchFilter( pattern,
+    SearchFilter( normalizedPattern( pattern ),
                   filterMode,
-                  StartsWith )  // defaultFilterMode
+                  StartsWith, // defaultFilterMode
+                  true )      // case-sensitive
 {
-    normalizePattern();
-
-    if ( _filterMode == Auto )
-        guessFilterMode();
-
-    if ( _filterMode == Wildcard )
-        _regexp.setPatternSyntax( QRegExp::Wildcard );
-
-    setCaseSensitive( _filterMode == ExactMatch );
 }
 
 
-void PkgFilter::normalizePattern()
+QString PkgFilter::normalizedPattern( const QString & pattern )
 {
-    QString oldPattern = _pattern;
-    _pattern.remove( QRegExp( "^Pkg:/*", Qt::CaseInsensitive ) );
-    _pattern.remove( QRegExp( "/.*$" ) );
+    QString normalizedPattern = pattern;
+    normalizedPattern.remove( QRegularExpression( "^Pkg:/*", QRegularExpression::CaseInsensitiveOption ) );
+    normalizedPattern.remove( QRegularExpression( "/.*$" ) );
 
-    if ( _pattern != oldPattern )
-    {
-        logInfo() << "Normalizing pkg pattern to \"" << _pattern << "\"" << endl;
-        _regexp.setPattern( _pattern );
-    }
-}
+    if ( normalizedPattern != pattern )
+        logInfo() << "Normalizing pkg pattern to \"" << normalizedPattern << "\"" << Qt::endl;
 
-
-bool PkgFilter::isPkgUrl( const QString & url )
-{
-    return url.startsWith( "Pkg:", Qt::CaseInsensitive );
-}
-
-
-QString PkgFilter::url() const
-{
-    return QString( "Pkg:/%1" ).arg( _pattern );
+    return normalizedPattern;
 }

@@ -7,14 +7,16 @@
  */
 
 
-#include "Qt4Compat.h"       // qEnableClearButton()
+//#include "Qt4Compat.h"       // qEnableClearButton()
 
 #include "FindFilesDialog.h"
+#include "QDirStatApp.h"
+#include "DirInfo.h"
+#include "DirTree.h"
+#include "FileSearchFilter.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
-#include "QDirStatApp.h"
-#include "DirTree.h"
-#include "DirInfo.h"
+#include "Subtree.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -32,7 +34,7 @@ FindFilesDialog::FindFilesDialog( QWidget * parent ):
     QDialog( parent ),
     _ui( new Ui::FindFilesDialog )
 {
-    // logDebug() << "init" << endl;
+    // logDebug() << "init" << Qt::endl;
 
     CHECK_NEW( _ui );
     _ui->setupUi( this );
@@ -40,11 +42,11 @@ FindFilesDialog::FindFilesDialog( QWidget * parent ):
     if ( lastPath.isEmpty() && app()->root() )
         lastPath = app()->root()->url();
 
-    qEnableClearButton( _ui->patternField );
+    _ui->patternField->setClearButtonEnabled( true );
     _ui->patternField->setFocus();
 
-    connect( this, SIGNAL( accepted()	   ),
-	     this, SLOT	 ( saveValues() ) );
+    connect( this, &FindFilesDialog::accepted,
+	     this, &FindFilesDialog::saveValues);
 
     loadValues();
 }
@@ -52,6 +54,7 @@ FindFilesDialog::FindFilesDialog( QWidget * parent ):
 
 FindFilesDialog::~FindFilesDialog()
 {
+    //logDebug() << " destructor called" << Qt::endl;
     delete _ui;
 }
 
@@ -61,20 +64,14 @@ FileSearchFilter FindFilesDialog::fileSearchFilter()
     FileInfo * subtree = 0;
 
     if ( _ui->wholeTreeRadioButton->isChecked() )
-    {
         subtree = app()->root();
-    }
     else if ( _ui->currentSubtreeRadioButton->isChecked() )
-    {
         subtree = currentSubtree();
-    }
-
-    int mode        = _ui->filterModeComboBox->currentIndex();
-    QString pattern = _ui->patternField->text();
 
     FileSearchFilter filter( subtree ? subtree->toDirInfo() : 0,
-                             pattern,
-                             (SearchFilter::FilterMode) mode );
+                             _ui->patternField->text(),
+                             ( SearchFilter::FilterMode )_ui->filterModeComboBox->currentIndex(),
+                             _ui->caseSensitiveCheckBox->isChecked() );
 
     filter.setFindFiles( _ui->findFilesRadioButton->isChecked() ||
                          _ui->findBothRadioButton->isChecked()    );
@@ -85,9 +82,8 @@ FileSearchFilter FindFilesDialog::fileSearchFilter()
     filter.setFindSymLinks( _ui->findSymLinksCheckBox->isChecked() );
 
     filter.setFindPkg( filter.findDirs() );
-    filter.setCaseSensitive ( _ui->caseSensitiveCheckBox->isChecked() );
 
-    logDebug() << filter << endl;
+    //logDebug() << filter << Qt::endl;
 
     return filter;
 }
@@ -103,7 +99,6 @@ DirInfo * FindFilesDialog::currentSubtree()
     {
         subtree = app()->dirTree()->locate( lastPath,
                                             true     ); // findPseudoDirs
-
         if ( ! subtree ) // lastPath outside of this tree?
         {
             if ( app()->root() )
@@ -126,9 +121,9 @@ FileSearchFilter FindFilesDialog::askFindFiles( bool    * canceled_ret,
                                                 QWidget * parent )
 {
     FindFilesDialog dialog( parent );
-    int result = dialog.exec();
+    const int result = dialog.exec();
 
-    FileSearchFilter filter( 0, "" );
+    FileSearchFilter filter;
     bool canceled = ( result == QDialog::Rejected );
 
     if ( ! canceled )
@@ -154,14 +149,10 @@ void FindFilesDialog::loadValues()
 
     _ui->patternField->setText( lastPattern );
 
-    QString    path = lastPath;
-    FileInfo * sel  = currentSubtree();
-
+    const FileInfo * sel  = currentSubtree();
+    const QString    path = sel ? sel->url() : lastPath;
     if ( sel )
-    {
-        path     = sel->url();
         lastPath = path;
-    }
 
     _ui->currentSubtreePathLabel->setText( path );
     _ui->currentSubtreeRadioButton->setEnabled( ! path.isEmpty() );
@@ -186,7 +177,7 @@ void FindFilesDialog::saveValues()
 
 void FindFilesDialog::readSettings()
 {
-    // logDebug() << endl;
+    // logDebug() << Qt::endl;
 
     QDirStat::Settings settings;
 
@@ -216,7 +207,7 @@ void FindFilesDialog::readSettings()
 
 void FindFilesDialog::writeSettings()
 {
-    // logDebug() << endl;
+    // logDebug() << Qt::endl;
 
     QDirStat::Settings settings;
 

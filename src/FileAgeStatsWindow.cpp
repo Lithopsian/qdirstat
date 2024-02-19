@@ -68,9 +68,9 @@ void FileAgeStatsWindow::refresh()
 
 void FileAgeStatsWindow::initWidgets()
 {
-    QFont font = _ui->heading->font();
-    font.setBold( true );
-    _ui->heading->setFont( font );
+//    QFont font = _ui->heading->font();
+//    font.setBold( true );
+//    _ui->heading->setFont( font );
 
     // _ui->heading->setText( text );
 
@@ -145,8 +145,7 @@ void FileAgeStatsWindow::populate( FileInfo * newSubtree )
     clear();
     _subtree = newSubtree;
 
-    _ui->heading->setText( tr( "File age statistics for %1" )
-                           .arg( _subtree.url() ) );
+    _ui->heading->setText( tr( "File age statistics for %1" ).arg( _subtree.url() ) );
 
     // For better Performance: Disable sorting while inserting many items
     _ui->treeWidget->setSortingEnabled( false );
