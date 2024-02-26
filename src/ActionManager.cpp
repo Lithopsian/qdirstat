@@ -84,3 +84,14 @@ bool ActionManager::addActions( QWidget *           widget,
     return foundAll;
 }
 
+
+void ActionManager::swapActions( QWidget * widget,
+				 QAction * actionToRemove,
+				 QAction * actionToAdd )
+{
+    if ( !widget->actions().contains( actionToRemove ) )
+	return;
+
+    widget->insertAction( actionToRemove, actionToAdd );
+    widget->removeAction( actionToRemove );
+}

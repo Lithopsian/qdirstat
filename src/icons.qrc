@@ -1,11 +1,11 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/unpkg.png</file>
     <file>icons/move-bottom.png</file>
     <file>icons/move-down.png</file>
     <file>icons/move-top.png</file>
     <file>icons/move-up.png</file>
     <file>icons/mimetype.png</file>
-    <file>icons/unpkg.png</file>
     <file>icons/package.png</file>
     <file>icons/magnifier-left.png</file>
     <file>icons/magnifier-zoom.png</file>

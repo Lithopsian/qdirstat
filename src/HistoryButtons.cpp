@@ -21,7 +21,7 @@ using namespace QDirStat;
 
 HistoryButtons::HistoryButtons( QAction * actionGoBack,
                                 QAction * actionGoForward ):
-    QObject { },
+    QObject (),
     _history { new History() },
     _actionGoBack    { actionGoBack },
     _actionGoForward { actionGoForward }
@@ -67,8 +67,7 @@ void HistoryButtons::addToHistory( FileInfo * item )
 
     if ( item )
     {
-        QString url = item->debugUrl();
-
+        const QString url = item->debugUrl();
         if ( url != _history->currentItem() )
         {
             _history->add( url );
@@ -97,18 +96,19 @@ void HistoryButtons::initHistoryButtons()
 void HistoryButtons::updateHistoryMenu()
 {
     _historyMenu->clear();
+
     QActionGroup * actionGroup = new QActionGroup( _historyMenu );
 
-    QStringList items = _history->allItems();
-    int current = _history->currentIndex();
+    const QStringList items = _history->allItems();
+    const int current = _history->currentIndex();
 
     for ( int i = items.size() - 1; i >= 0; i-- )
     {
-        QAction * action = new QAction( items.at( i ), _historyMenu );
+        QAction * action = new QAction( items.at( i ), actionGroup );
         action->setCheckable( true );
         action->setChecked( i == current );
         action->setData( i );
-        actionGroup->addAction( action );
+//        actionGroup->addAction( action );
         _historyMenu->addAction( action );
     }
 }
@@ -118,8 +118,8 @@ void HistoryButtons::historyMenuAction( QAction * action )
 {
     if ( action )
     {
-        QVariant data = action->data();
-        int index = data.toInt();
+        const QVariant data = action->data();
+        const int index = data.toInt();
 
         if ( _history->setCurrentIndex( index ) )
             navigateToUrl( _history->currentItem() );

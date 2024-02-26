@@ -47,7 +47,7 @@ PkgReader::~PkgReader()
 
 void PkgReader::read( const PkgFilter & filter )
 {
-    logInfo() << "Reading " << filter << Qt::endl;
+    //logInfo() << "Reading " << filter << Qt::endl;
 
     _pkgList = PkgQuery::installedPkg();
     filterPkgList( filter );
@@ -395,6 +395,7 @@ void PkgReadJob::addFile( const QString & fileListPath )
 		return;
 	    }
 
+	    _tree->childAddedNotify( newParent );
 	    // logDebug() << "Created " << newParent << Qt::endl;
 	}
 
@@ -533,7 +534,7 @@ void AsyncPkgReadJob::readFileListFinished( int			 exitCode,
     CHECK_PTR( _pkg );
     CHECK_PTR( _pkg->pkgManager() );
 
-    bool ok	   = true;
+    bool ok = true;
 
     if ( exitStatus != QProcess::NormalExit )
     {
@@ -544,8 +545,7 @@ void AsyncPkgReadJob::readFileListFinished( int			 exitCode,
     if ( ok && exitCode != 0 )
     {
 	ok = false;
-	logError() << "Get file list command exited with "
-		   << exitStatus << " for " << _pkg << Qt::endl;
+	logError() << "Get file list command exit status " << exitStatus << " for " << _pkg << Qt::endl;
     }
 
     if ( ok )
@@ -578,8 +578,7 @@ QStringList AsyncPkgReadJob::fileList()
 
 QStringList CachePkgReadJob::fileList()
 {
-    if ( _fileListCache &&
-	 _fileListCache->pkgManager() == _pkg->pkgManager() )
+    if ( _fileListCache && _fileListCache->pkgManager() == _pkg->pkgManager() )
     {
 	const QString pkgName = _pkg->pkgManager()->queryName( _pkg );
         QStringList fileList;

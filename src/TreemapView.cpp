@@ -18,7 +18,6 @@
 #include "SelectionModel.h"
 #include "Settings.h"
 #include "SignalBlocker.h"
-// #include "DelayedRebuilder.h"
 #include "Exception.h"
 #include "Logger.h"
 

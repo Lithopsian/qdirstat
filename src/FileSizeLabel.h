@@ -86,10 +86,10 @@ namespace QDirStat
 	 * Set the tooltip for a value.  The value will be formatted as the exact
 	 * number of bytes with the unit "bytes".  For values below 1000 bytes (will
 	 * appear as 1.0kB), no tooltip will be shown since the exact number of bytes
-	 * are already visible.  The tooltip may have a prefix (eg. ">") and a suffix
-	 * (eg. "/ 3 links").
+	 * are already visible.  The tooltip may have a prefix (eg. ">") or it may
+	 * have jard links, but it should never have both.
 	 **/
-	void setToolTip( FileSize size, const QString & prefix, const QString & suffix );
+	void setToolTip( FileSize size, const QString & prefix, nlink_t numLinks );
 
 	/**
 	 * Set a custom text. This text may or may not contain the value.  The
@@ -107,7 +107,7 @@ namespace QDirStat
          * same content as this label: clear its text and disable its caption
          * 'caption'.
          **/
-        void suppressIfSameContent( FileSizeLabel * cloneLabel, QLabel * caption ) const;
+//        void suppressIfSameContent( FileSizeLabel * cloneLabel, QLabel * caption ) const;
 
 	/**
 	 * Clear everything, including the visible text, the numeric value,

@@ -71,11 +71,11 @@ HistogramView::HistogramView( QWidget * parent ):
 //    _rebuilder = new AdaptiveTimer( this );
 //    CHECK_NEW( _rebuilder );
 
-    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-    setVerticalScrollBarPolicy	( Qt::ScrollBarAlwaysOff );
+//    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+//    setVerticalScrollBarPolicy	( Qt::ScrollBarAlwaysOff );
 
     // Improve graphics quality from C64 style to 21st century style
-    setRenderHints( QPainter::Antialiasing | QPainter::TextAntialiasing );
+//    setRenderHints( QPainter::Antialiasing | QPainter::TextAntialiasing );
 }
 
 

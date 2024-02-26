@@ -71,6 +71,7 @@ PkgFilter OpenPkgDialog::askPkgFilter( bool    * canceled_ret,
     return pkgFilter;
 }
 
+
 void OpenPkgDialog::textEdited()
 {
     if ( !_ui->pkgPatternField->text().isEmpty() )

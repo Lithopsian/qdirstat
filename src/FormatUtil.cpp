@@ -24,40 +24,35 @@ QString QDirStat::formatSize( FileSize lSize )
 
 QString QDirStat::formatSize( FileSize lSize, int precision )
 {
-    QString sizeString;
-    int	    unitIndex = 0;
-
-    static QStringList units = { QObject::tr( "bytes" ),
-	                         QObject::tr( "kB" ),
-	                         QObject::tr( "MB" ),
-	                         QObject::tr( "GB" ),
-	                         QObject::tr( "TB" ),
-	                         QObject::tr( "PB" ),
-	                         QObject::tr( "EB" ),
-	                         QObject::tr( "ZB" ),
-	                         QObject::tr( "YB" )
+    static QStringList units = { QObject::tr( " bytes" ),
+	                         QObject::tr( " kB" ),
+	                         QObject::tr( " MB" ),
+	                         QObject::tr( " GB" ),
+	                         QObject::tr( " TB" ),
+	                         QObject::tr( " PB" ),
+	                         QObject::tr( " EB" ),
+	                         QObject::tr( " ZB" ),
+	                         QObject::tr( " YB" )
                                };
-
     if ( lSize < 1000 )
     {
-	sizeString.setNum( lSize );
-	sizeString += " " + units.at( unitIndex );
+	// Exact number of bytes, no decimals
+	return QString::number( lSize ) + units.at( 0 );
     }
     else
     {
-	double size = lSize;
+	int    unitIndex = 1;
+	double size = lSize / 1024.0;
 
+	// Restrict to three digits before the decimal point
 	while ( size >= 1000.0 && unitIndex < units.size() - 1 )
 	{
 	    size /= 1024.0;
 	    ++unitIndex;
 	}
 
-	sizeString.setNum( size, 'f', precision );
-	sizeString += " " + units.at( unitIndex );
+	return QString::number( size, 'f', precision ) + units.at( unitIndex );
     }
-
-    return sizeString;
 }
 
 
@@ -74,21 +69,15 @@ QString QDirStat::formatShortByteSize( FileSize size )
 }
 
 
-static QString formatLinks( nlink_t numLinks )
-{
-    return QObject::tr( "%2 links" ).arg( numLinks );
-}
-
-
 QString QDirStat::formatLinksInline( nlink_t numLinks )
 {
-    return numLinks > 1 ? " / " + formatLinks( numLinks ) : "";
+    return numLinks > 1 ? QString( " / %1 links" ).arg( numLinks) : "";
 }
 
 
 QString QDirStat::formatLinksRichText( nlink_t numLinks )
 {
-    return numLinks > 1 ? "<br/>" + formatLinks( numLinks ) : "";
+    return numLinks > 1 ? QString( "<br/>%1 hard links" ).arg( numLinks ) : "";
 }
 
 

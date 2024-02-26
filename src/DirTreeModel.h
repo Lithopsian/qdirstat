@@ -17,8 +17,8 @@
 #include <QIcon>
 #include <QPalette>
 #include <QSet>
-#include <QTimer>
 #include <QTextStream>
+#include <QTimer>
 
 #include "DataColumns.h"
 #include "FileInfo.h"
@@ -126,17 +126,19 @@ namespace QDirStat
 	 * Return 'true' if the application uses a dark widget theme.
 	 **/
 	static bool usingDarkTheme()
-		{ return QGuiApplication::palette().color( QPalette::Active, QPalette::Base ).lightness() < 128; }
-
-	/**
-	 * Return 'true' if the application uses a light widget theme.
-	 **/
-	static bool usingLightTheme() { return ! usingDarkTheme(); }
+	    { return QGuiApplication::palette().color( QPalette::Active, QPalette::Base ).lightness() < 160; }
 
 	/**
 	 * Return the color configured for directories with a read error.
 	 **/
-	const QColor & dirReadErrColor() const { return _dirReadErrColor; }
+	const QColor & dirReadErrColor() const
+	    { return usingDarkTheme() ? _dirReadErrDarkTheme : _dirReadErrLightTheme; }
+
+	/**
+	 * Return the color configured for directories with a read error in a sub-directory.
+	 **/
+	const QColor & subtreeReadErrColor() const
+	    { return usingDarkTheme() ? _subtreeReadErrDarkTheme : _subtreeReadErrLightTheme; }
 
 	/**
 	 * Return the font used for bold items.
@@ -304,16 +306,19 @@ namespace QDirStat
 	QVariant sizeColTooltip( FileInfo * item ) const;
 
 	/**
-	 * For plain files that have multiple hard links or that are sparse
-	 * files or both, return a text describing the size: "20.0 MB / 4
-	 * Links", "1 GB (allocated: 2 kB)". For everything else, return an
-	 * empty string.
-	 *
-	 * 'fmtSz' is a pointer to a formatting function that takes a FileSize
-	 * argument and returns a QString.
+	 * For sparse files, return a list of three strings for the delegate:
+	 * text describing the size, eg. "1.0MB "; text describing the allocated
+	 * size, eg. "(1.0kB)"; and text descriving the number of hard links, eg.
+	 * " / 3 links", which will be empty if there are not at least 2
+	 * hard links.
 	 **/
-	static QString specialSizeText( FileInfo * item,
-					QString (*fmtSz)(FileSize) );
+	static QStringList sparseSizeText( FileInfo * item );
+
+	/**
+	 * Return text formatted as "42.0kB / 4 links".  This would normally only
+	 * ve called if the number of hard links is more than one.
+	 **/
+	static QString linksSizeText( FileInfo * item );
 
 	/**
 	 * Return data to be displayed for the specified model index and role.
@@ -354,12 +359,6 @@ namespace QDirStat
 			   Qt::SortOrder order = Qt::AscendingOrder ) Q_DECL_OVERRIDE;
 
 	/**
-	 * Return 'true' if this is considered a small file or symlink,
-	 * i.e. non-null, but 2 clusters allocated or less.
-	 **/
-	static bool isSmallFileOrSymLink( FileInfo * item );
-
-	/**
 	 * Return the resource path of the directory icon.
 	 **/
 	const QIcon & dirIcon() const { return _dirIcon; }
@@ -368,7 +367,6 @@ namespace QDirStat
 	 * Return the resource path of the unreadable directory icon.
 	 **/
 	const QIcon & unreadableDirIcon() const { return _unreadableDirIcon; }
-
 
 
     protected slots:
@@ -476,21 +474,20 @@ namespace QDirStat
 				   bool	      includeParent );
 
 
-	//
-	// Data for different roles for each item (row) and column
-	//
-
+	/**
+	 * Data for different roles for each item (row) and column
+	 **/
 	QVariant columnText	       ( FileInfo * item, int col ) const;
 	QVariant columnIcon	       ( FileInfo * item, int col ) const;
-	QVariant columnAlignment   ( FileInfo * item, int col ) const;
+	QVariant columnAlignment       ( FileInfo * item, int col ) const;
 	QVariant columnFont	       ( FileInfo * item, int col ) const;
-	QVariant dominantItemColumnFont( FileInfo * item, int col ) const;
+//	QVariant dominantItemColumnFont( FileInfo * item, int col ) const;
 
 	/**
 	 * Raw data for direct communication with our item delegates
 	 * (PercentBarDelegate, SizeColDelegate)
 	 **/
-	QVariant columnRawData	       ( FileInfo * item, int col ) const;
+	QVariant columnRawData ( FileInfo * item, int col ) const;
 
 	/**
 	 * Return the number of direct children (plus the attic if there is
@@ -510,12 +507,18 @@ namespace QDirStat
 	QVariant formatPercent( float percent ) const;
 
 	/**
-	 * Format a small size for a plain file for with both size and
-	 * allocated size: "137 Bytes (4k)"
-	 *
-	 * This returns an empty text if this item is not a plain file.
+	 * Return 'true' if this is considered a small file or symlink,
+	 * i.e. non-null, but 2 clusters allocated or less.
 	 **/
-	static QString smallSizeText( FileInfo * item );
+	static bool useSmallFileSizeText( FileInfo * item );
+
+	/**
+	 * Return a list containing two strings for the delegate: the size formatted
+	 * with special for individual bytes, eg "137 B "; and the allocated size in
+	 * whole kilobytes, eg. "(8k)". This is only intended to be called if
+	 * useSmallFilSizeText() returns true.
+	 **/
+	static QStringList smallSizeText( FileInfo * item );
 
 	/**
 	 * Find the child number 'childNo' among the children of 'parent'.
@@ -528,6 +531,12 @@ namespace QDirStat
 	 * its parent's children.
 	 **/
 	int rowNumber( FileInfo * child ) const;
+
+	/**
+	 * Returns whether the item will currently be lacking certain information.
+	 **/
+	bool limitedInfo( FileInfo * item ) const
+	    { return item->isPseudoDir() || item->readState() == DirCached || item->isPkgInfo(); }
 
 	/**
 	 * Start removing rows.
@@ -554,12 +563,13 @@ namespace QDirStat
 	/**
 	 * Return the number of rows (direct tree children) for 'parent'.
 	 **/
-	virtual int rowCount   ( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
+	virtual int rowCount( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
 
 	/**
 	 * Return the number of columns for 'parent'.
 	 **/
-	virtual int columnCount( const QModelIndex & ) const Q_DECL_OVERRIDE { return DataColumns::instance()->colCount(); }
+	virtual int columnCount( const QModelIndex & ) const Q_DECL_OVERRIDE
+	    { return DataColumns::instance()->colCount(); }
 
 
 	//
@@ -582,15 +592,14 @@ namespace QDirStat
 	bool		 _useBoldForDominantItems;
 
 	// Colors and fonts
-
-	QColor _dirReadErrColor;
-	QColor _subtreeReadErrColor;
+	QColor _dirReadErrLightTheme;
+	QColor _subtreeReadErrLightTheme;
+	QColor _dirReadErrDarkTheme;
+	QColor _subtreeReadErrDarkTheme;
 
 	QFont  _boldItemFont;
 
-
-	// The various icons
-
+	// The various tree icons
 	QIcon _dirIcon;
 	QIcon _dotEntryIcon;
 	QIcon _atticIcon;

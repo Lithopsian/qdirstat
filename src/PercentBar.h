@@ -9,20 +9,21 @@
 #ifndef PercentBar_h
 #define PercentBar_h
 
-#include <QStyledItemDelegate>
 #include <QColor>
 #include <QList>
+#include <QStyledItemDelegate>
 
-#include "DirTreeModel.h"       // RawDataRole
-#include "DirTreeView.h"       // RawDataRole
+#include "DirTreeModel.h"      // RawDataRole
+#include "DirTreeView.h"
 
 
 typedef QList<QColor> ColorList;
-class QTreeView;
 
 
 namespace QDirStat
 {
+    class DirTreeView;
+
     /**
      * Item delegate class to paint the percent bar in the PercentBarCol.
      *
@@ -54,12 +55,6 @@ namespace QDirStat
      *
      * For indented tree levels, the percent bar is indented as well, and a
      * different color is used for each indentation level.
-     *
-     *
-     * Notice that for QDirStat's DirTreeView and its DirTreeModel, there is a
-     * special class DirTreePercentBarDelegate that is derived from this, but
-     * reimplements the percentData() method to use the custom RawDataRole to
-     * get the numeric value from the model.
      **/
     class PercentBarDelegate: public QStyledItemDelegate
     {
@@ -70,7 +65,6 @@ namespace QDirStat
 	/**
 	 * Constructor with all the base fields.  Other constructors will
 	 * delegate to this one.
-         *
 	 **/
 	PercentBarDelegate( QTreeView * treeView,
 			    int percentBarCol,
@@ -78,16 +72,6 @@ namespace QDirStat
 			    int invisibleLevels );
 
 	/**
-	 * Constructor with startColorIndex for the age stats window.
-         *
-	 **/
-	PercentBarDelegate( QTreeView * treeView,
-			    int percentBarCol,
-			    int startColorIndex ):
-	    PercentBarDelegate { treeView, percentBarCol, startColorIndex, 1 }
-	{}
-
-	    /**
 	 * Destructor.
 	 **/
 	virtual ~PercentBarDelegate();
@@ -166,18 +150,16 @@ namespace QDirStat
          * the parent class, i.e. the value in that cell is displayed normally,
          * not a percent bar.
          **/
-        virtual QVariant percentData( const QModelIndex & index ) const;
+//        QVariant percentData( const QModelIndex & index ) const;
 
 	/**
 	 * Paint a percent bar into a widget.
 	 * 'indentPixel' is the number of pixels to indent the bar.
 	 **/
-	static void paintPercentBar( float	    percent,
-				     QPainter *	    painter,
-				     int	    indentPixel,
-				     const QRect  & cellRect,
-				     const QColor & fillColor,
-				     const QColor & barBackground );
+	void paintPercentBar( QPainter			 * painter,
+			      const QStyleOptionViewItem & option,
+			      const QModelIndex		 & index,
+			      float			   percent ) const;
 
 	/**
 	 * Return a color that contrasts with 'contrastColor'.
@@ -199,48 +181,6 @@ namespace QDirStat
 	int	    _sizeHintWidth;
 
     }; // class PercentBarDelegate
-
-
-    /**
-     * Specialized item delegate class to paint the percent bar in a
-     * DirTreeView that uses a DirTreeModel. It paints the bar in the
-     * PercentBarCol, and it fetches the percentage data from the
-     * DirTreeModel's custom RawDataRole.
-     *
-     * This class is not usable outside the context of a DirTreeView and a
-     * DirTreeModel.
-     **/
-    class DirTreePercentBarDelegate: public PercentBarDelegate
-    {
-
-    public:
-	/**
-	 * Constructor.
-	 **/
-	DirTreePercentBarDelegate( DirTreeView * treeView, int percentBarCol ):
-            PercentBarDelegate { treeView, percentBarCol, 0, 2 }
-        {}
-
-	/**
-	 * Destructor.
-	 **/
-	virtual ~DirTreePercentBarDelegate() {}
-
-
-    protected:
-
-        /**
-         * Get the percentage data for the specified model index. This is where
-         * this class is different from the base class: It uses a special data
-         * role that is specific to the DirTreeModel. This does not need to
-         * parse strings, it receives numeric data directly.
-         *
-         * Reimplemented from PercentBarDelegate.
-         **/
-        virtual QVariant percentData( const QModelIndex & index ) const Q_DECL_OVERRIDE
-            { return index.data( RawDataRole ); }
-
-    };  // class DirTreePercentBarDelegate
 
 }      // namespace QDirStat
 

@@ -17,13 +17,12 @@ class QAction;
 
 namespace QDirStat
 {
-    class DirTreePercentBarDelegate;
+    class PercentBarDelegate;
     class SizeColDelegate;
     class HeaderTweaker;
     class SelectionModelProxy;
     class CleanupCollection;
     class FileInfo;
-
 
     /**
      * Tree view widget for the QDirStat directory tree.
@@ -101,18 +100,13 @@ namespace QDirStat
     protected slots:
 
 	/**
-	 * Post a context menu for the item at 'pos'.
-	 **/
-//	void contextMenu( const QPoint & pos );
-
-
-    protected:
-
-	/**
 	 * Post the common context menu with actions (cleanup and other) for
 	 * 'item' at 'pos'.
 	 **/
-	void actionContextMenu( const QPoint & pos );
+	void contextMenu( const QPoint & pos );
+
+
+    protected:
 
 	/**
 	 * Post the context menu for the size column for 'item' at 'pos'.
@@ -151,10 +145,10 @@ namespace QDirStat
 
 	// Data members
 
-	DirTreePercentBarDelegate * _percentBarDelegate;
-        SizeColDelegate *           _sizeColDelegate;
-	HeaderTweaker *             _headerTweaker;
-	CleanupCollection *         _cleanupCollection;
+	PercentBarDelegate * _percentBarDelegate;
+        SizeColDelegate    * _sizeColDelegate;
+	HeaderTweaker      * _headerTweaker;
+	CleanupCollection  * _cleanupCollection;
 
     };	// class DirTreeView
 

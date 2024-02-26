@@ -43,7 +43,7 @@ void FileSizeLabel::setAllocated( const FileInfo * file )
 void FileSizeLabel::setValue( FileSize value, const QString & prefix )
 {
     QLabel::setText( prefix + formatSize( value ) );
-    setToolTip( value, prefix, "" );
+    setToolTip( value, prefix, 0 );
 }
 
 
@@ -51,16 +51,16 @@ void FileSizeLabel::setValueWithLinks( FileSize size, nlink_t numLinks )
 {
     const QString & text = formatSize( size );
     QLabel::setText( text + formatLinksInline( numLinks ) );
-    setToolTip( size, "", formatLinksRichText( numLinks ) );
+    setToolTip( size, "", numLinks );
 }
 
 
-void FileSizeLabel::setToolTip( FileSize size, const QString & prefix, const QString & suffix )
+void FileSizeLabel::setToolTip( FileSize size, const QString & prefix, nlink_t numLinks )
 {
     if ( size < 1000 ) // not useful below (rounded) 1 kB
 	QLabel::setToolTip( QString() );
 
-    QLabel::setToolTip( whitespacePre( prefix + formatByteSize( size ) + suffix ) );
+    QLabel::setToolTip( whitespacePre( prefix + formatByteSize( size ) + formatLinksRichText( numLinks ) ) );
 }
 
 
@@ -78,7 +78,7 @@ void FileSizeLabel::setBold( bool bold )
     setFont( textFont );
 }
 
-
+/*
 void FileSizeLabel::suppressIfSameContent( FileSizeLabel * cloneLabel, QLabel * caption ) const
 {
     if ( text() == cloneLabel->text() )
@@ -91,3 +91,4 @@ void FileSizeLabel::suppressIfSameContent( FileSizeLabel * cloneLabel, QLabel * 
 	caption->setEnabled( true );
     }
 }
+*/

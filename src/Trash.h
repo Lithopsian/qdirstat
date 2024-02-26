@@ -56,7 +56,7 @@ public:
      * Restore a file or directory from the trash to its original location.
      * Return 'true' on success, 'false' on error.
      **/
-    static bool restore( const QString & path );
+//    static bool restore( const QString & path );
 
     /**
      * Empty the trash can, i.e. delete all its contents permanently.
@@ -66,12 +66,12 @@ public:
      * trash directories that were used during the life time of the singleton
      * of this class.
      **/
-    static void empty();
+//    static void empty();
 
     /**
      * Return the device of file or directory 'path'.
      **/
-    static dev_t device( const QString & path );
+//    static dev_t device( const QString & path );
 
 
 protected:
@@ -84,13 +84,13 @@ protected:
     /**
      * Destructor.
      **/
-    virtual ~Trash();
+    virtual ~Trash() {}
 
     /**
      * Find the toplevel directory (the mount point) for the device that 'path'
      * is on.
      **/
-    static QString toplevel( const QString & path );
+//    static QString toplevel( const QString & path );
 
     /**
      * Return the trash dir for 'path'.
@@ -102,11 +102,8 @@ protected:
     // Data members
     //
 
-    static Trash       * _instance;
-
-    dev_t		_homeDevice;
-    TrashDir	      * _homeTrashDir;
-    TrashDirMap		_trashDirs;
+    TrashDir	* _homeTrashDir;
+    TrashDirMap   _trashDirs;
 
 };	// class Trash
 
@@ -143,17 +140,7 @@ public:
     /**
      * Return the device (as returned from stat()) for this trash directory.
      **/
-    dev_t device() const { return _device; }
-
-    /**
-     * Return the path of the "files" subdirectory of this trash dir.
-     **/
-    QString filesPath() const { return _path % "/files"; }
-
-    /**
-     * Return the path of the "info" subdirectory of this trash dir.
-     **/
-    QString infoPath() const { return _path % "/info"; }
+//    dev_t device() const { return _device; }
 
     /**
      * Create a name that is unique within this trash directory.
@@ -179,8 +166,17 @@ public:
      **/
     void move( const QString & path, const QString & targetName );
 
-
 protected:
+
+    /**
+     * Return the path of the "files" subdirectory of this trash dir.
+     **/
+    QString filesPath() const { return _path % "/files"; }
+
+    /**
+     * Return the path of the "info" subdirectory of this trash dir.
+     **/
+    QString infoPath() const { return _path % "/info"; }
 
     /**
      * Create a directory if it doesn't exist. This throws an exception if

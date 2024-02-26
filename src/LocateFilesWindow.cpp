@@ -190,7 +190,7 @@ void LocateFilesWindow::locateInMainWindow( QTreeWidgetItem * item )
 void LocateFilesWindow::itemContextMenu( const QPoint & pos )
 {
     QMenu menu;
-    const QStringList actions = { "actionCopyPathToClipboard", "actionMoveToTrash", "---" };
+    const QStringList actions = { "actionCopyPath", "actionMoveToTrash", "---" };
     ActionManager::instance()->addEnabledActions( &menu, actions );
 
     if ( app()->cleanupCollection() )

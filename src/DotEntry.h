@@ -38,7 +38,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DotEntry();
+	virtual ~DotEntry() {}
 
 	/**
 	 * Get the "Dot Entry" for this node if there is one (or 0 otherwise).
@@ -72,7 +72,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual void finalizeAll() Q_DECL_OVERRIDE;
+	virtual void finalizeAll() Q_DECL_OVERRIDE {}
 
 	/**
 	 * Get the current state of the directory reading process.
@@ -88,7 +88,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual void reset() Q_DECL_OVERRIDE;
+	virtual void reset() Q_DECL_OVERRIDE {}
 
 
     protected:
@@ -101,7 +101,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual void cleanupDotEntries() Q_DECL_OVERRIDE;
+	virtual void cleanupDotEntries() Q_DECL_OVERRIDE {}
 
     };	// class DotEntry
 

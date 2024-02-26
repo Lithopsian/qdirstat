@@ -69,6 +69,10 @@ void MainWindow::showUnpkgFiles( const UnpkgSettings & unpkgSettings )
     // Start reading the directory
     try
     {
+	// Remember this order for next time
+	_sortCol = app()->dirTreeModel()->sortColumn();
+	_sortOrder = app()->dirTreeModel()->sortOrder();
+
         QString dir = parseUnpkgStartingDir( unpkgSettings );
 
         _futureSelection.setUrl( dir );

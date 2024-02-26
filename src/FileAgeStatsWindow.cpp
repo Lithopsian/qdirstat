@@ -82,21 +82,19 @@ void FileAgeStatsWindow::initWidgets()
                                   tr( "%"       ),  // percent value
                                   tr( "Size"    ),
                                   tr( "Size %"  ),  // percent bar
-                                  tr( "%"       )
-                                }; // percent value
+                                  tr( "%"       ),  // percent value
+                                };
 
     _ui->treeWidget->setHeaderLabels( headers );
-    _ui->treeWidget->header()->setStretchLastSection( false );
+//    _ui->treeWidget->header()->setStretchLastSection( false );
 
     // Delegates for the percent bars
 
-    _filesPercentBarDelegate =
-        new PercentBarDelegate( _ui->treeWidget, YearListFilesPercentBarCol, 7 );
+    _filesPercentBarDelegate = new PercentBarDelegate( _ui->treeWidget, YearListFilesPercentBarCol, 7, 1 );
     CHECK_NEW( _filesPercentBarDelegate );
     _ui->treeWidget->setItemDelegateForColumn( YearListFilesPercentBarCol, _filesPercentBarDelegate );
 
-    _sizePercentBarDelegate =
-        new PercentBarDelegate( _ui->treeWidget, YearListSizePercentBarCol, 1 );
+    _sizePercentBarDelegate = new PercentBarDelegate( _ui->treeWidget, YearListSizePercentBarCol, 1, 1 );
     CHECK_NEW( _sizePercentBarDelegate );
     _ui->treeWidget->setItemDelegateForColumn( YearListSizePercentBarCol, _sizePercentBarDelegate );
 
@@ -169,15 +167,11 @@ void FileAgeStatsWindow::populateListWidget()
         if ( yearStats )
         {
             // Add a year item
-
             YearListItem * item = new YearListItem( *yearStats );
             CHECK_NEW( item );
-
             _ui->treeWidget->addTopLevelItem( item );
 
-
             // Add the month items if applicable
-
             if ( _stats->monthStatsAvailableFor( year ) )
             {
                 for ( short month = 1; month <= 12; month++ )
@@ -313,13 +307,11 @@ YearListItem::YearListItem( const YearStats & yearStats ) :
 
     if ( _stats.filesCount > 0 )
     {
-        QString pre( 4, ' ' );
-
         setText( YearListFilesCountCol,      QString::number( _stats.filesCount   ) + " " );
-        setText( YearListFilesPercentBarCol, formatPercent  ( _stats.filesPercent ) + " " );
+        setData( YearListFilesPercentBarCol, RawDataRole, _stats.sizePercent );
         setText( YearListFilesPercentCol,    formatPercent  ( _stats.filesPercent ) + " " );
-        setText( YearListSizeCol,            pre + formatSize( _stats.size        ) + " " );
-        setText( YearListSizePercentBarCol,  formatPercent  ( _stats.sizePercent  ) + " " );
+        setText( YearListSizeCol,            QString( 4, ' ' ) + formatSize( _stats.size ) + " " );
+        setData( YearListSizePercentBarCol,  RawDataRole, _stats.sizePercent );
         setText( YearListSizePercentCol,     formatPercent  ( _stats.sizePercent  ) + " " );
     }
 }
@@ -352,9 +344,7 @@ QVariant YearListItem::data( int column, int role ) const
     if ( role == Qt::TextAlignmentRole )
     {
         // Vertical alignment can't be set in any easier way (?)
-
         int alignment = Qt::AlignVCenter;
-
         if ( column == YearListYearCol )
             alignment |= Qt::AlignLeft;
         else
@@ -374,7 +364,7 @@ bool YearListItem::operator<( const QTreeWidgetItem & rawOther ) const
     // error which should not be silently ignored.
     const YearListItem & other = dynamic_cast<const YearListItem &>( rawOther );
 
-    int col = treeWidget() ? treeWidget()->sortColumn() : YearListYearCol;
+    const int col = treeWidget() ? treeWidget()->sortColumn() : YearListYearCol;
 
     switch ( col )
     {
@@ -385,12 +375,11 @@ bool YearListItem::operator<( const QTreeWidgetItem & rawOther ) const
                 else
                     return _stats.year  < other.stats().year;
             }
-
 	case YearListFilesCountCol:	return _stats.filesCount   < other.stats().filesCount;
-        case YearListFilesPercentBarCol:
+	case YearListFilesPercentBarCol:
 	case YearListFilesPercentCol:	return _stats.filesPercent < other.stats().filesPercent;
 	case YearListSizeCol:           return _stats.size         < other.stats().size;
-        case YearListSizePercentBarCol:
+	case YearListSizePercentBarCol:
 	case YearListSizePercentCol:	return _stats.sizePercent  < other.stats().sizePercent;
 	default:		        return QTreeWidgetItem::operator<( rawOther );
     }

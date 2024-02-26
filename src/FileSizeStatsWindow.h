@@ -25,7 +25,7 @@ namespace QDirStat
     class DirTree;
     class FileInfo;
     class FileSizeStats;
-	class PercentileSums;
+    class PercentileSums;
 
     /**
      * Modeless dialog to display file size statistics:
@@ -178,30 +178,30 @@ namespace QDirStat
 	/**
 	 * Add an item to a table.
 	 **/
-	QTableWidgetItem * addItem( QTableWidget *  table,
-				    int		    row,
-				    int		    col,
-				    const QString & text );
+	static QTableWidgetItem * addItem( QTableWidget *  table,
+					   int		    row,
+					   int		    col,
+					   const QString & text );
 
 	/**
 	 * Set the font to bold for all items in a table row.
 	 **/
-	void setRowBold( QTableWidget * table, int row );
+	static void setRowBold( QTableWidget * table, int row );
 
 	/**
 	 * Set the foreground (the text color) for all items in a table row.
 	 **/
-	void setRowForeground( QTableWidget * table, int row, const QBrush & brush );
+	static void setRowForeground( QTableWidget * table, int row, const QBrush & brush );
 
 	/**
 	 * Set the background for all items in a table row.
 	 **/
-	void setRowBackground( QTableWidget * table, int row, const QBrush & brush );
+	static void setRowBackground( QTableWidget * table, int row, const QBrush & brush );
 
 	/**
 	 * Set the text alignment for all items in a table column.
 	 **/
-	void setColAlignment( QTableWidget * table, int col, int alignment );
+	static void setColAlignment( QTableWidget * table, int col, int alignment );
 
 	/**
 	 * Fill the histogram with content.

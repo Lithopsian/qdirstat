@@ -82,7 +82,18 @@ void DirTree::setRoot( DirInfo *newRoot )
 
 FileInfo * DirTree::firstToplevel() const
 {
-    return _root ? _root->firstChild() : 0;
+    if ( !_root )
+	return 0;
+
+    FileInfo * result = _root->firstChild();
+
+    if ( !result )
+	result = _root->attic();
+
+    if ( !result )
+	result = _root->dotEntry();
+
+    return result;
 }
 
 
@@ -251,7 +262,8 @@ void DirTree::finalizeTree()
 	recalc( _root );
 	ignoreEmptyDirs( _root );
 	recalc( _root );
-	moveIgnoredToAttic( _root );
+	if ( _root->firstChild() )
+            moveIgnoredToAttic( _root->firstChild()->toDirInfo() );
 	recalc( _root );
     }
 }
@@ -534,7 +546,8 @@ bool DirTree::checkIgnoreFilters( const QString & path )
 
 void DirTree::moveIgnoredToAttic( DirInfo * dir )
 {
-    CHECK_PTR( dir );
+    if ( !dir )
+	return;;
 
     if ( dir->totalIgnoredItems() == 0 && dir->totalUnignoredItems() > 0 )
 	return;
@@ -548,15 +561,10 @@ void DirTree::moveIgnoredToAttic( DirInfo * dir )
     while ( child )
     {
 	if ( child->isIgnored() )
-	{
 	    // Don't move the child right here, otherwise the iteration breaks
 	    ignoredChildren << child;
-	}
 	else
-	{
-	    if ( child->isDirInfo() )
-		moveIgnoredToAttic( child->toDirInfo() );
-	}
+	    moveIgnoredToAttic( child->toDirInfo() );
 
 	child = child->next();
     }
@@ -590,14 +598,13 @@ void DirTree::ignoreEmptyDirs( DirInfo * dir )
 
     while ( child )
     {
-	if ( ! child->isIgnored() && child->isDirInfo() )
+	if ( !child->isIgnored() && child->isDirInfo() )
 	{
 	    DirInfo * subDir = child->toDirInfo();
 
 	    if ( subDir->totalUnignoredItems() == 0 )
-		// && ! subDir->isMountPoint()
 	    {
-		// logDebug() << "Ignoring empty subdir " << subDir << Qt::endl;
+		//logDebug() << "Ignoring empty subdir " << subDir << Qt::endl;
 		subDir->setIgnored( true );
 	    }
 	    else
@@ -623,14 +630,10 @@ void DirTree::unatticAll( DirInfo * dir )
 	dir->recalc();
     }
 
-    FileInfoIterator it( dir );
-
-    while ( *it )
+    for ( FileInfoIterator it( dir ); *it; ++it )
     {
 	if ( (*it)->isDirInfo() )
 	    unatticAll( (*it)->toDirInfo() );
-
-	++it;
     }
 }
 

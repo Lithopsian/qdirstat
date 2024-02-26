@@ -29,30 +29,30 @@
 #define DOMINANCE_MIN_PERCENT                    3.0
 #define DOMINANCE_MAX_PERCENT                   70.0
 #define DOMINANCE_ITEM_COUNT                    30
-#define VERBOSE_DOMINANCE_CHECK                  1
+#define VERBOSE_DOMINANCE_CHECK                  0
 #define DIRECT_CHILDREN_COUNT_SANITY_CHECK       0
 
 using namespace QDirStat;
 
 
-DirInfo::DirInfo( DirInfo * parent,
-		  DirTree * tree,
-		  const QString & name )
-    : FileInfo ( parent, tree, name )
+DirInfo::DirInfo( DirInfo	* parent,
+		  DirTree	* tree,
+		  const QString	& name )
+    : FileInfo( parent, tree, name )
 {
     init();
     _readState = DirFinished;
 }
 
 
-DirInfo::DirInfo( DirInfo * parent,
+DirInfo::DirInfo( DirInfo	* parent,
 		  DirTree	* tree,
-		  const QString & filenameWithoutPath,
+		  const QString	& filenameWithoutPath,
 		  struct stat	* statInfo )
-    : FileInfo ( parent,
-		 tree,
-		 filenameWithoutPath,
-		 statInfo )
+    : FileInfo( parent,
+		tree,
+		filenameWithoutPath,
+		statInfo )
 {
     init();
     ensureDotEntry();
@@ -67,12 +67,12 @@ DirInfo::DirInfo( DirInfo *	  parent,
 		  mode_t	  mode,
 		  FileSize	  size,
 		  time_t	  mtime )
-    : FileInfo ( parent,
-		 tree,
-		 filenameWithoutPath,
-		 mode,
-		 size,
-		 mtime )
+    : FileInfo( parent,
+		tree,
+		filenameWithoutPath,
+		mode,
+		size,
+		mtime )
 {
     init();
     ensureDotEntry();
@@ -125,7 +125,6 @@ void DirInfo::clear()
     _deletingAll = true;
 
     // Recursively delete all children.
-
     while ( _firstChild )
     {
 	FileInfo * nextChild = _firstChild->next();
@@ -139,7 +138,6 @@ void DirInfo::clear()
 
 
     // Delete the dot entry.
-
     if ( _dotEntry )
     {
 	delete _dotEntry;
@@ -479,7 +477,6 @@ bool DirInfo::isFinished()
 void DirInfo::setReadState( DirReadState newReadState )
 {
     // "aborted" has higher priority than "finished"
-
     if ( _readState == DirAborted && newReadState == DirFinished )
 	return;
 
@@ -580,9 +577,8 @@ void DirInfo::childAdded( FileInfo * newChild )
 	else
 	    _totalIgnoredItems++;
 
-	// Add ignored items only to all the totals if this directory is also
+	// Add ignored items to all the totals only if this directory is also
 	// ignored or if this is the attic.
-
 	if ( ! _isIgnored &&  ! isAttic() )
 	    addToTotal = false;
     }
@@ -803,11 +799,11 @@ QString DirInfo::sizePrefix() const
 	case DirError:
 	case DirAborted:
 	case DirPermissionDenied:
-	    return ">";
+	    return "> ";
 
 	case DirFinished:
 	case DirCached:
-	    return _errSubDirCount > 0 ? ">" : "";
+	    return _errSubDirCount > 0 ? "> " : "";
 
 	// No 'default' branch so the compiler can catch unhandled enum values
     }
@@ -859,13 +855,11 @@ void DirInfo::cleanupDotEntries()
 	return;
 
     // Reparent dot entry children if there are no subdirectories on this level
-
     if ( ! _firstChild && ! hasAtticChildren() )
     {
 	takeAllChildren( _dotEntry );
 
 	// Reparent the dot entry's attic's children to this item's attic
-
 	if ( _dotEntry->hasAtticChildren() )
 	{
 	    ensureAttic();
@@ -880,7 +874,6 @@ void DirInfo::cleanupDotEntries()
     //
     // Notice that this also checks if the dot entry's attic (if it has one) is
     // empty, and that its attic is deleted along with the dot entry.
-
     deleteEmptyDotEntry();
 }
 
@@ -918,7 +911,7 @@ void DirInfo::checkIgnored()
     // Display all directories as ignored that have any ignored items, but no
     // items that are not ignored.
 
-    _isIgnored = ( totalIgnoredItems() > 0 && totalUnignoredItems() == 0 );
+    _isIgnored = totalIgnoredItems() > 0 && totalUnignoredItems() == 0;
 
     if ( _isIgnored )
 	ignoreEmptySubDirs();
@@ -930,6 +923,13 @@ void DirInfo::checkIgnored()
 
 void DirInfo::ignoreEmptySubDirs()
 {
+    for ( FileInfoIterator it( this ); *it; ++it )
+    {
+	// logDebug() << "Ignoring empty subdir " << (*it) << Qt::endl;
+	(*it)->setIgnored( true );
+	_summaryDirty = true;
+    }
+/*
     FileInfoIterator it( this );
 
     while ( *it )
@@ -945,7 +945,7 @@ void DirInfo::ignoreEmptySubDirs()
 	}
 
 	++it;
-    }
+    } */
 }
 
 
@@ -989,23 +989,14 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
 	return *_sortedChildren;
     }
 
-
     // Clean old sorted children list and create a new one
-
     dropSortCache( true ); // recursive
     _sortedChildren = new FileInfoList();
     CHECK_NEW( _sortedChildren );
 
-
     // Populate with unsorted children list
-
-    FileInfo * child = _firstChild;
-
-    while ( child )
-    {
+    for ( FileInfo * child = _firstChild; child; child = child->next() )
 	_sortedChildren->append( child );
-	child = child->next();
-    }
 
     if ( _dotEntry )
 	_sortedChildren->append( _dotEntry );
@@ -1018,7 +1009,6 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
     if ( sortCol != NameCol )
     {
 	// Do secondary sorting by NameCol (always in ascending order)
-
 	std::stable_sort( _sortedChildren->begin(),
 			  _sortedChildren->end(),
 			  FileInfoSorter( NameCol, Qt::AscendingOrder ) );
@@ -1026,7 +1016,6 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
 
 
     // Primary sorting by sortCol ascending or descending (as specified in sortOrder)
-
     std::stable_sort( _sortedChildren->begin(),
 		      _sortedChildren->end(),
 		      FileInfoSorter( sortCol, sortOrder ) );
@@ -1168,9 +1157,9 @@ void DirInfo::findDominantChildren()
     if ( ! _sortedChildren )
         return;
 
+    // Only if sorting by size or percent, descending
     switch ( _lastSortCol )
     {
-        // Only if sorting by size or percent
         case PercentBarCol:
         case PercentNumCol:
         case SizeCol:
@@ -1206,8 +1195,7 @@ void DirInfo::findDominantChildren()
 #endif
 
     // Add the children that are larger to the dominant children
-
-    for ( int i=0; i < count; ++i )
+    for ( int i = 0; i < _sortedChildren->size(); ++i )
     {
         FileInfo * child = _sortedChildren->at( i );
         if ( child->subtreeAllocatedPercent() < dominanceThreshold )

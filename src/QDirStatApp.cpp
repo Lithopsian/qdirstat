@@ -24,19 +24,6 @@
 using namespace QDirStat;
 
 
-QDirStatApp * QDirStatApp::instance()
-{
-    static QDirStatApp _instance;
-    return &_instance;
-}
-
-
-DirTree * QDirStatApp::dirTree() const
-{
-    return _dirTreeModel ? _dirTreeModel->tree() : 0;
-}
-
-
 QDirStatApp::QDirStatApp()
 {
     // logDebug() << "Creating app" << Qt::endl;
@@ -66,17 +53,26 @@ QDirStatApp::~QDirStatApp()
 }
 
 
+QDirStatApp * QDirStatApp::instance()
+{
+    static QDirStatApp _instance;
+    return &_instance;
+}
+
+
+DirTree * QDirStatApp::dirTree() const
+{
+    return _dirTreeModel ? _dirTreeModel->tree() : 0;
+}
+
+
 QWidget * QDirStatApp::findMainWindow() const
 {
     QWidget * mainWin = 0;
     const QWidgetList toplevel = QApplication::topLevelWidgets();
 
-    for ( QWidgetList::const_iterator it = toplevel.constBegin();
-          it != toplevel.constEnd() && ! mainWin;
-          ++it )
-    {
+    for ( QWidgetList::const_iterator it = toplevel.cbegin(); it != toplevel.cend() && !mainWin; ++it )
         mainWin = qobject_cast<MainWindow *>( *it );
-    }
 
     if ( ! mainWin )
         logWarning() << "NULL mainWin for shared instance" << Qt::endl;

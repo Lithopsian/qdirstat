@@ -49,7 +49,6 @@ SOURCES	  = main.cpp			\
 	    DebugHelpers.cpp		\
 	    DirInfo.cpp			\
 	    DirReadJob.cpp		\
-	    DirSaver.cpp		\
 	    DirTree.cpp			\
 	    DirTreeCache.cpp		\
 	    DirTreeModel.cpp		\
@@ -153,7 +152,6 @@ HEADERS	  =				\
 	    DebugHelpers.h		\
 	    DirInfo.h			\
 	    DirReadJob.h		\
-	    DirSaver.h			\
 	    DirTree.h			\
 	    DirTreeCache.h		\
 	    DirTreeFilter.h		\

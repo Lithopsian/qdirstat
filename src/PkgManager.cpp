@@ -15,18 +15,6 @@
 using namespace QDirStat;
 
 
-PkgManager::PkgManager()
-{
-
-}
-
-
-PkgManager::~PkgManager()
-{
-    // NOP
-}
-
-
 QStringList PkgManager::fileList( const PkgInfo * pkg ) const
 {
     const QString command = fileListCommand( pkg );

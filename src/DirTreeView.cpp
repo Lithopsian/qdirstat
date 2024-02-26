@@ -30,7 +30,7 @@ DirTreeView::DirTreeView( QWidget * parent ):
     QTreeView( parent ),
     _cleanupCollection(0)
 {
-    _percentBarDelegate = new DirTreePercentBarDelegate( this, PercentBarCol );
+    _percentBarDelegate = new PercentBarDelegate( this, PercentBarCol, 0, 2 );
     CHECK_NEW( _percentBarDelegate );
     setItemDelegateForColumn( PercentBarCol, _percentBarDelegate );
 
@@ -48,14 +48,16 @@ DirTreeView::DirTreeView( QWidget * parent ):
     _headerTweaker = new HeaderTweaker( header(), this );
     CHECK_NEW( _headerTweaker );
 
-    connect( this , SIGNAL( customContextMenuRequested( const QPoint & ) ),
-	     this,  SLOT  ( actionContextMenu	      ( const QPoint & ) ) );
+    connect( this, &DirTreeView::customContextMenuRequested,
+	     this, &DirTreeView::contextMenu );
 }
 
 
 DirTreeView::~DirTreeView()
 {
     delete _headerTweaker;
+    delete _percentBarDelegate;
+    delete _sizeColDelegate;
 }
 
 
@@ -68,12 +70,12 @@ void DirTreeView::currentChanged( const QModelIndex & current,
 }
 
 
-void DirTreeView::actionContextMenu( const QPoint & pos )
+void DirTreeView::contextMenu( const QPoint & pos )
 {
     QModelIndex index = indexAt( pos );
     if ( ! index.isValid() )
     {
-	// logDebug() << "No item at this position" << Qt::endl;
+	logDebug() << "No item at this position" << Qt::endl;
 	return;
     }
 
@@ -85,7 +87,7 @@ void DirTreeView::actionContextMenu( const QPoint & pos )
     const QStringList actions1 = { "actionGoUp",
                                    "actionGoToToplevel",
                                    "---",
-                                   "actionCopyPathToClipboard",
+                                   "actionCopyPath",
                                    "actionMoveToTrash",
                                    "---"
                                  };
@@ -97,9 +99,10 @@ void DirTreeView::actionContextMenu( const QPoint & pos )
 
     // Less commonly used menu options
     const QStringList actions2 = { "---",
+	                           "actionStopReading",
 	                           "actionRefreshSelected",
-	                           "actionReadExcludedDirectory",
-	                           "actionContinueReadingAtMountPoint"
+	                           "actionReadExcluded",
+	                           "actionContinueReading"
 	                         };
     ActionManager::instance()->addEnabledActions( &menu, actions2 );
 
@@ -130,31 +133,6 @@ void DirTreeView::actionContextMenu( const QPoint & pos )
     menu.exec( mapToGlobal( pos ) );
 }
 
-/*
-void DirTreeView::sizeContextMenu( const QPoint & pos, FileInfo * item )
-{
-    if ( item->totalSize() >= 1024 ||
-         item->totalAllocatedSize() > item->totalSize() )
-    {
-        QString text = DirTreeModel::sizeText( item, formatByteSize );
-
-        if ( text.isEmpty() )
-        {
-            text = item->sizePrefix() + formatByteSize( item->totalSize() );
-
-            if ( item->allocatedSize() > item->totalSize() )
-            {
-                text += tr( " (allocated: %1)" )
-                    .arg( formatByteSize( item->totalAllocatedSize() ) );
-            }
-        }
-
-        QMenu menu;
-        menu.addAction( text );
-        menu.exec( mapToGlobal( pos ) );
-    }
-}
-*/
 
 QModelIndexList DirTreeView::expandedIndexes() const
 {
@@ -198,7 +176,7 @@ void DirTreeView::closeAllExcept( const QModelIndex & branch )
 
     // Close all items in branchesToClose
 
-//    foreach ( index, branchesToClose ) // too slow
+//    foreach ( index, branchesToClose ) // too slow!!!!
     {
 	// logDebug() << "Closing " << index << Qt::endl;
 	collapseAll();

@@ -16,6 +16,10 @@
 #include "Exception.h"
 #include "Logger.h"
 
+
+#define MIN_PERCENT_BAR_HEIGHT 16
+
+
 using namespace QDirStat;
 
 
@@ -41,22 +45,19 @@ PercentBarDelegate::~PercentBarDelegate()
 
 ColorList PercentBarDelegate::defaultFillColors() const
 {
-    ColorList colors;
-
-    colors << QColor(   0,   0, 255 )
-	   << QColor( 128,   0, 128 )
-	   << QColor( 231, 147,  43 )
-	   << QColor(   4, 113,   0 )
-	   << QColor( 176,   0,   0 )
-	   << QColor( 204, 187,   0 )
-	   << QColor( 162,  98,  30 )
-	   << QColor(   0, 148, 146 )
-	   << QColor( 217,  94,   0 )
-	   << QColor(   0, 194,  65 )
-	   << QColor( 194, 108, 187 )
-	   << QColor(   0, 179, 255 );
-
-    return colors;
+    return ColorList( { QColor(   0,   0, 255 ),
+			QColor( 128,   0, 128 ),
+			QColor( 231, 147,  43 ),
+			QColor(   4, 113,   0 ),
+			QColor( 176,   0,   0 ),
+			QColor( 204, 187,   0 ),
+			QColor( 162,  98,  30 ),
+			QColor(   0, 148, 146 ),
+			QColor( 217,  94,   0 ),
+			QColor(   0, 194,  65 ),
+			QColor( 194, 108, 187 ),
+			QColor(   0, 179, 255 ),
+		      } );
 }
 
 
@@ -67,6 +68,7 @@ void PercentBarDelegate::readSettings()
 
     _fillColors	   = readColorListEntry( settings, "Colors"    , defaultFillColors() );
     _barBackground = readColorEntry    ( settings, "Background", QColor( 160, 160, 160 ) );
+
     _sizeHintWidth = settings.value( "PercentBarColumnWidth", 180 ).toInt();
 
     settings.endGroup();
@@ -80,6 +82,7 @@ void PercentBarDelegate::writeSettings()
 
     writeColorListEntry( settings, "Colors"    , _fillColors	);
     writeColorEntry    ( settings, "Background", _barBackground );
+
     settings.setValue( "PercentBarColumnWidth",  _sizeHintWidth	);
 
     settings.endGroup();
@@ -90,13 +93,15 @@ void PercentBarDelegate::paint( QPainter		   * painter,
 				const QStyleOptionViewItem & option,
 				const QModelIndex	   & index ) const
 {
-    if ( ! index.isValid() || index.column() != _percentBarCol )
-	return QStyledItemDelegate::paint( painter, option, index );
-
-    QVariant data = percentData( index );
-
-    if ( data.isValid() )
+    if ( index.isValid() && index.column() == _percentBarCol )
     {
+	// We are responsible even for the highlight background of selected rows
+//	painter->eraseRect( option.rect );
+	if ( option.state & QStyle::State_Selected )
+	    painter->fillRect( option.rect, option.palette.highlight() );
+
+	QVariant data = index.data( RawDataRole );
+    //    QVariant data = percentData( index );
 	bool ok = true;
 	float percent = data.toFloat( &ok );
 
@@ -109,26 +114,19 @@ void PercentBarDelegate::paint( QPainter		   * painter,
 		percent = 100.0f;
 	    }
 
-	    int depth = treeLevel( index ) - _invisibleLevels;
-            int colorIndex = depth + _startColorIndex;
-	    int indentPixel  = ( depth * _treeView->indentation() ) / 2;
-	    QColor fillColor = _fillColors.at( colorIndex % _fillColors.size() );
+	    PercentBarDelegate::paintPercentBar( painter,
+						 option,
+						 index,
+						 percent );
 
-	    PercentBarDelegate::paintPercentBar( percent,
-			     painter,
-			     indentPixel,
-			     option.rect,
-			     fillColor,
-			     _barBackground );
-	}
-	else // percent < 0.0 => tree is busy => use as read job column
-	{
-	    return QStyledItemDelegate::paint( painter, option, index );
+	    return;
 	}
     }
+
+    QStyledItemDelegate::paint( painter, option, index );
 }
 
-
+/*
 QVariant PercentBarDelegate::percentData( const QModelIndex & index ) const
 {
     QVariant data = index.data( Qt::DisplayRole );
@@ -152,12 +150,11 @@ QVariant PercentBarDelegate::percentData( const QModelIndex & index ) const
 
     return QVariant( percent );
 }
-
+*/
 
 int PercentBarDelegate::treeLevel( const QModelIndex & index ) const
 {
     int level = 0;
-
     for ( QModelIndex item = index; item.isValid(); item = item.parent() )
 	++level;
 
@@ -168,26 +165,37 @@ int PercentBarDelegate::treeLevel( const QModelIndex & index ) const
 QSize PercentBarDelegate::sizeHint( const QStyleOptionViewItem & option,
                                     const QModelIndex	       & index) const
 {
+    QSize size = QStyledItemDelegate::sizeHint( option, index );
+
+    if ( !index.isValid() || index.column() != _percentBarCol )
+	return size;
+
+    size.setWidth( _sizeHintWidth );
+    size.setHeight( qMax( size.height(), MIN_PERCENT_BAR_HEIGHT ) );
+
+    return size;
+
     return QStyledItemDelegate::sizeHint( option, index );
 }
 
 
-void PercentBarDelegate::paintPercentBar( float		 percent,
-					  QPainter *	 painter,
-					  int		 indentPixel,
-					  const QRect  & cellRect,
-					  const QColor & fillColor,
-					  const QColor & barBackground )
+void PercentBarDelegate::paintPercentBar( QPainter		     * painter,
+					  const QStyleOptionViewItem & option,
+					  const QModelIndex	     & index,
+					  float			       percent ) const
 {
+    const int depth = treeLevel( index ) - _invisibleLevels;
+    const int indentPixel  = ( depth * _treeView->indentation() ) / 2;
+
+    const QRect cellRect = option.rect;
     const int penWidth = 2;
     const int extraMargin = cellRect.height() / 6;
     const int itemMargin = 4;
+
     const int x = cellRect.x() + itemMargin + indentPixel;
     const int y = cellRect.y() + extraMargin;
     const int w = cellRect.width() - 2 * itemMargin - indentPixel;
     const int h = cellRect.height() - 2 * extraMargin;
-
-    painter->eraseRect( cellRect );
 
     if ( w > 0 )
     {
@@ -195,13 +203,11 @@ void PercentBarDelegate::paintPercentBar( float		 percent,
 	pen.setWidth( 0 );
 	painter->setPen( pen );
 	painter->setBrush( Qt::NoBrush );
-	const int fillWidth = ( w - 2 * penWidth ) * percent / 100;
 
-
-	// Fill bar background.
+	// Fill bar background
 	painter->fillRect( x + penWidth, y + penWidth,
 			   w - 2 * penWidth + 1, h - 2 * penWidth + 1,
-			   barBackground );
+			   _barBackground );
 	/*
 	 * Notice: The Xlib XDrawRectangle() function always fills one
 	 * pixel less than specified. Although this is very likely just a
@@ -210,14 +216,14 @@ void PercentBarDelegate::paintPercentBar( float		 percent,
 	 * inherited that bug (although the Qt doc stays silent about
 	 * it). So it is really necessary to compensate for that missing
 	 * pixel in each dimension.
-	 *
-	 * If you don't believe it, see for yourself.
-	 * Hint: Try the xmag program to zoom into the drawn pixels.
 	 **/
 
-	// Fill the desired percentage.
+	// Fill the percentage
+	const int fillWidth = ( w - 2 * penWidth ) * percent / 100;
+	const int colorIndex = depth + _startColorIndex;
+	const QColor fillColor = _fillColors.at( colorIndex % _fillColors.size() );
 	painter->fillRect( x + penWidth, y + penWidth,
-			   fillWidth+1, h - 2 * penWidth+1,
+			   fillWidth + 1, h - 2 * penWidth + 1,
 			   fillColor );
 
 	// Draw 3D shadows.
@@ -228,12 +234,12 @@ void PercentBarDelegate::paintPercentBar( float		 percent,
 	painter->drawLine( x, y, x+w, y );
 	painter->drawLine( x, y, x, y+h );
 
-	pen.setColor( contrastingColor( barBackground.darker(), background ) );
+	pen.setColor( contrastingColor( _barBackground.darker(), background ) );
 	painter->setPen( pen );
 	painter->drawLine( x+1, y+1, x+w-1, y+1 );
 	painter->drawLine( x+1, y+1, x+1, y+h-1 );
 
-	pen.setColor( contrastingColor( barBackground.lighter(), background ) );
+	pen.setColor( contrastingColor( _barBackground.lighter(), background ) );
 	painter->setPen( pen );
 	painter->drawLine( x+1, y+h, x+w, y+h );
 	painter->drawLine( x+w, y, x+w, y+h );

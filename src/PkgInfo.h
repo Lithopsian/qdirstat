@@ -30,25 +30,6 @@ namespace QDirStat
         /**
          * Constructors
          **/
-        PkgInfo( DirTree          * tree,
-                 DirInfo          * parent,
-                 const QString    & name,
-                 const QString    & version,
-                 const QString    & arch,
-                 const PkgManager * pkgManager ):
-            DirInfo( parent,
-                     tree,
-                     name,
-                     0,   // mode
-                     0,   // size
-                     0 ), // mtime
-            _baseName( name ),
-            _version( version ),
-            _arch( arch ),
-            _pkgManager( pkgManager ),
-            _multiVersion( false ),
-            _multiArch( false )
-        {}
 
         PkgInfo( const QString    & name,
                  const QString    & version,
@@ -176,6 +157,31 @@ namespace QDirStat
                            const QStringList & pathComponents );
 
     protected:
+
+        /**
+         * Private constructor, the public ones delegate to this.  Note that the
+         * relevant DirInfo constructor is critical, it does not create a DotEntry
+         * because PkgInfo objects do not have DotEntry direct children.
+         **/
+        PkgInfo( DirTree          * tree,
+                 DirInfo          * parent,
+                 const QString    & name,
+                 const QString    & version,
+                 const QString    & arch,
+                 const PkgManager * pkgManager ):
+            DirInfo( parent,
+                     tree,
+                     name ),
+//                     0,   // mode
+//                     0,   // size
+//                     0 ), // mtime
+            _baseName( name ),
+            _version( version ),
+            _arch( arch ),
+            _pkgManager( pkgManager ),
+            _multiVersion( false ),
+            _multiArch( false )
+        {}
 
         // Data members
 

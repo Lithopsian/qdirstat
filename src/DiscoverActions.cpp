@@ -23,32 +23,28 @@ using namespace QDirStat;
 
 void DiscoverActions::discoverLargestFiles()
 {
-    discoverFiles( new QDirStat::LargestFilesTreeWalker(),
-                   tr( "Largest Files in %1" ) );
+    discoverFiles( new QDirStat::LargestFilesTreeWalker(), tr( "Largest Files in %1" ) );
     _locateFilesWindow->sortByColumn( LocateListSizeCol, Qt::DescendingOrder );
 }
 
 
 void DiscoverActions::discoverNewestFiles()
 {
-    discoverFiles( new QDirStat::NewFilesTreeWalker(),
-                   tr( "Newest Files in %1" ) );
+    discoverFiles( new QDirStat::NewFilesTreeWalker(), tr( "Newest Files in %1" ) );
     _locateFilesWindow->sortByColumn( LocateListMTimeCol, Qt::DescendingOrder );
 }
 
 
 void DiscoverActions::discoverOldestFiles()
 {
-    discoverFiles( new QDirStat::OldFilesTreeWalker(),
-                   tr( "Oldest Files in %1" ) );
+    discoverFiles( new QDirStat::OldFilesTreeWalker(), tr( "Oldest Files in %1" ) );
     _locateFilesWindow->sortByColumn( LocateListMTimeCol, Qt::AscendingOrder );
 }
 
 
 void DiscoverActions::discoverHardLinkedFiles()
 {
-    discoverFiles( new QDirStat::HardLinkedFilesTreeWalker(),
-                   tr( "Files with Multiple Hard Links in %1" ) );
+    discoverFiles( new QDirStat::HardLinkedFilesTreeWalker(), tr( "Files with Multiple Hard Links in %1" ) );
     _locateFilesWindow->sortByColumn( LocateListPathCol, Qt::AscendingOrder );
 }
 
@@ -56,16 +52,14 @@ void DiscoverActions::discoverHardLinkedFiles()
 void DiscoverActions::discoverBrokenSymLinks()
 {
     BusyPopup msg( tr( "Checking symlinks..." ), app()->findMainWindow() );
-    discoverFiles( new QDirStat::BrokenSymLinksTreeWalker(),
-                   tr( "Broken Symbolic Links in %1" ) );
+    discoverFiles( new QDirStat::BrokenSymLinksTreeWalker(), tr( "Broken Symbolic Links in %1" ) );
     _locateFilesWindow->sortByColumn( LocateListPathCol, Qt::AscendingOrder );
 }
 
 
 void DiscoverActions::discoverSparseFiles()
 {
-    discoverFiles( new QDirStat::SparseFilesTreeWalker(),
-                   tr( "Sparse Files in %1" ) );
+    discoverFiles( new QDirStat::SparseFilesTreeWalker(), tr( "Sparse Files in %1" ) );
     _locateFilesWindow->sortByColumn( LocateListSizeCol, Qt::DescendingOrder );
 }
 
@@ -73,7 +67,6 @@ void DiscoverActions::discoverSparseFiles()
 void DiscoverActions::discoverFilesFromYear( const QString & path, short year )
 {
     const QString headingText = tr( "Files from %1 in %2" ).arg( year ).arg( "%1");
-
     discoverFiles( new QDirStat::FilesFromYearTreeWalker( year ), headingText, path );
     _locateFilesWindow->sortByColumn( LocateListMTimeCol, Qt::DescendingOrder );
 }
@@ -82,7 +75,6 @@ void DiscoverActions::discoverFilesFromYear( const QString & path, short year )
 void DiscoverActions::discoverFilesFromMonth( const QString & path, short year, short month )
 {
     const QString headingText = tr( "Files from %1/%2 in %3" ).arg( month ).arg( year).arg( "%1");
-
     discoverFiles( new QDirStat::FilesFromMonthTreeWalker( year, month ), headingText, path );
     _locateFilesWindow->sortByColumn( LocateListMTimeCol, Qt::DescendingOrder );
 }
@@ -138,7 +130,6 @@ void DiscoverActions::findFiles( const FileSearchFilter & filter )
     if ( sel )
     {
         const QString headingText = tr( "Search Results for \"%1\"" ).arg( filter.pattern() );
-
         _locateFilesWindow->setHeading( headingText );
         _locateFilesWindow->populate( sel );
         _locateFilesWindow->show();

@@ -32,8 +32,10 @@ namespace QDirStat
      **/
     QString formatSize( FileSize size );
 
-    // Can't use a default argument when using this as a function pointer,
-    // so we really need the above overloaded version.
+    /**
+     * Can't use a default argument when using this as a function pointer,
+     * so we really need the above overloaded version.
+     **/
     QString formatSize( FileSize size, int precision );
 
     /**

@@ -18,9 +18,7 @@ using namespace QDirStat;
 
 QString PkgInfo::url() const
 {
-    const QString name = isPkgUrl( _name ) ? "" : _name;
-
-    return QString( "Pkg:/%1" ).arg( name );
+    return isPkgUrl( _name ) ? "Pkg:/" + _name : "Pkg:/";
 }
 
 

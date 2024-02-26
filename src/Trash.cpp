@@ -21,37 +21,7 @@
 #include "Exception.h"
 
 
-Trash * Trash::instance()
-{
-    static Trash _instance;
-    return &_instance;
-}
-
-
-Trash::Trash():
-    _homeTrashDir(0)
-{
-    _homeDevice = device( QDir::homePath() );
-
-    const QByteArray xdg_data_home = qgetenv( "XDG_DATA_HOME" );
-
-    const QString homeTrash =
-	xdg_data_home.isEmpty() ? QDir::homePath() + "/.local/share" : QString::fromUtf8( xdg_data_home );
-
-    _homeTrashDir = new TrashDir( homeTrash + "/Trash", _homeDevice );
-    CHECK_NEW( _homeTrashDir );
-
-    _trashDirs[ _homeDevice ] = _homeTrashDir;
-}
-
-
-Trash::~Trash()
-{
-    // NOP
-}
-
-
-dev_t Trash::device( const QString & path )
+static dev_t device( const QString & path )
 {
     dev_t dev = 0;
     struct stat statBuf;
@@ -70,7 +40,7 @@ dev_t Trash::device( const QString & path )
 }
 
 
-QString Trash::toplevel( const QString & rawPath )
+static QString toplevel( const QString & rawPath )
 {
     const dev_t dev = device( rawPath );
     const QFileInfo fileInfo( rawPath );
@@ -94,6 +64,30 @@ QString Trash::toplevel( const QString & rawPath )
 }
 
 
+Trash * Trash::instance()
+{
+    static Trash _instance;
+    return &_instance;
+}
+
+
+Trash::Trash():
+    _homeTrashDir { 0 }
+{
+    const dev_t homeDevice = device( QDir::homePath() );
+
+    const QByteArray xdg_data_home = qgetenv( "XDG_DATA_HOME" );
+
+    const QString homeTrash =
+	xdg_data_home.isEmpty() ? QDir::homePath() + "/.local/share" : QString::fromUtf8( xdg_data_home );
+
+    _homeTrashDir = new TrashDir( homeTrash + "/Trash", homeDevice );
+    CHECK_NEW( _homeTrashDir );
+
+    _trashDirs[ homeDevice ] = _homeTrashDir;
+}
+
+
 TrashDir * Trash::trashDir( const QString & path )
 {
     const dev_t dev = device( path );
@@ -106,7 +100,6 @@ TrashDir * Trash::trashDir( const QString & path )
     try
     {
 	// Check if there is $TOPDIR/.Trash
-
 	QString trashPath = topDir + "/.Trash";
 
 	struct stat statBuf;
@@ -115,7 +108,6 @@ TrashDir * Trash::trashDir( const QString & path )
 	if ( result < 0 && errno == ENOENT ) // No such file or directory
 	{
 	    // No $TOPDIR/.Trash: Use $TOPDIR/.Trash-$UID
-
 	    logInfo() << "No " << trashPath << Qt::endl;
 	    trashPath = topDir + QString( "/.Trash-%1" ).arg( getuid() );
 	    logInfo() << "Using " << trashPath << Qt::endl;
@@ -123,7 +115,6 @@ TrashDir * Trash::trashDir( const QString & path )
 	else if ( result < 0 )
 	{
 	    // stat() failed for some other reason (not "no such file or directory")
-
 	    THROW( FileException( trashPath, "stat() failed for " + trashPath
 				  + ": " + formatErrno() ) );
 	}
@@ -131,11 +122,9 @@ TrashDir * Trash::trashDir( const QString & path )
 	{
 	    const mode_t mode = statBuf.st_mode;
 
-	    if ( S_ISDIR( mode ) &&
-		 ( mode & S_ISVTX	) ) // Check sticky bit
+	    if ( S_ISDIR( mode ) && ( mode & S_ISVTX	) ) // Check sticky bit
 	    {
 		// Use $TOPDIR/.Trash/$UID
-
 		trashPath += QString( "/%1" ).arg( getuid() );
 		logInfo() << "Using " << trashPath << Qt::endl;
 	    }
@@ -157,8 +146,7 @@ TrashDir * Trash::trashDir( const QString & path )
     catch ( const FileException &ex )
     {
 	CAUGHT( ex );
-	logWarning() << "Falling back to home trash dir: "
-		     << _homeTrashDir->path() << Qt::endl;
+	logWarning() << "Falling back to home trash dir: " << _homeTrashDir->path() << Qt::endl;
 
 	return _homeTrashDir;
     }
@@ -191,7 +179,7 @@ bool Trash::trash( const QString & path )
     return true;
 }
 
-
+/*
 bool Trash::restore( const QString & path )
 {
     Q_UNUSED( path )
@@ -210,14 +198,14 @@ void Trash::empty()
     // TO DO
     // TO DO
 }
-
+*/
 
 
 
 
 TrashDir::TrashDir( const QString & path, dev_t device ):
-    _path( path ),
-    _device( device )
+    _path { path },
+    _device { device }
 {
     // logDebug() << "Created TrashDir " << path << Qt::endl;
 

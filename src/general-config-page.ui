@@ -2,18 +2,7 @@
 <ui version="4.0">
  <class>GeneralConfigPage</class>
  <widget class="QWidget" name="GeneralConfigPage">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>433</width>
-    <height>524</height>
-   </rect>
-  </property>
-  <property name="styleSheet">
-   <string notr="true"/>
-  </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
    <property name="leftMargin">
     <number>24</number>
    </property>
@@ -251,12 +240,6 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>13</width>
-         <height>173</height>
-        </size>
-       </property>
       </spacer>
      </item>
     </layout>
@@ -265,12 +248,6 @@
     <spacer name="horizontalSpacer_3">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>90</width>
-       <height>13</height>
-      </size>
      </property>
     </spacer>
    </item>

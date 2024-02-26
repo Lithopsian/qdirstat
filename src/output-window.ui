@@ -157,34 +157,25 @@ p, li { white-space: pre-wrap; }
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QToolButton" name="zoomInButton">
-       <property name="text">
-        <string>...</string>
-       </property>
        <property name="icon">
         <iconset resource="icons.qrc">
-         <normaloff>:/icons/zoom-in.png</normaloff>:/icons/zoom-in.png</iconset>
+         <normaloff>:/icons/magnifier-zoom-in.png</normaloff>:/icons/magnifier-zoom-in.png</iconset>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QToolButton" name="zoomOutButton">
-       <property name="text">
-        <string>...</string>
-       </property>
        <property name="icon">
         <iconset resource="icons.qrc">
-         <normaloff>:/icons/zoom-out.png</normaloff>:/icons/zoom-out.png</iconset>
+         <normaloff>:/icons/magnifier-zoom-out.png</normaloff>:/icons/magnifier-zoom-out.png</iconset>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QToolButton" name="resetZoomButton">
-       <property name="text">
-        <string>...</string>
-       </property>
        <property name="icon">
         <iconset resource="icons.qrc">
-         <normaloff>:/icons/zoom-best-fit.png</normaloff>:/icons/zoom-best-fit.png</iconset>
+         <normaloff>:/icons/magnifier-zoom-actual-equal.png</normaloff>:/icons/magnifier-zoom-actual-equal.png</iconset>
        </property>
       </widget>
      </item>
@@ -192,6 +183,12 @@ p, li { white-space: pre-wrap; }
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
       </spacer>
      </item>
@@ -206,6 +203,12 @@ p, li { white-space: pre-wrap; }
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
       </spacer>
      </item>
@@ -231,7 +234,7 @@ p, li { white-space: pre-wrap; }
   </layout>
   <action name="actionZoomIn">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset>
      <normaloff>:/icons/zoom-in.png</normaloff>:/icons/zoom-in.png</iconset>
    </property>
    <property name="text">
@@ -246,7 +249,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionZoomOut">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset>
      <normaloff>:/icons/zoom-out.png</normaloff>:/icons/zoom-out.png</iconset>
    </property>
    <property name="text">
@@ -261,7 +264,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionResetZoom">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset>
      <normaloff>:/icons/zoom-best-fit.png</normaloff>:/icons/zoom-best-fit.png</iconset>
    </property>
    <property name="text">

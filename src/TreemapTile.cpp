@@ -483,10 +483,10 @@ void TreemapTile::paint( QPainter            * painter,
 {
     CHECK_MAGIC( _orig );
 
-    if ( _firstTile )
+//    if ( _firstTile )
     {
 //        logDebug() << Qt::endl;
-        _parentView->rootTile()->_stopwatch.start();
+//        _parentView->rootTile()->_stopwatch.start();
     }
 
     // Don't paint tiles with children, the children will cover the parent, but double-check
@@ -564,8 +564,8 @@ void TreemapTile::paint( QPainter            * painter,
         painter->drawRect( selectionRect );
     }
 
-    if (_lastTile)
-        logDebug() << _parentView->rootTile()->_stopwatch.restart() << "ms" << Qt::endl;
+//    if (_lastTile)
+//        logDebug() << _parentView->rootTile()->_stopwatch.restart() << "ms" << Qt::endl;
 }
 
 void TreemapTile::drawOutline( QPainter * painter, const QRectF & rect, const QColor & color, int penScale )
@@ -703,7 +703,7 @@ const CushionHeightSequence * TreemapTile::calculateCushionHeights( double cushi
     // Start with the configured cushion height, times 4 from the coefficients
     double height = 4.0 * cushionHeight;
 
-    // Ten or so levels is plenty, hardly any change after that
+    // Fill the sequence with heights calculated from the configured scale factor
     for ( auto it = heights.begin(); it != heights.end(); ++it, height *= scaleFactor )
         *it = height;
 
@@ -916,7 +916,7 @@ void TreemapTile::contextMenuEvent( QGraphicsSceneContextMenuEvent * event )
     const QStringList actions1 = { "actionGoUp",
                                    "actionGoToToplevel",
                                    "---",
-                                   "actionCopyPathToClipboard",
+                                   "actionCopyPath",
                                    "actionMoveToTrash",
                                    "---"
                                  };

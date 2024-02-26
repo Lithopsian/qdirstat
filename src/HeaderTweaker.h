@@ -46,21 +46,26 @@ namespace QDirStat
 	virtual ~HeaderTweaker();
 
 	/**
-	 * Order the columns according to 'colOrderList'.
-	 **/
-	void setColumnOrder( const DataColumnList & colOrderList);
-
-	/**
 	 * Resize a header view to contents.
 	 **/
 	static void resizeToContents( QHeaderView * header );
 
-    public slots:
+	/**
+	 * Switch the layout to the one with the specified name.
+	 **/
+	void changeLayout( const QString & name );
+
+    protected slots:
+
+	/**
+	 * Set auto size mode for all columns on.
+	 **/
+	void setAllColumnsAutoSize();
 
 	/**
 	 * Set auto size mode for all columns on or off.
 	 **/
-	void setAllColumnsAutoSize( bool autoSize = true );
+	void setAllColumnsAutoSize( bool autoSize );
 
 	/**
 	 * Set interactive size mode (i.e. auto size mode off) for all columns.
@@ -76,24 +81,6 @@ namespace QDirStat
 	 * Reset all columns to defaults: Column order, visibility, auto size.
 	 **/
 	void resetToDefaults();
-
-	/**
-	 * Read parameters from the settings file.
-	 **/
-	void readSettings();
-
-	/**
-	 * Write parameters to the settings file.
-	 **/
-	void writeSettings();
-
-	/**
-	 * Switch the layout to the one with the specified name.
-	 **/
-	void changeLayout( const QString & name );
-
-
-    protected slots:
 
 	/**
 	 * Initialize the header view. This makes sense only when it has
@@ -123,24 +110,24 @@ namespace QDirStat
 	 **/
 	void autoSizeCurrentCol();
 
-	/**
-	 * Read the settings for a layout.
-	 **/
-	void readLayoutSettings( ColumnLayout * layout );
-
-	/**
-	 * Write the settings for a layout.
-	 **/
-	void writeLayoutSettings( ColumnLayout * layout );
-
 
     protected:
+
+	/**
+	 * Create one action and connect to the given slot.
+	 **/
+	QAction * createAction( const QString & title, void( HeaderTweaker::*slot )( void ) );
 
 	/**
 	 * Create internally used actions and connect them to the appropriate
 	 * slots.
 	 **/
 	void createActions();
+
+	/**
+	 * Create one column layout.
+	 **/
+	void createColumnLayout( const QString & layoutName );
 
 	/**
 	 * Create the column layouts.
@@ -174,6 +161,11 @@ namespace QDirStat
 	void fixupLayout( ColumnLayout * layout );
 
 	/**
+	 * Order the columns according to 'colOrderList'.
+	 **/
+	void setColumnOrder( const DataColumnList & colOrderList);
+
+	/**
 	 * Show the columns that are in 'columns'.
 	 **/
 	void setColumnVisibility( const DataColumnList & columns );
@@ -186,7 +178,7 @@ namespace QDirStat
 	/**
 	 * Return 'true' if logical section no. 'section' has auto resize mode.
 	 **/
-	bool autoSizeCol( int section ) const;
+	bool autoSizeCol( int section ) const { return resizeMode( section ) == QHeaderView::ResizeToContents; }
 
 	/**
 	 * Add any columns that are missing from the default columns to
@@ -197,13 +189,32 @@ namespace QDirStat
 	/**
 	 * Return the resize mode for the specified section.
 	 **/
-	QHeaderView::ResizeMode resizeMode( int section ) const;
+	QHeaderView::ResizeMode resizeMode( int section ) const { return _header->sectionResizeMode( section ); }
 
 	/**
 	 * Set the resize mode for the specified section.
 	 **/
 	void setResizeMode( int section, QHeaderView::ResizeMode resizeMode );
 
+	/**
+	 * Read parameters from the settings file.
+	 **/
+	void readSettings();
+
+	/**
+	 * Write parameters to the settings file.
+	 **/
+	void writeSettings();
+
+	/**
+	 * Read the settings for a layout.
+	 **/
+	void readLayoutSettings( ColumnLayout * layout );
+
+	/**
+	 * Write the settings for a layout.
+	 **/
+	void writeLayoutSettings( ColumnLayout * layout );
 
 	//
 	// Data members
@@ -236,7 +247,16 @@ namespace QDirStat
 
 	QString	       name;
 	DataColumnList columns;
-	DataColumnList defaultColumns;
+
+	/**
+	 * Return the default column list for this layout.
+	 **/
+	DataColumnList defaultColumns() const { return defaultColumns( name ); }
+
+	/**
+	 * Return the default column list for a layout.
+	 **/
+	static DataColumnList defaultColumns( const QString & layoutName );
 
     };	// class ColumnLayout
 

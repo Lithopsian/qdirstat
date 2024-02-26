@@ -10,22 +10,27 @@
 #ifndef ActionManager_h
 #define ActionManager_h
 
+
 #include <QAction>
 #include <QList>
 #include <QPointer>
 
-/**
- * Container class for QActions that are defined in a Qt Designer .ui file, but
- * that are also needed in context menus e.g. in context menus of views.
- *
- * This is a singleton class that is populated by the class that builds the
- * widget tree from the .ui file by simpling passing the toplevel widget of
- * that tree to this class; the ActionManager uses Qt's introspection to find
- * the matching QActions.
- **/
+
 namespace QDirStat
 {
+    class FileInfo;
+    class FileInfoSet;
+    class TreemapView;
 
+    /**
+     * Container class for QActions that are defined in a Qt Designer .ui file, but
+     * that are also needed in context menus e.g. in context menus of views.
+     *
+     * This is a singleton class that is populated by the class that builds the
+     * widget tree from the .ui file by simpling passing the toplevel widget of
+     * that tree to this class; the ActionManager uses Qt's introspection to find
+     * the matching QActions.
+     **/
     class ActionManager
     {
     public:
@@ -44,27 +49,23 @@ namespace QDirStat
 	void addWidgetTree( QObject * tree );
 
 	/**
-	 * Add all the actions in 'actionNames' to a menu. Return 'true' if
-	 * success, 'false' if any of the actions were not found.
-	 *
-	 * If 'enabledOnly' is 'true', only those actions that are currently
-	 * enabled are added.
-	 *
-	 * If an action name in actionNames starts with "---", a separator is
-	 * added to the menu instead of an action.
-	 *
-	 * Notice that this class already logs an error for action names that
-	 * were not found.
+	 * Add all the actions listed in 'actionNames' to a widget.
 	 **/
-	bool addActions( QWidget * widget,
-			 const QStringList & actionNames,
-			 bool                enabledOnly = false);
+	bool addActions( QWidget * widget, const QStringList & actionNames )
+		{ return addActions( widget, actionNames, false ); }
 
 	/**
 	 * Add only the enabled actions in 'actionNames' to a widget.
 	 **/
 	bool addEnabledActions( QWidget * widget, const QStringList & actionNames )
 		{ return addActions( widget, actionNames, true ); }
+
+	/**
+	 * Replace one action by another, for example in a toolbar.
+	 **/
+	static void swapActions( QWidget * widget,
+				 QAction * actionToRemove,
+				 QAction * actionToAdd );
 
 
     protected:
@@ -80,6 +81,23 @@ namespace QDirStat
 	 * object name 'actionName'. Return 0 if there is no such QAction.
 	 **/
 	QAction * action( const QString & actionName ) const;
+
+	/**
+	 * Add all the actions in 'actionNames' to a menu. Return 'true' if
+	 * success, 'false' if any of the actions were not found.
+	 *
+	 * If 'enabledOnly' is 'true', only those actions that are currently
+	 * enabled are added.
+	 *
+	 * If an action name in actionNames starts with "---", a separator is
+	 * added to the menu instead of an action.
+	 *
+	 * Notice that this class already logs an error for action names that
+	 * were not found.
+	 **/
+	bool addActions( QWidget * widget,
+			 const QStringList & actionNames,
+			 bool                enabledOnly);
 
 
 	//

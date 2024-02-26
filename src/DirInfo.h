@@ -54,7 +54,8 @@ namespace QDirStat
 
 	/**
 	 * This constructor does not initially create a dot entry.  If that
-	 * is desired, you can always use ensureDotEntry() later.
+	 * is desired, you can always use ensureDotEntry() later.  This is
+	 * used by PkgInfo which does not have DotEntry children.
 	 **/
 	DirInfo( DirInfo	* parent,
 	         DirTree	* tree,
@@ -561,14 +562,14 @@ namespace QDirStat
 	 **/
 	void recalc();
 
-        /**
-         * Return 'true' if this child is a dominant one among its siblings,
-         * i.e. if its total size is much larger than the other items on the
-         * same level.
-         *
-         * This may trigger some calculations that may be cached.
-         **/
-        bool isDominantChild( FileInfo * child );
+	/**
+	 * Return 'true' if this child is a dominant one among its siblings,
+	 * i.e. if its total size is much larger than the other items on the
+	 * same level.
+	 *
+	 * This may trigger some calculations that may be cached.
+	 **/
+	bool isDominantChild( FileInfo * child );
 
 
     protected:

@@ -23,7 +23,7 @@
 class QCloseEvent;
 class QMouseEvent;
 class QSignalMapper;
-class TreeLayout;
+//class TreeLayout;
 class SysCallFailedException;
 class QMenu;
 
@@ -262,6 +262,7 @@ protected slots:
      **/
     void readingAborted();
 
+void layoutChanged( const QList<QPersistentModelIndex> &, QAbstractItemModel::LayoutChangeHint );
     /**
      * Change display mode to "busy" (while reading a directory tree):
      * Sort tree view by read jobs, hide treemap view.
@@ -469,10 +470,15 @@ protected:
     void mapTreeExpandAction( QAction * action, int level );
 
     /**
-     * Return the name string (eg. "L2") of the current layout.
+     * Map actions to action names (eg. "L3").
      **/
-    QString currentLayoutName() const
-	{ return _currentLayout ? _layouts.key( _currentLayout ) : ""; }
+    QString layoutName( const QAction * action ) const;
+    QAction * layoutAction( const QString & layoutName ) const;
+
+    /**
+     * Return the action or name string (eg. "L2") of the current layout.
+     **/
+    QString currentLayoutName() const;
 
     /**
      * Change the main window layout.
@@ -482,32 +488,33 @@ protected:
     /**
      * Create the different top layouts.
      **/
-    void initLayouts();
+    void initLayouts( const QString & currentLayoutName );
 
     /**
      * Create one layout action.
      **/
-    void initLayout( const QString & layoutName, QAction * action );
+    void initLayout( const QString & layoutName, const QString & currentLayoutName );
 
     /**
-     * Save the current settings in 'layout'.
+     * Save whether the details panel is visible to the current layout action.
      **/
-    void saveLayout( TreeLayout * layout );
+    void saveLayout( bool detailsPaneVisible );
 
     /**
      * Apply a layout to the current settings.
      **/
-    void applyLayout( const TreeLayout * layout );
+    void applyLayout( const QAction * action );
 
     /**
      * Read settings for one layout.
      **/
-    void readLayoutSettings( TreeLayout * layout );
+    void readLayoutSetting( const QString & layoutName );
 
     /**
-     * Write settings for one layout.
+     * Write layout settings.
      **/
-    void writeLayoutSettings( const TreeLayout * layout );
+    void writeLayoutSetting( const QAction * action );
+    void writeLayoutSettings();
 
     /**
      * Apply the future selection: Select the URL that was stored in
@@ -555,6 +562,12 @@ protected:
     void showOpenDirErrorPopup( const SysCallFailedException & ex );
 
     /**
+     * Detect theme changes.  Currently only the file details panel needs to
+     * react to this, so just call it directly.
+     **/
+    virtual void changeEvent( QEvent * event ) Q_DECL_OVERRIDE;
+
+    /**
      * Handle mouse buttons: Activate history actions actionGoBack and
      * actionGoForward with the "back" and "forward" mouse buttons as well.
      **/
@@ -579,11 +592,13 @@ private:
     int				   _statusBarTimeout; // millisec
     int				   _longStatusBarTimeout; // millisec
     QSignalMapper		 * _treeLevelMapper;
-    TreeLayout			 * _currentLayout;
-    QMap<QString, TreeLayout *>	   _layouts;
+//    TreeLayout			 * _currentLayout;
+//    QMap<QString, TreeLayout *>	   _layouts;
     QTimer			   _updateTimer;
-    QTimer                         _treeExpandTimer;
+//    QTimer                         _treeExpandTimer;
     QDirStat::Subtree              _futureSelection;
+    int				   _sortCol;
+    Qt::SortOrder		   _sortOrder;
 
 }; // class MainWindow
 
@@ -596,7 +611,7 @@ private:
  *
  * Notice that the column layouts are handled in the HeaderTweaker and its
  * ColumnLayout helper class; see also HeaderTweaker.h and HeaderTweaker.cpp.
- **/
+
 class TreeLayout
 {
 public:
@@ -609,5 +624,5 @@ public:
     bool    _showDetailsPanel;
 
 }; // class TreeLayout
-
+**/
 #endif // MainWindow_H

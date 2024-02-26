@@ -37,7 +37,7 @@ FileSizeStatsWindow::FileSizeStatsWindow( QWidget * parent ):
     _subtree { 0 },
     _stats { new FileSizeStats() }
 {
-    logDebug() << "init" << Qt::endl;
+    //logDebug() << "init" << Qt::endl;
 
     CHECK_NEW( _stats );
     CHECK_NEW( _ui );
@@ -45,17 +45,6 @@ FileSizeStatsWindow::FileSizeStatsWindow( QWidget * parent ):
     _ui->setupUi( this );
     initWidgets();
     readWindowSettings( this, "FileSizeStatsWindow" );
-
-    _bucketsTableModel = new BucketsTableModel( this, _ui->histogramView );
-    CHECK_NEW( _bucketsTableModel );
-    _ui->bucketsTable->setModel( _bucketsTableModel );
-
-    QList<QCommandLinkButton *> helpButtons = _ui->helpPage->findChildren<QCommandLinkButton *>();
-    foreach ( const QCommandLinkButton * helpButton, helpButtons )
-    {
-	connect( helpButton, &QAbstractButton::clicked,
-		 this,	     &FileSizeStatsWindow::showHelp );
-    }
 }
 
 
@@ -95,6 +84,17 @@ void FileSizeStatsWindow::initWidgets()
 //    font.setBold( true );
 //    _ui->heading->setFont( font );
 
+    _bucketsTableModel = new BucketsTableModel( this, _ui->histogramView );
+    CHECK_NEW( _bucketsTableModel );
+    _ui->bucketsTable->setModel( _bucketsTableModel );
+
+    QList<QCommandLinkButton *> helpButtons = _ui->helpPage->findChildren<QCommandLinkButton *>();
+    foreach ( const QCommandLinkButton * helpButton, helpButtons )
+    {
+	connect( helpButton, &QAbstractButton::clicked,
+		 this,	     &FileSizeStatsWindow::showHelp );
+    }
+
     _ui->optionsPanel->hide();
 
     connect( _ui->percentileFilterCheckBox, SIGNAL( stateChanged( int ) ),
@@ -117,6 +117,7 @@ void FileSizeStatsWindow::initWidgets()
 
     connect( _ui->endPercentileSpinBox,	  SIGNAL( valueChanged( int ) ),
 	     this,			  SLOT	( applyOptions()      ) );
+
 }
 
 
@@ -177,9 +178,7 @@ void FileSizeStatsWindow::populate( FileInfo * subtree, const QString & suffix )
 void FileSizeStatsWindow::fillPercentileTable()
 {
     int step = _ui->percentileFilterCheckBox->isChecked() ? 1 : 5;
-    fillQuantileTable( _ui->percentileTable, 100, "P",
-		       _stats->percentileSums(),
-		       step, 2 );
+    fillQuantileTable( _ui->percentileTable, 100, "P", _stats->percentileSums(), step, 2 );
 }
 
 
@@ -223,78 +222,70 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
     table->setColumnCount( sums.isEmpty() ? 3 : 5 );
     table->setRowCount( order + 1 );
 
-    QStringList header;
+    QStringList headers;
 
     switch ( order )
     {
-	case 100:	header << tr( "Percentile" ); break;
-	case  10:	header << tr( "Decile"	   ); break;
-	case   4:	header << tr( "Quartile"   ); break;
-	default:	header << tr( "%1-Quantile" ).arg( order ); break;
+	case 100:	headers << tr( " Percentile " ); break;
+	case  10:	headers << tr( " Decile "     ); break;
+	case   4:	headers << tr( " Quartile "   ); break;
+	default:	headers << tr( " %1-Quantile " ).arg( order ); break;
     }
 
-    header << tr( "Value" ) << tr( "Name" );
+    headers << tr( " Value " ) << tr( " Name " );
 
     if ( ! sums.isEmpty() )
     {
-	header << tr( "Sum %1(n-1)..%2(n)" ).arg( namePrefix ).arg( namePrefix );
-	header << tr( "Cumulative Sum" );
+	headers << tr( " Sum %1(n-1)..%2(n) " ).arg( namePrefix ).arg( namePrefix );
+	headers << tr( " Cumulative Sum " );
     }
 
-    for ( int col = 0; col < header.size(); ++col )
-    {
-	QString text = " " + header[ col ] + " ";
-	table->setHorizontalHeaderItem( col, new QTableWidgetItem( text ) );
-    }
+//    for ( const QString & header : headers )
+	table->setHorizontalHeaderLabels( headers );
+//    }
 
-    int median	   = order / 2;
-    int quartile_1 = -1;
-    int quartile_3 = -1;
-
-    if ( order % 4 == 0 )
-    {
-	quartile_1 = order / 4;
-	quartile_3 = quartile_1 * 3;
-    }
+    const int median = order / 2;
+    const int quartile_1 = order % 4 == 0 ? order / 4      : -1;
+    const int quartile_3 = order % 4 == 0 ? quartile_1 * 3 : -1;
 
     int row = 0;
 
     for ( int i=0; i <= order; ++i )
     {
-	if ( step > 1 &&
-	     i > extremesMargin && i < order - extremesMargin &&
-	     i % step != 0 )
-	{
+	if ( step > 1 && i > extremesMargin && i < order - extremesMargin && i % step != 0 )
 	    continue;
-	}
 
 	addItem( table, row, NumberCol, namePrefix + QString::number( i ) );
 	addItem( table, row, ValueCol, formatSize( _stats->quantile( order, i ) ) );
 
-    if ( i > 0 && i < sums.size() )
-    {
-	addItem( table, row, SumCol, formatSize( sums.individual().at( i ) ) );
-	addItem( table, row, CumulativeSumCol, formatSize( sums.cumulative().at( i ) ) );
-    }
-
-	if ( i == 0 || i == median || i == order || i == quartile_1 || i == quartile_3 )
+	if ( i > 0 && i < sums.size() )
 	{
-	    QString text;
+	    addItem( table, row, SumCol, formatSize( sums.individual().at( i ) ) );
+	    addItem( table, row, CumulativeSumCol, formatSize( sums.cumulative().at( i ) ) );
+	}
 
-	    if	    ( i == 0 )		text = tr( "Min" );
-	    else if ( i == order  )	text = tr( "Max" );
-	    else if ( i == median )	text = tr( "Median" );
-	    else if ( i == quartile_1 ) text = tr( "1. Quartile" );
-	    else if ( i == quartile_3 ) text = tr( "3. Quartile" );
+	QString text;
+	if 	( i == 0 )		text = tr( "Min" );
+	else if ( i == order  )		text = tr( "Max" );
+	else if ( i == median )		text = tr( "Median" );
+	else if ( i == quartile_1 )	text = tr( "1. Quartile" );
+	else if ( i == quartile_3 )	text = tr( "3. Quartile" );
 
+	if ( !text.isEmpty() )
+	{
 	    addItem( table, row, NameCol, text );
 	    setRowBold( table, row );
-	    setRowForeground( table, row, QBrush( QColor( Qt::blue ) ) );
+//	    setRowForeground( table, row, QBrush( QColor( Qt::blue ) ) ); // very bad in dark themes
 	}
 	else if ( order > 20 && i % 10 == 0 && step <= 1 )
 	{
 	    addItem( table, row, NameCol, "" ); // Fill the empty cell
-	    setRowBackground( table, row, QBrush( QColor( 0xE0, 0xE0, 0xF0 ), Qt::SolidPattern ) );
+
+	    // Derive a color with some contrast in light or dark themes.
+	    QColor base = table->palette().color( QPalette::Base );
+	    const int lightness = base.lightness();
+	    base.setHsl( base.hue(), base.saturation(), lightness > 128 ? lightness - 64 : lightness + 64 );
+	    setRowBackground( table, row, base );
 	}
 
 	++row;
@@ -306,17 +297,16 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
     setColAlignment( table, ValueCol,  Qt::AlignRight  | Qt::AlignVCenter );
     setColAlignment( table, NameCol,   Qt::AlignCenter | Qt::AlignVCenter );
     setColAlignment( table, SumCol,    Qt::AlignRight  | Qt::AlignVCenter );
-    setColAlignment( table, CumulativeSumCol,	 Qt::AlignRight	 | Qt::AlignVCenter );
+    setColAlignment( table, CumulativeSumCol, Qt::AlignRight | Qt::AlignVCenter );
 
     HeaderTweaker::resizeToContents( table->horizontalHeader() );
 }
 
 
-QTableWidgetItem *
-FileSizeStatsWindow::addItem( QTableWidget *  table,
-			      int	      row,
-			      int	      col,
-			      const QString & text )
+QTableWidgetItem * FileSizeStatsWindow::addItem( QTableWidget *	 table,
+						 int		 row,
+						 int		 col,
+						 const QString & text )
 {
     QTableWidgetItem * item = new QTableWidgetItem( text );
     CHECK_NEW( item );
@@ -331,7 +321,6 @@ void FileSizeStatsWindow::setRowBold( QTableWidget * table, int row )
     for ( int col=0; col < table->columnCount(); ++col )
     {
 	QTableWidgetItem * item = table->item( row, col );
-
 	if ( item )
 	{
 	    QFont font = item->font();
@@ -347,7 +336,6 @@ void FileSizeStatsWindow::setRowForeground( QTableWidget * table, int row, const
     for ( int col=0; col < table->columnCount(); ++col )
     {
 	QTableWidgetItem * item = table->item( row, col );
-
 	if ( item )
 	    item->setForeground( brush );
     }
@@ -359,7 +347,6 @@ void FileSizeStatsWindow::setRowBackground( QTableWidget * table, int row, const
     for ( int col=0; col < table->columnCount(); ++col )
     {
 	QTableWidgetItem * item = table->item( row, col );
-
 	if ( item )
 	    item->setBackground( brush );
     }
@@ -485,9 +472,10 @@ void FileSizeStatsWindow::updateOptions()
 
 void FileSizeStatsWindow::showHelp()
 {
-    QString topic = "Statistics.md";
-    const QObject * button = sender();
-
+//    QString topic = "Statistics.md";
+    const QWidget * button = (QWidget *)sender();
+    const QString topic = button->statusTip();
+/*
     if	    ( button == _ui->medianPercentilesHelpButton   )  topic = "Median-Percentiles.md";
     else if ( button == _ui->histogramsInGeneralHelpButton )  topic = "Histograms-in-General.md";
     else if ( button == _ui->fileSizeHistogramHelpButton   )  topic = "File-Size-Histogram.md";
@@ -495,9 +483,9 @@ void FileSizeStatsWindow::showHelp()
     else if ( button == _ui->histogramOptionsHelpButton	   )  topic = "Histogram-Options.md";
     else if ( button == _ui->percentilesTableHelpButton	   )  topic = "Percentiles-Table.md";
     else if ( button == _ui->bucketsTableHelpButton	   )  topic = "Buckets-Table.md";
-
+*/
     // logInfo() << "Help topic: " << topic << Qt::endl;
-    QString helpUrl = "https://github.com/shundhammer/qdirstat/blob/master/doc/stats/" + topic;
+    const QString helpUrl = "https://github.com/shundhammer/qdirstat/blob/master/doc/stats/" + topic;
     QString program = "/usr/bin/xdg-open";
 
     // logInfo() << "Starting  " << program << " " << helpUrl << Qt::endl;

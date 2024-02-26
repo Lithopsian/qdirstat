@@ -30,18 +30,6 @@ DotEntry::DotEntry( DirTree * tree,
 }
 
 
-DotEntry::~DotEntry()
-{
-
-}
-
-
-void DotEntry::reset()
-{
-    // NOP
-}
-
-
 void DotEntry::insertChild( FileInfo * newChild )
 {
     CHECK_PTR( newChild );
@@ -57,22 +45,10 @@ void DotEntry::insertChild( FileInfo * newChild )
 }
 
 
-void DotEntry::finalizeAll()
-{
-    // NOP
-}
-
-
 DirReadState DotEntry::readState() const
 {
     if ( _parent )
 	return _parent->readState();
     else // This should never happen
 	return _readState;
-}
-
-
-void DotEntry::cleanupDotEntries()
-{
-    // NOP
 }

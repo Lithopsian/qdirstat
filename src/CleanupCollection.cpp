@@ -20,6 +20,7 @@
 #include "SelectionModel.h"
 #include "OutputWindow.h"
 #include "Refresher.h"
+#include "Trash.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -610,3 +611,36 @@ void CleanupCollection::writeSettings( const CleanupList & newCleanups)
     readSettings();
 }
 
+
+void CleanupCollection::moveToTrash()
+{
+    const FileInfoSet selectedItems = _selectionModel->selectedItems();
+
+    // Prepare output window
+    OutputWindow * outputWindow = new OutputWindow( qApp->activeWindow() );
+    CHECK_NEW( outputWindow );
+
+    // Prepare refresher
+    const FileInfoSet refreshSet = Refresher::parents( selectedItems );
+    _selectionModel->prepareRefresh( refreshSet );
+    Refresher * refresher  = new Refresher( this, refreshSet );
+    CHECK_NEW( refresher );
+
+    connect( outputWindow, SIGNAL( lastProcessFinished( int ) ),
+	     refresher,	   SLOT	 ( refresh()		      ) );
+
+    outputWindow->showAfterTimeout();
+
+    // Move all selected items to trash
+    foreach ( const FileInfo * item, selectedItems )
+    {
+	const bool success = Trash::trash( item->path() );
+
+	if ( success )
+	    outputWindow->addStdout( tr( "Moved to trash: %1" ).arg( item->path() ) );
+	else
+	    outputWindow->addStderr( tr( "Move to trash failed for %1" ).arg( item->path() ) );
+    }
+
+    outputWindow->noMoreProcesses();
+}

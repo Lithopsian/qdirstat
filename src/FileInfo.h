@@ -339,10 +339,10 @@ namespace QDirStat
 	 **/
 	FileSize allocatedSize() const;
 
-        /**
-         * The ratio of size() / allocatedSize() in percent.
-         **/
-        int usedPercent() const;
+	/**
+	 * The ratio of size() / allocatedSize() in percent.
+	 **/
+	int usedPercent() const;
 
 	/**
 	 * The allocated size without taking multiple hard links into account.
@@ -362,13 +362,13 @@ namespace QDirStat
 	 **/
 	time_t mtime() const { return _mtime; }
 
-        /**
-         * Returns the year and month derived from the file mtime.
-         *
-         * The first call to this will calculate the value from _mtime and
-         * cache it (and the corresponding year); that's why this is not a
-         * const method.
-         **/
+	/**
+	 * Returns the year and month derived from the file mtime.
+	 *
+	 * The first call to this will calculate the value from _mtime and
+	 * cache it (and the corresponding year); that's why this is not a
+	 * const method.
+	 **/
 	 QPair<short, short> yearAndMonth();
 
 	/**

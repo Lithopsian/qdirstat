@@ -3,6 +3,14 @@
  <author>Stefan Hundhammer</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>628</width>
+    <height>510</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>QDirStat</string>
   </property>
@@ -69,6 +77,9 @@
              <property name="sortingEnabled">
               <bool>true</bool>
              </property>
+             <attribute name="headerStretchLastSection">
+              <bool>false</bool>
+             </attribute>
             </widget>
            </item>
           </layout>
@@ -113,6 +124,14 @@
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>628</width>
+     <height>21</height>
+    </rect>
+   </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
@@ -124,8 +143,8 @@
     <addaction name="actionRefreshAll"/>
     <addaction name="actionRefreshSelected"/>
     <addaction name="separator"/>
-    <addaction name="actionReadExcludedDirectory"/>
-    <addaction name="actionContinueReadingAtMountPoint"/>
+    <addaction name="actionReadExcluded"/>
+    <addaction name="actionContinueReading"/>
     <addaction name="actionStopReading"/>
     <addaction name="separator"/>
     <addaction name="actionAskWriteCache"/>
@@ -141,33 +160,21 @@
      <property name="title">
       <string>E&amp;xpand Tree to Level</string>
      </property>
-     <addaction name="actionExpandTreeLevel0"/>
      <addaction name="actionExpandTreeLevel1"/>
      <addaction name="actionExpandTreeLevel2"/>
      <addaction name="actionExpandTreeLevel3"/>
      <addaction name="actionExpandTreeLevel4"/>
      <addaction name="actionExpandTreeLevel5"/>
     </widget>
-    <widget class="QMenu" name="menuTreemap">
-     <property name="title">
-      <string>Tree&amp;map</string>
-     </property>
-     <addaction name="actionShowTreemap"/>
-     <addaction name="actionTreemapZoomTo"/>
-     <addaction name="actionTreemapZoomIn"/>
-     <addaction name="actionTreemapZoomOut"/>
-     <addaction name="actionResetTreemapZoom"/>
-     <addaction name="actionTreemapRebuild"/>
-    </widget>
     <addaction name="actionCloseAllTreeLevels"/>
     <addaction name="menuExpandTreeToLevel"/>
-    <addaction name="menuTreemap"/>
-    <addaction name="separator"/>
-    <addaction name="actionShowDetailsPanel"/>
     <addaction name="separator"/>
     <addaction name="actionLayout1"/>
     <addaction name="actionLayout2"/>
     <addaction name="actionLayout3"/>
+    <addaction name="separator"/>
+    <addaction name="actionShowDetailsPanel"/>
+    <addaction name="actionShowTreemap"/>
     <addaction name="separator"/>
     <addaction name="actionFileSizeStats"/>
     <addaction name="actionFileTypeStats"/>
@@ -178,7 +185,7 @@
     <property name="title">
      <string>&amp;Edit</string>
     </property>
-    <addaction name="actionCopyPathToClipboard"/>
+    <addaction name="actionCopyPath"/>
     <addaction name="actionMoveToTrash"/>
     <addaction name="actionFindFiles"/>
     <addaction name="separator"/>
@@ -192,6 +199,11 @@
     <addaction name="actionGoForward"/>
     <addaction name="actionGoUp"/>
     <addaction name="actionGoToToplevel"/>
+    <addaction name="separator"/>
+    <addaction name="actionTreemapZoomTo"/>
+    <addaction name="actionTreemapZoomIn"/>
+    <addaction name="actionTreemapZoomOut"/>
+    <addaction name="actionResetTreemapZoom"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -259,7 +271,9 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionOpenDir"/>
-   <addaction name="actionRefreshSelected"/>
+   <addaction name="actionOpenPkg"/>
+   <addaction name="actionOpenUnpkg"/>
+   <addaction name="actionRefreshAll"/>
    <addaction name="separator"/>
    <addaction name="actionFindFiles"/>
    <addaction name="separator"/>
@@ -312,7 +326,7 @@
   </action>
   <action name="actionCloseAllTreeLevels">
    <property name="text">
-    <string>&amp;Close All Tree Levels</string>
+    <string>&amp;Close All Tree Branches</string>
    </property>
    <property name="toolTip">
     <string>Close all branches of the directory tree</string>
@@ -465,6 +479,10 @@
    </property>
   </action>
   <action name="actionRefreshAll">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
+   </property>
    <property name="text">
     <string>Refresh &amp;All</string>
    </property>
@@ -475,7 +493,7 @@
     <string>F5</string>
    </property>
   </action>
-  <action name="actionCopyPathToClipboard">
+  <action name="actionCopyPath">
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/icons/edit-copy.png</normaloff>:/icons/edit-copy.png</iconset>
@@ -496,7 +514,7 @@
      <normaloff>:/icons/magnifier-zoom-actual.png</normaloff>:/icons/magnifier-zoom-actual.png</iconset>
    </property>
    <property name="text">
-    <string>Zoom &amp;To</string>
+    <string>Zoom Treemap &amp;To</string>
    </property>
    <property name="toolTip">
     <string>Zoom the treemap in to the selected item</string>
@@ -511,7 +529,7 @@
      <normaloff>:/icons/magnifier-zoom-in.png</normaloff>:/icons/magnifier-zoom-in.png</iconset>
    </property>
    <property name="text">
-    <string>Zoom &amp;In</string>
+    <string>Zoom &amp;In Treemap</string>
    </property>
    <property name="toolTip">
     <string>Zoom the treemap in (enlarge) one level</string>
@@ -526,7 +544,7 @@
      <normaloff>:/icons/magnifier-zoom-out.png</normaloff>:/icons/magnifier-zoom-out.png</iconset>
    </property>
    <property name="text">
-    <string>Zoom &amp;Out</string>
+    <string>Zoom &amp;Out Treemap</string>
    </property>
    <property name="toolTip">
     <string>Zoom the treemap out one level</string>
@@ -541,7 +559,7 @@
      <normaloff>:/icons/magnifier-zoom-actual-equal.png</normaloff>:/icons/magnifier-zoom-actual-equal.png</iconset>
    </property>
    <property name="text">
-    <string>&amp;Reset Zoom</string>
+    <string>&amp;Reset Treemap Zoom</string>
    </property>
    <property name="toolTip">
     <string>Reset the treemap zoom factor to normal</string>
@@ -566,7 +584,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Show Treemap</string>
+    <string>Show Tree&amp;map</string>
    </property>
    <property name="toolTip">
     <string>Enable or disable showing the treemap view</string>
@@ -620,10 +638,6 @@
    </property>
   </action>
   <action name="actionRefreshSelected">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
-   </property>
    <property name="text">
     <string>Refresh &amp;Selected</string>
    </property>
@@ -634,7 +648,7 @@
     <string>F6</string>
    </property>
   </action>
-  <action name="actionReadExcludedDirectory">
+  <action name="actionReadExcluded">
    <property name="text">
     <string>Read &amp;Excluded Directory</string>
    </property>
@@ -642,7 +656,7 @@
     <string>Read a directory that was excluded by an exclude rule</string>
    </property>
   </action>
-  <action name="actionContinueReadingAtMountPoint">
+  <action name="actionContinueReading">
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/icons/hard-disk.png</normaloff>:/icons/hard-disk.png</iconset>

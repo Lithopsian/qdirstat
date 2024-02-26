@@ -441,7 +441,6 @@ namespace QDirStat
 	 * Recurse through the tree from 'dir' on and move any ignored items to
 	 * the attic on the same level.
 	 **/
-
 	void moveIgnoredToAttic( DirInfo * dir );
 
 	/**
@@ -461,10 +460,10 @@ namespace QDirStat
 	 **/
 	void recalc( DirInfo * dir );
 
-        /**
-         * Try to derive the cluster size from 'item'.
-         **/
-        void detectClusterSize( FileInfo * item );
+	/**
+	 * Try to derive the cluster size from 'item'.
+	 **/
+	void detectClusterSize( FileInfo * item );
 
 
 

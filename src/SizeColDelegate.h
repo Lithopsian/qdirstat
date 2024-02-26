@@ -35,9 +35,9 @@ namespace QDirStat
          * Constructor.
          **/
 	SizeColDelegate( QTreeView * treeView ):
-	    QStyledItemDelegate { treeView },
-	    _treeView { treeView },
-	    _model { 0 }
+	    QStyledItemDelegate { treeView }
+//	    _treeView { treeView },
+//	    _model { 0 }
 	{}
 
         /**
@@ -65,12 +65,12 @@ namespace QDirStat
         /**
          * Get the model from a model index and store it in _model.
          **/
-        void ensureModel( const QModelIndex & index ) const;
+//        void ensureModel( const QModelIndex & index ) const;
 
         /**
          * Get the model from a model index and store it in _model.
          **/
-        bool isDelegateItem( FileInfo * item ) const;
+//        static bool isDelegateItem( FileInfo * item );
 
         /**
          * Determine the color to use for the highlighted (allocated) porition
@@ -78,15 +78,15 @@ namespace QDirStat
 	 * colour of the cell, to account for both dark themes and whether the item
 	 * is selected.
          **/
-	QColor highlightedText( const QStyleOptionViewItem & option, FileInfo * item ) const;
+	static QColor highlightedText( const QStyleOptionViewItem & option, bool sparseFile );
 
 
         //
         // Data members
         //
 
-        QTreeView *             _treeView;
-        mutable DirTreeModel *  _model;
+//        QTreeView *             _treeView;
+//        mutable DirTreeModel *  _model;
 
     };  // class SizeColDelegate
 

@@ -112,6 +112,12 @@ namespace QDirStat
 	 **/
 	const CleanupList & cleanupList() const { return _cleanupList; }
 
+	/**
+	 * Move the selected items to trash.
+	 **/
+	void moveToTrash();
+
+
     signals:
 
 	/**
@@ -136,6 +142,7 @@ namespace QDirStat
 	 * complete and stable.
 	 **/
 	void assumedDeleted();
+
 
     public slots:
 

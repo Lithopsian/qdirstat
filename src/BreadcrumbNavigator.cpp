@@ -73,8 +73,10 @@ void BreadcrumbNavigator::fillBreadcrumbs( FileInfo * item )
     QString basePath;
 
     const FileInfo * toplevel = item->tree()->firstToplevel();
-    splitBasePath( toplevel->name(), basePath, name );
+    if ( !toplevel )
+        return;
 
+    splitBasePath( toplevel->name(), basePath, name );
     if ( ! basePath.isEmpty() )
         _breadcrumbs[ 0 ].pathComponent = basePath;
 
@@ -108,28 +110,19 @@ void BreadcrumbNavigator::fillBreadcrumbs( FileInfo * item )
 QString BreadcrumbNavigator::html() const
 {
     QString html;
-    QString name;
 
-    for ( int i=0; i < _breadcrumbs.size(); ++i )
+    for ( const Breadcrumb & crumb : _breadcrumbs )
     {
-        const Breadcrumb & crumb = _breadcrumbs[ i ];
-        name = crumb.displayName;
-
+        QString name = crumb.displayName;
         if ( name.isEmpty() )
             name = crumb.pathComponent;
 
         if ( ! name.isEmpty() )
         {
             if ( crumb.url.isEmpty() )
-            {
                 html += name.toHtmlEscaped();
-            }
             else
-            {
-                html += QString( "<a href=\"%1\">%2</a>" )
-                    .arg( crumb.url )
-                    .arg( name.toHtmlEscaped() );
-            }
+                html += QString( "<a href=\"%1\">%2</a>" ).arg( crumb.url ).arg( name.toHtmlEscaped() );
 
             if ( ! name.endsWith( "/" ) )
                 html += "/";
