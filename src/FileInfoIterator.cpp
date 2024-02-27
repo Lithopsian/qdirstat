@@ -21,7 +21,7 @@ using namespace QDirStat;
 FileInfoIterator::FileInfoIterator( const FileInfo * parent,
 				    bool       callNext ) :
     _parent { parent },
-    _current { 0 },
+    _current { nullptr },
     _directChildrenProcessed { false },
     _dotEntryProcessed { false }
 {

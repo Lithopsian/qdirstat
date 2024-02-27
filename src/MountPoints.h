@@ -42,7 +42,7 @@ namespace QDirStat
 		    const QString & path,
 		    const QString & filesystemType,
 		    const QString & mountOptions ):
-	    _storageInfo{ 0 },
+	    _storageInfo { nullptr },
 	    _device { device },
 	    _path { path },
 	    _filesystemType { filesystemType },

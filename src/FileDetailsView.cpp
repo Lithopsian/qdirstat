@@ -547,7 +547,7 @@ void FileDetailsView::showSelectionSummary( const FileInfoSet & selectedItems )
     int subtreeFileCount = 0;
 
     const FileInfoSet sel = selectedItems.normalized();
-    foreach ( FileInfo * item, sel )
+    for ( FileInfo * item : sel )
     {
 	if ( item->isDirInfo() )
 	{

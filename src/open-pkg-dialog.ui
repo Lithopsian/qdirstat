@@ -84,7 +84,7 @@
      <item>
       <widget class="QRadioButton" name="useFilterRadioButton">
        <property name="text">
-        <string>Show packages &amp;matching...</string>
+        <string>&amp;Show packages matching...</string>
        </property>
       </widget>
      </item>
@@ -121,7 +121,7 @@
           <item>
            <widget class="QLineEdit" name="pkgPatternField">
             <property name="placeholderText">
-             <string>pkgname</string>
+             <string>package name</string>
             </property>
            </widget>
           </item>
@@ -141,9 +141,6 @@
           </item>
           <item>
            <widget class="QComboBox" name="filterModeComboBox">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
             <item>
              <property name="text">
               <string>Auto</string>
@@ -226,38 +223,6 @@
  </widget>
  <resources/>
  <connections>
-  <connection>
-   <sender>pkgPatternField</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>OpenPkgDialog</receiver>
-   <slot>textEdited()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>167</x>
-     <y>76</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>180</x>
-     <y>137</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>useFilterRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>filterFrame</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>167</x>
-     <y>76</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>180</x>
-     <y>137</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>

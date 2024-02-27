@@ -34,7 +34,7 @@ QPointer<FileSizeStatsWindow> FileSizeStatsWindow::_sharedInstance = 0;
 FileSizeStatsWindow::FileSizeStatsWindow( QWidget * parent ):
     QDialog ( parent ),
     _ui { new Ui::FileSizeStatsWindow },
-    _subtree { 0 },
+    _subtree { nullptr },
     _stats { new FileSizeStats() }
 {
     //logDebug() << "init" << Qt::endl;
@@ -88,8 +88,8 @@ void FileSizeStatsWindow::initWidgets()
     CHECK_NEW( _bucketsTableModel );
     _ui->bucketsTable->setModel( _bucketsTableModel );
 
-    QList<QCommandLinkButton *> helpButtons = _ui->helpPage->findChildren<QCommandLinkButton *>();
-    foreach ( const QCommandLinkButton * helpButton, helpButtons )
+    const QList<QCommandLinkButton *> helpButtons = _ui->helpPage->findChildren<QCommandLinkButton *>();
+    for ( const QCommandLinkButton * helpButton : helpButtons )
     {
 	connect( helpButton, &QAbstractButton::clicked,
 		 this,	     &FileSizeStatsWindow::showHelp );
@@ -353,7 +353,7 @@ void FileSizeStatsWindow::setRowBackground( QTableWidget * table, int row, const
 }
 
 
-void FileSizeStatsWindow::setColAlignment( QTableWidget * table, int col, int alignment )
+void FileSizeStatsWindow::setColAlignment( QTableWidget * table, int col, Qt::Alignment alignment )
 {
     for ( int row=0; row < table->rowCount(); ++row )
     {

@@ -98,7 +98,8 @@ PkgInfoList RpmPkgManager::parsePkgList( const QString & output ) const
 {
     PkgInfoList pkgList;
 
-    foreach ( const QString & line, output.split( "\n" ) )
+    const QStringList splitOutput = output.split( "\n" );
+    for ( const QString & line : splitOutput )
     {
 	if ( ! line.isEmpty() )
 	{
@@ -186,7 +187,7 @@ PkgFileListCache * RpmPkgManager::createFileListCache( PkgFileListCache::LookupT
     //	   zsh-5.6-lp151.1.3.x86_64 | /etc/zprofile
     //	   zsh-5.6-lp151.1.3.x86_64 | /etc/zsh_completion.d
 
-    foreach ( const QString & line, lines )
+    for ( const QString & line : lines )
     {
 	if ( line.isEmpty() )
 	    continue;

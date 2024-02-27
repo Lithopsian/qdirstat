@@ -157,7 +157,7 @@ ExcludeRules::ExcludeRules( const QStringList & paths,
 			    bool useFullPath,
 			    bool checkAnyFileChild )
 {
-    foreach ( const QString & path, paths )
+    for ( const QString & path : paths )
         add( patternSyntax, path, caseSensitive, useFullPath, checkAnyFileChild );
 }
 
@@ -220,7 +220,7 @@ bool ExcludeRules::match( const QString & fullPath, const QString & fileName )
     if ( fullPath.isEmpty() || fileName.isEmpty() )
 	return false;
 
-    foreach ( ExcludeRule * rule, _rules )
+    for ( ExcludeRule * rule : _rules )
     {
 	if ( rule->match( fullPath, fileName ) )
 	{
@@ -240,7 +240,7 @@ bool ExcludeRules::matchDirectChildren( DirInfo * dir )
     if ( ! dir )
 	return false;
 
-    foreach ( ExcludeRule * rule, _rules )
+    for ( ExcludeRule * rule : _rules )
     {
 	if ( rule->matchDirectChildren( dir ) )
 	{
@@ -261,7 +261,7 @@ const ExcludeRule * ExcludeRules::matchingRule( const QString & fullPath,
     if ( fullPath.isEmpty() || fileName.isEmpty() )
 	return 0;
 
-    foreach ( ExcludeRule * rule, _rules )
+    for ( ExcludeRule * rule : _rules )
     {
 	if ( rule->match( fullPath, fileName ) )
 	    return rule;
@@ -319,7 +319,7 @@ void ExcludeRules::readSettings()
     {
 	// Read all settings groups [ExcludeRule_xx] that were found
 
-	foreach ( const QString & groupName, excludeRuleGroups )
+	for ( const QString & groupName : excludeRuleGroups )
 	{
 	    settings.beginGroup( groupName );
 

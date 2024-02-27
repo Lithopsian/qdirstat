@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <QObject>
 #include <QString>
 #include <QTextStream>
 
@@ -22,6 +23,12 @@
 namespace QDirStat
 {
     /**
+     * Can't use a default argument when using this as a function pointer,
+     * so we really need the above overloaded version.
+     **/
+    QString formatSize( FileSize size, int precision );
+
+    /**
      * Format a file / subtree size human readable, i.e. in "GB" / "MB"
      * etc. rather than huge numbers of digits. 'precision' is the number of
      * digits after the decimal point.
@@ -30,45 +37,43 @@ namespace QDirStat
      *
      *	   logDebug() << "Size: " << x->totalSize() << Qt::endl;
      **/
-    QString formatSize( FileSize size );
-
-    /**
-     * Can't use a default argument when using this as a function pointer,
-     * so we really need the above overloaded version.
-     **/
-    QString formatSize( FileSize size, int precision );
+    inline QString formatSize( FileSize size ) { return formatSize( size, 1 ); }
 
     /**
      * Format a file / subtree size as bytes, but still human readable with a
      * thousands separator.
      **/
-    QString formatByteSize( FileSize size );
+    inline QString formatByteSize( FileSize size )
+	{ return QObject::tr( "%L1 bytes" ).arg( size ); }
 
     /**
      * Format a file size string with no thousands separators and "B" for the units.
      * This is only intended for small values, typically less than 1,000.
      **/
-    QString formatShortByteSize( FileSize size );
-
+    inline QString formatShortByteSize( FileSize size )
+	{ return QString( "%1 B" ).arg( size ); }
 
     /**
      * Format a string of the form "/ 3 links" for describing hard links.  If the
      * number of links is less than 2, an empty string is returned.
      **/
-    QString formatLinksInline( nlink_t numLinks );
+    inline QString formatLinksInline( nlink_t numLinks )
+	{ return numLinks > 1 ? QString( " / %1 links" ).arg( numLinks) : ""; }
 
     /**
      * Format a string of the form "<br/>3 links" for describing hard links on a
      * separate line, typically in a tooltip.  If the number of links is less than 2,
      * an empty string is returned.
      **/
-    QString formatLinksRichText( nlink_t numLinks );
+    inline QString formatLinksRichText( nlink_t numLinks )
+	{ return numLinks > 1 ? QString( "<br/>%1 hard links" ).arg( numLinks ) : ""; }
 
     /**
      * Wraps the text in html formatting to prevent line breaks except at explicit
      * newlines and break tags.
      **/
-    QString whitespacePre( const QString & text );
+    inline QString whitespacePre( const QString & text )
+	{ return "<p style='white-space:pre'>" + text + "</p>"; }
 
     /**
      * Format a timestamp (like the latestMTime()) human-readable.
@@ -96,29 +101,38 @@ namespace QDirStat
     /**
      * Format a number in octal with a leading zero.
      **/
-    QString formatOctal( int number );
+    inline QString formatOctal( int number )
+	{ return QString( "0" ) + QString::number( number, 8 ); }
 
     /**
      * Format a file stat mode as octal.
      **/
-    QString octalMode( mode_t mode );
+    inline QString octalMode( mode_t mode )
+	{ return formatOctal( ALLPERMS & mode ); }
 
     /**
      * Format the mode (the permissions bits) returned from the stat() system
      * call in the commonly used formats, both symbolic and octal, e.g.
      *	   drwxr-xr-x  0755
      **/
-    QString formatPermissions( mode_t mode );
+    inline QString formatPermissions( mode_t mode )
+	{ return symbolicMode( mode ) + "  " + formatOctal( ALLPERMS & mode ); }
+
+    /**
+     * Returns the string resized to the given width and padded with
+     * non-breaking spaces.
+     **/
+     inline QString pad( const QString & string, int width )
+	{ return string.leftJustified( width, QChar( 0x00A0 ) ); }
 
     /**
      * Human-readable output of a file size in a debug stream.
+     * Removed because the overload of is ambiguous between FileSize
+     * and qsizetype (and potentially other long long ints).  Use
+     * formatSize() explicitly if you need this.
      **/
-    inline QTextStream & operator<< ( QTextStream & stream, FileSize lSize )
-    {
-	stream << formatSize( lSize );
-
-	return stream;
-    }
+//    inline QTextStream & operator<< ( QTextStream & stream, FileSize lSize )
+//	{ return stream << formatSize( lSize ); }
 
 }       // namespace QDirStat
 

@@ -70,7 +70,7 @@ void PkgQuery::checkPkgManagers()
     {
         QStringList available;
 
-        foreach ( const PkgManager * pkgManager, _pkgManagers )
+        for ( const PkgManager * pkgManager : _pkgManagers )
             available << pkgManager->name();
 
         logInfo() << "Found " << available.join( ", " )  << Qt::endl;
@@ -115,7 +115,7 @@ QString PkgQuery::getOwningPackage( const QString & path )
 
     if ( ! haveResult )
     {
-	foreach ( const PkgManager * pkgManager, _pkgManagers )
+	for ( const PkgManager * pkgManager : _pkgManagers )
 	{
 	    pkg = pkgManager->owningPkg( path );
 
@@ -149,7 +149,7 @@ PkgInfoList PkgQuery::getInstalledPkg() const
 {
     PkgInfoList pkgList;
 
-    foreach ( const PkgManager * pkgManager, _pkgManagers )
+    for ( const PkgManager * pkgManager : _pkgManagers )
     {
         pkgList.append( pkgManager->installedPkg() );
     }
@@ -160,7 +160,7 @@ PkgInfoList PkgQuery::getInstalledPkg() const
 
 QStringList PkgQuery::getFileList( const PkgInfo * pkg ) const
 {
-    foreach ( const PkgManager * pkgManager, _pkgManagers )
+    for ( const PkgManager * pkgManager : _pkgManagers )
     {
         const QStringList fileList = pkgManager->fileList( pkg );
 
@@ -174,7 +174,7 @@ QStringList PkgQuery::getFileList( const PkgInfo * pkg ) const
 
 bool PkgQuery::checkGetInstalledPkgSupport() const
 {
-    foreach ( const PkgManager * pkgManager, _pkgManagers )
+    for ( const PkgManager * pkgManager : _pkgManagers )
     {
         if ( pkgManager->supportsGetInstalledPkg() )
             return true;
@@ -186,7 +186,7 @@ bool PkgQuery::checkGetInstalledPkgSupport() const
 
 bool PkgQuery::checkFileListSupport() const
 {
-    foreach ( const PkgManager * pkgManager, _pkgManagers )
+    for ( const PkgManager * pkgManager : _pkgManagers )
     {
         if ( pkgManager->supportsFileList() )
             return true;

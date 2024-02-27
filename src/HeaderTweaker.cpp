@@ -25,7 +25,7 @@ HeaderTweaker::HeaderTweaker( QHeaderView * header, DirTreeView * parent ):
     _treeView { parent },
     _header { header },
     _currentSection { -1 },
-    _currentLayout { 0 }
+    _currentLayout { nullptr }
 {
     CHECK_PTR( _header );
 
@@ -34,7 +34,7 @@ HeaderTweaker::HeaderTweaker( QHeaderView * header, DirTreeView * parent ):
     _header->setContextMenuPolicy( Qt::CustomContextMenu );
 
 //    setAllColumnsAutoSize( true );
-    createActions();
+//    createActions();
     createColumnLayouts();
 
     connect( _header, &QHeaderView::sectionCountChanged,
@@ -88,45 +88,14 @@ void HeaderTweaker::createColumnLayouts()
 }
 
 
-QAction * HeaderTweaker::createAction( const QString & title, void( HeaderTweaker::*slot )( void ) )
+QAction * HeaderTweaker::createAction( QMenu * menu, const QString & title, void( HeaderTweaker::*slot )( void ) )
 {
     QAction * action = new QAction( title, this );
     CHECK_NEW( action );
+    menu->addAction( action );
     connect( action, &QAction::triggered, this, slot );
 
     return action;
-}
-
-
-void HeaderTweaker::createActions()
-{
-    _actionHideCurrentCol =
-	createAction( tr( "&Hide" ), &HeaderTweaker::hideCurrentCol );
-
-    _actionShowAllHiddenColumns =
-	createAction( tr( "Show &All Hidden Columns" ), &HeaderTweaker::showAllHiddenColumns );
-
-    _actionAllColumnsAutoSize =
-	createAction( tr( "Auto &Size" ), &HeaderTweaker::setAllColumnsAutoSize );
-
-    _actionAllColumnsInteractiveSize =
-	createAction( tr( "&Interactive Size" ), &HeaderTweaker::setAllColumnsInteractiveSize );
-
-    _actionResetToDefaults =
-	createAction( tr( "&Reset to Defaults" ), &HeaderTweaker::resetToDefaults );
-
-    _actionAutoSizeCurrentCol =
-	createAction( tr( "A&uto Size" ), &HeaderTweaker::autoSizeCurrentCol );
-    _actionAutoSizeCurrentCol->setCheckable( true );
-}
-
-
-void HeaderTweaker::updateActions( int section )
-{
-    _actionHideCurrentCol->setEnabled( section != 0 );
-
-//    SignalBlocker sigBlocker( _actionAutoSizeCurrentCol ); // this doesn't fire triggered()
-    _actionAutoSizeCurrentCol->setChecked( autoSizeCol( section ) );
 }
 
 
@@ -134,22 +103,29 @@ void HeaderTweaker::contextMenu( const QPoint & pos )
 {
     _currentSection = _header->logicalIndexAt( pos );
     QString colName = this->colName( _currentSection );
-    updateActions( _currentSection );
 
     QMenu menu;
 //    menu.addAction( tr( "Column \"%1\"" ).arg( colName ) );
 //    menu.addSeparator();
-    menu.addAction( _actionAutoSizeCurrentCol );
-    menu.addAction( _actionHideCurrentCol     );
-    _actionHideCurrentCol->setText( QString( "&Hide \"%1\"" ).arg( colName ) );
+    QAction * autoSizeCurrentCol = createAction( &menu,
+						 tr( "A&uto Size" ),
+						 &HeaderTweaker::autoSizeCurrentCol );
+    autoSizeCurrentCol->setCheckable( true );
+    autoSizeCurrentCol->setChecked( autoSizeCol( _currentSection ) );
+
+    QAction * hideCurrentCol = createAction( &menu,
+					     tr( "&Hide \"%1\"" ).arg( colName ),
+					     &HeaderTweaker::hideCurrentCol );
+    hideCurrentCol->setEnabled( _currentSection );
+
     menu.addSeparator();
     menu.addMenu( createHiddenColMenu( &menu ) );
 
     QMenu allColMenu( tr( "&All Columns" ) );
     menu.addMenu( &allColMenu );
-    allColMenu.addAction( _actionAllColumnsAutoSize );
-    allColMenu.addAction( _actionAllColumnsInteractiveSize );
-    allColMenu.addAction( _actionResetToDefaults );
+    createAction( &allColMenu, tr( "Auto &Size" ),         &HeaderTweaker::setAllColumnsAutoSize );
+    createAction( &allColMenu, tr( "&Interactive Size" ),  &HeaderTweaker::setAllColumnsInteractiveSize );
+    createAction( &allColMenu, tr( "&Reset to Defaults" ), &HeaderTweaker::resetToDefaults );
 
     menu.exec( _header->mapToGlobal( pos ) );
 }
@@ -165,9 +141,9 @@ QMenu * HeaderTweaker::createHiddenColMenu( QWidget * parent )
 	if ( _header->isSectionHidden( section ) )
 	{
 	    const QString text = tr( "Show Column \"%1\"" ).arg( this->colName( section ) );
-	    QAction * showAction = createAction( text, &HeaderTweaker::showHiddenCol );
+	    QAction * showAction = createAction( hiddenColMenu, text, &HeaderTweaker::showHiddenCol );
 	    showAction->setData( section );
-	    hiddenColMenu->addAction( showAction );
+//	    hiddenColMenu->addAction( showAction );
 	    ++actionCount;
 	}
     }
@@ -179,7 +155,7 @@ QMenu * HeaderTweaker::createHiddenColMenu( QWidget * parent )
     else if ( actionCount > 1 )
     {
 	hiddenColMenu->addSeparator();
-	hiddenColMenu->addAction( _actionShowAllHiddenColumns );
+	createAction( hiddenColMenu, tr( "Show &All Hidden Columns" ), &HeaderTweaker::showAllHiddenColumns );
     }
 
     return hiddenColMenu;
@@ -212,12 +188,7 @@ void HeaderTweaker::hideCurrentCol()
 void HeaderTweaker::autoSizeCurrentCol()
 {
     if ( _currentSection >= 0 )
-    {
-	setResizeMode( _currentSection,
-		       _actionAutoSizeCurrentCol->isChecked() ?
-		       QHeaderView::ResizeToContents :
-		       QHeaderView::Interactive );
-    }
+	setResizeMode( _currentSection, toggleResizeMode( _header->sectionResizeMode( _currentSection ) ) );
     else
 	logWarning() << "No current section" << Qt::endl;
 
@@ -225,25 +196,24 @@ void HeaderTweaker::autoSizeCurrentCol()
 }
 
 
-void HeaderTweaker::setAllColumnsAutoSize( bool autoSize )
+void HeaderTweaker::setAllColumnsResizeMode( bool autoSize )
 {
-    const QHeaderView::ResizeMode resizeMode =
-	autoSize ? QHeaderView::ResizeToContents : QHeaderView::Interactive;
+    const QHeaderView::ResizeMode newResizeMode = resizeMode( autoSize );
 
     for ( int section = 0; section < _header->count(); ++section )
-	setResizeMode( section, resizeMode );
+	setResizeMode( section, newResizeMode );
 }
 
 
 void HeaderTweaker::setAllColumnsAutoSize()
 {
-    setAllColumnsAutoSize( true );
+    setAllColumnsResizeMode( true );
 }
 
 
 void HeaderTweaker::setAllColumnsInteractiveSize()
 {
-    setAllColumnsAutoSize( false );
+    setAllColumnsResizeMode( false );
 }
 
 
@@ -280,10 +250,7 @@ void HeaderTweaker::showAllHiddenColumns()
     logDebug() << "Showing all columns" << Qt::endl;
 
     for ( int section = 0; section < _header->count(); ++section )
-    {
-	if ( _header->isSectionHidden( section ) )
-	    _header->setSectionHidden( section, false );
-    }
+	_header->setSectionHidden( section, false );
 }
 
 
@@ -332,7 +299,6 @@ void HeaderTweaker::readSettings()
 	const QString colName	= DataColumns::toString( col );
 
 	const int width = settings.value( "Width_" + colName, -1 ).toInt();
-
 	if ( width > 0 )
 	{
 	    setResizeMode( section, QHeaderView::Interactive );
@@ -346,7 +312,7 @@ void HeaderTweaker::readSettings()
 
     settings.endGroup();
 
-    for ( ColumnLayout * layout : qAsConst( _layouts ) )
+    for ( ColumnLayout * layout : _layouts )
 	readLayoutSettings( layout );
 }
 
@@ -390,8 +356,8 @@ void HeaderTweaker::writeSettings()
 
     settings.endGroup();
 
-    // Save column layouts
-    for ( ColumnLayout * layout : qAsConst( _layouts ) )
+    // Write column layouts to settings
+    for ( ColumnLayout * layout : _layouts )
 	writeLayoutSettings( layout );
 }
 
@@ -456,7 +422,7 @@ void HeaderTweaker::saveLayout( ColumnLayout * layout )
 	const int logicalIndex = _header->logicalIndex( visualIndex );
 	const DataColumn col   = static_cast<DataColumn>( logicalIndex );
 
-	if ( ! _header->isSectionHidden( logicalIndex ) )
+	if ( !_header->isSectionHidden( logicalIndex ) )
 	    layout->columns << col;
     }
 }
@@ -483,12 +449,6 @@ void HeaderTweaker::fixupLayout( ColumnLayout * layout )
     }
 
     DataColumns::ensureNameColFirst( layout->columns );
-}
-
-
-void HeaderTweaker::setResizeMode( int section, QHeaderView::ResizeMode resizeMode )
-{
-    _header->setSectionResizeMode( section, resizeMode );
 }
 
 

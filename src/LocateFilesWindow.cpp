@@ -158,8 +158,11 @@ void LocateFilesWindow::populateRecursive( FileInfo * dir )
 
 void LocateFilesWindow::showResultsCount()
 {
-    QString text = _treeWalker->overflow() ? tr( "Limited to %1 results" ) : tr( "%1 results" );
-    text = text.arg( _ui->treeWidget->topLevelItemCount() );
+    const int results = _ui->treeWidget->topLevelItemCount();
+    const QString text = _treeWalker->overflow() ?
+        tr( "Limited to %1 results" ).arg( results ) :
+        results == 1 ? tr( "1 result" ) :
+        tr( "%1 results" ).arg( results );
     _ui->resultsLabel->setText( text );
 }
 
@@ -207,7 +210,7 @@ void LocateFilesWindow::addCleanupHotkeys()
 
     ActionManager::instance()->addActions( this, { "actionMoveToTrash", "actionFindFiles" } );
 
-    foreach ( Cleanup * cleanup, app()->cleanupCollection()->cleanupList() )
+    for ( Cleanup * cleanup : app()->cleanupCollection()->cleanupList() )
     {
         if ( cleanup->worksForFile() && ! cleanup->shortcut().isEmpty() )
             addAction( cleanup );

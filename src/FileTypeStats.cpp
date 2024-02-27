@@ -209,7 +209,7 @@ void FileTypeStats::removeCruft()
     }
 
 #if 1
-    logDebug() << "Merged " << cruft.size() << " suffixes to <NO SUFFIX>: "
+    logDebug() << "Merged " << (int)cruft.size() << " suffixes to <NO SUFFIX>: "
 	       << cruft.join( ", " ) << Qt::endl;
 #endif
     logDebug() << "Merged: " << totalMergedCount << " files "
@@ -279,7 +279,7 @@ void FileTypeStats::sanityCheck()
 {
     FileSize categoryTotal = 0LL;
 
-    foreach ( const FileSize sum, _categorySum )
+    for ( const FileSize sum : _categorySum )
 	categoryTotal += sum;
 
     const FileSize missing = totalSize() - categoryTotal;

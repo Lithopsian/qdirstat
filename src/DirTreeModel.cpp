@@ -30,16 +30,16 @@ using namespace QDirStat;
 
 
 DirTreeModel::DirTreeModel( QObject * parent ):
-    QAbstractItemModel( parent ),
-    _tree(0),
-    _selectionModel(0),
-    _readJobsCol( PercentBarCol ),
+    QAbstractItemModel ( parent ),
+    _tree { nullptr },
+    _selectionModel { nullptr },
+    _readJobsCol { PercentBarCol },
 //    _updateTimerMillisec( 250 ), \\ initialised in readSettings
 //    _slowUpdateMillisec( 3000 ),
-    _slowUpdate( false ),
-    _sortCol( SizeCol ),
-    _sortOrder( Qt::DescendingOrder ),
-    _removingRows( false )
+    _slowUpdate { false },
+    _sortCol { SizeCol },
+    _sortOrder { Qt::DescendingOrder },
+    _removingRows { false }
 {
     readSettings();
     createTree();
@@ -1041,7 +1041,7 @@ void DirTreeModel::sendPendingUpdates()
 {
     //logDebug() << "Sending " << _pendingUpdates.size() << " updates" << Qt::endl;
 
-    foreach ( DirInfo * dir, _pendingUpdates )
+    for ( DirInfo * dir : _pendingUpdates )
 	dataChangedNotify( dir );
 
     _pendingUpdates.clear();
@@ -1215,7 +1215,8 @@ void DirTreeModel::subtreeCleared( DirInfo * )
 void DirTreeModel::invalidatePersistent( FileInfo * subtree,
 					 bool	    includeParent )
 {
-    foreach ( const QModelIndex & index, persistentIndexList() )
+    const auto indexList = persistentIndexList();
+    for ( const QModelIndex & index : indexList )
     {
 	FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
 	CHECK_PTR( item );

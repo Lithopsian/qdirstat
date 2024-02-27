@@ -32,10 +32,10 @@ using namespace QDirStat;
 
 
 MimeCategoryConfigPage::MimeCategoryConfigPage( QWidget * parent ):
-    ListEditor( parent ),
-    _ui( new Ui::MimeCategoryConfigPage ),
-    _dirTree( 0 ),
-    _dirty( false )
+    ListEditor ( parent ),
+    _ui { new Ui::MimeCategoryConfigPage },
+    _dirTree { nullptr },
+    _dirty { false }
 {
     //logDebug() << "MimeCategoryConfigPage constructor" << Qt::endl;
 

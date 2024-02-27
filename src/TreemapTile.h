@@ -437,17 +437,6 @@ namespace QDirStat
 	QPixmap renderCushion( const QRectF & rect );
 
 	/**
-	 * Render a tile to a pixmap as a plain colour, usually with an outline.
-	 **/
-//		QPixmap renderPlainTile( const QRectF & rect );
-
-	/**
-	 * Render an outline on a pixmap image.  Fast, but sub-pixels lines are relatively
-	 * low quality compared to painter->drawLine().
-	 **/
-//		void renderOutline( QImage & image, int width, int height, const QColor & lineColor, const QColor & tileColor );
-
-	/**
 	 * Recursively iterate through all the children of this tile, rendering the cushions
 	 * of any leaf-level tiles.
 	 **/

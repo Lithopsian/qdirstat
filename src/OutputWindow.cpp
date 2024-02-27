@@ -27,10 +27,10 @@ using QDirStat::writeFontEntry;
     connect( (ACTION), SIGNAL( triggered() ), (RECEIVER), SLOT( RCVR_SLOT ) )
 
 
-OutputWindow::OutputWindow( QWidget * parent ):
+OutputWindow::OutputWindow( QWidget * parent, bool autoClose ):
     QDialog( parent ),
     _ui( new Ui::OutputWindow ),
-    _showOnStderr( true ),
+    _showOnStderr( false ),
     _noMoreProcesses( false ),
     _closed( false ),
     _killedAll( false ),
@@ -43,7 +43,7 @@ OutputWindow::OutputWindow( QWidget * parent ):
     readSettings();
 
     _ui->terminal->clear();
-    setAutoClose( false );
+    setAutoClose( autoClose );
 
     CONNECT_ACTION( _ui->actionZoomIn,	    this, zoomIn()    );
     CONNECT_ACTION( _ui->actionZoomOut,	    this, zoomOut()   );
@@ -62,7 +62,7 @@ OutputWindow::~OutputWindow()
     {
 	logWarning() << _processList.size() << " processes left over" << Qt::endl;
 
-	foreach ( const QProcess * process, _processList )
+	for ( const QProcess * process : _processList )
 	    logWarning() << "Left over: " << process << Qt::endl;
 
 	qDeleteAll( _processList );
@@ -309,7 +309,7 @@ void OutputWindow::closeIfDone()
 {
     if ( _processList.isEmpty() && _noMoreProcesses )
     {
-	if ( ( autoClose() && _errorCount == 0 ) || _closed || ! isVisible() )
+	if ( ( autoClose() || _closed || !isVisible() ) && _errorCount == 0 )
 	{
 	    //logDebug() << "No more processes to watch. Auto-closing." << Qt::endl;
 	    this->deleteLater(); // It is safe to call this multiple times
@@ -322,7 +322,7 @@ void OutputWindow::noMoreProcesses()
 {
     _noMoreProcesses = true;
 
-    if ( _processList.isEmpty() && _noMoreProcesses )
+    if ( _processList.isEmpty() )
     {
 	//logDebug() << "Emitting lastProcessFinished() err: " << _errorCount << Qt::endl;
 	emit lastProcessFinished( _errorCount );
@@ -378,7 +378,7 @@ void OutputWindow::killAll()
 {
     int killCount = 0;
 
-    foreach ( QProcess * process, _processList )
+    for ( QProcess * process : _processList )
     {
 	logInfo() << "Killing process " << process << Qt::endl;
 	process->kill();
@@ -406,7 +406,7 @@ void OutputWindow::setTerminalBackground( const QColor & newColor )
 
 bool OutputWindow::hasActiveProcess() const
 {
-    foreach ( const QProcess * process, _processList )
+    for ( const QProcess * process : _processList )
     {
 	if ( process->state() == QProcess::Starting ||
 	     process->state() == QProcess::Running )
@@ -421,7 +421,7 @@ bool OutputWindow::hasActiveProcess() const
 
 QProcess * OutputWindow::pickQueuedProcess()
 {
-    foreach ( QProcess * process, _processList )
+    for ( QProcess * process : _processList )
     {
 	if ( process->state() == QProcess::NotRunning )
 	    return process;

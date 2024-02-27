@@ -88,7 +88,7 @@ void PkgReader::filterPkgList( const PkgFilter & filter )
 
     PkgInfoList matches;
 
-    foreach ( PkgInfo * pkg, _pkgList )
+    for ( PkgInfo * pkg : _pkgList )
     {
 	if ( filter.matches( pkg->baseName() ) )
 	{
@@ -105,10 +105,10 @@ void PkgReader::handleMultiPkg()
 {
     _multiPkg.clear();
 
-    foreach ( PkgInfo * pkg, _pkgList )
+    for ( PkgInfo * pkg : _pkgList )
 	_multiPkg.insert( pkg->baseName(), pkg );
 
-    foreach ( const QString & pkgName, _multiPkg.uniqueKeys() )
+    for ( const QString & pkgName : _multiPkg.uniqueKeys() )
 	createDisplayName( pkgName );
 }
 
@@ -142,7 +142,7 @@ void PkgReader::createDisplayName( const QString & pkgName )
 		   << Qt::endl;
     }
 
-    foreach ( PkgInfo * pkg, pkgList )
+    for ( PkgInfo * pkg : pkgList )
     {
 	QString name = pkgName;
 
@@ -173,7 +173,7 @@ void PkgReader::addPkgToTree()
     CHECK_NEW( top );
     _tree->root()->insertChild( top );
 
-    foreach ( PkgInfo * pkg, _pkgList )
+    for ( PkgInfo * pkg : _pkgList )
     {
 	pkg->setTree( _tree );
 	top->insertChild( pkg );
@@ -199,7 +199,7 @@ void PkgReader::createCachePkgReadJobs()
 	return;
     }
 
-    foreach ( PkgInfo * pkg, _pkgList )
+    for ( PkgInfo * pkg : _pkgList )
     {
 	CachePkgReadJob * job = new CachePkgReadJob( _tree, pkg, fileListCache );
 	CHECK_NEW( job );
@@ -217,7 +217,7 @@ void PkgReader::createAsyncPkgReadJobs()
     processStarter->setAutoDelete( true );
     processStarter->setMaxParallel( _maxParallelProcesses );
 
-    foreach ( PkgInfo * pkg, _pkgList )
+    for ( PkgInfo * pkg : _pkgList )
     {
 	QProcess * process = createReadFileListProcess( pkg );
 
@@ -347,7 +347,7 @@ void PkgReadJob::startReading()
 
     _pkg->setReadState( DirReading );
 
-    foreach ( const QString & path, fileList() )
+    for ( const QString & path : fileList() )
 	addFile( path );
 
     finalizeAll( _pkg );

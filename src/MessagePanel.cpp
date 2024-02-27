@@ -19,15 +19,14 @@ QList<MessagePanel *> MessagePanel::_instances;
 
 MessagePanel::MessagePanel( QWidget * parent ):
     QWidget( parent ),
-    _ui( new Ui::MessagePanel )
+    _ui { new Ui::MessagePanel }
 {
     CHECK_NEW( _ui );
-
     _ui->setupUi( this );
 
     // The dummy placeholder is only needed for handling in Qt designer.
-    delete _ui->dummy;
-    _ui->dummy = 0;
+//    delete _ui->dummy;
+//    _ui->dummy = 0;
 
     _instances << this;
 }
@@ -54,6 +53,9 @@ void MessagePanel::add( PanelMessage * msg )
 
 void MessagePanel::clear()
 {
-    foreach ( PanelMessage * msg, findChildren<PanelMessage *>() )
-	delete msg;
+    PanelMessage * child;
+    while ( ( child = findChild<PanelMessage *>() ) != nullptr )
+        delete child;
+//    foreach ( PanelMessage * msg, findChildren<PanelMessage *>() )
+//        delete msg;
 }

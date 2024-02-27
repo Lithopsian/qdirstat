@@ -368,7 +368,7 @@ void layoutChanged( const QList<QPersistentModelIndex> &, QAbstractItemModel::La
     /**
      * Show or hide the details view.
      **/
-    void setDetailsPanelVisible( bool visible );
+    void setDetailsPanelVisible( bool detailsPanelVisible );
 
     /**
      * Copy the path of the current item (if there is one) to the system
@@ -498,7 +498,7 @@ protected:
     /**
      * Save whether the details panel is visible to the current layout action.
      **/
-    void saveLayout( bool detailsPaneVisible );
+    void updateLayout( bool detailsPanelVisible );
 
     /**
      * Apply a layout to the current settings.

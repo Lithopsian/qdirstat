@@ -53,7 +53,7 @@ Cleanup * StdCleanup::openFileManagerHere( QObject * parent )
 				    Cleanup::ShowNever );
     CHECK_NEW( cleanup );
     cleanup->setIcon( ":/icons/file-manager.png" );
-    cleanup->setShortcut( Qt::CTRL + Qt::Key_G );
+    cleanup->setShortcut( Qt::CTRL | Qt::Key_G );
 
     return cleanup;
 }
@@ -74,7 +74,7 @@ Cleanup * StdCleanup::openTerminalHere( QObject * parent )
 				    Cleanup::ShowNever );
     CHECK_NEW( cleanup );
     cleanup->setIcon( ":/icons/terminal.png" );
-    cleanup->setShortcut( Qt::CTRL + Qt::Key_T );
+    cleanup->setShortcut( Qt::CTRL | Qt::Key_T );
 
     return cleanup;
 }
@@ -94,7 +94,7 @@ Cleanup * StdCleanup::checkFileType( QObject * parent )
 				    false,
 				    Cleanup::ShowAlways );
     CHECK_NEW( cleanup );
-    cleanup->setShortcut( Qt::CTRL + Qt::Key_Y );
+    cleanup->setShortcut( Qt::CTRL | Qt::Key_Y );
 
     return cleanup;
 }
@@ -188,7 +188,7 @@ Cleanup * StdCleanup::hardDelete( QObject * parent )
 				    false );
     CHECK_NEW( cleanup );
     cleanup->setIcon( ":/icons/delete.png" );
-    cleanup->setShortcut( Qt::CTRL + Qt::Key_Delete );
+    cleanup->setShortcut( Qt::CTRL | Qt::Key_Delete );
 
     return cleanup;
 }

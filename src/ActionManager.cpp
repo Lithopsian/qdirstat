@@ -34,7 +34,7 @@ void ActionManager::addWidgetTree( QObject * tree )
 
 QAction * ActionManager::action( const QString & actionName ) const
 {
-    foreach ( const QPointer<QObject> tree, _widgetTrees )
+    for ( const QPointer<QObject> & tree : _widgetTrees )
     {
 	if ( tree ) // might be destroyed in the meantime
 	{
@@ -57,7 +57,7 @@ bool ActionManager::addActions( QWidget *           widget,
     bool foundAll = true;
     QMenu * menu = qobject_cast<QMenu *>( widget );
 
-    foreach ( const QString & actionName, actionNames )
+    for ( const QString & actionName : actionNames )
     {
 	if ( actionName.startsWith( "---" ) )
 	{

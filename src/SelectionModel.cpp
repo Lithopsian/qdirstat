@@ -21,12 +21,12 @@ using namespace QDirStat;
 
 
 SelectionModel::SelectionModel( DirTreeModel * dirTreeModel, QObject * parent ):
-    QItemSelectionModel( dirTreeModel, parent ),
-    _dirTreeModel( dirTreeModel ),
-    _currentItem(0),
-    _currentBranch(0),
-    _selectedItemsDirty(false),
-    _verbose(false)
+    QItemSelectionModel ( dirTreeModel, parent ),
+    _dirTreeModel { dirTreeModel },
+    _currentItem { nullptr },
+    _currentBranch { nullptr },
+    _selectedItemsDirty {false },
+    _verbose {false }
 {
     connect( this, &SelectionModel::currentChanged,
 	     this, &SelectionModel::propagateCurrentChanged );
@@ -67,7 +67,8 @@ FileInfoSet SelectionModel::selectedItems()
 
 	_selectedItems.clear();
 
-	foreach ( const QModelIndex index, selectedIndexes() )
+	const QModelIndexList indexes = selectedIndexes();
+	for ( const QModelIndex index : indexes )
 	{
 	    if ( index.isValid() )
 	    {
@@ -156,7 +157,7 @@ void SelectionModel::setSelectedItems( const FileInfoSet & selectedItems )
 
     QItemSelection sel;
 
-    foreach ( FileInfo * item, selectedItems )
+    for ( FileInfo * item : selectedItems )
     {
 	QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
 
@@ -261,10 +262,11 @@ void SelectionModel::deletingChildNotify( FileInfo * deletedChild )
 
 void SelectionModel::dumpSelectedItems()
 {
+    const FileInfoSet items = selectedItems();
     logDebug() << "Current item: " << _currentItem << Qt::endl;
-    logDebug() << selectedItems().size() << " items selected" << Qt::endl;
+    logDebug() << items.size() << " items selected" << Qt::endl;
 
-    foreach ( const FileInfo * item, selectedItems() )
+    for ( const FileInfo * item : items )
 	logDebug() << "	 Selected: " << item << Qt::endl;
 
     logNewline();

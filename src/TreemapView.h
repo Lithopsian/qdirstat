@@ -39,7 +39,6 @@ namespace QDirStat
     class SelectionModel;
     class SelectionModelProxy;
     class Settings;
-//    class DelayedRebuilder;
 
     enum TreemapCancel
     {
@@ -49,7 +48,6 @@ namespace QDirStat
     };
 
     typedef QList<HighlightRect *> HighlightRectList;
-//    typedef QColor ( TreemapView::*TileColorFunction )( FileInfo * file );
 
     // Treemap layers (Z values)
     const double TileLayer             = 0.0;
@@ -67,7 +65,6 @@ namespace QDirStat
 	Q_OBJECT
 
     public:
-//	TileColorFunction tileColor;
 
 	/**
 	 * Constructor. Remember to set the directory tree with setDirTree()
@@ -509,17 +506,6 @@ namespace QDirStat
 	void writeOptionalColorEntry( Settings & settings, const char * setting, const QColor & color );
 
 	/**
-	 * Schedule a rebuild of the treemap with 'newRoot'. If another rebuild
-	 * is scheduled before the timeout is over, nothing will happen until
-	 * the last scheduled timeout has elapsed.
-	 *
-	 * The purpose of this is to avoid unnecessary rebuilds when the user
-	 * resizes the window or the treemap subwindow: Only the last rebuild
-	 * is really executed (when all the resizing has settled somehow).
-	 **/
-//	void scheduleRebuildTreemap( FileInfo * newRoot );
-
-	/**
 	 * Rebuild the treemap with 'newRoot' as the new root.
 	 **/
 	void rebuildTreemap( FileInfo * newRoot );
@@ -631,11 +617,6 @@ namespace QDirStat
 	void setCurrentItem( FileInfo * node );
 
 	/**
-	 * Rebuild the treemap if no more pending rebuilds are scheduled.
-	 **/
-//	void rebuildTreemapDelayed();
-
-	/**
 	 * The treemap thread has finished.
 	 **/
 	void treemapFinished();
@@ -648,7 +629,6 @@ namespace QDirStat
 	SelectionModel		* _selectionModel;
 	SelectionModelProxy	* _selectionModelProxy;
 	const CleanupCollection	* _cleanupCollection;
-//        DelayedRebuilder    * _rebuilder;
 
 	TreemapTile	    * _rootTile;
 //	TreemapTile	    * _currentTile;

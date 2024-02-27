@@ -72,7 +72,7 @@ Trash * Trash::instance()
 
 
 Trash::Trash():
-    _homeTrashDir { 0 }
+    _homeTrashDir { nullptr }
 {
     const dev_t homeDevice = device( QDir::homePath() );
 

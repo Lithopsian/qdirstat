@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>MimeCategoryConfigPage</class>
  <widget class="QWidget" name="MimeCategoryConfigPage">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>550</width>
-    <height>488</height>
-   </rect>
-  </property>
   <layout class="QHBoxLayout" name="horizontalLayout_6">
    <item>
     <widget class="QSplitter" name="horizontalSplitter">
@@ -216,6 +208,12 @@
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add filename patterns here, each one on a separate line. Use * or ? as wildcards and [] for matching sets of characters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
+              <property name="verticalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOff</enum>
+              </property>
+              <property name="horizontalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOff</enum>
+              </property>
              </widget>
             </item>
            </layout>
@@ -255,12 +253,6 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tab_18">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <attribute name="title">
         <string>&amp;Treemap</string>
        </attribute>
@@ -273,24 +265,21 @@
           <property name="handleWidth">
            <number>8</number>
           </property>
-          <property name="childrenCollapsible">
-           <bool>false</bool>
-          </property>
           <widget class="QDirStat::TreemapView" name="treemapView">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>1</verstretch>
             </sizepolicy>
            </property>
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>120</height>
-            </size>
-           </property>
            <property name="toolTip">
-            <string>Preview Treemap</string>
+            <string>Preview treemap appearance</string>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
            </property>
           </widget>
           <widget class="QWidget" name="layoutWidget2">

@@ -15,6 +15,7 @@
 #include "Cleanup.h"
 #include "StdCleanup.h"
 #include "DirTree.h"
+#include "FormatUtil.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
 #include "SelectionModel.h"
@@ -85,7 +86,7 @@ void CleanupCollection::remove( Cleanup * cleanup )
 
 void CleanupCollection::addStdCleanups()
 {
-    foreach ( Cleanup * cleanup, StdCleanup::stdCleanups( this ) )
+    for ( Cleanup * cleanup : StdCleanup::stdCleanups( this ) )
     {
 	CHECK_PTR( cleanup );
 	add( cleanup );
@@ -147,7 +148,7 @@ void CleanupCollection::updateActions()
     const bool busy		= sel.containsBusyItem();
     const bool treeBusy		= sel.treeIsBusy();
 
-    foreach ( Cleanup * cleanup, _cleanupList )
+    for ( Cleanup * cleanup : _cleanupList )
     {
 	if ( ! cleanup->active() ||
 	     ( treeBusy		&& cleanup->refreshPolicy() != Cleanup::NoRefresh ) ||
@@ -170,14 +171,14 @@ void CleanupCollection::updateActions()
 
 void CleanupCollection::updateMenus()
 {
-    _menus.removeAll( 0 ); // Remove QPointers that have become invalid
+    _menus.removeAll( nullptr ); // Remove QPointers that have become invalid
 
-    foreach ( QMenu * menu, _menus )
+    for ( QMenu * menu : _menus )
     {
 	if ( menu )
 	{
 	    // Remove all Cleanups from this menu
-	    foreach ( QAction * action, menu->actions() )
+	    for ( QAction * action : menu->actions() )
 	    {
 		Cleanup * cleanup = dynamic_cast<Cleanup *>( action );
 
@@ -194,14 +195,14 @@ void CleanupCollection::updateMenus()
 
 void CleanupCollection::updateToolBars()
 {
-    _toolBars.removeAll( 0 ); // Remove QPointers that have become invalid
+    _toolBars.removeAll( nullptr ); // Remove QPointers that have become invalid
 
-    foreach ( QToolBar * toolBar, _toolBars )
+    for ( QToolBar * toolBar : _toolBars )
     {
 	if ( toolBar )
 	{
 	    // Remove all Cleanups from this tool bar
-	    foreach ( QAction * action, toolBar->actions() )
+	    for ( QAction * action : toolBar->actions() )
 	    {
 		Cleanup * cleanup = dynamic_cast<Cleanup *>( action );
 
@@ -243,9 +244,8 @@ void CleanupCollection::execute()
 
     emit startingCleanup( cleanup->cleanTitle() );
 
-    OutputWindow * outputWindow = new OutputWindow( qApp->activeWindow() );
+    OutputWindow * outputWindow = new OutputWindow( qApp->activeWindow(), cleanup->outputWindowAutoClose() );
     CHECK_NEW( outputWindow );
-    outputWindow->setAutoClose( cleanup->outputWindowAutoClose() );
 
     switch ( cleanup->outputWindowPolicy() )
     {
@@ -257,26 +257,20 @@ void CleanupCollection::execute()
 	    outputWindow->showAfterTimeout( cleanup->outputWindowTimeout() );
 	    break;
 
-	case Cleanup::ShowIfErrorOutput: // showOnStderr is default
+	case Cleanup::ShowIfErrorOutput:
+	    outputWindow->setShowOnStderr( true );
 	    break;
 
 	case Cleanup::ShowNever:
-	    outputWindow->setShowOnStderr( false );
 	    break;
     }
 
     if ( cleanup->refreshPolicy() == Cleanup::RefreshThis ||
 	 cleanup->refreshPolicy() == Cleanup::RefreshParent )
     {
-	const FileInfoSet refreshSet =
-	    cleanup->refreshPolicy() == Cleanup::RefreshParent ? Refresher::parents( selection ) : selection;
-
-	_selectionModel->prepareRefresh( refreshSet );
-	Refresher * refresher = new Refresher( this, refreshSet );
-	CHECK_NEW( refresher );
-
-	connect( outputWindow, SIGNAL( lastProcessFinished( int ) ),
-		 refresher,    SLOT  ( refresh()		) );
+	createRefresher( outputWindow, cleanup->refreshPolicy() == Cleanup::RefreshParent ?
+	    Refresher::parents( selection ) :
+	    selection );
     }
 
     connect( outputWindow, SIGNAL( lastProcessFinished( int ) ),
@@ -288,7 +282,7 @@ void CleanupCollection::execute()
     // perform an action on each of them individually. We can't know if the
     // action on the ancestor affects any of its children.
 
-    foreach ( FileInfo * item, selection )
+    for ( FileInfo * item : selection )
     {
 	if ( cleanup->worksFor( item ) )
 	{
@@ -311,7 +305,7 @@ void CleanupCollection::execute()
         // deleted (thus invalidating pointers to it). Normalizing removes
         // items from the set that also have any ancestors in the set.
 
-        foreach ( FileInfo * item, selection.invalidRemoved().normalized() )
+        for ( FileInfo * item : selection.invalidRemoved().normalized() )
         {
             DirTree * tree = item->tree();
 
@@ -329,7 +323,7 @@ void CleanupCollection::execute()
 bool CleanupCollection::confirmation( Cleanup * cleanup, const FileInfoSet & items )
 {
     // Pad the title to avoid tiny dialog boxes
-    const QString title = cleanup->cleanTitle().leftJustified( 40, 0x00A0 );
+    const QString title = pad( cleanup->cleanTitle(), 40 );
 
     QString msg = "<html>";
     if ( items.size() == 1 ) // The most common case
@@ -346,9 +340,7 @@ bool CleanupCollection::confirmation( Cleanup * cleanup, const FileInfoSet & ite
     else // Multiple items selected
     {
 	QStringList urls;
-	const bool isMixed = items.containsDir() && items.containsFile();
-
-	if ( isMixed )
+	if ( items.containsDir() && items.containsFile() )
 	{
 	    QStringList dirs	= filteredUrls( items, true, false,    // dirs, nonDirs
 						true );		       // extraHighlight
@@ -418,7 +410,7 @@ void CleanupCollection::addToMenu( QMenu * menu, bool keepUpdated )
 {
     CHECK_PTR( menu );
 
-    foreach ( Cleanup * cleanup, _cleanupList )
+    for ( Cleanup * cleanup : _cleanupList )
     {
 	if ( cleanup->active() )
 	    menu->addAction( cleanup );
@@ -433,7 +425,7 @@ void CleanupCollection::addEnabledToMenu( QMenu * menu ) const
 {
     CHECK_PTR( menu );
 
-    foreach ( Cleanup * cleanup, _cleanupList )
+    for ( Cleanup * cleanup : _cleanupList )
     {
 	if ( cleanup->active() && cleanup->isEnabled() )
 	    menu->addAction( cleanup );
@@ -445,7 +437,7 @@ void CleanupCollection::addToToolBar( QToolBar * toolBar, bool keepUpdated )
 {
     CHECK_PTR( toolBar );
 
-    foreach ( Cleanup * cleanup, _cleanupList )
+    for ( Cleanup * cleanup : _cleanupList )
     {
 	// Add only cleanups that have an icon to avoid overcrowding the
 	// toolbar with actions that only have a text.
@@ -469,7 +461,7 @@ void CleanupCollection::readSettings()
     {
 	// Read all settings groups [Cleanup_xx] that were found
 
-	foreach ( const QString & groupName, cleanupGroups )
+	for ( const QString & groupName : cleanupGroups )
 	{
 	    settings.beginGroup( groupName );
 
@@ -617,30 +609,35 @@ void CleanupCollection::moveToTrash()
     const FileInfoSet selectedItems = _selectionModel->selectedItems();
 
     // Prepare output window
-    OutputWindow * outputWindow = new OutputWindow( qApp->activeWindow() );
+    OutputWindow * outputWindow = new OutputWindow( qApp->activeWindow(), true );
     CHECK_NEW( outputWindow );
 
     // Prepare refresher
-    const FileInfoSet refreshSet = Refresher::parents( selectedItems );
+    createRefresher( outputWindow, Refresher::parents( selectedItems ) );
+
+    // Window will never show for quick and successful trashes
+    outputWindow->showAfterTimeout();
+
+    // Move all selected items to trash
+    for ( const FileInfo * item : selectedItems )
+    {
+	QCoreApplication::processEvents(); // give the output window a chance
+	if ( Trash::trash( item->path() ) )
+	    outputWindow->addStdout( tr( "Moved to trash: " ) + item->path() );
+	else
+	    outputWindow->addStderr( tr( "Move to trash failed for " ) + item->path() );
+    }
+
+    outputWindow->noMoreProcesses();
+}
+
+
+void CleanupCollection::createRefresher( OutputWindow * outputWindow, const FileInfoSet & refreshSet )
+{
     _selectionModel->prepareRefresh( refreshSet );
     Refresher * refresher  = new Refresher( this, refreshSet );
     CHECK_NEW( refresher );
 
-    connect( outputWindow, SIGNAL( lastProcessFinished( int ) ),
-	     refresher,	   SLOT	 ( refresh()		      ) );
-
-    outputWindow->showAfterTimeout();
-
-    // Move all selected items to trash
-    foreach ( const FileInfo * item, selectedItems )
-    {
-	const bool success = Trash::trash( item->path() );
-
-	if ( success )
-	    outputWindow->addStdout( tr( "Moved to trash: %1" ).arg( item->path() ) );
-	else
-	    outputWindow->addStderr( tr( "Move to trash failed for %1" ).arg( item->path() ) );
-    }
-
-    outputWindow->noMoreProcesses();
+    connect( outputWindow, &OutputWindow::lastProcessFinished,
+	     refresher,	   &Refresher::refresh );
 }

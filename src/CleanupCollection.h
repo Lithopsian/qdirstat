@@ -238,6 +238,10 @@ namespace QDirStat
 	 **/
 	void updateMenusAndToolBars();
 
+	/**
+	 * Create a refresher for the given refresh set.
+	 **/
+	void createRefresher( OutputWindow * outputWindow, const FileInfoSet & refreshSet );
 
 	//
 	// Data members

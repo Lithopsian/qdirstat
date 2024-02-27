@@ -80,7 +80,7 @@ QStringList OpenUnpkgDialog::cleanedLines( QPlainTextEdit *widget ) const
     const QStringList lines  = text.split( '\n', Qt::SkipEmptyParts );
     QStringList result;
 
-    foreach ( QString line, lines )
+    for ( QString line : lines )
     {
 	line = line.trimmed();
 

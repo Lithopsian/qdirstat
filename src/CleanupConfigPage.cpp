@@ -25,9 +25,9 @@ using namespace QDirStat;
 
 
 CleanupConfigPage::CleanupConfigPage( QWidget * parent ):
-    ListEditor( parent ),
-    _ui( new Ui::CleanupConfigPage ),
-    _cleanupCollection( 0 )
+    ListEditor ( parent ),
+    _ui { new Ui::CleanupConfigPage },
+    _cleanupCollection { nullptr }
 {
     CHECK_NEW( _ui );
 
@@ -120,7 +120,7 @@ void CleanupConfigPage::fillListWidget()
     CHECK_PTR( _cleanupCollection );
     listWidget()->clear();
 
-    foreach ( const Cleanup * cleanup, _cleanupCollection->cleanupList() )
+    for ( const Cleanup * cleanup : _cleanupCollection->cleanupList() )
     {
 	// Make a deep copy so the config dialog can work without disturbing the real rules
 	Cleanup * newCleanup = new Cleanup( cleanup );

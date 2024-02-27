@@ -236,7 +236,7 @@ QString DpkgPkgManager::originalOwningPkg( const QString & path ) const
 		    // Pick any one which isn't the diverting package
 		    const QStringList packages = fields.first().split( ", " );
 		    logDebug() << " diverted file owned by " << packages << Qt::endl;
-		    foreach ( const QString package, packages )
+		    for ( const QString & package : packages )
 			if ( package != divertingPkg )
 			    return package;
 		}
@@ -265,8 +265,8 @@ PkgInfoList DpkgPkgManager::installedPkg() const
 PkgInfoList DpkgPkgManager::parsePkgList( const QString & output ) const
 {
     PkgInfoList pkgList;
-
-    foreach ( const QString & line, output.split( "\n" ) )
+    const QStringList splitOutput = output.split( "\n" );
+    for ( const QString & line : splitOutput )
     {
 	if ( ! line.isEmpty() )
 	{
@@ -305,7 +305,7 @@ QStringList DpkgPkgManager::parseFileList( const QString & output ) const
     QStringList fileList;
     const QStringList lines = output.split( "\n" );
 
-    foreach ( const QString & line, lines )
+    for ( const QString & line : lines )
     {
 	if ( isDivertedBy( line ) )
 	{
@@ -480,7 +480,7 @@ PkgFileListCache * DpkgPkgManager::createFileListCache( PkgFileListCache::Lookup
 	if ( pathname.isEmpty() || pathname == "/." )
 	    continue;
 
-	foreach ( const QString & pkgName, packages.split( ", " ) )
+	for ( const QString & pkgName : packages.split( ", " ) )
 	    if ( ! pkgName.isEmpty() )
 		cache->add( pkgName, pathname );
     }

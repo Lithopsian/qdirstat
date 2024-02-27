@@ -114,7 +114,7 @@ void MainWindow::setUnpkgFilters( const UnpkgSettings & unpkgSettings,
     app()->dirTree()->addFilter( filter );
 
     // Add the filters for each file pattern the user explicitly requested to ignore
-    foreach ( const QString & pattern, unpkgSettings.ignorePatterns() )
+    for ( const QString & pattern : unpkgSettings.ignorePatterns() )
 	app()->dirTree()->addFilter( DirTreePatternFilter::create( pattern ) );
 }
 

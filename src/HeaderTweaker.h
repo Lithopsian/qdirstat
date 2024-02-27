@@ -63,11 +63,6 @@ namespace QDirStat
 	void setAllColumnsAutoSize();
 
 	/**
-	 * Set auto size mode for all columns on or off.
-	 **/
-	void setAllColumnsAutoSize( bool autoSize );
-
-	/**
 	 * Set interactive size mode (i.e. auto size mode off) for all columns.
 	 **/
 	void setAllColumnsInteractiveSize();
@@ -116,13 +111,13 @@ namespace QDirStat
 	/**
 	 * Create one action and connect to the given slot.
 	 **/
-	QAction * createAction( const QString & title, void( HeaderTweaker::*slot )( void ) );
+	QAction * createAction( QMenu * menu, const QString & title, void( HeaderTweaker::*slot )( void ) );
 
 	/**
 	 * Create internally used actions and connect them to the appropriate
 	 * slots.
 	 **/
-	void createActions();
+//	void createActions();
 
 	/**
 	 * Create one column layout.
@@ -138,12 +133,29 @@ namespace QDirStat
 	 * Update all actions for a context menu for logical section
 	 * 'section'.
 	 **/
-	void updateActions( int section );
+//	void updateActions( int section );
 
 	/**
 	 * Create a submenu for the currently hidden columns.
 	 **/
 	QMenu * createHiddenColMenu( QWidget * parent );
+
+	/**
+	 * Set auto size mode for all columns on or off.
+	 **/
+	void setAllColumnsResizeMode( bool autoSize );
+
+	/**
+	 * Set auto size mode for all columns on or off.
+	 **/
+	 QHeaderView::ResizeMode toggleResizeMode( QHeaderView::ResizeMode resizeMode )
+		{ return resizeMode == QHeaderView::Interactive ? QHeaderView::ResizeToContents : QHeaderView::Interactive; }
+
+	/**
+	 * Set auto size mode for all columns on or off.
+	 **/
+	QHeaderView::ResizeMode resizeMode( bool autoSize ) const
+	    { return autoSize ? QHeaderView::ResizeToContents : QHeaderView::Interactive; }
 
 	/**
 	 * Save the current status in 'layout'.
@@ -178,7 +190,8 @@ namespace QDirStat
 	/**
 	 * Return 'true' if logical section no. 'section' has auto resize mode.
 	 **/
-	bool autoSizeCol( int section ) const { return resizeMode( section ) == QHeaderView::ResizeToContents; }
+	bool autoSizeCol( int section ) const
+	    { return resizeMode( section ) == QHeaderView::ResizeToContents; }
 
 	/**
 	 * Add any columns that are missing from the default columns to
@@ -189,12 +202,14 @@ namespace QDirStat
 	/**
 	 * Return the resize mode for the specified section.
 	 **/
-	QHeaderView::ResizeMode resizeMode( int section ) const { return _header->sectionResizeMode( section ); }
+	QHeaderView::ResizeMode resizeMode( int section ) const
+	    { return _header->sectionResizeMode( section ); }
 
 	/**
 	 * Set the resize mode for the specified section.
 	 **/
-	void setResizeMode( int section, QHeaderView::ResizeMode resizeMode );
+	void setResizeMode( int section, QHeaderView::ResizeMode resizeMode )
+	    { _header->setSectionResizeMode( section, resizeMode ); }
 
 	/**
 	 * Read parameters from the settings file.
@@ -222,12 +237,6 @@ namespace QDirStat
 
 	DirTreeView		      * _treeView;
 	QHeaderView		      * _header;
-	QAction			      * _actionAllColumnsAutoSize;
-	QAction			      * _actionAllColumnsInteractiveSize;
-	QAction			      * _actionAutoSizeCurrentCol;
-	QAction			      * _actionHideCurrentCol;
-	QAction			      * _actionShowAllHiddenColumns;
-	QAction			      * _actionResetToDefaults;
 	int				_currentSection;
 	QMap<QString, ColumnLayout *>	_layouts;
 	ColumnLayout *			_currentLayout;

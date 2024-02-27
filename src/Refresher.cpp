@@ -38,7 +38,7 @@ FileInfoSet Refresher::parents( const FileInfoSet children )
 {
     FileInfoSet parents;
 
-    foreach ( FileInfo * child, children )
+    for ( FileInfo * child : children )
     {
 	if ( child && child->parent() )
         {

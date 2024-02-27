@@ -197,8 +197,8 @@ CacheReader::CacheReader( const QString & fileName,
     _ok { true },
     _errorCount { 0 },
     _toplevel { parent },
-    _lastDir { 0 },
-    _lastExcludedDir {0 },
+    _lastDir { nullptr },
+    _lastExcludedDir { nullptr },
     _multiSlash { "//+" } // cache regexp for multiple use
 {
     if ( _cache == 0 )

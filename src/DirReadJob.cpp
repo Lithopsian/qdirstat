@@ -35,7 +35,7 @@ DirReadJob::DirReadJob( DirTree * tree,
 			DirInfo * dir  ):
     _tree { tree },
     _dir { dir },
-    _queue { 0 },
+    _queue { nullptr },
     _started { false }
 {
     if ( _dir )
@@ -270,7 +270,7 @@ void LocalDirReadJob::startReading()
 	// multiple hard links in the same directory, a QMap would store only
 	// one of them, all others would go missing in the DirTree.
 
-	foreach ( const QString & entryName, entryMap )
+	for ( const QString & entryName : entryMap )
 	{
 	    if ( fstatat( dirFd, entryName.toUtf8(), &statInfo, flags ) == 0 )	// OK?
 	    {
@@ -762,13 +762,13 @@ void DirReadJobQueue::clear()
 
 void DirReadJobQueue::abort()
 {
-    foreach ( DirReadJob * job, _queue )
+    for ( DirReadJob * job : _queue )
     {
 	if ( job->dir() )
 	    job->dir()->readJobAborted( job->dir() );
     }
 
-    foreach ( DirReadJob * job, _blocked )
+    for ( DirReadJob * job : _blocked )
     {
 	if ( job->dir() )
 	    job->dir()->readJobAborted( job->dir() );

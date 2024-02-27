@@ -55,15 +55,15 @@ namespace QDirStat
 	 **/
 	ListEditor( QWidget * parent ):
 	    QWidget { parent },
-	    _listWidget {0 },
-	    _firstRow {0 },
+	    _listWidget { nullptr },
+	    _firstRow { 0 },
 	    _updatesLocked {false },
-	    _moveUpButton {0 },
-	    _moveDownButton { 0 },
-	    _moveToTopButton { 0 },
-	    _moveToBottomButton { 0 },
-	    _addButton { 0 },
-	    _removeButton { 0}
+	    _moveUpButton { nullptr },
+	    _moveDownButton { nullptr },
+	    _moveToTopButton { nullptr },
+	    _moveToBottomButton { nullptr },
+	    _addButton { nullptr },
+	    _removeButton { nullptr }
 	{}
 
 	/**

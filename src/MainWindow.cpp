@@ -40,12 +40,10 @@
 #include "Logger.h"
 #include "OpenDirDialog.h"
 #include "OpenPkgDialog.h"
-#include "OutputWindow.h"
 #include "PanelMessage.h"
 #include "PkgManager.h"
 #include "PkgQuery.h"
 #include "QDirStatApp.h"
-#include "Refresher.h"
 #include "SelectionModel.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
@@ -64,14 +62,14 @@ using namespace QDirStat;
 MainWindow::MainWindow( bool slowUpdate ):
     QMainWindow(),
     _ui { new Ui::MainWindow },
-    _configDialog { 0 },
+    _configDialog { nullptr },
     _discoverActions { new DiscoverActions( this ) },
     _enableDirPermissionsWarning { false },
     _verboseSelection { false },
     _urlInWindowTitle { false },
     _statusBarTimeout { 3000 }, // millisec
     _longStatusBarTimeout { 30000 }, // millisec
-    _treeLevelMapper { 0 },
+    _treeLevelMapper { nullptr },
     _sortCol { QDirStat::DataColumns::toViewCol( QDirStat::SizeCol ) },
     _sortOrder { Qt::DescendingOrder }
 {
@@ -493,11 +491,11 @@ void MainWindow::updateFileDetailsView()
 }
 
 
-void MainWindow::setDetailsPanelVisible( bool visible )
+void MainWindow::setDetailsPanelVisible( bool detailsPanelVisible )
 {
-    saveLayout( visible );
+    updateLayout( detailsPanelVisible );
 
-    if ( visible )
+    if ( detailsPanelVisible )
         updateFileDetailsView();
 }
 
@@ -514,7 +512,7 @@ void MainWindow::readingFinished()
     idleDisplay();
 
     const QString elapsedTime = formatMillisec( _stopWatch.elapsed() );
-    _ui->statusBar->showMessage( tr( "Finished. Elapsed time: %1").arg( elapsedTime ), _longStatusBarTimeout );
+    _ui->statusBar->showMessage( tr( "Finished. Elapsed time: " ) + elapsedTime, _longStatusBarTimeout );
     logInfo() << "Reading finished after " << elapsedTime << Qt::endl;
 
     if ( app()->root() &&
@@ -532,7 +530,7 @@ void MainWindow::readingAborted()
     idleDisplay();
 
     const QString elapsedTime = formatMillisec( _stopWatch.elapsed() );
-    _ui->statusBar->showMessage( tr( "Aborted. Elapsed time: %1").arg( elapsedTime ), _longStatusBarTimeout );
+    _ui->statusBar->showMessage( tr( "Aborted. Elapsed time: " ) + elapsedTime, _longStatusBarTimeout );
     logInfo() << "Reading aborted after " << elapsedTime << Qt::endl;
 }
 
@@ -595,9 +593,8 @@ void MainWindow::showOpenDirErrorPopup( const SysCallFailedException & ex )
     updateWindowTitle( "" );
     app()->dirTree()->sendFinished();
 
-    QMessageBox errorPopup( QMessageBox::Warning,	// icon
-                            tr( "Error" ),		// title
-                            tr( "Could not open directory %1" ).arg( ex.resourceName() ).leftJustified( 50, 0x00A0 ) );
+    const QString msg = pad( tr( "Could not open directory " ) + ex.resourceName(), 50 );
+    QMessageBox errorPopup( QMessageBox::Warning, tr( "Error" ), msg );
     errorPopup.setDetailedText( ex.what() );
     errorPopup.exec();
 }
@@ -768,9 +765,8 @@ void MainWindow::readCache( const QString & cacheFileName )
     if ( !app()->dirTree()->readCache( cacheFileName ) )
     {
 	idleDisplay();
-	QMessageBox::warning( this,
-                              tr( "Error" ), // Title
-                              tr( "Can't read cache file \"%1\"").arg( cacheFileName ).leftJustified( 50, 0x00A0 ) );
+	const QString msg = pad( tr( "Can't read cache file " ) + cacheFileName, 50 );
+	QMessageBox::warning( this, tr( "Error" ), msg );
     }
 }
 
@@ -798,13 +794,13 @@ void MainWindow::askWriteCache()
     const bool ok = app()->dirTree()->writeCache( fileName );
     if ( ok )
     {
-	showProgress( tr( "Directory tree written to file %1" ).arg( fileName ) );
+	showProgress( tr( "Directory tree written to file " ) + fileName );
     }
     else
     {
 	QMessageBox::warning( this,
 			      tr( "Error" ), // Title
-			      tr( "ERROR writing cache file \"%1\"").arg( fileName ) );
+			      tr( "ERROR writing cache file " ) + fileName );
     }
 }
 
@@ -831,7 +827,7 @@ void MainWindow::showProgress( const QString & text )
 
 void MainWindow::showElapsedTime()
 {
-    showProgress( tr( "Reading... %1" ).arg( formatMillisec( _stopWatch.elapsed(), false ) ) );
+    showProgress( tr( "Reading... " ) + formatMillisec( _stopWatch.elapsed(), false ) );
 }
 
 
@@ -883,7 +879,7 @@ void MainWindow::startingCleanup( const QString & cleanupName )
 
     _futureSelection.set( app()->selectionModel()->selectedItems().first() );
 
-    showProgress( tr( "Starting cleanup action %1" ).arg( cleanupName ) );
+    showProgress( tr( "Starting cleanup action " ) + cleanupName );
 }
 
 
@@ -910,7 +906,7 @@ void MainWindow::copyCurrentPathToClipboard()
 	QClipboard * clipboard = QApplication::clipboard();
 	const QString path = currentItem->path();
 	clipboard->setText( path );
-	showProgress( tr( "Copied to system clipboard: %1" ).arg( path ) );
+	showProgress( tr( "Copied to system clipboard: " ) + path );
     }
     else
     {
@@ -1114,19 +1110,6 @@ void MainWindow::showUnreadableDirs()
 {
     UnreadableDirsWindow::populateSharedInstance( app()->root() );
 }
-
-/*
-void MainWindow::showAboutDialog()
-{
-    QMessageBox::about( this, tr( "About QDirStat" ), ABOUT_DIALOG_TEXT );
-}
-
-
-void MainWindow::showDonateDialog()
-{
-    QMessageBox::about( this, tr( "Donate" ), DONATE_DIALOG_TEXT );
-}
-*/
 
 #if 0
 void MainWindow::itemClicked( const QModelIndex & index )

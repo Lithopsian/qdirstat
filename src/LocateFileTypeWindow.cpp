@@ -152,7 +152,7 @@ void LocateFileTypeWindow::populateRecursive( FileInfo * dir )
 
 	FileSize totalSize = 0LL;
 
-	foreach ( FileInfo * file, matches )
+	for ( FileInfo * file : matches )
 	    totalSize += file->size();
 
 	SuffixSearchResultItem * searchResultItem =

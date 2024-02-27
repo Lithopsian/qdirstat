@@ -43,7 +43,7 @@ public:
     /**
      * Constructor.
      **/
-    OutputWindow( QWidget * parent );
+    OutputWindow( QWidget * parent, bool autoClose );
 
     /**
      * Destructor.
@@ -68,11 +68,6 @@ public:
      * Return the number of errors the processes reported.
      **/
     int errorCount() const { return _errorCount; }
-
-    /**
-     * Set the auto-close checkbox to the given state.
-     **/
-    void setAutoClose( bool autoClose ) { _ui->autoCloseCheckBox->setChecked( autoClose ); }
 
     /**
      * Set if this dialog should show itself if there is any output on
@@ -275,6 +270,11 @@ signals:
 
 
 protected:
+
+    /**
+     * Set the auto-close checkbox to the given state.
+     **/
+    void setAutoClose( bool autoClose ) { _ui->autoCloseCheckBox->setChecked( autoClose ); }
 
     /**
      * Close event: Invoked upon QDialog::close(), i.e. the "Close" button, the

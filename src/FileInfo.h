@@ -89,7 +89,7 @@ namespace QDirStat
 		  FileSize	  blocks,
 		  nlink_t	  links ):
 	    _parent { parent },
-	    _next { 0 },
+	    _next { nullptr },
 	    _tree { tree },
 	    _magic { FileInfoMagic },
 	    _name { filenameWithoutPath },

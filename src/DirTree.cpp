@@ -35,7 +35,7 @@ DirTree::DirTree():
     _root { new DirInfo( this ) },
     _crossFilesystems { false },
     _isBusy { false },
-    _excludeRules { 0 },
+    _excludeRules { nullptr },
     _beingDestroyed { false },
     _haveClusterSize { false },
     _blocksPerCluster { 0 }
@@ -180,7 +180,7 @@ void DirTree::refresh( const FileInfoSet & refreshSet )
 {
     FileInfoSet items = refreshSet.invalidRemoved().normalized();
 
-    foreach ( FileInfo * item, items )
+    for ( FileInfo * item : items )
     {
 	// Need to check the magic number here again because a previous
 	// iteration step might have made the item invalid already
@@ -534,7 +534,7 @@ void DirTree::clearFilters()
 
 bool DirTree::checkIgnoreFilters( const QString & path )
 {
-    foreach ( DirTreeFilter * filter, _filters )
+    for ( DirTreeFilter * filter : _filters )
     {
 	if ( filter->ignore( path ) )
 	    return true;
@@ -570,7 +570,7 @@ void DirTree::moveIgnoredToAttic( DirInfo * dir )
     }
 
 
-    foreach ( FileInfo * child, ignoredChildren )
+    for ( FileInfo * child : ignoredChildren )
     {
 	// logDebug() << "Moving ignored " << child << " to attic" << Qt::endl;
 	dir->moveToAttic( child );

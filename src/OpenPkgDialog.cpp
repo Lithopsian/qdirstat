@@ -16,8 +16,8 @@ using namespace QDirStat;
 
 
 OpenPkgDialog::OpenPkgDialog( QWidget * parent ):
-    QDialog( parent ),
-    _ui( new Ui::OpenPkgDialog )
+    QDialog ( parent ),
+    _ui { new Ui::OpenPkgDialog }
 {
     // logDebug() << "init" << Qt::endl;
 
@@ -25,6 +25,10 @@ OpenPkgDialog::OpenPkgDialog( QWidget * parent ):
     _ui->setupUi( this );
     _ui->pkgPatternField->setClearButtonEnabled( true );
     _ui->pkgPatternField->setFocus();
+
+    connect( _ui->pkgPatternField, &QLineEdit::textChanged,
+             this,                 &OpenPkgDialog::textEdited );
+
 }
 
 
@@ -74,7 +78,9 @@ PkgFilter OpenPkgDialog::askPkgFilter( bool    * canceled_ret,
 
 void OpenPkgDialog::textEdited()
 {
-    if ( !_ui->pkgPatternField->text().isEmpty() )
-        _ui->useFilterRadioButton->setChecked(true);
+    if ( _ui->pkgPatternField->text().isEmpty() )
+        _ui->allPkgRadioButton->setChecked( true );
+    else
+        _ui->useFilterRadioButton->setChecked( true );
 }
 

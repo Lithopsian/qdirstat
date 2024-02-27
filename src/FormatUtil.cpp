@@ -16,12 +16,6 @@
 using namespace QDirStat;
 
 
-QString QDirStat::formatSize( FileSize lSize )
-{
-    return formatSize( lSize, 1 );
-}
-
-
 QString QDirStat::formatSize( FileSize lSize, int precision )
 {
     static QStringList units = { QObject::tr( " bytes" ),
@@ -56,37 +50,6 @@ QString QDirStat::formatSize( FileSize lSize, int precision )
 }
 
 
-QString QDirStat::formatByteSize( FileSize size )
-{
-
-    return QObject::tr( "%L1 bytes" ).arg( size );
-}
-
-
-QString QDirStat::formatShortByteSize( FileSize size )
-{
-    return QString( "%1 B" ).arg( size );
-}
-
-
-QString QDirStat::formatLinksInline( nlink_t numLinks )
-{
-    return numLinks > 1 ? QString( " / %1 links" ).arg( numLinks) : "";
-}
-
-
-QString QDirStat::formatLinksRichText( nlink_t numLinks )
-{
-    return numLinks > 1 ? QString( "<br/>%1 hard links" ).arg( numLinks ) : "";
-}
-
-
-QString QDirStat::whitespacePre( const QString & text )
-{
-    return "<p style='white-space:pre'>" + text + "</p>";
-}
-
-
 QString QDirStat::formatPercent( float percent )
 {
     if ( percent < 0.0 )	// Invalid percentage?
@@ -101,21 +64,13 @@ QString QDirStat::formatTime( time_t rawTime )
     if ( rawTime == (time_t) 0 )
 	return "";
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 8, 0)
     const QDateTime time = QDateTime::fromTime_t( rawTime );
+#else
+    const QDateTime time = QDateTime::fromSecsSinceEpoch( rawTime );
+#endif
     return QLocale().toString( time, QLocale::ShortFormat );
 //    return time.toString( Qt::DefaultLocaleShortDate );
-}
-
-
-QString QDirStat::formatPermissions( mode_t mode )
-{
-    return symbolicMode( mode ) + "  " + formatOctal( ALLPERMS & mode );
-}
-
-
-QString QDirStat::formatOctal( int number )
-{
-    return QString( "0" ) + QString::number( number, 8 );
 }
 
 
@@ -163,12 +118,6 @@ QString QDirStat::symbolicMode( mode_t mode )
 	result += "-";
 
     return result;
-}
-
-
-QString QDirStat::octalMode( mode_t mode )
-{
-    return formatOctal( ALLPERMS & mode );
 }
 
 

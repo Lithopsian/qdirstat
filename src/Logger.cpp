@@ -243,12 +243,6 @@ void Logger::setLogLevel( Logger *logger, LogSeverity newLevel )
 }
 
 
-void Logger::newline()
-{
-    _logStream << Qt::endl;
-}
-
-
 QString Logger::timeStamp()
 {
     return QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss.zzz" );
@@ -299,7 +293,7 @@ static void qt_logger( QtMsgType msgType,
 {
     const QStringList lines = msg.split("\n");
 
-    foreach ( QString line, msg.split( "\n" ) )
+    for ( QString line : lines )
     {
         // Remove utterly misleading message that will just dump a ton of bug
         // reports on the application maintainers just because some clueless
@@ -513,7 +507,7 @@ void Logger::logRotate( const QString & logDir,
     }
 
     const QStringList matches = dir.entryList( QStringList() << oldNamePattern( filename ), QDir::Files );
-    foreach ( const QString & match, matches )
+    for ( const QString & match : matches )
     {
 	if ( ! keepers.contains( match ) )
 	{
@@ -539,28 +533,10 @@ QString Logger::expandVariables( const QString & unexpanded )
 
 
 
-QTextStream & operator<<( QTextStream & str, bool val )
-{
-    str << ( val ? "true" : "false" );
-    return str;
-}
-
-
-QTextStream & operator<<( QTextStream & str, const QStringList &stringList )
-{
-    str << stringList.join( ", " );
-    return str;
-}
-
-
 QTextStream & operator<<( QTextStream & str, const QRectF & rect )
 {
-    str << "QRectF("
-           << " x: " << rect.x()
-           << " y: " << rect.y()
-           << " width: " << rect.width()
-           << " height: " << rect.height()
-           << " )";
+    str << "QRectF( x: " << rect.x() << " y: " << rect.y()
+           << " width: " << rect.width() << " height: " << rect.height() << " )";
 
     return str;
 }
@@ -568,10 +544,7 @@ QTextStream & operator<<( QTextStream & str, const QRectF & rect )
 
 QTextStream & operator<<( QTextStream & str, const QPointF & point )
 {
-    str << "QPointF("
-           << " x: " << point.x()
-           << " y: " << point.y()
-           << " )";
+    str << "QPointF( x: " << point.x() << " y: " << point.y() << " )";
 
     return str;
 }
@@ -579,10 +552,7 @@ QTextStream & operator<<( QTextStream & str, const QPointF & point )
 
 QTextStream & operator<<( QTextStream & str, const QSizeF & size )
 {
-    str << "QSizeF("
-           << " width: " << size.width()
-           << " height: " << size.height()
-           << " )";
+    str << "QSizeF( width: " << size.width() << " height: " << size.height() << " )";
 
     return str;
 }
@@ -590,10 +560,7 @@ QTextStream & operator<<( QTextStream & str, const QSizeF & size )
 
 QTextStream & operator<<( QTextStream & str, const QSize & size )
 {
-    str << "QSize("
-           << " width: " << size.width()
-           << " height: " << size.height()
-           << " )";
+    str << "QSize( width: " << size.width() << " height: " << size.height() << " )";
 
     return str;
 }

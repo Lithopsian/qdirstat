@@ -50,7 +50,8 @@ void FilesystemsWindow::populate()
     QFileIconProvider iconProvider;
     clear();
 
-    foreach ( MountPoint * mountPoint, MountPoints::normalMountPoints() )
+    const auto mountPoints = MountPoints::normalMountPoints();
+    for ( MountPoint * mountPoint : mountPoints )
     {
 	CHECK_PTR( mountPoint);
 

@@ -56,7 +56,7 @@ namespace QDirStat
 
 	colorList.clear();
 
-	foreach ( const QString & rgb, strList )
+	for ( const QString & rgb : strList )
 	{
 	    QColor color( rgb );
 
@@ -82,7 +82,7 @@ namespace QDirStat
     {
 	QStringList strList;
 
-	foreach ( const QColor & color, colors )
+	for ( const QColor & color : colors )
 	{
 	    strList << color.name();
 	}

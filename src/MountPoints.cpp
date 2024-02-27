@@ -194,7 +194,7 @@ bool MountPoints::isDeviceMounted( const QString & device )
     // Do NOT call ensurePopulated() here: This would cause a recursion in the
     // populating process!
 
-    foreach ( const MountPoint * mountPoint, instance()->_mountPointList )
+    for ( const MountPoint * mountPoint : instance()->_mountPointList )
     {
 	if ( mountPoint->device() == device )
 	    return true;
@@ -355,7 +355,8 @@ bool MountPoints::readStorageInfo()
 {
     findNtfsDevices();
 
-    foreach ( const QStorageInfo mount, QStorageInfo::mountedVolumes() )
+    const auto mountedVolumes = QStorageInfo::mountedVolumes();
+    for ( const QStorageInfo & mount : mountedVolumes )
     {
         const QString device( QString::fromUtf8( mount.device() ) );
         QString fsType( QString::fromUtf8( mount.fileSystemType() ) );
@@ -397,7 +398,7 @@ bool MountPoints::checkForBtrfs()
 {
     ensurePopulated();
 
-    foreach ( const MountPoint * mountPoint, _mountPointMap )
+    for ( const MountPoint * mountPoint : _mountPointMap )
     {
 	if ( mountPoint && mountPoint->isBtrfs() )
 	    return true;
@@ -434,7 +435,7 @@ void MountPoints::findNtfsDevices()
         const QStringList lines = output.split( "\n" )
             .filter( QRegularExpression( "\\s+ntfs", QRegularExpression::CaseInsensitiveOption ) );
 
-        foreach ( const QString line, lines )
+        for ( const QString & line : lines )
         {
             QString device = "/dev/" + line.split( QRegularExpression( "\\s+" ) ).first();
             logDebug() << "NTFS on " << device << Qt::endl;
@@ -452,7 +453,7 @@ QList<MountPoint *> MountPoints::normalMountPoints()
     instance()->ensurePopulated();
     QList<MountPoint *> result;
 
-    foreach ( MountPoint * mountPoint, instance()->_mountPointList )
+    for ( MountPoint * mountPoint : instance()->_mountPointList )
     {
 	if ( ! mountPoint->isSystemMount()     &&
              ! mountPoint->isDuplicate()       &&
@@ -469,14 +470,15 @@ QList<MountPoint *> MountPoints::normalMountPoints()
 
 void MountPoints::dumpNormalMountPoints()
 {
-    foreach ( const MountPoint * mountPoint, normalMountPoints() )
+    const auto mountPoints = normalMountPoints();
+    for ( const MountPoint * mountPoint : mountPoints )
 	logDebug() << mountPoint << Qt::endl;
 }
 
 
 void MountPoints::dump()
 {
-    foreach ( const MountPoint * mountPoint, instance()->_mountPointList )
+    for ( const MountPoint * mountPoint : instance()->_mountPointList )
 	logDebug() << mountPoint << Qt::endl;
 }
 

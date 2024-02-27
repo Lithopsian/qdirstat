@@ -27,8 +27,8 @@ using namespace QDirStat;
 
 
 DirTreeView::DirTreeView( QWidget * parent ):
-    QTreeView( parent ),
-    _cleanupCollection(0)
+    QTreeView ( parent ),
+    _cleanupCollection { nullptr }
 {
     _percentBarDelegate = new PercentBarDelegate( this, PercentBarCol, 0, 2 );
     CHECK_NEW( _percentBarDelegate );
@@ -149,7 +149,8 @@ QModelIndexList DirTreeView::expandedIndexes() const
 	return QModelIndexList();
     }
 
-    foreach ( const QModelIndex & index, dirTreeModel->persistentIndexList() )
+    const auto indexList = dirTreeModel->persistentIndexList();
+    for ( const QModelIndex & index : indexList )
     {
 	if ( isExpanded( index ) )
 	    expandedList << index;

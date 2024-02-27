@@ -118,7 +118,7 @@ void FileAgeStats::calcPercentages()
     _totalFilesCount = 0;
     _totalFilesSize  = 0;
 
-    foreach ( const YearStats & stats, _yearStats )
+    for ( const YearStats & stats : _yearStats )
     {
         _totalFilesCount += stats.filesCount;
         _totalFilesSize  += stats.size;

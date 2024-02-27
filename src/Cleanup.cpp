@@ -42,7 +42,7 @@ Cleanup::Cleanup( QObject            * parent,
 		  bool                 outputWindowAutoClose,
 		  QString              shell,
 		  QString              iconName ):
-    QAction { title, parent },
+    QAction ( title, parent ),
     _active { active },
     _title { title },
     _command { command },
@@ -63,11 +63,11 @@ Cleanup::Cleanup( QObject            * parent,
 
 
 Cleanup::Cleanup( const Cleanup * other ):
-    Cleanup { 0, other->_active, other->_title, other->_command,
+    Cleanup ( 0, other->_active, other->_title, other->_command,
               other->_recurse, other->_askForConfirmation, other->_refreshPolicy,
               other->_worksForDir, other->_worksForFile, other->_worksForDotEntry,
               other->_outputWindowPolicy, other->_outputWindowTimeout, other->_outputWindowAutoClose,
-              other->_shell, other->_iconName }
+              other->_shell, other->_iconName )
 {
 //    setIcon ( other->iconName() ); // not currently in the config dialog
     setShortcut( other->shortcut() );
@@ -319,7 +319,7 @@ const QStringList & Cleanup::defaultShells()
 	cached = true;
 	const QStringList candidates = { loginShell(), "/bin/bash", "/bin/sh" };
 
-	foreach ( const QString & shell, candidates )
+	for ( const QString & shell : candidates )
 	{
 	    if ( isExecutable( shell ) )
 		 shells << shell;

@@ -26,17 +26,17 @@ using namespace QDirStat;
 
 TreemapView::TreemapView( QWidget * parent ):
     QGraphicsView ( parent ),
-    _tree { 0 },
-    _selectionModel { 0 },
-    _selectionModelProxy { 0 },
-    _cleanupCollection { 0 },
-//    _rebuilder(0),
-    _rootTile { 0 },
-//    _currentTile(0),
-    _currentTileHighlighter { 0 },
-    _sceneMask { 0 },
-    _newRoot { 0 },
-//    _highlightedTile(0),
+    _tree { nullptr },
+    _selectionModel { nullptr },
+    _selectionModelProxy { nullptr },
+    _cleanupCollection { nullptr },
+//    _rebuilder { nullptr },
+    _rootTile { nullptr },
+//    _currentTile { nullptr },
+    _currentTileHighlighter { nullptr },
+    _sceneMask { nullptr },
+    _newRoot { nullptr },
+//    _highlightedTile { nullptr },
     _disabled { false },
 //    _useFixedColor(false).
     _treemapRunning { false },
@@ -46,17 +46,8 @@ TreemapView::TreemapView( QWidget * parent ):
 
     readSettings();
 
-//    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-//    setVerticalScrollBarPolicy  ( Qt::ScrollBarAlwaysOff );
-//    setOptimizationFlags( DontSavePainterState | DontAdjustForAntialiasing );
     QThreadPool::globalInstance()->setMaxThreadCount(100);
-/*
-    _rebuilder = new DelayedRebuilder( this );
-    CHECK_NEW( _rebuilder );
 
-    connect( _rebuilder, &DelayedRebuilder::rebuild,
-             this,       &TreemapView::rebuildTreemapDelayed );
-*/
     connect( &_watcher,  &QFutureWatcher<TreemapTile *>::finished,
              this,       &TreemapView::treemapFinished );
 }
@@ -342,7 +333,7 @@ bool TreemapView::canZoomOut() const
 
 void TreemapView::rebuildTreemap()
 {
-    logDebug() << _savedRootUrl << Qt::endl;
+    //logDebug() << _savedRootUrl << Qt::endl;
     FileInfo * root = 0;
 
     if ( ! _savedRootUrl.isEmpty() )
@@ -380,7 +371,7 @@ void TreemapView::rebuildTreemap( FileInfo * newRoot )
         return;
     }
 
-    logDebug() << rect << Qt::endl;
+    //logDebug() << rect << Qt::endl;
     _treemapCancel = TreemapCancelNone;
     _treemapRunning = true;
 
@@ -392,6 +383,7 @@ void TreemapView::rebuildTreemap( FileInfo * newRoot )
                                              rect );
         if ( treemapCancelled() )
         {
+            // Logging is not thread-sage, use only for debugging
 //            logDebug() << "treemap cancelled, delete tiles" << Qt::endl;
             delete tile;
             tile = 0;
@@ -408,7 +400,7 @@ void TreemapView::treemapFinished()
 {
     TreemapTile *futureResult = _future.result();
 
-    logDebug() << _stopwatch.restart() << "ms " << _future << Qt::endl;
+    logDebug() << _stopwatch.restart() << "ms " << Qt::endl;
 
     _treemapRunning = false;
     _tileFutures.clear();
@@ -449,17 +441,12 @@ void TreemapView::treemapFinished()
     scene()->addItem( _rootTile );
 
     if ( _selectionModel )
-    {
-        //logDebug() << _stopwatch.restart() << "ms" << Qt::endl;
         updateSelection( _selectionModel->selectedItems() );
-//        logDebug() << _stopwatch.restart() << "ms" << Qt::endl;
-//        updateCurrentItem( _selectionModel->currentItem() );
-    }
 
     emit treemapChanged();
 
     // << _stopwatch.restart() << "ms" << Qt::endl;
-    _lastTile->setLastTile();
+//    _lastTile->setLastTile();
 }
 
 
@@ -530,23 +517,6 @@ void TreemapView::changeTreemapColors()
     _rootTile->invalidateCushions();
     _rootTile->update( _rootTile->rect() );
 }
-
-/*
-void TreemapView::scheduleRebuildTreemap( FileInfo * newRoot )
-{
-    if ( _disabled )
-        return;
-
-    _newRoot = newRoot;
-    _rebuilder->scheduleRebuild();
-}
-
-
-void TreemapView::rebuildTreemapDelayed()
-{
-    rebuildTreemap( _newRoot );
-}
-*/
 
 void TreemapView::deleteNotify( FileInfo * )
 {
@@ -677,7 +647,7 @@ void TreemapView::setCurrentTile( const TreemapTile * tile )
 
     if ( _currentTileHighlighter )
     {
-        //logDebug() << Qt::endl;
+        //logDebug() " Highting the current tile" << Qt::endl;
 
         if ( tile == _rootTile )
             _currentTileHighlighter->hide(); // Don't highlight the root tile
@@ -736,7 +706,8 @@ void TreemapView::updateSelection( const FileInfoSet & newSelection )
     if ( newSelection.size() > 10 )
     {
         // Build a mapping of all fileInfo objects to tiles for scaling to very large selections
-        foreach ( QGraphicsItem * graphicsItem, scene()->items() )
+        const auto items = scene()->items();
+        for ( QGraphicsItem * graphicsItem : items )
         {
             TreemapTile * tile = dynamic_cast<TreemapTile *>( graphicsItem );
             if ( tile )
@@ -768,7 +739,7 @@ void TreemapView::sendSelection( const TreemapTile *tile)
         return;
 
     SignalBlocker sigBlocker( _selectionModelProxy );
-    QList<QGraphicsItem *> selectedTiles = scene()->selectedItems();
+    const QList<QGraphicsItem *> selectedTiles = scene()->selectedItems();
 
     if ( selectedTiles.size() == 1 && selectedTiles.first() == tile )
     {
@@ -782,7 +753,7 @@ void TreemapView::sendSelection( const TreemapTile *tile)
     {
         FileInfoSet selectedItems;
 
-        foreach ( const QGraphicsItem * selectedItem, selectedTiles )
+        for ( const QGraphicsItem * selectedItem : selectedTiles )
         {
             const TreemapTile * selectedTile = dynamic_cast<const TreemapTile *>( selectedItem );
 
@@ -918,7 +889,7 @@ const TreemapTile * TreemapView::highlightedParent() const
 void TreemapView::saveTreemapRoot()
 {
     _savedRootUrl = _rootTile ? _rootTile->orig()->debugUrl() : QString();
-    logDebug() << _savedRootUrl << Qt::endl;
+    //logDebug() << _savedRootUrl << Qt::endl;
 }
 
 
@@ -1043,7 +1014,6 @@ SceneMask::SceneMask( const TreemapTile * tile, float opacity ):
     // Since the default OddEvenFillRule leaves overlapping areas unfilled,
     // adding the tile's rect that is inside the scene rect leaves the tile
     // "cut out", i.e. unobscured.
-
     path.addRect( tile->rect() );
     setPath( path );
 

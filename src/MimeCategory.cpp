@@ -142,7 +142,7 @@ void MimeCategory::addPattern( const QString &	   rawPattern,
 void MimeCategory::addPatterns( const QStringList & patterns,
 				Qt::CaseSensitivity caseSensitivity )
 {
-    foreach ( const QString & rawPattern, patterns )
+    for ( const QString & rawPattern : patterns )
     {
 	QString pattern = rawPattern.trimmed();
 
@@ -155,7 +155,7 @@ void MimeCategory::addPatterns( const QStringList & patterns,
 void MimeCategory::addSuffixes( const QStringList & suffixes,
 				Qt::CaseSensitivity caseSensitivity )
 {
-    foreach ( const QString & rawSuffix, suffixes )
+    for ( const QString & rawSuffix : suffixes )
     {
 	QString suffix = rawSuffix.trimmed();
 
@@ -205,7 +205,7 @@ QStringList MimeCategory::humanReadableSuffixList( const QStringList & suffixLis
 {
     QStringList result;
 
-    foreach ( const QString & suffix, suffixList )
+    for ( const QString & suffix : suffixList )
 	result << ( "*." + suffix );
 
     return result;

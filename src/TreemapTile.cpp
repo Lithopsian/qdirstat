@@ -33,10 +33,10 @@ TreemapTile::TreemapTile( TreemapView * parentView,
                           const QRectF & rect ):
     QGraphicsRectItem ( rect ),
     _parentView { parentView },
-//    _parentTile { 0 },
+//    _parentTile { nullptr },
     _orig { orig },
     _cushionSurface { _parentView->cushionHeights() }, // initial cushion surface
-    _highlighter { 0 },
+    _highlighter { nullptr },
     _firstTile { true },
     _lastTile { false }
 {
@@ -71,7 +71,7 @@ TreemapTile::TreemapTile( TreemapTile * parentTile,
 //    _parentTile { parentTile },
     _orig { orig },
     _cushionSurface { parentTile->_cushionSurface, _parentView->cushionHeights() }, // copy the parent cushion and scale the height
-    _highlighter { 0 },
+    _highlighter { nullptr },
     _firstTile { false },
     _lastTile { false }
 {
@@ -108,7 +108,7 @@ TreemapTile::TreemapTile( TreemapTile * parentTile,
 //    _parentTile { parentTile },
     _orig { orig },
     _cushionSurface { cushionSurface }, // uses the default copy constructor on a row cushion
-    _highlighter { 0 },
+    _highlighter { nullptr },
     _firstTile ( false ),
     _lastTile { false }
 {
@@ -131,7 +131,7 @@ void TreemapTile::init()
 {
     setPen( Qt::NoPen );
 
-    _parentView->setLastTile( this ); // only for logging
+//    _parentView->setLastTile( this ); // only for logging
 
     setFlags( ItemIsSelectable );
 
@@ -418,7 +418,11 @@ void TreemapTile::addRenderThread( TreemapTile *tile, int minThreadTileSize )
          return;
 
     //logDebug() << QThreadPool::globalInstance()->activeThreadCount() << " threads active" << Qt::endl;
+#if (QT_VERSION < QT_VERSION_CHECK( 6, 0, 0 ))
     _parentView->appendTileFuture( QtConcurrent::run( tile, &TreemapTile::renderChildCushions ) );
+#else
+    _parentView->appendTileFuture( QtConcurrent::run( &TreemapTile::renderChildCushions, tile ) );
+#endif
 }
 
 void TreemapTile::renderChildCushions()
@@ -426,7 +430,8 @@ void TreemapTile::renderChildCushions()
     if ( _parentView->treemapCancelled() )
         return;
 
-    foreach ( QGraphicsItem *graphicsItem, childItems() )
+    const auto items = childItems();
+    for ( QGraphicsItem *graphicsItem : items )
     {
         // nothing other than tiles in the tree at this point
         TreemapTile *tile = ( TreemapTile * )( graphicsItem );
@@ -440,43 +445,7 @@ void TreemapTile::renderChildCushions()
             tile->setBrush( tileColor( tile->_orig ) );
     }
 }
-/*
-QPixmap TreemapTile::renderPlainTile( const QRectF & rect )
-{
-    const double width = rect.width();
-    const double height = rect.height();
-    QImage image( width, height, QImage::Format_RGB32);
 
-    const QColor tileColor = _parentView->tileColor( _orig );
-    image.fill( tileColor );
-    renderOutline( image, width, height, _parentView->outlineColor(), tileColor );
-
-    return QPixmap::fromImage( image );
-}
-
-void TreemapTile::renderOutline( QImage & image, int width, int height, const QColor & lineColor, const QColor & tileColor )
-{
-    //Soften the impact of the outline on very small tiles so they don't merge into a black mass
-    QRgb rgb = lineColor.rgb();
-    const int blendSize = qMin( width, height );
-    if ( blendSize < 10 )
-    {
-        // Blend the outline colour with the tile colour
-        const float blend = 0.08 * ( 10 - blendSize );
-        const float blended = 1.0 - blend;
-        const int blendedRed = lineColor.red() * blended + tileColor.red() * blend + 0.5;
-        const int blendedGreen = lineColor.green() * blended + tileColor.green() * blend + 0.5;
-        const int blendedBlue = lineColor.blue() * blended + tileColor.blue() * blend + 0.5;
-        rgb = qRgb( blendedRed, blendedGreen, blendedBlue );
-    }
-
-    // Draw an outline, just on the top and left so the lines don't double up
-    for ( int x = 0; x < width; ++x )
-        image.setPixel( x, 0, rgb );
-    for ( int y = 1; y < height; ++y )
-        image.setPixel( 0, y, rgb );
-}
-*/
 void TreemapTile::paint( QPainter            * painter,
                          const QStyleOptionGraphicsItem * option,
                          QWidget            * widget )
@@ -715,7 +684,8 @@ void TreemapTile::invalidateCushions()
     _cushion = QPixmap();
     setBrush( QBrush() );
 
-    foreach ( QGraphicsItem *graphicsItem, childItems() )
+    const auto items = childItems();
+    for ( QGraphicsItem *graphicsItem : items )
     {
         TreemapTile * tile = dynamic_cast<TreemapTile *>( graphicsItem );
         if ( tile )

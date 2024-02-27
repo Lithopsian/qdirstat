@@ -169,7 +169,7 @@ QStringList DataColumns::toStringList( const DataColumnList & colList )
 {
     QStringList strList;
 
-    foreach ( const DataColumn col, colList )
+    for ( const DataColumn col : colList )
 	strList << toString( col );
 
     return strList;
@@ -180,7 +180,7 @@ DataColumnList DataColumns::fromStringList( const QStringList & strList )
 {
     DataColumnList colList;
 
-    foreach ( const QString & str, strList )
+    for ( const QString & str : strList )
     {
 	DataColumn col = fromString( str );
 

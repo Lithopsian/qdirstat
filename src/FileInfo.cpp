@@ -50,7 +50,7 @@ FileInfo::FileInfo( DirInfo	  * parent,
      * This is the standard case.
      **/
     : _parent { parent }
-    , _next { 0 }
+    , _next { nullptr }
     , _tree { tree }
     , _magic { FileInfoMagic }
     , _name { filenameWithoutPath }

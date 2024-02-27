@@ -106,7 +106,7 @@ namespace QDirStat
 	     **/
 #if (QT_VERSION < QT_VERSION_CHECK( 6, 6, 0 ))
 	    static QString wildcardToRegularExpression( const QString pattern,
-							WildcardConversionOptions options = NonPathWildcardConversion);
+							QDirStat::WildcardConversionOptions options = NonPathWildcardConversion);
 #endif
 
 	private:

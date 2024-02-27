@@ -34,7 +34,7 @@ FileInfoSet FileInfoSet::normalized() const
 {
     FileInfoSet normalized;
 
-    foreach ( FileInfo * item, *this )
+    for ( FileInfo * item : *this )
     {
 	if ( ! containsAncestorOf( item ) )
 	    normalized << item;
@@ -52,7 +52,7 @@ FileInfoSet FileInfoSet::invalidRemoved() const
 {
     FileInfoSet result;
 
-    foreach ( FileInfo * item, *this )
+    for ( FileInfo * item : *this )
     {
 	if ( item && item->checkMagicNumber() )
 	{
@@ -80,7 +80,7 @@ FileInfo * FileInfoSet::first() const
 
 bool FileInfoSet::containsPseudoDir() const
 {
-    foreach ( const FileInfo * item, *this )
+    for ( const FileInfo * item : *this )
     {
 	if ( item && item->isPseudoDir() )
 	    return true;
@@ -92,7 +92,7 @@ bool FileInfoSet::containsPseudoDir() const
 
 bool FileInfoSet::containsDotEntry() const
 {
-    foreach ( const FileInfo * item, *this )
+    for ( const FileInfo * item : *this )
     {
 	if ( item && item->isDotEntry() )
 	    return true;
@@ -104,7 +104,7 @@ bool FileInfoSet::containsDotEntry() const
 
 bool FileInfoSet::containsAttic() const
 {
-    foreach ( const FileInfo * item, *this )
+    for ( const FileInfo * item : *this )
     {
 	if ( item && item->isAttic() )
 	    return true;
@@ -116,7 +116,7 @@ bool FileInfoSet::containsAttic() const
 
 bool FileInfoSet::containsDir() const
 {
-    foreach ( const FileInfo * item, *this )
+    for ( const FileInfo * item : *this )
     {
 	if ( item && item->isDir() )
 	    return true;
@@ -128,7 +128,7 @@ bool FileInfoSet::containsDir() const
 
 bool FileInfoSet::containsFile() const
 {
-    foreach ( const FileInfo * item, *this )
+    for ( const FileInfo * item : *this )
     {
 	if ( item && item->isFile() )
 	    return true;
@@ -140,7 +140,7 @@ bool FileInfoSet::containsFile() const
 
 bool FileInfoSet::containsSpecial() const
 {
-    foreach ( const FileInfo * item, *this )
+    for ( const FileInfo * item : *this )
     {
 	if ( item && item->isSpecial() )
 	    return true;
@@ -152,7 +152,7 @@ bool FileInfoSet::containsSpecial() const
 
 bool FileInfoSet::containsPkg() const
 {
-    foreach ( const FileInfo * item, *this )
+    for ( const FileInfo * item : *this )
     {
 	if ( item && item->isPkgInfo() )
 	    return true;
@@ -164,7 +164,7 @@ bool FileInfoSet::containsPkg() const
 
 bool FileInfoSet::containsBusyItem() const
 {
-    foreach ( const FileInfo * item, *this )
+    for ( const FileInfo * item : *this )
     {
 	if ( item && item->isBusy() )
 	    return true;
@@ -187,7 +187,7 @@ FileSize FileInfoSet::totalSize() const
 {
     FileSize sum = 0LL;
 
-    foreach ( FileInfo * item, *this )
+    for ( FileInfo * item : *this )
     {
 	if ( item )
 	    sum += item->totalSize();
@@ -201,7 +201,7 @@ FileSize FileInfoSet::totalAllocatedSize() const
 {
     FileSize sum = 0LL;
 
-    foreach ( FileInfo * item, *this )
+    for ( FileInfo * item : *this )
     {
 	if ( item )
 	    sum += item->totalAllocatedSize();

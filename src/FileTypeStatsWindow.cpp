@@ -299,10 +299,10 @@ void FileTypeStatsWindow::addTopXOtherItems( CategoryFileTypeItem  * otherCatego
 #if 1
         QStringList suffixes;
 
-        foreach ( FileTypeItem * item, otherItems )
+        for ( FileTypeItem * item : otherItems )
             suffixes << item->text(0);
 
-        logDebug() << "Discarding " << otherItems.size()
+        logDebug() << "Discarding " << (int)otherItems.size()
                    << " suffixes below <other>: "
                    << suffixes.join( ", " )
                    << Qt::endl;

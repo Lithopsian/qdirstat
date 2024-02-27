@@ -73,7 +73,8 @@ PkgInfoList PacManPkgManager::parsePkgList( const QString & output ) const
 {
     PkgInfoList pkgList;
 
-    foreach ( const QString & line, output.split( "\n" ) )
+    const QStringList splitOutput = output.split( "\n" );
+    for ( const QString & line : splitOutput )
     {
         if ( ! line.isEmpty() )
         {

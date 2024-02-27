@@ -6,6 +6,7 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <QActionGroup>
 
 #include "MainWindow.h"
 #include "QDirStatApp.h"
@@ -77,7 +78,7 @@ void MainWindow::initLayout( const QString & layoutName, const QString & current
 void MainWindow::changeLayoutSlot()
 {
     // Get the layout to use from data() from the QAction that sent the signal.
-    QAction * action   = qobject_cast<QAction *>( sender() );
+    const QAction * action   = qobject_cast<QAction *>( sender() );
     changeLayout( layoutName( action ) );
 }
 
@@ -96,10 +97,10 @@ void MainWindow::changeLayout( const QString & name )
 }
 
 
-void MainWindow::saveLayout( bool detailsPaneVisible )
+void MainWindow::updateLayout( bool detailsPanelVisible )
 {
-    _ui->fileDetailsPanel->setVisible( detailsPaneVisible );
-    _layoutActionGroup->checkedAction()->setData( detailsPaneVisible );
+    _ui->fileDetailsPanel->setVisible( detailsPanelVisible );
+    _layoutActionGroup->checkedAction()->setData( detailsPanelVisible );
 }
 
 

@@ -179,7 +179,8 @@ namespace QDirStat
     {
     public:
 
-        virtual bool check( FileInfo * item );
+        virtual bool check( FileInfo * item )
+            { return item && item->isSymLink() && item->isBrokenSymLink(); }
     };
 
 

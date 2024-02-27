@@ -128,7 +128,7 @@ public:
      * Log a plain newline without any prefix (timestamp, source file name,
      * line number).
      */
-    void newline();
+    void newline() { _logStream << Qt::endl; }
     static void newline( Logger * logger );
 
     /**
@@ -286,8 +286,12 @@ class QPointF;
 class QSize;
 
 
-QTextStream & operator<<( QTextStream & str, bool val );
-QTextStream & operator<<( QTextStream & str, const QStringList &stringList );
+inline QTextStream & operator<<( QTextStream & str, bool val )
+    { return str << ( val ? "true" : "false" ); }
+
+inline QTextStream & operator<<( QTextStream & str, const QStringList &stringList )
+    { return str << stringList.join( ", " ); }
+
 QTextStream & operator<<( QTextStream & str, const QSizeF  & size );
 QTextStream & operator<<( QTextStream & str, const QRectF  & rect );
 QTextStream & operator<<( QTextStream & str, const QPointF & point );

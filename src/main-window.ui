@@ -3,14 +3,6 @@
  <author>Stefan Hundhammer</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>628</width>
-    <height>510</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>QDirStat</string>
   </property>
@@ -115,6 +107,12 @@
        <property name="horizontalScrollBarPolicy">
         <enum>Qt::ScrollBarAlwaysOff</enum>
        </property>
+       <property name="renderHints">
+        <set>QPainter::SmoothPixmapTransform|QPainter::TextAntialiasing</set>
+       </property>
+       <property name="viewportUpdateMode">
+        <enum>QGraphicsView::BoundingRectViewportUpdate</enum>
+       </property>
        <property name="optimizationFlags">
         <set>QGraphicsView::DontAdjustForAntialiasing|QGraphicsView::DontSavePainterState</set>
        </property>
@@ -124,14 +122,6 @@
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>628</width>
-     <height>21</height>
-    </rect>
-   </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
@@ -302,9 +292,6 @@
    <property name="text">
     <string>&amp;Quit</string>
    </property>
-   <property name="toolTip">
-    <string>Exit application</string>
-   </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
    </property>
@@ -318,7 +305,7 @@
     <string>&amp;Open Directory...</string>
    </property>
    <property name="toolTip">
-    <string>Open a directory to scan</string>
+    <string>Read a directory and its contents</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -327,9 +314,6 @@
   <action name="actionCloseAllTreeLevels">
    <property name="text">
     <string>&amp;Close All Tree Branches</string>
-   </property>
-   <property name="toolTip">
-    <string>Close all branches of the directory tree</string>
    </property>
   </action>
   <action name="actionExpandTreeLevel0">
@@ -344,9 +328,6 @@
    <property name="text">
     <string>Level &amp;1</string>
    </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 1</string>
-   </property>
    <property name="shortcut">
     <string>Ctrl+1</string>
    </property>
@@ -354,9 +335,6 @@
   <action name="actionExpandTreeLevel2">
    <property name="text">
     <string>Level &amp;2</string>
-   </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 2</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+2</string>
@@ -366,9 +344,6 @@
    <property name="text">
     <string>Level &amp;3</string>
    </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 3</string>
-   </property>
    <property name="shortcut">
     <string>Ctrl+3</string>
    </property>
@@ -376,9 +351,6 @@
   <action name="actionExpandTreeLevel4">
    <property name="text">
     <string>Level &amp;4</string>
-   </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 4</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+4</string>
@@ -388,9 +360,6 @@
    <property name="text">
     <string>Level &amp;5</string>
    </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 5</string>
-   </property>
    <property name="shortcut">
     <string>Ctrl+5</string>
    </property>
@@ -398,9 +367,6 @@
   <action name="actionExpandTreeLevel6">
    <property name="text">
     <string>Level &amp;6</string>
-   </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 6.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+6</string>
@@ -410,9 +376,6 @@
    <property name="text">
     <string>Level &amp;7</string>
    </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 7.</string>
-   </property>
    <property name="shortcut">
     <string>Ctrl+7</string>
    </property>
@@ -421,9 +384,6 @@
    <property name="text">
     <string>Level &amp;8</string>
    </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 8.</string>
-   </property>
    <property name="shortcut">
     <string>Ctrl+8</string>
    </property>
@@ -431,9 +391,6 @@
   <action name="actionExpandTreeLevel9">
    <property name="text">
     <string>Level &amp;9</string>
-   </property>
-   <property name="toolTip">
-    <string>Expand (open) the directory tree to level 9.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+9</string>
@@ -448,7 +405,7 @@
     <string>&amp;Stop Reading</string>
    </property>
    <property name="toolTip">
-    <string>Stop reading directories</string>
+    <string>Stop reading immediately</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -462,9 +419,6 @@
    <property name="text">
     <string>&amp;Write To Cache File...</string>
    </property>
-   <property name="toolTip">
-    <string>Write the current directory tree to a cache file</string>
-   </property>
   </action>
   <action name="actionAskReadCache">
    <property name="icon">
@@ -473,9 +427,6 @@
    </property>
    <property name="text">
     <string>&amp;Read Cache File...</string>
-   </property>
-   <property name="toolTip">
-    <string>Read a directory tree from a cache file</string>
    </property>
   </action>
   <action name="actionRefreshAll">
@@ -500,9 +451,6 @@
    </property>
    <property name="text">
     <string>&amp;Copy Path</string>
-   </property>
-   <property name="toolTip">
-    <string>Copy the full path of the current item to the system clipboard for use in other applications</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
@@ -641,9 +589,6 @@
    <property name="text">
     <string>Refresh &amp;Selected</string>
    </property>
-   <property name="toolTip">
-    <string>Reread the selected branch from disk</string>
-   </property>
    <property name="shortcut">
     <string>F6</string>
    </property>
@@ -651,9 +596,6 @@
   <action name="actionReadExcluded">
    <property name="text">
     <string>Read &amp;Excluded Directory</string>
-   </property>
-   <property name="toolTip">
-    <string>Read a directory that was excluded by an exclude rule</string>
    </property>
   </action>
   <action name="actionContinueReading">
@@ -664,9 +606,6 @@
    <property name="text">
     <string>Continue Reading at &amp;Mount Point</string>
    </property>
-   <property name="toolTip">
-    <string>Continue reading at filesystem mount point not crossed</string>
-   </property>
   </action>
   <action name="actionConfigure">
    <property name="icon">
@@ -675,9 +614,6 @@
    </property>
    <property name="text">
     <string>&amp;Settings...</string>
-   </property>
-   <property name="toolTip">
-    <string>Configure QDirStat</string>
    </property>
   </action>
   <action name="actionVerboseSelection">
@@ -760,9 +696,6 @@
    <property name="text">
     <string>Show &amp;Details Panel</string>
    </property>
-   <property name="toolTip">
-    <string>Show details panel</string>
-   </property>
   </action>
   <action name="actionLayout1">
    <property name="checkable">
@@ -775,7 +708,7 @@
     <string>L1</string>
    </property>
    <property name="toolTip">
-    <string>Layout 1 (short)</string>
+    <string>Switch to layout 1 (short)</string>
    </property>
    <property name="shortcut">
     <string>Alt+1</string>
@@ -795,7 +728,7 @@
     <string>L2</string>
    </property>
    <property name="toolTip">
-    <string>Layout 2 (classic)</string>
+    <string>Switch to layout 2 (classic)</string>
    </property>
    <property name="shortcut">
     <string>Alt+2</string>
@@ -812,7 +745,7 @@
     <string>L3</string>
    </property>
    <property name="toolTip">
-    <string>Layout 3 (full)</string>
+    <string>Switch to layout 3 (full)</string>
    </property>
    <property name="shortcut">
     <string>Alt+3</string>
@@ -895,48 +828,30 @@
    <property name="text">
     <string>&amp;Largest Files</string>
    </property>
-   <property name="toolTip">
-    <string>Show a list of the largest files in the current directory tree</string>
-   </property>
   </action>
   <action name="actionDiscoverNewestFiles">
    <property name="text">
     <string>&amp;Newest Files</string>
-   </property>
-   <property name="toolTip">
-    <string>Show a list of the newest files in the current directory tree</string>
    </property>
   </action>
   <action name="actionDiscoverOldestFiles">
    <property name="text">
     <string>&amp;Oldest Files</string>
    </property>
-   <property name="toolTip">
-    <string>Show a list of the oldest files in the current directory tree</string>
-   </property>
   </action>
   <action name="actionDiscoverHardLinkedFiles">
    <property name="text">
     <string>Files with Multiple &amp;Hard Links</string>
-   </property>
-   <property name="toolTip">
-    <string>Show a list of files with multiple hard links</string>
    </property>
   </action>
   <action name="actionDiscoverBrokenSymLinks">
    <property name="text">
     <string>&amp;Broken Symbolic LInks</string>
    </property>
-   <property name="toolTip">
-    <string>Show a list of broken symlinks</string>
-   </property>
   </action>
   <action name="actionDiscoverSparseFiles">
    <property name="text">
     <string>&amp;Sparse Files</string>
-   </property>
-   <property name="toolTip">
-    <string>Show a list of sparse files</string>
    </property>
   </action>
   <action name="actionBtrfsSizeReporting">

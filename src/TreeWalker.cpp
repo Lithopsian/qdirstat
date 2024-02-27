@@ -34,12 +34,12 @@ qreal TreeWalker::upperPercentileThreshold( PercentileStats & stats )
 
     if ( percentile > 0 )
     {
-        logDebug() << "Threshold: " << percentile << ". percentile" << Qt::endl;
+        //logDebug() << "Threshold: " << percentile << ". percentile" << Qt::endl;
         threshold = stats.percentile( percentile );
     }
     else
     {
-        logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
+        //logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
         const int index = stats.dataSize() - MAX_RESULTS;
         threshold = stats.data().at( index );
     }
@@ -61,12 +61,12 @@ qreal TreeWalker::lowerPercentileThreshold( PercentileStats & stats )
 
     if ( percentile > 0 )
     {
-        logDebug() << "Threshold: " << percentile << ". percentile" << Qt::endl;
+        //logDebug() << "Threshold: " << percentile << ". percentile" << Qt::endl;
         threshold = stats.percentile( percentile );
     }
     else
     {
-        logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
+        //logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
         const int index = MAX_RESULTS;
         threshold = stats.data().at( index );
     }
@@ -98,12 +98,6 @@ void OldFilesTreeWalker::prepare( FileInfo * subtree )
     TreeWalker::prepare( subtree );
     FileMTimeStats stats( subtree );
     _threshold = (time_t) lowerPercentileThreshold( stats );
-}
-
-
-bool BrokenSymLinksTreeWalker::check( FileInfo * item )
-{
-    return item && item->isSymLink() && item->isBrokenSymLink();
 }
 
 

@@ -160,7 +160,7 @@ void FileAgeStatsWindow::populate( FileInfo * newSubtree )
 
 void FileAgeStatsWindow::populateListWidget()
 {
-    foreach ( short year, _stats->years() )
+    for ( short year : _stats->years() )
     {
         YearStats * yearStats = _stats->yearStats( year );
 
@@ -199,7 +199,7 @@ void FileAgeStatsWindow::populateListWidget()
 
 void FileAgeStatsWindow::fillGaps()
 {
-    foreach ( short year, findGaps() )
+    for ( short year : findGaps() )
     {
         YearListItem * item = new YearListItem( YearStats( year ) );
         CHECK_NEW( item );
@@ -247,8 +247,8 @@ void FileAgeStatsWindow::locateFiles()
 
     if ( item )
     {
-        short month = item->stats().month;
-        short year  = item->stats().year;
+        const short month = item->stats().month;
+        const short year  = item->stats().year;
 
         if ( month > 0 && year > 0 )
             emit locateFilesFromMonth( _subtree.url(), year, month );

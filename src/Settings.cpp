@@ -62,7 +62,7 @@ void Settings::fixFileOwners()
 {
     if ( SysUtil::runningWithSudo() )
     {
-        foreach ( const QString & filename, _usedConfigFiles )
+        for ( const QString & filename : _usedConfigFiles )
             fixFileOwner( filename );
     }
 }
@@ -152,7 +152,7 @@ QStringList Settings::findGroups( const QString & groupPrefix )
     QStringList result;
     ensureToplevel();
 
-    foreach ( const QString & group, childGroups() )
+    for ( const QString & group : childGroups() )
     {
 	if ( group.startsWith( groupPrefix ) )
 	    result << group;
@@ -166,7 +166,7 @@ bool Settings::hasGroup( const QString & groupPrefix )
 {
     ensureToplevel();
 
-    foreach ( const QString & group, childGroups() )
+    for ( const QString & group : childGroups() )
     {
 	if ( group.startsWith( groupPrefix ) )
 	    return true;
@@ -180,7 +180,7 @@ void Settings::removeGroups( const QString & groupPrefix )
 {
     ensureToplevel();
 
-    foreach ( const QString & group, childGroups() )
+    for ( const QString & group : childGroups() )
     {
 	if ( group.startsWith( groupPrefix ) )
 	    remove( group );
@@ -202,7 +202,7 @@ void Settings::moveGroups( const QString & groupPrefix,
 #endif
 	const QStringList groups = from->findGroups( groupPrefix );
 
-	foreach ( const QString & group, groups )
+	for ( const QString & group : groups )
 	{
 	    // logVerbose() << "  Migrating " << group << Qt::endl;
 
@@ -211,7 +211,7 @@ void Settings::moveGroups( const QString & groupPrefix,
 
 	    const QStringList keys = from->allKeys();
 
-	    foreach( const QString & key, keys )
+	    for ( const QString & key : keys )
 	    {
 		// logVerbose() << "	Copying " << key << Qt::endl;
 		to->setValue( key, from->value( key ) );

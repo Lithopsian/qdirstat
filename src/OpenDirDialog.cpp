@@ -256,7 +256,7 @@ void OpenDirDialog::populatePathComboBox( const QString & fullPath )
     _ui->pathComboBox->addItem( "/" );
     QString path;
 
-    foreach ( const QString & component, pathComponents )
+    for ( const QString & component : pathComponents )
     {
         path += "/" + component;
         _ui->pathComboBox->addItem( path );
