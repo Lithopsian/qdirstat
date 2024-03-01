@@ -375,7 +375,7 @@ PkgFileListCache * DpkgPkgManager::createFileListCache( PkgFileListCache::Lookup
     QString output = runCommand( "/usr/bin/dpkg", { "-S", "*" }, &exitCode );
 
     if ( exitCode != 0 )
-	return 0;
+	return nullptr;
 
     const QStringList lines = output.split( "\n" );
     output.clear(); // Free all that text ASAP

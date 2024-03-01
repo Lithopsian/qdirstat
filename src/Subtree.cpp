@@ -31,12 +31,12 @@ DirInfo * Subtree::dir()
 {
     FileInfo * item = subtree();
 
-    if ( ! item )
-        return 0;
+    if ( !item )
+        return nullptr;
 
     DirInfo * dir = item->toDirInfo();
 
-    if ( ! dir && item->parent() )
+    if ( !dir && item->parent() )
         dir = item->parent();
 
     if ( dir && _tree && dir == _tree->root() )
@@ -86,8 +86,8 @@ void Subtree::setUrl( const QString & newUrl )
 
 FileInfo * Subtree::locate()
 {
-    if ( ! _tree || _url.isEmpty() )
-	return 0;
+    if ( !_tree || _url.isEmpty() )
+	return nullptr;
 
     return _tree->locate( _url,
 			  true ); // findPseudoDirs

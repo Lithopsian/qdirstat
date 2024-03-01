@@ -46,7 +46,7 @@ namespace QDirStat
 	 * not have a dot entry itself.
 	 **/
 	virtual DotEntry * dotEntry() const Q_DECL_OVERRIDE
-	    { return 0; }
+	    { return nullptr; }
 
 	/**
 	 * Check if this is a dot entry.

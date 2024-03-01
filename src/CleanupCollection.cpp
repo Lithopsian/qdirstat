@@ -115,7 +115,7 @@ Cleanup * CleanupCollection::at( int index ) const
     if ( index >= 0 && index < _cleanupList.size() )
 	return _cleanupList.at( index );
     else
-	return 0;
+	return nullptr;
 }
 
 

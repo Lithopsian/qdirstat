@@ -244,7 +244,7 @@ QProcess * PkgReader::createReadFileListProcess( PkgInfo * pkg )
     if ( command.isEmpty() )
     {
 	logError() << "Empty file list command for " << pkg << Qt::endl;
-	return 0;
+	return nullptr;
     }
 
     QStringList args	  = command.split( QRegularExpression( "\\s+" ) );
@@ -444,7 +444,7 @@ FileInfo * PkgReadJob::createItem( const QStringList & pathComponents,
     statInfo = this->lstat( path );
 
     if ( ! statInfo ) // lstat() failed
-	return 0;
+	return nullptr;
 
     const QString name = pathComponents.last();
 
@@ -487,7 +487,7 @@ struct stat * PkgReadJob::lstat( const QString & path )
         ++_lstatCalls;
 
         if ( result != 0 )
-            return 0;	// lstat() failed
+            return nullptr;	// lstat() failed
 
         _statCache.insert( path, statInfo );
     }

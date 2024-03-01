@@ -72,7 +72,7 @@ FileInfoSet FileInfoSet::invalidRemoved() const
 FileInfo * FileInfoSet::first() const
 {
     if ( isEmpty() )
-	return 0;
+	return nullptr;
     else
 	return *begin();
 }

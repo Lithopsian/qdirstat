@@ -222,7 +222,7 @@ void ListEditor::currentItemChanged( QListWidgetItem * current,
 void * ListEditor::value( QListWidgetItem * item )
 {
     if ( ! item )
-	return 0;
+	return nullptr;
 
     ListEditorItem * editorItem = dynamic_cast<ListEditorItem *>( item );
     CHECK_DYNAMIC_CAST( editorItem, "ListEditorItem *" );

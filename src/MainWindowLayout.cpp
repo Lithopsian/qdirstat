@@ -32,7 +32,7 @@ QAction * MainWindow::layoutAction( const QString & layoutName ) const
     if ( layoutName == "L1" ) return _ui->actionLayout1;
     if ( layoutName == "L2" ) return _ui->actionLayout2;
     if ( layoutName == "L3" ) return _ui->actionLayout3;
-    return 0;
+    return nullptr;
 }
 
 

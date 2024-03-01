@@ -113,7 +113,7 @@ FileInfo * FileInfoSortedBySizeIterator::current() const
     if ( _currentIndex >= 0 && _currentIndex < _sortedChildren.size() )
 	return _sortedChildren.at( _currentIndex );
     else
-	return 0;
+	return nullptr;
 }
 */
 /*

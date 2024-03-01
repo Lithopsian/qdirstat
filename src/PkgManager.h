@@ -175,7 +175,7 @@ namespace QDirStat
 	 * delete it when you are done with it.
 	 **/
 	virtual PkgFileListCache * createFileListCache( PkgFileListCache::LookupType ) const
-	    { return 0; }
+	    { return nullptr; }
 
 	/**
 	 * Return a name suitable for a detailed queries for 'pkg'.

@@ -59,7 +59,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from DirInfo.
 	 **/
-	virtual Attic * attic() const Q_DECL_OVERRIDE { return 0; }
+	virtual Attic * attic() const Q_DECL_OVERRIDE { return nullptr; }
 
 	/**
 	 * Get the current state of the directory reading process.

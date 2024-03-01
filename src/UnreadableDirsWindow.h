@@ -191,12 +191,17 @@ namespace QDirStat
 			       const QString & userName,
 			       const QString & groupName,
 			       const QString & symbolicPermissions,
-			       const QString & octalPermissions	 );
+			       const QString & octalPermissions );
 
 	/**
 	 * Return the path of this directory.
 	 **/
 	QString path() const { return _path; }
+
+	/**
+	 * Set the text and alignment for a column.
+	 **/
+	void set( int col, const QString & text, Qt::Alignment alignment );
 
 	/**
 	 * Less-than operator for sorting.

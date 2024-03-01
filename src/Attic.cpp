@@ -42,7 +42,7 @@ Attic::~Attic()
 FileInfo * Attic::locate( QString url, bool findPseudoDirs )
 {
     if ( ! _tree || ! _parent )
-	return 0;
+	return nullptr;
 
     // Search all children
 
@@ -61,6 +61,6 @@ FileInfo * Attic::locate( QString url, bool findPseudoDirs )
     // An attic can have neither an attic nor a dot entry, so there is no need
     // to search in either of those.
 
-    return 0;
+    return nullptr;
 }
 

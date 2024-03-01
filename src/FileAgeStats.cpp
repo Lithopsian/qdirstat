@@ -177,7 +177,7 @@ YearStats * FileAgeStats::yearStats( short year )
     if ( _yearStats.contains( year ) )
         return &( _yearStats[ year ] );
     else
-        return 0;
+        return nullptr;
 }
 
 

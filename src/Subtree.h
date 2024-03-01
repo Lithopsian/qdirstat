@@ -46,9 +46,9 @@ namespace QDirStat
          * Constructor.
          **/
         Subtree( DirTree * tree = 0 ):
-                 _tree( tree ),
-                 _useRootFallback( true ),
-                 _useParentFallback( false )
+                 _tree { tree },
+                 _useRootFallback { true },
+                 _useParentFallback { false }
         {}
 
         /**

@@ -21,7 +21,7 @@ using namespace QDirStat;
 DirTreeFilter * DirTreePatternFilter::create( const QString & pattern )
 {
     if ( pattern.isEmpty() )
-	return 0;
+	return nullptr;
 
     DirTreeFilter * filter = 0;
 
