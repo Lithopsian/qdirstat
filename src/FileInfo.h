@@ -14,8 +14,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <QTextStream>
 #include <QList>
+#include <QtMath>
+#include <QTextStream>
 
 #include "FileSize.h"
 
@@ -25,7 +26,7 @@
 // syscall returns, yet it is the reference unit for st_blocks in that same
 // struct.
 
-#define STD_BLOCK_SIZE	512L
+#define STD_BLOCK_SIZE 512L
 
 
 namespace QDirStat
@@ -78,37 +79,6 @@ namespace QDirStat
 
 	/**
 	 * Constructor from raw data values.
-	 **/
-	FileInfo( DirInfo	* parent,
-		  DirTree	* tree,
-		  const QString	& filenameWithoutPath,
-		  mode_t	  mode,
-		  FileSize	  size,
-		  time_t	  mtime,
-		  bool		  isSparseFile,
-		  FileSize	  blocks,
-		  nlink_t	  links ):
-	    _parent { parent },
-	    _next { nullptr },
-	    _tree { tree },
-	    _magic { FileInfoMagic },
-	    _name { filenameWithoutPath },
-	    _isLocalFile { true },
-	    _isSparseFile { isSparseFile },
-	    _isIgnored { false },
-	    _device { 0 },
-	    _mode { mode },
-	    _links { links },
-	    _uid { 0 },
-	    _gid { 0 },
-	    _size { size },
-	    _blocks { blocks },
-	    _allocatedSize { blocks * STD_BLOCK_SIZE },
-	    _mtime { mtime }
-	{}
-
-	/**
-	 * Constructor from the bare necessary fields.
 	 *
 	 * Don't make any assumptions about the file's tail. We might use
 	 *
@@ -119,11 +89,45 @@ namespace QDirStat
 	 **/
 	FileInfo( DirInfo	* parent,
 		  DirTree	* tree,
-		  const QString	& filenameWithoutPath,
+		  const QString	& filename,
+		  mode_t	  mode,
+		  FileSize	  size,
+		  FileSize	  allocatedSize,
+		  time_t	  mtime,
+		  bool		  isSparseFile,
+		  FileSize	  blocks,
+		  nlink_t	  links ):
+	    _parent { parent },
+	    _next { nullptr },
+	    _tree { tree },
+	    _magic { FileInfoMagic },
+	    _name { filename },
+	    _isLocalFile { true },
+	    _isSparseFile { isSparseFile },
+	    _isIgnored { false },
+	    _device { 0 },
+	    _mode { mode },
+	    _links { links },
+	    _uid { 0 },
+	    _gid { 0 },
+	    _size { size },
+	    _blocks { blocks },
+	    _allocatedSize { allocatedSize },
+	    _mtime { mtime }
+	{}
+
+	/**
+	 * Constructor from the bare necessary fields.  This is used by the
+	 * Mime categorizer config page to create dummy entries in an example tree.
+	 *
+	 **/
+	FileInfo( DirInfo	* parent,
+		  DirTree	* tree,
+		  const QString	& filename,
 		  mode_t	  mode,
 		  FileSize	  size,
 		  time_t	  mtime ):
-	    FileInfo { parent, tree, filenameWithoutPath, mode, size, mtime, false, blocksFromSize( size ), 1 }
+	    FileInfo ( parent,tree, filename, mode, size, size, mtime, false, blocksFromSize( size ), 1 )
 	{}
 
 	/**
@@ -131,8 +135,8 @@ namespace QDirStat
 	 **/
 	FileInfo( DirInfo	* parent,
 		  DirTree	* tree,
-		  const QString	& name ):
-	    FileInfo { parent, tree, name, 0, 0, 0, false, 0, 1 }
+		  const QString	& filename ):
+	    FileInfo ( parent, tree, filename, 0, 0, 0, 0, false, 0, 1 )
 	{}
 
 	/**
@@ -140,7 +144,7 @@ namespace QDirStat
 	 **/
 	FileInfo( DirInfo	* parent,
 		  DirTree	* tree,
-		  const QString	& filenameWithoutPath,
+		  const QString	& filename,
 		  struct stat	* statInfo );
 
 	/**
@@ -310,7 +314,7 @@ namespace QDirStat
 	 * The number of blocks, calculated from the size of the file.
 	 **/
 	static int blocksFromSize( FileSize size )
-	    { return ( size % STD_BLOCK_SIZE ) > 0 ? size / STD_BLOCK_SIZE + 1 : size / STD_BLOCK_SIZE; }
+	    { return qCeil( (float)size / STD_BLOCK_SIZE ); }
 
 	/**
 	 * The file size in bytes without taking multiple hard links into
@@ -512,8 +516,7 @@ namespace QDirStat
 	 * This default implementation silently ignores the value passed and
 	 * does nothing. Derived classes may want to overwrite this.
 	 **/
-	virtual void setMountPoint( bool )
-	    { return; }
+	virtual void setMountPoint( bool ) { return; }
 
 	/**
 	 * Returns true if this subtree is finished reading.
@@ -594,7 +597,7 @@ namespace QDirStat
 	 *
 	 * This default implementation always returns 0.
 	 **/
-	virtual FileInfo * firstChild() const { return 0; }
+	virtual FileInfo * firstChild() const { return nullptr; }
 
 	/**
 	 * Set this entry's first child.
@@ -651,7 +654,7 @@ namespace QDirStat
 	 *
 	 * This default implementation always returns 0.
 	 **/
-	virtual DotEntry * dotEntry() const { return 0; }
+	virtual DotEntry * dotEntry() const { return nullptr; }
 
 	/**
 	 * Set a "Dot Entry". This makes sense for directories only.
@@ -683,7 +686,7 @@ namespace QDirStat
 	 *
 	 * This default implementation always returns 0.
 	 **/
-	virtual Attic * attic() const { return 0; }
+	virtual Attic * attic() const { return nullptr; }
 
 	/**
 	 * Check if this is an attic entry where ignored files and directories

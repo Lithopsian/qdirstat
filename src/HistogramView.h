@@ -84,7 +84,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~HistogramView();
+	virtual ~HistogramView() {}
 
 	/**
 	 * Clear all data and all displayed graphics.
@@ -340,15 +340,9 @@ namespace QDirStat
     public slots:
 
 	/**
-	 * The first build of the histogram, will be submitted on a delay
-	 * or it will crash.
+	 * Build the histogram based on the current data.
 	 **/
 	void build();
-
-	/**
-	 * Rebuild the histogram based on the current data.
-	 **/
-	void rebuild();
 
 
     protected:
@@ -380,6 +374,12 @@ namespace QDirStat
 	void addMarkers();
 
 	void addOverflowPanel();
+
+        /**
+         * Add a text item at 'pos' and return the bottom left of its bounding
+         * rect.
+         **/
+	QGraphicsTextItem * addText( const QPointF & pos, const QString & text );
 
         /**
          * Add a text item at 'pos' and return the bottom left of its bounding

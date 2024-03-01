@@ -111,7 +111,8 @@ namespace QDirStat
 	/**
 	 * Make the histogram options visible or invisible.
 	 **/
-	void toggleOptions();
+	void openOptions();
+	void closeOptions();
 
 	/**
 	 * Check the options widgets for any new values, apply them and rebuild

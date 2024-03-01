@@ -221,12 +221,6 @@ namespace QDirStat
          **/
         virtual QVariant data( int column, int role ) const Q_DECL_OVERRIDE;
 
-        /**
-         * Return the (translated) short month name or an empty string if it's
-         * out of the 1-12 range.
-         **/
-        QString monthName( short month ) const;
-
 
     protected:
 

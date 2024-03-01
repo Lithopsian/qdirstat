@@ -164,8 +164,8 @@ MountPoint * MountPoints::findNearestMountPoint( const QString & startPath )
     const QFileInfo fileInfo( startPath );
     QString path = fileInfo.canonicalFilePath(); // absolute path without symlinks or ..
 
-    if ( path != startPath )
-	logDebug() << startPath << " canonicalized is " << path << Qt::endl;
+//    if ( path != startPath )
+//	logDebug() << startPath << " canonicalized is " << path << Qt::endl;
 
     MountPoint * mountPoint = findByPath( path );
 
@@ -183,7 +183,7 @@ MountPoint * MountPoints::findNearestMountPoint( const QString & startPath )
 	}
     }
 
-    // logDebug() << "Nearest mount point for " << startPath << " is " << mountPoint << Qt::endl;
+    //logDebug() << "Nearest mount point for " << startPath << " is " << mountPoint << Qt::endl;
 
     return mountPoint;
 }
@@ -240,7 +240,7 @@ void MountPoints::ensurePopulated()
 #endif
 
     _isPopulated = true; // don't try more than once
-    // dumpNormalMountPoints();
+//    dumpNormalMountPoints();
 }
 
 
@@ -437,7 +437,7 @@ void MountPoints::findNtfsDevices()
 
         for ( const QString & line : lines )
         {
-            QString device = "/dev/" + line.split( QRegularExpression( "\\s+" ) ).first();
+            const QString device = "/dev/" + line.split( QRegularExpression( "\\s+" ) ).first();
             logDebug() << "NTFS on " << device << Qt::endl;
             _ntfsDevices << device;
         }
@@ -472,20 +472,30 @@ void MountPoints::dumpNormalMountPoints()
 {
     const auto mountPoints = normalMountPoints();
     for ( const MountPoint * mountPoint : mountPoints )
-	logDebug() << mountPoint << Qt::endl;
+	logDebug() << mountPoint->path() << Qt::endl;
 }
 
 
 void MountPoints::dump()
 {
     for ( const MountPoint * mountPoint : instance()->_mountPointList )
-	logDebug() << mountPoint << Qt::endl;
+	logDebug() << mountPoint->path() << Qt::endl;
 }
 
 
 void MountPoints::reload()
 {
     instance()->ensurePopulated();
+}
+
+
+QString MountPoints::device( const QString & url )
+{
+    const MountPoint * mountPoint = MountPoints::findByPath( url );
+    if ( mountPoint )
+	return mountPoint->device();
+
+    return QString();
 }
 
 

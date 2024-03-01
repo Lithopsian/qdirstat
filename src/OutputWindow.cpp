@@ -388,9 +388,7 @@ void OutputWindow::killAll()
     }
 
     _killedAll = true;
-    addCommandLine( killCount == 1 ?
-		    tr( "Process killed." ) :
-		    tr( "Killed %1 processes." ).arg( killCount ) );
+    addCommandLine( killCount == 1 ? tr( "Process killed." ) : tr( "Killed %1 processes." ).arg( killCount ) );
 }
 
 
@@ -427,7 +425,7 @@ QProcess * OutputWindow::pickQueuedProcess()
 	    return process;
     }
 
-    return 0;
+    return nullptr;
 }
 
 

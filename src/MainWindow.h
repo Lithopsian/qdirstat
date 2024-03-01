@@ -573,6 +573,13 @@ protected:
      **/
     virtual void mousePressEvent( QMouseEvent * event ) Q_DECL_OVERRIDE;
 
+	/**
+	 * Context menu event.
+	 *
+	 * Reimplemented from QMainWindow.
+	 **/
+	virtual void contextMenuEvent( QContextMenuEvent * event ) Q_DECL_OVERRIDE;
+
 
 private:
     Ui::MainWindow		 * _ui;

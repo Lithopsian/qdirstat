@@ -131,7 +131,7 @@ void TreemapTile::init()
 {
     setPen( Qt::NoPen );
 
-//    _parentView->setLastTile( this ); // only for logging
+    _parentView->setLastTile( this ); // only for logging
 
     setFlags( ItemIsSelectable );
 
@@ -452,10 +452,10 @@ void TreemapTile::paint( QPainter            * painter,
 {
     CHECK_MAGIC( _orig );
 
-//    if ( _firstTile )
+    if ( _firstTile )
     {
 //        logDebug() << Qt::endl;
-//        _parentView->rootTile()->_stopwatch.start();
+        _parentView->rootTile()->_stopwatch.start();
     }
 
     // Don't paint tiles with children, the children will cover the parent, but double-check
@@ -533,8 +533,8 @@ void TreemapTile::paint( QPainter            * painter,
         painter->drawRect( selectionRect );
     }
 
-//    if (_lastTile)
-//        logDebug() << _parentView->rootTile()->_stopwatch.restart() << "ms" << Qt::endl;
+    if (_lastTile)
+        logDebug() << _parentView->rootTile()->_stopwatch.restart() << "ms" << Qt::endl;
 }
 
 void TreemapTile::drawOutline( QPainter * painter, const QRectF & rect, const QColor & color, int penScale )
@@ -773,7 +773,7 @@ void TreemapTile::mousePressEvent( QGraphicsSceneMouseEvent * event )
         // logDebug() << this << " right mouse pressed" << Qt::endl;
         _parentView->setCurrentTile( this );
         break;
-
+/*
     case Qt::ExtraButton1:
         // logDebug() << this << " back mouse button pressed" << Qt::endl;
         _parentView->resetZoom();
@@ -783,7 +783,7 @@ void TreemapTile::mousePressEvent( QGraphicsSceneMouseEvent * event )
         // logDebug() << this << " forward mouse button pressed" << Qt::endl;
         _parentView->zoomTo();
         break;
-
+*/
     default:
         QGraphicsRectItem::mousePressEvent( event );
         break;
@@ -883,8 +883,10 @@ void TreemapTile::contextMenuEvent( QGraphicsSceneContextMenuEvent * event )
     // The first action should not be a destructive one like "move to trash":
     // It's just too easy to select and execute the first action accidentially,
     // especially on a laptop touchpad.
-    const QStringList actions1 = { "actionGoUp",
-                                   "actionGoToToplevel",
+    const QStringList actions1 = { "actionTreemapZoomTo",
+                                   "actionTreemapZoomIn",
+                                   "actionTreemapZoomOut",
+                                   "actionResetTreemapZoom",
                                    "---",
                                    "actionCopyPath",
                                    "actionMoveToTrash",
@@ -895,15 +897,6 @@ void TreemapTile::contextMenuEvent( QGraphicsSceneContextMenuEvent * event )
     // User-defined cleanups
     if ( _parentView->cleanupCollection() )
     _parentView->cleanupCollection()->addEnabledToMenu( &menu );
-
-    // Less commonly used menu options
-    const QStringList actions2 = { "---",
-                                   "actionTreemapZoomTo",
-                                   "actionTreemapZoomIn",
-                                   "actionTreemapZoomOut",
-                                   "actionResetTreemapZoom"
-                                 };
-    ActionManager::instance()->addEnabledActions( &menu, actions2 );
 
     menu.exec( event->screenPos() );
 }

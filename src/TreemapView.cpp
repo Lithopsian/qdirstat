@@ -30,7 +30,6 @@ TreemapView::TreemapView( QWidget * parent ):
     _selectionModel { nullptr },
     _selectionModelProxy { nullptr },
     _cleanupCollection { nullptr },
-//    _rebuilder { nullptr },
     _rootTile { nullptr },
 //    _currentTile { nullptr },
     _currentTileHighlighter { nullptr },
@@ -47,6 +46,13 @@ TreemapView::TreemapView( QWidget * parent ):
     readSettings();
 
     QThreadPool::globalInstance()->setMaxThreadCount(100);
+
+    // Very important, the resize/rescale can get ugly without this
+    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+    setVerticalScrollBarPolicy	( Qt::ScrollBarAlwaysOff );
+    setRenderHints( QPainter::SmoothPixmapTransform );
+    setOptimizationFlags( DontAdjustForAntialiasing | DontSavePainterState );
+
 
     connect( &_watcher,  &QFutureWatcher<TreemapTile *>::finished,
              this,       &TreemapView::treemapFinished );
@@ -446,7 +452,7 @@ void TreemapView::treemapFinished()
     emit treemapChanged();
 
     // << _stopwatch.restart() << "ms" << Qt::endl;
-//    _lastTile->setLastTile();
+    _lastTile->setLastTile();
 }
 
 
@@ -782,7 +788,7 @@ void TreemapView::updateCurrentItem( FileInfo * currentItem )
 TreemapTile * TreemapView::findTile( TreemapTile *rootTile, const FileInfo *node ) const
 {
     if ( !node || !rootTile )
-        return 0;
+        return nullptr;
 
     // common case that is easy
     if ( rootTile->orig() == node )
@@ -800,7 +806,7 @@ TreemapTile * TreemapView::findTile( TreemapTile *rootTile, const FileInfo *node
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 

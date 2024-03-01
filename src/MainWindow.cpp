@@ -252,35 +252,34 @@ void MainWindow::updateActions()
     const bool reading	     = app()->dirTree()->isBusy();
     FileInfo * currentItem   = app()->currentItem();
     FileInfo * firstToplevel = app()->root();
-    const bool pkgView	     = firstToplevel && firstToplevel->isPkgInfo();
+    const bool pkgView       = firstToplevel && firstToplevel->isPkgInfo();
 
     _ui->actionStopReading->setEnabled	( reading );
-    _ui->actionRefreshAll->setEnabled	( !reading );
+    _ui->actionRefreshAll->setEnabled	( !reading && firstToplevel );
     _ui->actionAskReadCache->setEnabled	( !reading );
-    _ui->actionAskWriteCache->setEnabled( !reading );
+    _ui->actionAskWriteCache->setEnabled( !reading && !pkgView && firstToplevel);
 
     _ui->actionCopyPath->setEnabled    ( currentItem );
     _ui->actionGoUp->setEnabled        ( currentItem && currentItem->treeLevel() > 1 );
     _ui->actionGoToToplevel->setEnabled( firstToplevel );
 
-    const FileInfoSet selectedItems = app()->selectionModel()->selectedItems();
-    const FileInfo * sel	    = selectedItems.first();
-    const bool selSizeOne	    = selectedItems.size() == 1;
-
-    const bool oneDirSelected	   = selSizeOne && sel && sel->isDir() && !sel->isPkgInfo();
-    const bool pseudoDirSelected   = selectedItems.containsPseudoDir();
-    const bool pkgSelected	   = selectedItems.containsPkg();
-
-    _ui->actionMoveToTrash->setEnabled    ( sel && !pseudoDirSelected && !pkgSelected && !reading );
-    _ui->actionRefreshSelected->setEnabled( selSizeOne && !pkgView );
+    const FileInfoSet selectedItems  = app()->selectionModel()->selectedItems();
+    const bool        selSizeOne     = selectedItems.size() == 1;
+    const FileInfo  * sel            = selectedItems.first();
+    const bool        oneDirSelected = selSizeOne && sel && sel->isDir() && !pkgView;
+    _ui->actionRefreshSelected->setEnabled( selSizeOne && !pkgView && !sel->isMountPoint() && !sel->isExcluded() );
     _ui->actionContinueReading->setEnabled( oneDirSelected && sel->isMountPoint() );
     _ui->actionReadExcluded->setEnabled   ( oneDirSelected && sel->isExcluded()   );
 
-    const bool nothingOrOneDirInfo = selectedItems.isEmpty() || ( selSizeOne && sel->isDirInfo() );
+    const bool pseudoDirSelected = selectedItems.containsPseudoDir();
+    const bool pkgSelected	 = selectedItems.containsPkg();
+    _ui->actionMoveToTrash->setEnabled( sel && !pseudoDirSelected && !pkgSelected && !reading );
+
+    const bool nothingOrOneDirInfo = !reading && (selectedItems.isEmpty() || ( selSizeOne && sel->isDirInfo() ) );
     // Notice that DotEntry, PkgInfo, Attic also inherit DirInfo
-    _ui->actionFileSizeStats->setEnabled( !reading && nothingOrOneDirInfo );
-    _ui->actionFileTypeStats->setEnabled( !reading && nothingOrOneDirInfo );
-    _ui->actionFileAgeStats->setEnabled ( !reading && nothingOrOneDirInfo );
+    _ui->actionFileSizeStats->setEnabled( nothingOrOneDirInfo );
+    _ui->actionFileTypeStats->setEnabled( nothingOrOneDirInfo );
+    _ui->actionFileAgeStats->setEnabled ( nothingOrOneDirInfo );
 
     const bool showingTreemap = _ui->treemapView->isVisible();
     _ui->actionTreemapAsSidePanel->setEnabled( showingTreemap );
@@ -1092,13 +1091,14 @@ void MainWindow::showDirPermissionsWarning()
 //    if ( _dirPermissionsWarning || ! _enableDirPermissionsWarning )
 	return; // never display, I know already
 
-    PanelMessage * msg = new PanelMessage( _ui->messagePanel );
+    PanelMessage * msg = new PanelMessage( _ui->messagePanel,
+					   tr( "Some directories could not be read." ),
+					   tr( "You might not have sufficient permissions." ) );
     CHECK_NEW( msg );
 
-    msg->setHeading( tr( "Some directories could not be read." ) );
-    msg->setText( tr( "You might not have sufficient permissions." ) );
-    msg->setIcon( QPixmap( ":/icons/lock-closed.png" ) );
+    msg->setDetails( tr( "Show unreadable directories..." ) );
     msg->connectDetailsLink( this, SLOT( showUnreadableDirs() ) );
+    msg->setIcon( QPixmap( ":/icons/lock-closed.png" ) );
 
     _ui->messagePanel->add( msg );
     _dirPermissionsWarning = msg;

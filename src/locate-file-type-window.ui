@@ -24,10 +24,7 @@
    </item>
    <item>
     <widget class="QTreeWidget" name="treeWidget">
-     <property name="rootIsDecorated">
-      <bool>false</bool>
-     </property>
-     <property name="sortingEnabled">
+     <property name="uniformRowHeights">
       <bool>true</bool>
      </property>
      <column>
@@ -79,7 +76,7 @@
    <sender>closeButton</sender>
    <signal>clicked()</signal>
    <receiver>LocateFileTypeWindow</receiver>
-   <slot>reject()</slot>
+   <slot>deleteLater()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>349</x>

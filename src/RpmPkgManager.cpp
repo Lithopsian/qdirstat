@@ -172,7 +172,7 @@ PkgFileListCache * RpmPkgManager::createFileListCache( PkgFileListCache::LookupT
 				 LONG_CMD_TIMEOUT_SEC );
 
     if ( exitCode != 0 )
-	return 0;
+	return nullptr;
 
     const QStringList lines = output.split( "\n" );
     output.clear(); // Free all that text ASAP
@@ -251,13 +251,12 @@ void RpmPkgManager::rebuildRpmDbWarning() const
 
     if ( MessagePanel::haveInstance() && ! panelMessage )
     {
-	panelMessage = new PanelMessage();
+	panelMessage = new PanelMessage( MessagePanel::firstInstance(),
+			 QObject::tr( "RPM is very slow." ),
+			 QObject::tr( "Open a shell window and run:<br/><code>sudo rpm --rebuilddb</code>" ) );
 	CHECK_NEW( panelMessage );
 
-	panelMessage->setHeading( QObject::tr( "RPM is very slow." ) );
-	panelMessage->setText( QObject::tr( "Open a shell window and run:<br>%1" )
-                               .arg( "<tt>sudo rpm --rebuilddb</tt>" ) );
-	panelMessage->setIcon( QPixmap( ":/icons/dialog-warning.png" ) );
+	panelMessage->setIcon( QPixmap( ":/icons/warning.png" ) );
 
 	MessagePanel::firstInstance()->add( panelMessage );
     }

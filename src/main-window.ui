@@ -3,6 +3,14 @@
  <author>Stefan Hundhammer</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>628</width>
+    <height>510</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>QDirStat</string>
   </property>
@@ -100,28 +108,20 @@
         </widget>
        </widget>
       </widget>
-      <widget class="QDirStat::TreemapView" name="treemapView">
-       <property name="verticalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
-       </property>
-       <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
-       </property>
-       <property name="renderHints">
-        <set>QPainter::SmoothPixmapTransform|QPainter::TextAntialiasing</set>
-       </property>
-       <property name="viewportUpdateMode">
-        <enum>QGraphicsView::BoundingRectViewportUpdate</enum>
-       </property>
-       <property name="optimizationFlags">
-        <set>QGraphicsView::DontAdjustForAntialiasing|QGraphicsView::DontSavePainterState</set>
-       </property>
-      </widget>
+      <widget class="QDirStat::TreemapView" name="treemapView"/>
      </widget>
     </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>628</width>
+     <height>21</height>
+    </rect>
+   </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
@@ -130,12 +130,12 @@
     <addaction name="actionOpenPkg"/>
     <addaction name="actionOpenUnpkg"/>
     <addaction name="separator"/>
+    <addaction name="actionStopReading"/>
     <addaction name="actionRefreshAll"/>
-    <addaction name="actionRefreshSelected"/>
     <addaction name="separator"/>
+    <addaction name="actionRefreshSelected"/>
     <addaction name="actionReadExcluded"/>
     <addaction name="actionContinueReading"/>
-    <addaction name="actionStopReading"/>
     <addaction name="separator"/>
     <addaction name="actionAskWriteCache"/>
     <addaction name="actionAskReadCache"/>
@@ -597,14 +597,16 @@
    <property name="text">
     <string>Read &amp;Excluded Directory</string>
    </property>
+   <property name="shortcut">
+    <string>F6</string>
+   </property>
   </action>
   <action name="actionContinueReading">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/hard-disk.png</normaloff>:/icons/hard-disk.png</iconset>
-   </property>
    <property name="text">
     <string>Continue Reading at &amp;Mount Point</string>
+   </property>
+   <property name="shortcut">
+    <string>F6</string>
    </property>
   </action>
   <action name="actionConfigure">
@@ -755,16 +757,10 @@
    <property name="text">
     <string>&amp;Donate...</string>
    </property>
-   <property name="toolTip">
-    <string>Make a donation to support the QDirStat project</string>
-   </property>
   </action>
   <action name="actionWhatsNew">
    <property name="text">
     <string>What's &amp;New in this Release...</string>
-   </property>
-   <property name="toolTip">
-    <string>Show release notes in external web browser</string>
    </property>
   </action>
   <action name="actionOpenPkg">
@@ -877,9 +873,6 @@
    <property name="iconText">
     <string>QDirStat for Headless Servers...</string>
    </property>
-   <property name="toolTip">
-    <string>QDirStat for Headless Servers</string>
-   </property>
    <property name="statusTip">
     <string>https://github.com/shundhammer/qdirstat/blob/master/doc/QDirStat-for-Servers.md</string>
    </property>
@@ -984,6 +977,22 @@
    </property>
    <property name="statusTip">
     <string>https://github.com/shundhammer/qdirstat/blob/master/doc/Treemap.md</string>
+   </property>
+  </action>
+  <action name="actionShowStatusBar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show &amp;Status Bar</string>
+   </property>
+  </action>
+  <action name="actionShowMenuBar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show &amp;Menu Bar</string>
    </property>
   </action>
  </widget>

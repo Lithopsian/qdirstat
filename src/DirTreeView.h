@@ -109,14 +109,6 @@ namespace QDirStat
     protected:
 
 	/**
-	 * Post the context menu for the size column for 'item' at 'pos'.
-         *
-         * This displays the exact byte size for that item (the column shows a
-         * human-readable size like "4.31 MB").
-	 **/
-//	void sizeContextMenu( const QPoint & pos, FileInfo * item );
-
-	/**
 	 * Change the current item. Overwritten from QTreeView to make sure
 	 * the branch of the new current item is expanded and scrolled to
 	 * the visible area.
@@ -129,7 +121,7 @@ namespace QDirStat
          *
          * Reimplemented from QTreeView.
          **/
-        virtual void keyPressEvent( QKeyEvent * event ) Q_DECL_OVERRIDE;
+//        virtual void keyPressEvent( QKeyEvent * event ) Q_DECL_OVERRIDE;
 
         /**
          * Mouse button handler.

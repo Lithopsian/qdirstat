@@ -99,7 +99,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QDialog.
 	 **/
-	virtual void reject() Q_DECL_OVERRIDE;
+//	virtual void reject() Q_DECL_OVERRIDE;
 
 
     protected slots:
@@ -192,6 +192,13 @@ namespace QDirStat
 	QString	 path()	      const { return _path; }
 	int	 count()      const { return _count; }
 	FileSize totalSize()  const { return _totalSize; }
+
+    protected:
+
+	/**
+	 * Set both the text and text alignment for a column.
+	 **/
+	void set( int col, const QString & text, Qt::Alignment alignment );
 
 	/**
 	 * Less-than operator for sorting.

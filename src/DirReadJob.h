@@ -140,13 +140,13 @@ namespace QDirStat
 	 * Check if going from 'parent' to 'child' would cross a filesystem
 	 * boundary. This take Btrfs subvolumes into account.
 	 **/
-	bool crossingFilesystems( DirInfo * parent, DirInfo * child );
+	static bool crossingFilesystems( DirTree * tree, DirInfo * parent, DirInfo * child );
 
 	/**
 	 * Return the device name where 'dir' is on if it's a mount point.
 	 * This uses MountPoints which reads /proc/mounts.
 	 **/
-	QString device( const DirInfo * dir ) const;
+	static QString device( const DirInfo * dir );
 
 	/**
 	 * Check if we really should cross into a mounted filesystem; don't do
@@ -215,19 +215,6 @@ namespace QDirStat
 	virtual ~LocalDirReadJob();
 
 	/**
-	 * Obtain information about the URL specified and create a new FileInfo
-	 * or a DirInfo (whatever is appropriate) from that information. Use
-	 * FileInfo::isDirInfo() to find out which.
-	 *
-	 * If the underlying syscall fails, this throws a SysCallException if
-	 * 'doThrow' is 'true', and it just returns 0 if it is 'false'.
-	 **/
-	static FileInfo * stat( const QString & url,
-				DirTree	      * tree,
-				DirInfo	      * parent	= 0,
-				bool		doThrow = true );
-
-	/**
 	 * Return 'true' if any exclude rules matching against any direct file
 	 * child should be applied. This is generally useful only for
 	 * second-level read jobs, not for the starting point of a directory
@@ -244,8 +231,8 @@ namespace QDirStat
 	/**
 	 * Set the applyFileChildExcludeRules flag.
 	 **/
-	void setApplyFileChildExcludeRules( bool val )
-	    { _applyFileChildExcludeRules = val; }
+//	void setApplyFileChildExcludeRules( bool val )
+//	    { _applyFileChildExcludeRules = val; }
 
 	/**
 	 * Read the directory. Prior to this nothing happens.
@@ -325,7 +312,7 @@ namespace QDirStat
 	//
 
 	QString _dirName;
-	bool	_applyFileChildExcludeRules;
+//	bool	_applyFileChildExcludeRules;
 	bool	_checkedForNtfs;
 	bool	_isNtfs;
 

@@ -111,7 +111,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QDialog.
 	 **/
-	virtual void reject() Q_DECL_OVERRIDE;
+//	virtual void reject() Q_DECL_OVERRIDE;
 
 
     protected slots:
@@ -171,8 +171,8 @@ namespace QDirStat
 	Ui::LocateFilesWindow * _ui;
         TreeWalker *            _treeWalker;
         Subtree                 _subtree;
-        int                     _sortCol;
-        Qt::SortOrder           _sortOrder;
+//        int                     _sortCol;
+//        Qt::SortOrder           _sortOrder;
     };
 
 
@@ -223,6 +223,13 @@ namespace QDirStat
 	QString	 path()         const { return _path;  }
 //	FileSize size()         const { return _size;  }
 //	time_t   mtime()        const { return _mtime; }
+
+    protected:
+
+	/**
+	 * Sets both the text and text alignment for a column.
+	 **/
+	void set( int col, const QString & text, Qt::Alignment alignment );
 
 	/**
 	 * Less-than operator for sorting.

@@ -42,8 +42,8 @@ namespace QDirStat
 		 struct stat   * statInfo );
 
 	/**
-	 * Constructor from the bare necessary fields for use from a cache file
-	 * reader.
+	 * Constructor from the bare necessary fields to create a dummy tree
+	 * in the Mime catagorizer config page.
 	 **/
 	DirInfo( DirInfo *	 parent,
 		 DirTree *	 tree,
@@ -203,7 +203,7 @@ namespace QDirStat
 	/**
 	 * Set the 'excluded' status.
 	 **/
-	virtual void setExcluded( bool excl =true ) Q_DECL_OVERRIDE
+	virtual void setExcluded( bool excl = true ) Q_DECL_OVERRIDE
 	    { _isExcluded = excl; }
 
 	/**

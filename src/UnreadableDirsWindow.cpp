@@ -8,13 +8,14 @@
 
 
 #include "UnreadableDirsWindow.h"
-#include "QDirStatApp.h"        // SelectionModel
+#include "Attic.h"
 #include "DirTree.h"
 #include "DirTreeModel.h"
-#include "Attic.h"
+#include "FormatUtil.h"
+#include "HeaderTweaker.h"
+#include "QDirStatApp.h"        // dirTreeModel
 #include "SelectionModel.h"
 #include "SettingsHelpers.h"
-#include "HeaderTweaker.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -25,8 +26,8 @@ QPointer<UnreadableDirsWindow> UnreadableDirsWindow::_sharedInstance = 0;
 
 
 UnreadableDirsWindow::UnreadableDirsWindow( QWidget * parent ):
-    QDialog( parent ),
-    _ui( new Ui::UnreadableDirsWindow )
+    QDialog ( parent ),
+    _ui { new Ui::UnreadableDirsWindow }
 {
     // logDebug() << "init" << Qt::endl;;
 
@@ -35,9 +36,8 @@ UnreadableDirsWindow::UnreadableDirsWindow( QWidget * parent ):
     initWidgets();
     readWindowSettings( this, "UnreadableDirsWindow" );
 
-    connect( _ui->treeWidget,	 SIGNAL( currentItemChanged( QTreeWidgetItem *,
-							     QTreeWidgetItem * ) ),
-	     this,		 SLOT  ( selectResult	   ( QTreeWidgetItem * ) ) );
+    connect( _ui->treeWidget,	 &QTreeWidget::currentItemChanged,
+	     this,		 &UnreadableDirsWindow::selectResult );
 }
 
 
@@ -73,12 +73,23 @@ void UnreadableDirsWindow::initWidgets()
 //    font.setBold( true );
 //    _ui->heading->setFont( font );
 
-    const QStringList headerLabels = { tr( "Directory" ), tr( "User" ), ( "Group" ), tr( "Permissions" ), tr( "Perm." ) };
+    const QStringList headerLabels = { tr( "Directory" ),
+				       tr( "User" ),
+				       tr( "Group" ),
+				       tr( "Permissions" ),
+				       tr( "Perm." )
+				     };
 
+    _ui->treeWidget->setIconSize( app()->dirTreeModel()->unreadableDirIcon().actualSize( QSize( 22, 22 ) ) );
     _ui->treeWidget->setColumnCount( headerLabels.size() );
     _ui->treeWidget->setHeaderLabels( headerLabels );
-    _ui->treeWidget->setSortingEnabled( false );
-    _ui->treeWidget->header()->setStretchLastSection( false );
+
+    // Center the column headers except the first
+    for ( int col = 1; col < headerLabels.size(); ++col )
+	_ui->treeWidget->headerItem()->setTextAlignment( col, Qt::AlignHCenter );
+
+//    _ui->treeWidget->setSortingEnabled( false );
+//    _ui->treeWidget->header()->setStretchLastSection( false );
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
 }
 
@@ -118,8 +129,8 @@ void UnreadableDirsWindow::populate( FileInfo * newSubtree )
     populateRecursive( newSubtree ? newSubtree : _subtree() );
     _ui->treeWidget->sortByColumn( 0, Qt::AscendingOrder );
 
-    int count = _ui->treeWidget->topLevelItemCount();
-    _ui->totalLabel->setText( QString( "Total: %1" ).arg( count ) );
+    _ui->totalLabel->setText( "Total: " + _ui->treeWidget->topLevelItemCount() );
+
     //logDebug() << count << " directories" << Qt::endl;;
 
     // Make sure something is selected, even if this window is not the active
@@ -190,8 +201,7 @@ void UnreadableDirsWindow::selectResult( QTreeWidgetItem * item )
     if ( ! item )
 	return;
 
-    UnreadableDirListItem * searchResult =
-	dynamic_cast<UnreadableDirListItem *>( item );
+    const UnreadableDirListItem * searchResult = dynamic_cast<UnreadableDirListItem *>( item );
     CHECK_DYNAMIC_CAST( searchResult, "UnreadableDirListItem" );
     CHECK_PTR( _subtree.tree() );
 
@@ -212,21 +222,27 @@ UnreadableDirListItem::UnreadableDirListItem( const QString & path,
 					      const QString & userName,
 					      const QString & groupName,
 					      const QString & symbolicPermissions,
-					      const QString & octalPermissions	) :
-    QTreeWidgetItem( QTreeWidgetItem::UserType ),
-    _path( path )
+					      const QString & octalPermissions ) :
+    QTreeWidgetItem ( QTreeWidgetItem::UserType ),
+    _path { path }
 {
-    static QIcon lockedDirIcon( QPixmap( ":/icons/tree-medium/unreadable-dir.png" ) );
+//    static QIcon lockedDirIcon( ":/icons/tree-medium/unreadable-dir.png" );
 
-    int col = -1;
+    int col = 0;
 
-    setText( ++col, path + "    "	);  setTextAlignment( col, Qt::AlignLeft    );
+    set( col, path + "    ", Qt::AlignLeft );
     setIcon( col, app()->dirTreeModel()->unreadableDirIcon() );
+    set( ++col, userName, Qt::AlignLeft );
+    set( ++col, groupName, Qt::AlignLeft );
+    set( ++col, symbolicPermissions, Qt::AlignRight );
+    set( ++col, octalPermissions, Qt::AlignRight );
+}
 
-    setText( ++col, userName		);  setTextAlignment( col, Qt::AlignLeft    );
-    setText( ++col, groupName		);  setTextAlignment( col, Qt::AlignLeft    );
-    setText( ++col, symbolicPermissions );  setTextAlignment( col, Qt::AlignHCenter );
-    setText( ++col, octalPermissions	);  setTextAlignment( col, Qt::AlignRight   );
+
+void UnreadableDirListItem::set( int col, const QString & text, Qt::Alignment alignment )
+{
+    setText( col, text );
+    setTextAlignment( col, alignment | Qt::AlignVCenter );
 }
 
 

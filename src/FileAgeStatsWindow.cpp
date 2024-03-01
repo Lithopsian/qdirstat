@@ -107,16 +107,17 @@ void FileAgeStatsWindow::initWidgets()
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
 
 
-    // Signal/slot connections
+    connect( _ui->refreshButton, &QPushButton::clicked,
+             this,               &FileAgeStatsWindow::refresh );
 
-    connect( _ui->refreshButton, SIGNAL( clicked() ),
-             this,               SLOT  ( refresh() ) );
+    connect( _ui->locateButton,  &QPushButton::clicked,
+             this,               &FileAgeStatsWindow::locateFiles );
 
-    connect( _ui->treeWidget,    SIGNAL( itemSelectionChanged() ),
-             this,               SLOT  ( enableActions()        ) );
+    connect( _ui->treeWidget,	 &QTreeWidget::itemDoubleClicked,
+	     this,		 &FileAgeStatsWindow::locateFiles );
 
-    connect( _ui->locateButton,  SIGNAL( clicked()     ),
-             this,               SLOT  ( locateFiles() ) );
+    connect( _ui->treeWidget,    &QTreeWidget::itemSelectionChanged,
+             this,               &FileAgeStatsWindow::enableActions );
 }
 
 
@@ -301,7 +302,7 @@ YearListItem::YearListItem( const YearStats & yearStats ) :
     _stats( yearStats )
 {
     if ( _stats.month > 0 )
-        setText( YearListYearCol,            monthName( yearStats.month ) );
+        setText( YearListYearCol,            monthAbbreviation( yearStats.month ) );
     else
         setText( YearListYearCol,            QString::number( _stats.year         ) + " " );
 
@@ -314,28 +315,6 @@ YearListItem::YearListItem( const YearStats & yearStats ) :
         setData( YearListSizePercentBarCol,  RawDataRole, _stats.sizePercent );
         setText( YearListSizePercentCol,     formatPercent  ( _stats.sizePercent  ) + " " );
     }
-}
-
-
-QString YearListItem::monthName( short month ) const
-{
-    switch ( month )
-    {
-        case  1: return QObject::tr( "Jan." );
-        case  2: return QObject::tr( "Feb." );
-        case  3: return QObject::tr( "Mar." );
-        case  4: return QObject::tr( "Apr." );
-        case  5: return QObject::tr( "May"  );
-        case  6: return QObject::tr( "Jun." );
-        case  7: return QObject::tr( "Jul." );
-        case  8: return QObject::tr( "Aug." );
-        case  9: return QObject::tr( "Sep." );
-        case 10: return QObject::tr( "Oct." );
-        case 11: return QObject::tr( "Nov." );
-        case 12: return QObject::tr( "Dec." );
-    }
-
-    return "";
 }
 
 

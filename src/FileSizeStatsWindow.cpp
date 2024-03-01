@@ -97,27 +97,29 @@ void FileSizeStatsWindow::initWidgets()
 
     _ui->optionsPanel->hide();
 
-    connect( _ui->percentileFilterCheckBox, SIGNAL( stateChanged( int ) ),
-	     this,			    SLOT  ( fillPercentileTable()      ) );
+    connect( _ui->closeOptionsButton,	    &QPushButton::clicked,
+	     this,			    &FileSizeStatsWindow::closeOptions );
 
-    connect( _ui->optionsButton, SIGNAL( clicked()	 ),
-	     this,		 SLOT  ( toggleOptions() ) );
+    connect( _ui->openOptionsButton,	    &QPushButton::clicked,
+	     this,			    &FileSizeStatsWindow::openOptions );
 
-    connect( _ui->autoButton,	 SIGNAL( clicked()  ),
-	     this,		 SLOT  ( autoPercentiles() ) );
+    connect( _ui->autoButton,		    &QPushButton::clicked,
+	     this,			    &FileSizeStatsWindow::autoPercentiles );
 
-    connect( _ui->startPercentileSlider,  SIGNAL( valueChanged( int ) ),
-	     this,			  SLOT	( applyOptions()      ) );
+    connect( _ui->startPercentileSlider,    &QSlider::valueChanged,
+	     this,			    &FileSizeStatsWindow::applyOptions );
 
-    connect( _ui->startPercentileSpinBox, SIGNAL( valueChanged( int ) ),
-	     this,			  SLOT	( applyOptions()      ) );
+    connect( _ui->startPercentileSpinBox,   qOverload<int>( &QSpinBox::valueChanged ),
+	     this,			    &FileSizeStatsWindow::applyOptions );
 
-    connect( _ui->endPercentileSlider,	  SIGNAL( valueChanged( int ) ),
-	     this,			  SLOT	( applyOptions()      ) );
+    connect( _ui->endPercentileSlider,	    &QSlider::valueChanged,
+	     this,			    &FileSizeStatsWindow::applyOptions );
 
-    connect( _ui->endPercentileSpinBox,	  SIGNAL( valueChanged( int ) ),
-	     this,			  SLOT	( applyOptions()      ) );
+    connect( _ui->endPercentileSpinBox,	    qOverload<int>( &QSpinBox::valueChanged ),
+	     this,			    &FileSizeStatsWindow::applyOptions );
 
+    connect( _ui->percentileFilterCheckBox, &QCheckBox::stateChanged,
+	     this,			    &FileSizeStatsWindow::fillPercentileTable );
 }
 
 
@@ -219,7 +221,6 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
     };
 
     table->clear();
-    table->setColumnCount( sums.isEmpty() ? 3 : 5 );
     table->setRowCount( order + 1 );
 
     QStringList headers;
@@ -237,12 +238,11 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
     if ( ! sums.isEmpty() )
     {
 	headers << tr( " Sum %1(n-1)..%2(n) " ).arg( namePrefix ).arg( namePrefix );
-	headers << tr( " Cumulative Sum " );
+	headers << tr( " Cumulative sum " );
     }
 
-//    for ( const QString & header : headers )
-	table->setHorizontalHeaderLabels( headers );
-//    }
+    table->setColumnCount( headers.size() );
+    table->setHorizontalHeaderLabels( headers );
 
     const int median = order / 2;
     const int quartile_1 = order % 4 == 0 ? order / 4      : -1;
@@ -257,13 +257,15 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
 
 	addItem( table, row, NumberCol, namePrefix + QString::number( i ) );
 	addItem( table, row, ValueCol, formatSize( _stats->quantile( order, i ) ) );
-
+	addItem( table, row, SumCol, i > 0 ? formatSize( sums.individual().at( i ) ) : "" );
+	addItem( table, row, CumulativeSumCol, i > 0 ? formatSize( sums.cumulative().at( i ) ) : "" );
+/*
 	if ( i > 0 && i < sums.size() )
 	{
 	    addItem( table, row, SumCol, formatSize( sums.individual().at( i ) ) );
 	    addItem( table, row, CumulativeSumCol, formatSize( sums.cumulative().at( i ) ) );
 	}
-
+*/
 	QString text;
 	if 	( i == 0 )		text = tr( "Min" );
 	else if ( i == order  )		text = tr( "Max" );
@@ -277,7 +279,9 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
 	    setRowBold( table, row );
 //	    setRowForeground( table, row, QBrush( QColor( Qt::blue ) ) ); // very bad in dark themes
 	}
-	else if ( order > 20 && i % 10 == 0 && step <= 1 )
+//	else if ( order > 20 && i % 10 == 0 && step <= 1 )
+
+	if ( i % 10 == 0 && step <= 1 )
 	{
 	    addItem( table, row, NameCol, "" ); // Fill the empty cell
 
@@ -293,11 +297,11 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
 
     table->setRowCount( row );
 
-    setColAlignment( table, NumberCol, Qt::AlignRight  | Qt::AlignVCenter );
-    setColAlignment( table, ValueCol,  Qt::AlignRight  | Qt::AlignVCenter );
-    setColAlignment( table, NameCol,   Qt::AlignCenter | Qt::AlignVCenter );
-    setColAlignment( table, SumCol,    Qt::AlignRight  | Qt::AlignVCenter );
-    setColAlignment( table, CumulativeSumCol, Qt::AlignRight | Qt::AlignVCenter );
+    setColAlignment( table, NumberCol, Qt::AlignRight );
+    setColAlignment( table, ValueCol,  Qt::AlignRight );
+    setColAlignment( table, NameCol,   Qt::AlignCenter);
+    setColAlignment( table, SumCol,    Qt::AlignRight );
+    setColAlignment( table, CumulativeSumCol, Qt::AlignRight );
 
     HeaderTweaker::resizeToContents( table->horizontalHeader() );
 }
@@ -330,7 +334,7 @@ void FileSizeStatsWindow::setRowBold( QTableWidget * table, int row )
     }
 }
 
-
+/*
 void FileSizeStatsWindow::setRowForeground( QTableWidget * table, int row, const QBrush & brush )
 {
     for ( int col=0; col < table->columnCount(); ++col )
@@ -340,7 +344,7 @@ void FileSizeStatsWindow::setRowForeground( QTableWidget * table, int row, const
 	    item->setForeground( brush );
     }
 }
-
+*/
 
 void FileSizeStatsWindow::setRowBackground( QTableWidget * table, int row, const QBrush & brush )
 {
@@ -358,9 +362,8 @@ void FileSizeStatsWindow::setColAlignment( QTableWidget * table, int col, Qt::Al
     for ( int row=0; row < table->rowCount(); ++row )
     {
 	QTableWidgetItem * item = table->item( row, col );
-
 	if ( item )
-	    item->setTextAlignment( alignment );
+	    item->setTextAlignment( alignment | Qt::AlignVCenter );
     }
 }
 
@@ -383,17 +386,14 @@ void FileSizeStatsWindow::fillHistogram()
 
 void FileSizeStatsWindow::fillBuckets()
 {
-    HistogramView * histogram = _ui->histogramView;
-
-    const int startPercentile = histogram->startPercentile();
-    const int endPercentile   = histogram->endPercentile();
+    const int startPercentile = _ui->histogramView->startPercentile();
+    const int endPercentile   = _ui->histogramView->endPercentile();
     const int percentileCount = endPercentile - startPercentile;
-
     const int dataCount       = qRound( _stats->dataSize() * percentileCount / 100.0 );
-    const int bucketCount     = histogram->bestBucketCount( dataCount );
-    const QRealList buckets   = _stats->fillBuckets( bucketCount, startPercentile, endPercentile );
+    const int bucketCount     = _ui->histogramView->bestBucketCount( dataCount );
 
-    histogram->setBuckets( buckets );
+    const QRealList buckets   = _stats->fillBuckets( bucketCount, startPercentile, endPercentile );
+    _ui->histogramView->setBuckets( buckets );
     fillBucketsTable();
 }
 
@@ -411,19 +411,18 @@ void FileSizeStatsWindow::reject()
 }
 
 
-void FileSizeStatsWindow::toggleOptions()
+void FileSizeStatsWindow::openOptions()
 {
-    if ( _ui->optionsPanel->isVisible() )
-    {
-	_ui->optionsPanel->hide();
-	_ui->optionsButton->setText( tr( "&Options >>" ) );
-    }
-    else
-    {
-	_ui->optionsPanel->show();
-	_ui->optionsButton->setText( tr( "<< &Options" ) );
-	updateOptions();
-    }
+    _ui->optionsPanel->show();
+    _ui->openOptionsButton->hide();
+    updateOptions();
+}
+
+
+void FileSizeStatsWindow::closeOptions()
+{
+    _ui->optionsPanel->hide();
+    _ui->openOptionsButton->show();
 }
 
 
@@ -442,7 +441,7 @@ void FileSizeStatsWindow::applyOptions()
 	histogram->setEndPercentile  ( newEnd	);
 	fillBuckets();
 	histogram->autoLogHeightScale(); // FIXME
-	histogram->rebuild();
+	histogram->build();
     }
 }
 
@@ -454,7 +453,7 @@ void FileSizeStatsWindow::autoPercentiles()
     updateOptions();
     fillBuckets();
     _ui->histogramView->autoLogHeightScale(); // FIXME
-    _ui->histogramView->rebuild();
+    _ui->histogramView->build();
 }
 
 

@@ -158,3 +158,24 @@ QString QDirStat::formatMillisec( qint64 millisec, bool showMillisec )
 
     return formattedTime;
 }
+
+
+QString QDirStat::monthAbbreviation( short month )
+{
+    switch ( month )
+    {
+        case  1: return QObject::tr( "Jan" );
+        case  2: return QObject::tr( "Feb" );
+        case  3: return QObject::tr( "Mar" );
+        case  4: return QObject::tr( "Apr" );
+        case  5: return QObject::tr( "May" );
+        case  6: return QObject::tr( "Jun" );
+        case  7: return QObject::tr( "Jul" );
+        case  8: return QObject::tr( "Aug" );
+        case  9: return QObject::tr( "Sep" );
+        case 10: return QObject::tr( "Oct" );
+        case 11: return QObject::tr( "Nov" );
+        case 12: return QObject::tr( "Dec" );
+	default: return "";
+    }
+}

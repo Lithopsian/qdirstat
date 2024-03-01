@@ -64,9 +64,8 @@ const QColor & MimeCategorizer::color( const FileInfo * item )
 const MimeCategory * MimeCategorizer::category( const FileInfo * item, QString * suffix_ret )
 {
     if ( !item )
-	return 0;
+	return nullptr;
 
-    CHECK_PTR  ( item );
     CHECK_MAGIC( item );
 
     const QReadLocker locker( &_lock );
@@ -86,10 +85,9 @@ const MimeCategory * MimeCategorizer::category( const QString & filename )
 const MimeCategory * MimeCategorizer::category( const FileInfo * item ) const
 {
     if ( item->isSymLink() )
-    {
 	return _symlinkCategory;
-    }
-    else if ( item->isFile() )
+
+    if ( item->isFile() )
     {
 	const MimeCategory *matchedCategory = category( item->name(), 0 );
 	if ( matchedCategory )
@@ -100,10 +98,8 @@ const MimeCategory * MimeCategorizer::category( const FileInfo * item ) const
 	else
 	    return &_emptyCategory;
     }
-    else
-    {
-	return &_emptyCategory;
-    }
+
+    return &_emptyCategory;
 }
 
 
@@ -114,9 +110,9 @@ const MimeCategory * MimeCategorizer::category( const QString & filename,
 	*suffix_ret = "";
 
     if ( filename.isEmpty() )
-	return 0;
+	return nullptr;
 
-    const MimeCategory *category = 0;
+    const MimeCategory *category = nullptr;
 
     // Whole filename exact matching will be relatively rare, so quickly check if it is
     // possible to produce any matches before doing the actual case-sensitive and insensitive
@@ -126,7 +122,7 @@ const MimeCategory * MimeCategorizer::category( const QString & filename,
 
     if ( length < _caseSensitiveLengths.size() && _caseSensitiveLengths.testBit( length ) )
     {
-	category = _caseSensitiveExact.value( filename, 0 );
+	category = _caseSensitiveExact.value( filename, nullptr );
 	if ( category )
 	    return category;
     }
@@ -136,7 +132,7 @@ const MimeCategory * MimeCategorizer::category( const QString & filename,
 	// A lowercased filename will have been detected already because there is a pattern
 	// in the case-sensitive map, so only filenames which are not lowercase are of
 	// interest here.
-	category = _caseInsensitiveExact.value( filename.toLower(), 0 );
+	category = _caseInsensitiveExact.value( filename.toLower(), nullptr );
 	if ( category )
 	    return category;
     }
@@ -145,7 +141,7 @@ const MimeCategory * MimeCategorizer::category( const QString & filename,
     // Ignore an initial dot and treat repeated dots as a single separator
     QString suffix = filename.section( '.', 1, -1, QString::SectionSkipEmpty );
 
-    while ( ! suffix.isEmpty() )
+    while ( !suffix.isEmpty() )
     {
         // logVerbose() << "Checking " << suffix << Qt::endl;
 
@@ -187,7 +183,7 @@ const MimeCategory * MimeCategorizer::matchWildcardSuffix( const QMultiHash<QStr
 							   const QString & filename,
 							   const QString & suffix ) const
 {
-    auto rangeIts = map.equal_range( suffix );
+    const auto rangeIts = map.equal_range( suffix );
     for ( auto it = rangeIts.first; it != rangeIts.second && it.key() == suffix; ++it )
     {
 	WildcardPair pair = it.value();
@@ -195,7 +191,7 @@ const MimeCategory * MimeCategorizer::matchWildcardSuffix( const QMultiHash<QStr
 	    return pair.second;
     }
 
-    return 0;
+    return nullptr;
 }
 
 
@@ -207,19 +203,19 @@ const MimeCategory * MimeCategorizer::matchWildcard( const QString & filename ) 
 	    return pair.second;
     }
 
-    return 0; // No match
+    return nullptr; // No match
 }
 
 
 const MimeCategory * MimeCategorizer::findCategoryByName( const QString & categoryName ) const
 {
-    for ( MimeCategory * category : _categories )
+    for ( const MimeCategory * category : _categories )
     {
 	if ( category && category->name() == categoryName )
 	    return category;
     }
 
-    return 0; // No match
+    return nullptr; // No match
 }
 
 
@@ -389,7 +385,7 @@ void MimeCategorizer::readSettings()
     generalSettings.endGroup();
 
     MimeCategorySettings settings;
-    QStringList mimeCategoryGroups = settings.findGroups( settings.groupPrefix() );
+    const QStringList mimeCategoryGroups = settings.findGroups( settings.groupPrefix() );
 
     clear();
 

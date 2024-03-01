@@ -43,7 +43,7 @@ bool FileInfo::_ignoreHardLinks = false;
 
 FileInfo::FileInfo( DirInfo	  * parent,
 		    DirTree	  * tree,
-		    const QString & filenameWithoutPath,
+		    const QString & filename,
 		    struct stat	  * statInfo )
     /**
      * Constructor from a stat buffer (i.e. based on an lstat() call).
@@ -53,7 +53,7 @@ FileInfo::FileInfo( DirInfo	  * parent,
     , _next { nullptr }
     , _tree { tree }
     , _magic { FileInfoMagic }
-    , _name { filenameWithoutPath }
+    , _name { filename }
     , _isLocalFile { true }
     , _isIgnored { false }
     , _allocatedSize { 0 }
@@ -276,12 +276,12 @@ bool FileInfo::isInSubtree( const FileInfo *subtree ) const
 FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
 {
     if ( ! _tree )
-	return 0;
+	return nullptr;
 
     FileInfo * result = 0;
 
     if ( ! url.startsWith( _name ) && this != _tree->root() )
-	return 0;
+	return nullptr;
     else					// URL starts with this node's name
     {
 	if ( this != _tree->root() )		// The root item is invisible
@@ -298,7 +298,7 @@ FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
 		if ( _name.right(1) != "/" &&	// and this is not the root directory
 		     ! isDotEntry() )		// or a dot entry:
 		{
-		    return 0;			// This can't be any of our children.
+		    return nullptr;			// This can't be any of our children.
 		}
 	    }
 	}
@@ -532,7 +532,7 @@ PkgInfo * FileInfo::pkgInfoParent() const
 	pkg = pkg->parent();
     }
 
-    return 0;
+    return nullptr;
 }
 
 

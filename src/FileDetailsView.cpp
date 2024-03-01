@@ -96,7 +96,7 @@ void FileDetailsView::showDetails( const FileInfoSet & selectedItems )
 
 void FileDetailsView::showDetails( FileInfo * file )
 {
-    if ( ! file )
+    if ( !file )
     {
 	clear();
 	return;
@@ -133,8 +133,6 @@ void FileDetailsView::showFileInfo( FileInfo * file )
     _ui->blockIcon->setVisible( file->isBlockDevice() );
     _ui->charIcon->setVisible( file->isCharDevice() );
     _ui->specialIcon->setVisible( file->isFifo() || file->isSocket() );
-
-//    _ui->fileSymLinkBrokenWarning->setVisible( file->isBrokenSymLink() );
 
     if ( file->isSymLink() )
     {
@@ -176,7 +174,7 @@ void FileDetailsView::showFileInfo( FileInfo * file )
     _ui->filePermissionsLabel->setText( formatPermissions( file->mode() ) );
     _ui->fileMTimeLabel->setText( formatTime( file->mtime() ) );
 
-//    if ( ! file->isSparseFile() )
+//    if ( !file->isSparseFile() )
 //	_ui->fileSizeLabel->suppressIfSameContent( _ui->fileAllocatedLabel, _ui->fileAllocatedCaption );
 }
 
@@ -228,7 +226,7 @@ void FileDetailsView::showFilePkgInfo( const FileInfo * file )
 	    const QString delayHint = QString( _pkgUpdateTimer->delayStage(), '.' ).replace( ".", ". " );
 	    _ui->filePackageLabel->setText( delayHint );
 
-	    // Caspture url by value because the FileInfo may be gone  by the time the timer expires
+	    // Caspture url by value because the FileInfo may be gone by the time the timer expires
 	    const QString url = file->url();
 	    _pkgUpdateTimer->request( [ url, this ]() { updatePkgInfo( url ); } );
 
@@ -248,7 +246,7 @@ void FileDetailsView::updatePkgInfo( const QString & path )
 
     const QString pkg = PkgQuery::owningPkg( path );
     _ui->filePackageLabel->setText( pkg );
-    _ui->filePackageCaption->setEnabled( ! pkg.isEmpty() );
+    _ui->filePackageCaption->setEnabled( !pkg.isEmpty() );
 
 //    _pkgUpdateTimer->deliveryComplete();
 }
@@ -271,7 +269,7 @@ void FileDetailsView::showDetails( DirInfo * dir )
 {
     // logDebug() << "Showing dir details about " << dir << Qt::endl;
 
-    if ( ! dir )
+    if ( !dir )
     {
 	clear();
 	return;
@@ -281,14 +279,15 @@ void FileDetailsView::showDetails( DirInfo * dir )
     setLabelLimited(_ui->dirNameLabel, name );
 
     QString dirType = dir->isMountPoint() ? tr( "mount point" ) :
-                      dir->isPseudoDir() ? tr( "pseudo directory" ) : tr( "directory" );
+                      dir->isPseudoDir() ?  tr( "pseudo directory" ) :
+		                            tr( "directory" );
     _ui->dirTypeLabel->setText( dirType );
 
-    _ui->dirIcon->setVisible( ! dir->readError() );
+    _ui->dirIcon->setVisible( !dir->readError() );
     _ui->dirUnreadableIcon->setVisible( dir->readError() );
 
     // Subtree information
-    setDirBlockVisibility( ! dir->isPseudoDir() );
+    setDirBlockVisibility( !dir->isPseudoDir() );
     showSubtreeInfo( dir );
     showDirNodeInfo( dir );
 
@@ -306,22 +305,26 @@ QString FileDetailsView::subtreeMsg( const DirInfo * dir )
 	case DirReading:
 	    return tr( "[reading]" );
 
-	case DirOnRequestOnly:
-	    return tr( "[not read]" );
-
 	case DirPermissionDenied:
 	    return tr( "[permission denied]" );
 
 	case DirError:
 	    return tr( "[read error]" );
 
+	case DirOnRequestOnly:
+	    return tr( "[not read]" );
+
+	case DirAborted:
+	    return tr( "[aborted]" );
+
 	case DirFinished:
 	case DirCached:
-	case DirAborted:
+//	case DirAborted:
 	default:
 	    return QString();
     }
 }
+
 
 void FileDetailsView::showSubtreeInfo( DirInfo * dir )
 {
@@ -373,9 +376,9 @@ void FileDetailsView::showDirNodeInfo( const DirInfo * dir )
 {
     CHECK_PTR( dir );
 
-//    setDirBlockVisibility( ! dir->isPseudoDir() );
+//    setDirBlockVisibility( !dir->isPseudoDir() );
 
-    if ( ! dir->isPseudoDir() )
+    if ( !dir->isPseudoDir() )
     {
 	_ui->dirOwnSizeCaption->setVisible( dir->size() > 0 );
 	_ui->dirOwnSizeLabel->setVisible  ( dir->size() > 0 );
@@ -420,30 +423,13 @@ void FileDetailsView::setDirBlockVisibility( bool visible )
 
 QString FileDetailsView::pkgMsg( const PkgInfo * pkg )
 {
-    switch ( pkg->readState() )
+    if ( pkg->readState() == DirCached || pkg->readState() == DirOnRequestOnly )
     {
-	case DirQueued:
-	case DirReading:
-	    return tr( "[reading]" );
-
-	case DirPermissionDenied:
-	    return tr( "[permission denied]" );
-
-	case DirError:
-	    return tr( "[read error]" );
-
-	case DirAborted:
-	    return tr( "[aborted]" );
-
-	case DirCached:
-	case DirOnRequestOnly:
-	    logError() << "invalid readState for a Pkg" << Qt::endl;
-	    return QString();
-
-	case DirFinished:
-	default:
-	    return QString();
+	logError() << "invalid readState for a Pkg" << Qt::endl;
+	return QString();
     }
+
+    return subtreeMsg( pkg );
 }
 
 
@@ -451,7 +437,7 @@ void FileDetailsView::showDetails( PkgInfo * pkg )
 {
     // logDebug() << "Showing pkg details about " << pkg << Qt::endl;
 
-    if ( ! pkg )
+    if ( !pkg )
     {
 	clear();
 	return;
@@ -499,7 +485,7 @@ void FileDetailsView::showPkgSummary( PkgInfo * pkg )
 {
     // logDebug() << "Showing pkg details about " << pkg << Qt::endl;
 
-    if ( ! pkg )
+    if ( !pkg )
     {
 	clear();
 	return;
@@ -507,7 +493,7 @@ void FileDetailsView::showPkgSummary( PkgInfo * pkg )
 
     setLabel( _ui->pkgSummaryPkgCountLabel, pkg->directChildrenCount() );
 
-    if ( ! pkg->isBusy() && pkg->readState() == DirFinished )
+    if ( !pkg->isBusy() && pkg->readState() == DirFinished )
     {
 	setLabel( _ui->pkgSummaryTotalSizeLabel,   pkg->totalSize()	     );
 	setLabel( _ui->pkgSummaryAllocatedLabel,   pkg->totalAllocatedSize() );
@@ -522,9 +508,9 @@ void FileDetailsView::showPkgSummary( PkgInfo * pkg )
     {
 	QString msg;
 	if ( pkg->isBusy() )
-	    msg = tr( "[Reading]" );
+	    msg = tr( "[reading]" );
 	else if ( pkg->readError() )
-	    msg = tr( "[Read Error]" );
+	    msg = tr( "[read error]" );
 	_ui->pkgSummaryTotalSizeLabel->setText( msg );
 	_ui->pkgSummaryAllocatedLabel->clear();
 	_ui->pkgSummaryItemCountLabel->clear();
@@ -651,8 +637,8 @@ void FileDetailsView::setMimeCategory( const FileInfo * fileInfo )
 {
     const QString categoryName = mimeCategory( fileInfo );
     _ui->fileMimeOrLinkCaption->setText( tr( "MIME category:" ) );
-    _ui->fileMimeOrLinkCaption->setEnabled( ! categoryName.isEmpty() );
-    _ui->fileMimeOrLinkLabel->setEnabled( ! categoryName.isEmpty() );
+    _ui->fileMimeOrLinkCaption->setEnabled( !categoryName.isEmpty() );
+    _ui->fileMimeOrLinkLabel->setEnabled( !categoryName.isEmpty() );
     _ui->fileMimeOrLinkLabel->setText( categoryName );
 }
 

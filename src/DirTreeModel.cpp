@@ -14,6 +14,7 @@
 #include "DirTree.h"
 #include "FileInfoIterator.h"
 #include "DataColumns.h"
+#include "MountPoints.h"
 #include "SelectionModel.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
@@ -233,6 +234,7 @@ void DirTreeModel::loadIcons()
     _symlinkIcon       = QIcon( _treeIconDir + "symlink.png"	    );
     _unreadableDirIcon = QIcon( _treeIconDir + "unreadable-dir.png" );
     _mountPointIcon    = QIcon( _treeIconDir + "mount-point.png"    );
+    _networkIcon       = QIcon( _treeIconDir + "network.png"	    );
     _stopIcon	       = QIcon( _treeIconDir + "stop.png"	    );
     _excludedIcon      = QIcon( _treeIconDir + "excluded.png"	    );
     _blockDeviceIcon   = QIcon( _treeIconDir + "block-device.png"   );
@@ -266,7 +268,7 @@ FileInfo * DirTreeModel::findChild( DirInfo * parent, int childNo ) const
 		   << parent << Qt::endl;
 	Debug::dumpChildrenList( parent, childrenList );
 
-	return 0;
+	return nullptr;
     }
 
     return childrenList.at( childNo );
@@ -302,7 +304,7 @@ int DirTreeModel::rowNumber( FileInfo * child ) const
 FileInfo * DirTreeModel::itemFromIndex( const QModelIndex & index )
 {
     if ( !index.isValid() )
-	return 0;
+	return nullptr;
 
     FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
     CHECK_MAGIC( item );
@@ -651,7 +653,7 @@ QVariant DirTreeModel::columnText( FileInfo * item, int col ) const
     CHECK_PTR( item );
 
     if ( col == _readJobsCol && item->isBusy() )
-	return tr( "[%1 Read Jobs]" ).arg( item->pendingReadJobs() );
+	return tr( "[%1 read jobs]" ).arg( item->pendingReadJobs() );
 
     if ( item->isPkgInfo() && item->readState() == DirAborted && !item->firstChild() && col != NameCol )
 	return "?";
@@ -659,7 +661,7 @@ QVariant DirTreeModel::columnText( FileInfo * item, int col ) const
     switch ( col )
     {
 	case NameCol:		  return item->name();
-	case PercentBarCol:	  return item->isExcluded() ? tr( "[Excluded]" ) : QVariant();
+	case PercentBarCol:	  return item->isExcluded() ? tr( "[excluded]" ) : QVariant();
 	case PercentNumCol:
 	{
 	    if ( item->isAttic() || item == _tree->firstToplevel() )
@@ -923,16 +925,19 @@ QIcon DirTreeModel::itemTypeIcon( FileInfo * item ) const
     if ( item->isAttic()    ) return _atticIcon;
     if ( item->isPkgInfo()  ) return _pkgIcon;
     if ( item->isExcluded() ) return _excludedIcon;
+    if ( item->readError()  ) return _unreadableDirIcon;
 
     if ( item->isDir() )
     {
-	if ( item->readError()		     ) return _unreadableDirIcon;
-	if ( item->isMountPoint()	     ) return _mountPointIcon;
 	if ( item->isIgnored()		     ) return _atticIcon;
+	if ( item->isMountPoint()	     )
+	{
+	    const MountPoint * mountPoint = MountPoints::findByPath( item->path() );
+	    return mountPoint->isNetworkMount() ? _networkIcon : _mountPointIcon;
+	}
 	return _dirIcon;
     }
     // else file
-    if ( item->readError()     )   return _unreadableDirIcon;
     if ( item->isFile()	       )   return _fileIcon;
     if ( item->isSymLink()     )   return _symlinkIcon;
     if ( item->isBlockDevice() )   return _blockDeviceIcon;

@@ -126,6 +126,11 @@ namespace QDirStat
 	{ return string.leftJustified( width, QChar( 0x00A0 ) ); }
 
     /**
+     * Returns a three-letter abbreviation for the requested month.
+     **/
+    QString monthAbbreviation( short month );
+
+    /**
      * Human-readable output of a file size in a debug stream.
      * Removed because the overload of is ambiguous between FileSize
      * and qsizetype (and potentially other long long ints).  Use

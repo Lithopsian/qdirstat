@@ -31,9 +31,9 @@ LocateFilesWindow::LocateFilesWindow( TreeWalker * treeWalker,
                                       QWidget    * parent ):
     QDialog ( parent ),
     _ui { new Ui::LocateFilesWindow },
-    _treeWalker { treeWalker },
-    _sortCol { LocateListPathCol },
-    _sortOrder { Qt::AscendingOrder }
+    _treeWalker { treeWalker }
+//    _sortCol { LocateListPathCol },
+//    _sortOrder { Qt::AscendingOrder }
 {
     // logDebug() << "init" << Qt::endl;;
 
@@ -89,30 +89,32 @@ void LocateFilesWindow::refresh()
 
 void LocateFilesWindow::initWidgets()
 {
-//    QFont font = _ui->heading->font();
-//    font.setBold( true );
-//    _ui->heading->setFont( font );
-
     _ui->treeWidget->setColumnCount( LocateListColumnCount );
     _ui->treeWidget->setHeaderLabels( { tr( "Size" ), tr( "Last Modified" ), tr( "Path" ) } );
-//    _ui->treeWidget->header()->setStretchLastSection( false );
-    HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
+    _ui->treeWidget->headerItem()->setTextAlignment( LocateListSizeCol, Qt::AlignHCenter );
+    _ui->treeWidget->headerItem()->setTextAlignment( LocateListMTimeCol, Qt::AlignHCenter );
+
+    _ui->treeWidget->setIconSize( app()->dirTreeModel()->dirIcon().actualSize( QSize( 22, 22 ) ) );
     _ui->resultsLabel->setText( "" );
+
+    HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
+
     addCleanupHotkeys();
 }
 
-
+/*
 void LocateFilesWindow::reject()
 {
     deleteLater();
 }
-
+*/
 
 void LocateFilesWindow::populate( FileInfo * newSubtree )
 {
     // logDebug() << "populating with " << newSubtree << Qt::endl;;
 
     clear();
+
     _subtree = newSubtree;
     _treeWalker->prepare( _subtree() );
 
@@ -123,7 +125,7 @@ void LocateFilesWindow::populate( FileInfo * newSubtree )
     showResultsCount();
 
     _ui->treeWidget->setSortingEnabled( true );
-    _ui->treeWidget->sortByColumn( _sortCol, _sortOrder );
+    _ui->treeWidget->sortByColumn( LocateListPathCol, Qt::AscendingOrder );
 }
 
 
@@ -132,9 +134,7 @@ void LocateFilesWindow::populateRecursive( FileInfo * dir )
     if ( ! dir )
 	return;
 
-    FileInfoIterator it( dir );
-
-    while ( *it )
+    for ( FileInfoIterator it( dir ); *it; ++it )
     {
 	FileInfo * item = *it;
 
@@ -147,11 +147,7 @@ void LocateFilesWindow::populateRecursive( FileInfo * dir )
         }
 
 	if ( item->hasChildren() )
-	{
 	    populateRecursive( item );
-	}
-
-        ++it;
     }
 }
 
@@ -159,11 +155,12 @@ void LocateFilesWindow::populateRecursive( FileInfo * dir )
 void LocateFilesWindow::showResultsCount()
 {
     const int results = _ui->treeWidget->topLevelItemCount();
-    const QString text = _treeWalker->overflow() ?
-        tr( "Limited to %1 results" ).arg( results ) :
-        results == 1 ? tr( "1 result" ) :
-        tr( "%1 results" ).arg( results );
-    _ui->resultsLabel->setText( text );
+    if ( _treeWalker->overflow() )
+	_ui->resultsLabel->setText( tr( "Limited to %1 results" ).arg( results ) );
+    else if ( results == 1 )
+	_ui->resultsLabel->setText( tr( "1 result" ) );
+    else
+        _ui->resultsLabel->setText( tr( "%1 results" ).arg( results ) );
 }
 
 
@@ -226,10 +223,10 @@ void LocateFilesWindow::setHeading( const QString & text )
 
 void LocateFilesWindow::sortByColumn( int col, Qt::SortOrder order )
 {
-    _sortCol   = col;
-    _sortOrder = order;
+//    _sortCol   = col;
+//    _sortOrder = order;
 
-    _ui->treeWidget->sortByColumn( _sortCol, _sortOrder );
+    _ui->treeWidget->sortByColumn( col, order );
     selectFirstItem();
 }
 
@@ -245,16 +242,18 @@ LocateListItem::LocateListItem( FileInfo * item ):
     _size  = item->totalSize();
     _mtime = item->mtime();
 
-    const QIcon icon = app()->dirTreeModel()->itemTypeIcon( item );
+    set( LocateListSizeCol,  formatSize( _size )  + " ", Qt::AlignRight );
+    set( LocateListMTimeCol, formatTime( _mtime ) + " ", Qt::AlignLeft  );
+    set( LocateListPathCol,  _path                + " ", Qt::AlignLeft  );
 
-    setText( LocateListSizeCol,	 formatSize( _size )  + " " );
-    setText( LocateListMTimeCol, formatTime( _mtime ) + " " );
-    setText( LocateListPathCol,	 _path                + " " );
-    setIcon( LocateListPathCol,  icon );
+    setIcon( LocateListPathCol,  app()->dirTreeModel()->itemTypeIcon( item ) );
+}
 
-    setTextAlignment( LocateListSizeCol,	 Qt::AlignRight );
-    setTextAlignment( LocateListMTimeCol,	 Qt::AlignLeft  );
-    setTextAlignment( LocateListPathCol,	 Qt::AlignLeft	);
+
+void LocateListItem::set( int col, const QString & text, Qt::Alignment alignment )
+{
+    setText( col, text );
+    setTextAlignment( col, alignment | Qt::AlignVCenter );
 }
 
 

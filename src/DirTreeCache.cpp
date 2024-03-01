@@ -16,6 +16,7 @@
 #include "DotEntry.h"
 #include "ExcludeRules.h"
 #include "FormatUtil.h"
+#include "MountPoints.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -37,7 +38,7 @@ using namespace QDirStat;
 
 bool CacheWriter::writeCache( const QString & fileName, const DirTree *tree )
 {
-    if ( ! tree || ! tree->root() )
+    if ( !tree || !tree->root() )
 	return false;
 
     gzFile cache = gzopen( (const char *) fileName.toUtf8(), "w" );
@@ -52,7 +53,7 @@ bool CacheWriter::writeCache( const QString & fileName, const DirTree *tree )
     gzprintf( cache,
 	     "# Do not edit!\n"
 	     "#\n"
-	     "# Type\tpath\t\tsize\tmtime\t\t<optional fields>\n"
+	     "# Type\tpath\t\tsize\tmtime\t\tmode\t<optional fields>\n"
 	     "\n" );
 
     writeTree( cache, tree->root()->firstChild() );
@@ -64,72 +65,57 @@ bool CacheWriter::writeCache( const QString & fileName, const DirTree *tree )
 
 void CacheWriter::writeTree( gzFile cache, const FileInfo * item )
 {
-    if ( ! item )
+    if ( !item )
 	return;
 
-    //
     // Write entry for this item
-    //
-
-    if ( ! item->isDotEntry() )
+    if ( !item->isDotEntry() )
 	writeItem( cache, item );
 
-    //
     // Write file children
-    //
-
     if ( item->dotEntry() )
 	writeTree( cache, item->dotEntry() );
 
-    //
     // Recurse through subdirectories
-    //
-
-    FileInfo * child = item->firstChild();
-
-    while ( child )
-    {
+    for ( FileInfo * child = item->firstChild(); child; child = child->next() )
 	writeTree( cache, child );
-	child = child->next();
-    }
 }
 
 
 void CacheWriter::writeItem( gzFile cache, const FileInfo * item )
 {
-    if ( ! item )
+    if ( !item )
 	return;
 
     // Write file type
-
     const char * file_type = "";
-    if	    ( item->isFile()		)	file_type = "F";
-    else if ( item->isDir()		)	file_type = "D";
-    else if ( item->isSymLink()		)	file_type = "L";
-    else if ( item->isBlockDevice()	)	file_type = "BlockDev";
-    else if ( item->isCharDevice()	)	file_type = "CharDev";
-    else if ( item->isFifo()		)	file_type = "FIFO";
-    else if ( item->isSocket()		)	file_type = "Socket";
-
+    if	    ( item->isFile()		) file_type = "F";
+    else if ( item->isDir()		) file_type = "D";
+    else if ( item->isSymLink()		) file_type = "L";
+    else if ( item->isBlockDevice()	) file_type = "BlockDev";
+    else if ( item->isCharDevice()	) file_type = "CharDev";
+    else if ( item->isFifo()		) file_type = "FIFO";
+    else if ( item->isSocket()		) file_type = "Socket";
     gzprintf( cache, "%s", file_type );
 
     // Write name
-    if ( item->isDirInfo() && ! item->isDotEntry() )
-    {
-	// Use absolute path
-	gzprintf( cache, " %s", urlEncoded( item->url() ).data() );
-    }
+    if ( item->isDirInfo() && !item->isDotEntry() )
+	gzprintf( cache, " %s", urlEncoded( item->url() ).data() ); // absolute path
     else
-    {
-	// Use relative path
-	gzprintf( cache, "\t%s", urlEncoded( item->name() ).data() );
-    }
+	gzprintf( cache, "\t%s", urlEncoded( item->name() ).data() ); // relative path
 
     // Write size
     gzprintf( cache, "\t%s", formatSize( item->rawByteSize() ).toUtf8().data() );
 
     // Write mtime
-    gzprintf( cache, "\t0x%lx", (unsigned long) item->mtime() );
+    gzprintf( cache, "\t0x%lx", (unsigned long)item->mtime() );
+
+    // For permissions, although also identifies the object type
+    gzprintf( cache, "\t%07o", item->mode() );
+
+    // Flags, also an excuse to keep an even number of extra fields
+    // Currently the only flag is whether the object is excluded
+    gzprintf( cache, "\t%0xlx", (unsigned long)item->isExcluded() );
 
     // Optional fields
     if ( item->isSparseFile() )
@@ -137,6 +123,7 @@ void CacheWriter::writeItem( gzFile cache, const FileInfo * item )
     if ( item->isFile() && item->links() > 1 )
 	gzprintf( cache, "\tlinks: %u", (unsigned) item->links() );
 
+    // One item per line
     gzputc( cache, '\n' );
 }
 
@@ -149,12 +136,9 @@ QByteArray CacheWriter::urlEncoded( const QString & path )
     url.setScheme( "foo" );
     url.setPath( path );
 
-    QByteArray encoded = url.toEncoded( QUrl::RemoveScheme );
-
+    const QByteArray encoded = url.toEncoded( QUrl::RemoveScheme );
     if ( encoded.isEmpty() )
-    {
         logError() << "Invalid file/dir name: " << path << Qt::endl;
-    }
 
     return encoded;
 
@@ -163,6 +147,7 @@ QByteArray CacheWriter::urlEncoded( const QString & path )
 
 QString CacheWriter::formatSize( FileSize size )
 {
+    // Only use size suffixes for exact multiples, otherwise the exact number of bytes
     if ( size >= TB && size % TB == 0 )
         return QString( "%1T" ).arg( size / TB );
 
@@ -187,7 +172,7 @@ QString CacheWriter::formatSize( FileSize size )
 CacheReader::CacheReader( const QString & fileName,
 			  DirTree *	  tree,
 			  DirInfo *	  parent ):
-    QObject { },
+    QObject (),
     _tree { tree },
     _cache { gzopen( fileName.toUtf8(), "r" ) },
     _buffer { { 0 } },
@@ -244,9 +229,7 @@ void CacheReader::rewind()
 
 bool CacheReader::read( int maxLines )
 {
-    while ( ! gzeof( _cache )
-	    && _ok
-	    && ( maxLines == 0 || --maxLines > 0 ) )
+    while ( !gzeof( _cache ) && _ok && ( maxLines == 0 || --maxLines > 0 ) )
     {
 	if ( readLine() )
 	{
@@ -255,7 +238,7 @@ bool CacheReader::read( int maxLines )
 	}
     }
 
-    return _ok && ! gzeof( _cache );
+    return _ok && !gzeof( _cache );
 }
 
 
@@ -284,23 +267,39 @@ void CacheReader::addItem()
     const char * raw_path	= field( n++ );
     const char * size_str	= field( n++ );
     const char * mtime_str	= field( n++ );
-    const char * blocks_str	= 0;
-    const char * links_str	= 0;
+    const char * mode_str	= nullptr;
+    const char * flags_str	= nullptr;
+    const char * blocks_str	= nullptr;
+    const char * links_str	= nullptr;
 
+    // Look for mode first, but old formats won't have it at all
+    if ( fieldsCount() > n )
+    {
+	mode_str = field( n );
+	if ( *mode_str == '0' )
+	{
+	    // If we have mode, we should have flags next
+	    ++n;
+	    flags_str = field( n++ );
+	}
+
+    }
+
+    // Optional key/value field pairs
     while ( fieldsCount() > n+1 )
     {
 	const char * keyword	= field( n++ );
-	const char * val_str		= field( n++ );
+	const char * val_str	= field( n++ );
 
+	// blocks: is used for sparse files to give the allocation
 	if ( strcasecmp( keyword, "blocks:" ) == 0 ) blocks_str = val_str;
+
+	// links: is used when there is more than one hard link
 	if ( strcasecmp( keyword, "links:"  ) == 0 ) links_str	= val_str;
     }
-
-
+/*
     // Type
-
     mode_t mode = S_IFREG;
-
     if	    ( strcasecmp( type, "F"	   ) == 0 )	mode = S_IFREG;
     else if ( strcasecmp( type, "D"	   ) == 0 )	mode = S_IFDIR;
     else if ( strcasecmp( type, "L"	   ) == 0 )	mode = S_IFLNK;
@@ -308,19 +307,54 @@ void CacheReader::addItem()
     else if ( strcasecmp( type, "CharDev"  ) == 0 )	mode = S_IFCHR;
     else if ( strcasecmp( type, "FIFO"	   ) == 0 )	mode = S_IFIFO;
     else if ( strcasecmp( type, "Socket"   ) == 0 )	mode = S_IFSOCK;
-
+*/
+    mode_t mode;
+    if ( mode_str )
+    {
+	mode = strtoll( mode_str, 0, 8 );
+    }
+    else
+    {
+	// No mode in old file formats,
+	// get the object type from the first field, but no permissions
+	switch ( toupper( *type ) )
+	{
+	    case 'F':
+	    {
+		// 'F' is ambiguous unfortunately
+		if ( *(mode_str+1) == 0 )
+		    mode = S_IFREG;
+		else
+		    mode = S_IFIFO;
+		break;
+	    }
+	    case 'D': mode = S_IFDIR; break;
+	    case 'L': mode = S_IFLNK; break;
+	    case 'B': mode = S_IFBLK; break;
+	    case 'C': mode = S_IFCHR; break;
+	    case 'S': mode = S_IFSOCK; break;
+	    default:  mode = S_IFREG; break;
+	}
+    }
 
     // Path
-
     if ( *raw_path == '/' )
 	_lastDir = 0;
 
+    const QString fullPath = unescapedPath( raw_path );
+    QString path;
+    QString name;
+    splitPath( fullPath, path, name );
+
+    if ( _lastExcludedDir && path.startsWith( _lastExcludedDirUrl ) )
+    {
+	// logDebug() << "Excluding " << path << "/" << name << Qt::endl;
+	return;
+    }
 
     // Size
-
     char * end = 0;
     FileSize size = strtoll( size_str, &end, 10 );
-
     if ( end )
     {
 	switch ( *end )
@@ -333,52 +367,37 @@ void CacheReader::addItem()
 	}
     }
 
-
     // MTime
-
     const time_t mtime = strtol( mtime_str, 0, 0 );
 
+    // The only flag so far is isExlcuded, so just treat it as a straight boolean
+    // isExcluded will only appear on directories ... excluded files don't appear
+    const bool isExcluded = strtol( flags_str, 0, 0 );
 
-    // Blocks
+    // Consider it a sparse file if the blocks field is present
+    const bool isSparseFile = blocks_str;
 
-    const FileSize blocks = blocks_str ? strtoll( blocks_str, 0, 10 ) : -1;
-
+    // Blocks: only stored for sparse files, otherwise just guess from the file size
+    const FileSize blocks = blocks_str ?
+			    strtoll( blocks_str, 0, 10 ) :
+			    qCeil( (float)size / STD_BLOCK_SIZE );
 
     // Links
-
     const int links = links_str ? atoi( links_str ) : 1;
 
+    // For sparse files, we can calculate the actual allocated size from the block count.
+    // For other files, just use the file size with no assumptions about over-allocation
+    const FileSize allocatedSize = isSparseFile ? blocks * STD_BLOCK_SIZE: size;
 
-    //
-    // Create a new item
-    //
-
-    const QString fullPath = unescapedPath( raw_path );
-    QString path;
-    QString name;
-    splitPath( fullPath, path, name );
-
-    if ( _lastExcludedDir )
-    {
-	if ( path.startsWith( _lastExcludedDirUrl ) )
-	{
-	    // logDebug() << "Excluding " << path << "/" << name << Qt::endl;
-	    return;
-	}
-    }
-
-    // Find parent in tree
-
+    // Find parent in tree.
     DirInfo * parent = _lastDir;
-
-    if ( ! parent && _tree->root() )
+    if ( !parent && _tree->root() )
     {
-	if ( ! _tree->root()->hasChildren() )
+	if ( !_tree->root()->hasChildren() )
 	    parent = _tree->root();
 
 	// Try the easy way first - the starting point of this cache
-
-	if ( ! parent && _toplevel )
+	if ( !parent && _toplevel )
 	    parent = dynamic_cast<DirInfo *> ( _toplevel->locate( path ) );
 
 #if DEBUG_LOCATE_PARENT
@@ -386,11 +405,9 @@ void CacheReader::addItem()
 	    logDebug() << "Using cache starting point as parent for " << fullPath << Qt::endl;
 #endif
 
-
-	// Fallback: Search the entire tree
-
-	if ( ! parent )
+	if ( !parent )
 	{
+	    // Fallback: Search the entire tree
 	    parent = dynamic_cast<DirInfo *> ( _tree->locate( path ) );
 
 #if DEBUG_LOCATE_PARENT
@@ -399,7 +416,18 @@ void CacheReader::addItem()
 #endif
 	}
 
-	if ( ! parent ) // Still nothing?
+	if ( !parent && path.isEmpty() )
+	{
+	    // Everything except directories jas no path part in their filename, so if lastDir
+	    // is missing, fro example, excluded, we can never find it by searching.  Skip
+	    // (silently in release versions, or the log will be huge), but don't treat as an error.
+#if DEBUG_LOCATE_PARENT
+	    logWarning() << "no parent for " << path << " " << name << Qt::endl;
+#endif
+	    return;
+	}
+
+	if ( !parent ) // Still nothing?
 	{
 	    logError() << _fileName << ":" << _lineNo << ": "
 		       << "Could not locate parent \"" << path << "\" for "
@@ -419,34 +447,40 @@ void CacheReader::addItem()
 	}
     }
 
-    if ( strcasecmp( type, "D" ) == 0 )
+    if ( ( mode & S_IFDIR ) == S_IFDIR ) // directory
     {
 	QString url = ( parent == _tree->root() ) ? buildPath( path, name ) : name;
 #if VERBOSE_CACHE_DIRS
 	logDebug() << "Creating DirInfo for " << url << " with parent " << parent << Qt::endl;
 #endif
-	DirInfo * dir = new DirInfo( parent, _tree, url,
-				     mode, size, mtime );
+	DirInfo * dir = new DirInfo( parent, _tree, url, mode, size, mtime );
 	dir->setReadState( DirReading );
 	_lastDir = dir;
 
 	if ( parent )
 	    parent->insertChild( dir );
 
-	if ( ! _tree->root() )
+	if ( !_tree->root() )
 	{
 	    _tree->setRoot( dir );
 	    _toplevel = dir;
 	}
 
-	if ( ! _toplevel )
+	if ( !_toplevel )
 	    _toplevel = dir;
+
+	if ( !MountPoints::device( dir->url() ).isEmpty() )
+	    dir->setMountPoint();
 
 	_tree->childAddedNotify( dir );
 
 	if ( dir != _toplevel )
 	{
-	    if ( ExcludeRules::instance()->match( dir->url(), dir->name() ) )
+	    // Directories may be excluded because they were excluded at the time the cache
+	    // was written, or because of a rule now.  Not perfect, but we can't show
+	    // directories that no longer match an exclude rules because they just aren't
+	    // populated in the cache file.
+	    if ( isExcluded || ExcludeRules::instance()->match( dir->url(), dir->name() ) )
 	    {
 		logDebug() << "Excluding " << name << Qt::endl;
 		dir->setExcluded();
@@ -460,33 +494,28 @@ void CacheReader::addItem()
 	    }
 	}
     }
-    else
+    else if ( parent ) // not directory
     {
-	if ( parent )
-	{
 #if VERBOSE_CACHE_FILE_INFOS
-	    logDebug() << "Creating FileInfo for "
-		       << buildPath( parent->debugUrl(), name ) << Qt::endl;
+	logDebug() << "Creating FileInfo for " << buildPath( parent->debugUrl(), name ) << Qt::endl;
 #endif
 
-	    FileInfo * item = new FileInfo( parent, _tree, name,
-					    mode, size, mtime, blocks != -1,
-					    blocks, links );
-	    parent->insertChild( item );
-	    _tree->childAddedNotify( item );
-	}
-	else
-	{
-	    logError() << _fileName << ":" << _lineNo << ": "
-		       << "No parent for item " << name << Qt::endl;
-	}
+	FileInfo * item = new FileInfo( parent, _tree, name,
+					mode, size, allocatedSize, mtime,
+					isSparseFile, blocks, links );
+	parent->insertChild( item );
+	_tree->childAddedNotify( item );
+    }
+    else
+    {
+	logError() << _fileName << ":" << _lineNo << ": " << "No parent for item " << name << Qt::endl;
     }
 }
 
 
 bool CacheReader::eof() const
 {
-    if ( ! _ok || ! _cache )
+    if ( !_ok || !_cache )
 	return true;
 
     return gzeof( _cache );
@@ -495,9 +524,9 @@ bool CacheReader::eof() const
 
 QString CacheReader::firstDir()
 {
-    while ( ! gzeof( _cache ) && _ok )
+    while ( !gzeof( _cache ) && _ok )
     {
-	if ( ! readLine() )
+	if ( !readLine() )
 	    return "";
 
 	splitLine();
@@ -519,7 +548,7 @@ QString CacheReader::firstDir()
 
 bool CacheReader::checkHeader()
 {
-    if ( ! _ok || ! readLine() )
+    if ( !_ok || !readLine() )
 	return false;
 
     // logDebug() << "Checking cache file header" << Qt::endl;
@@ -535,9 +564,9 @@ bool CacheReader::checkHeader()
     if ( _ok )
     {
 	if ( ( strcmp( field( 0 ), "[qdirstat" ) != 0 &&
-	       strcmp( field( 0 ), "[kdirstat" ) != 0	) ||
-	     strcmp( field( 2 ), "cache"     ) != 0 ||
-	     strcmp( field( 3 ), "file]"     ) != 0 )
+	       strcmp( field( 0 ), "[kdirstat" ) != 0 ) ||
+	       strcmp( field( 2 ), "cache"     ) != 0 ||
+	       strcmp( field( 3 ), "file]"     ) != 0 )
 	{
 	    _ok = false;
 	    logError() << _fileName << ":" << _lineNo
@@ -552,14 +581,14 @@ bool CacheReader::checkHeader()
 	// currently not checking version number
 	// for future use
 
-	if ( ! _ok )
+	if ( !_ok )
 	    logError() << _fileName << ":" << _lineNo
 		      << ": Incompatible cache file version" << Qt::endl;
     }
 
     // logDebug() << "Cache file header check OK: " << _ok << Qt::endl;
 
-    if ( ! _ok )
+    if ( !_ok )
 	emit error();
 
     return _ok;
@@ -568,7 +597,7 @@ bool CacheReader::checkHeader()
 
 bool CacheReader::readLine()
 {
-    if ( ! _ok || ! _cache )
+    if ( !_ok || !_cache )
 	return false;
 
     _fieldsCount = 0;
@@ -577,12 +606,12 @@ bool CacheReader::readLine()
     {
 	_lineNo++;
 
-	if ( ! gzgets( _cache, _buffer, MAX_CACHE_LINE_LEN-1 ) )
+	if ( !gzgets( _cache, _buffer, MAX_CACHE_LINE_LEN-1 ) )
 	{
 	    _buffer[0]	= 0;
 	    _line	= _buffer;
 
-	    if ( ! gzeof( _cache ) )
+	    if ( !gzeof( _cache ) )
 	    {
 		_ok = false;
 		logError() << _fileName << ":" << _lineNo << ": Read error" << Qt::endl;
@@ -597,7 +626,7 @@ bool CacheReader::readLine()
 
 	// logDebug() << "line[ " << _lineNo << "]: \"" << _line<< "\"" << Qt::endl;
 
-    } while ( ! gzeof( _cache ) &&
+    } while ( !gzeof( _cache ) &&
 	      ( *_line == 0   ||	// empty line
 		*_line == '#'	  ) );	// comment line
 
@@ -609,7 +638,7 @@ void CacheReader::splitLine()
 {
     _fieldsCount = 0;
 
-    if ( ! _ok || ! _line )
+    if ( !_ok || !_line )
 	return;
 
     if ( *_line == '#' )	// skip comment lines
@@ -640,14 +669,14 @@ const char * CacheReader::field( int no ) const
     if ( no >= 0 && no < _fieldsCount )
 	return _fields[ no ];
     else
-	return 0;
+	return nullptr;
 }
 
 
 char * CacheReader::skipWhiteSpace( char * cptr )
 {
     if ( cptr == 0 )
-	return 0;
+	return nullptr;
 
     while ( *cptr != 0 && isspace( *cptr ) )
 	cptr++;
@@ -659,9 +688,9 @@ char * CacheReader::skipWhiteSpace( char * cptr )
 char * CacheReader::findNextWhiteSpace( char * cptr )
 {
     if ( cptr == 0 )
-	return 0;
+	return nullptr;
 
-    while ( *cptr != 0 && ! isspace( *cptr ) )
+    while ( *cptr != 0 && !isspace( *cptr ) )
 	cptr++;
 
     return *cptr == 0 ? 0 : cptr;
@@ -670,12 +699,11 @@ char * CacheReader::findNextWhiteSpace( char * cptr )
 
 void CacheReader::killTrailingWhiteSpace( char * cptr )
 {
-    char * start = cptr;
-
     if ( cptr == 0 )
 	return;
 
-    cptr = start + strlen( start ) -1;
+    char * start = cptr;
+    cptr = start + strlen( start ) - 1;
 
     while ( cptr >= start && isspace( *cptr ) )
 	*cptr-- = 0;
@@ -740,21 +768,17 @@ void CacheReader::finalizeRecursive( DirInfo * dir )
 {
     if ( dir->readState() != DirOnRequestOnly )
     {
-	if ( ! dir->readError() )
+	if ( !dir->readError() )
 	    dir->setReadState( DirCached );
 
 	dir->finalizeLocal();
 	_tree->sendReadJobFinished( dir );
     }
 
-    FileInfo * child = dir->firstChild();
-
-    while ( child )
+    for ( FileInfo * child = dir->firstChild(); child; child = child->next() )
     {
 	if ( child->isDirInfo() )
 	    finalizeRecursive( child->toDirInfo() );
-
-	child = child->next();
     }
 
 }

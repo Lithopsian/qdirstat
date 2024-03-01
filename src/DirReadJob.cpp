@@ -6,8 +6,6 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>	// AT_ constants (fstatat() flags)
 #include <unistd.h>     // R_OK, X_OK
@@ -100,62 +98,32 @@ void DirReadJob::deletingChild( FileInfo *deletedChild )
 }
 
 
-bool DirReadJob::crossingFilesystems( DirInfo * parent, DirInfo * child )
+bool DirReadJob::crossingFilesystems( DirTree * tree, DirInfo * parent, DirInfo * child )
 {
     if ( parent->device() == child->device() )
 	return false;
 
     const QString childDevice	= device( child );
     QString parentDevice	= device( parent->findNearestMountPoint() );
-
-    if ( childDevice.isEmpty() && parent->readState() == DirCached )
-    {
-	// A DirInfo from a cache file always has device number 0, so the
-	// initial check failed because of that. The child might still be a
-	// mount point, but since that path was not found in the list of known
-	// mount points from /proc/mounts or /etc/mtab, we assume that this was
-	// not the case.
-	//
-	// See also https://github.com/shundhammer/qdirstat/issues/114
-
-	return false;
-    }
-
     if ( parentDevice.isEmpty() )
-	parentDevice = _tree->device();
+	parentDevice = tree->device();
 
-    bool crossing = true;
-
-    if ( ! parentDevice.isEmpty() && ! childDevice.isEmpty() )
-	crossing = parentDevice != childDevice;
-
+    // Not safe to assume that empty devices indicate filesystem crossing.
+    // Calling something a mountpoint when it isn't causes findNearestMountPoint()
+    // to return null and things then crash.
+    const bool crossing = !parentDevice.isEmpty() && !childDevice.isEmpty() && parentDevice != childDevice;
     if ( crossing )
-    {
-	logInfo() << "Filesystem boundary at mount point " << child
-		  << " on device " << ( childDevice.isEmpty() ? "<unknown>" : childDevice )
-		  << Qt::endl;
-    }
+	logInfo() << "Filesystem boundary at mount point " << child << " on device " << childDevice << Qt::endl;
     else
-    {
-	logInfo() << "Mount point " << child
-		  << " is still on the same device " << childDevice << Qt::endl;
-    }
+	logInfo() << "Mount point " << child << " is still on the same device " << childDevice << Qt::endl;
 
     return crossing;
 }
 
 
-QString DirReadJob::device( const DirInfo * dir ) const
+QString DirReadJob::device( const DirInfo * dir )
 {
-    if ( dir )
-    {
-	const MountPoint * mountPoint = MountPoints::findByPath( dir->url() );
-
-	if ( mountPoint )
-	    return mountPoint->device();
-    }
-
-    return QString();
+    return MountPoints::device( dir->url() );
 }
 
 
@@ -163,17 +131,17 @@ bool DirReadJob::shouldCrossIntoFilesystem( const DirInfo * dir ) const
 {
     const MountPoint * mountPoint = MountPoints::findByPath( dir->url() );
 
-    if ( ! mountPoint )
+    if ( !mountPoint )
     {
         logError() << "Can't find mount point for " << dir->url() << Qt::endl;
 
         return false;
     }
 
-    bool doCross =
-	! mountPoint->isSystemMount()  &&	//  /dev, /proc, /sys, ...
-	! mountPoint->isDuplicate()    &&	//  bind mount or multiple mounted
-	! mountPoint->isNetworkMount();		//  NFS or CIFS (Samba)
+    const bool doCross =
+	!mountPoint->isSystemMount()  &&	//  /dev, /proc, /sys, ...
+	!mountPoint->isDuplicate()    &&	//  bind mount or multiple mounted
+	!mountPoint->isNetworkMount();		//  NFS or CIFS (Samba)
 
 //    logDebug() << ( doCross ? "Reading" : "Not reading" )
 //	       << " mounted filesystem " << mountPoint->path() << Qt::endl;
@@ -191,7 +159,7 @@ bool LocalDirReadJob::_warnedAboutNtfsHardLinks = false;
 LocalDirReadJob::LocalDirReadJob( DirTree * tree,
 				  DirInfo * dir ):
     DirReadJob { tree, dir },
-    _applyFileChildExcludeRules { false },
+//    _applyFileChildExcludeRules { false },
     _checkedForNtfs { false },
     _isNtfs { false }
 {
@@ -345,7 +313,8 @@ void LocalDirReadJob::startReading()
 
 	//
 	// Check all entries against exclude rules that match against any
-	// direct non-directory entry.
+	// direct non-directory entry.  Don't do this check for the top-level
+	// directory.
 	//
 	// Doing this now is a performance optimization: This could also be
 	// done immediately after each entry is read, but that would mean
@@ -357,12 +326,9 @@ void LocalDirReadJob::startReading()
 	// exclude rule does match, but that is the exceptional case; if there
 	// are no such rules to begin with, the match function returns 'false'
 	// immediately, so the performance impact is minimal.
-	//
-	// Also intentionally not also checking the DirTree specific exclude
-	// rules here: They are meant strictly for directory exclude rules.
 
-	if ( _applyFileChildExcludeRules &&
-	     ExcludeRules::instance()->matchDirectChildren( _dir ) )
+//	if ( _applyFileChildExcludeRules &&
+	if ( _dir->parent() && _dir->parent()->parent() && ExcludeRules::instance()->matchDirectChildren( _dir ) )
 	{
 	    excludeDirLate();
 	    readState = DirOnRequestOnly;
@@ -394,16 +360,17 @@ void LocalDirReadJob::processSubDir( const QString & entryName, DirInfo * subDir
 
     if ( matchesExcludeRule( entryName ) )
     {
+	// Don't read children of excluded directories, just mark them
 	subDir->setExcluded();
 	finishReading( subDir, DirOnRequestOnly );
     }
     else // No exclude rule matched
     {
-	if ( ! crossingFilesystems(_dir, subDir ) ) // normal case
+	if ( !crossingFilesystems( _tree, _dir, subDir ) ) // normal case
 	{
 	    LocalDirReadJob * job = new LocalDirReadJob( _tree, subDir );
 	    CHECK_NEW( job );
-	    job->setApplyFileChildExcludeRules( true );
+//	    job->setApplyFileChildExcludeRules( true );
 	    _tree->addJob( job );
 	}
 	else	    // The subdirectory we just found is a mount point.
@@ -414,7 +381,7 @@ void LocalDirReadJob::processSubDir( const QString & entryName, DirInfo * subDir
 	    {
 		LocalDirReadJob * job = new LocalDirReadJob( _tree, subDir );
 		CHECK_NEW( job );
-		job->setApplyFileChildExcludeRules( true );
+//		job->setApplyFileChildExcludeRules( true );
 		_tree->addJob( job );
 	    }
 	    else
@@ -526,8 +493,7 @@ void LocalDirReadJob::excludeDirLate()
 
 void LocalDirReadJob::handleLstatError( const QString & entryName )
 {
-    logWarning() << "lstat(" << fullName( entryName ) << ") failed: "
-		 << formatErrno() << Qt::endl;
+    logWarning() << "lstat(" << fullName( entryName ) << ") failed: " << formatErrno() << Qt::endl;
 
     /*
      * Not much we can do when lstat() didn't work; let's at
@@ -551,64 +517,6 @@ QString LocalDirReadJob::fullName( const QString & entryName ) const
     const QString result = dirName + "/" + entryName;
 
     return result;
-}
-
-
-FileInfo * LocalDirReadJob::stat( const QString & url,
-				  DirTree	* tree,
-				  DirInfo	* parent,
-				  bool		  doThrow )
-{
-    struct stat statInfo;
-    // logDebug() << "url: \"" << url << "\"" << Qt::endl;
-
-    if ( lstat( url.toUtf8(), &statInfo ) == 0 ) // lstat() OK
-    {
-	QString name = url;
-
-	if ( parent && parent != tree->root() )
-	{
-	    QStringList components = url.split( "/", Qt::SkipEmptyParts );
-	    name = components.last();
-	}
-
-	if ( S_ISDIR( statInfo.st_mode ) )	// directory?
-	{
-	    DirInfo * dir = new DirInfo( parent, tree, name, &statInfo );
-	    CHECK_NEW( dir );
-
-	    if ( parent )
-		parent->insertChild( dir );
-
-	    if ( dir && parent &&
-		 ! tree->isTopLevel( dir ) &&
-		 ! parent->isPkgInfo() &&
-		 dir->device() != parent->device() )
-	    {
-		logDebug() << dir << " is a mount point" << Qt::endl;
-		dir->setMountPoint();
-	    }
-
-	    return dir;
-	}
-	else					// no directory
-	{
-	    FileInfo * file = new FileInfo( parent, tree, name, &statInfo );
-	    CHECK_NEW( file );
-
-	    if ( parent )
-		parent->insertChild( file );
-
-	    return file;
-	}
-    }
-    else // lstat() failed
-    {
-	if ( doThrow )
-	    THROW( SysCallFailedException( "lstat", url ) );
-
-	return 0;
-    }
 }
 
 
@@ -695,12 +603,12 @@ void CacheReadJob::read()
 	return;
     }
 
-    logDebug() << "Reading 1000 cache lines" << Qt::endl;
+    //logDebug() << "Reading 1000 cache lines" << Qt::endl;
     _reader->read( 1000 );
 
     if ( _reader->eof() || ! _reader->ok() )
     {
-	logDebug() << "Cache reading finished - ok: " << _reader->ok() << Qt::endl;
+	//logDebug() << "Cache reading finished - ok: " << _reader->ok() << Qt::endl;
 	finished();
     }
 }

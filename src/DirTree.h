@@ -465,6 +465,18 @@ namespace QDirStat
 	 **/
 	void detectClusterSize( FileInfo * item );
 
+	/**
+	 * Obtain information about the URL specified and create a new FileInfo
+	 * or a DirInfo (whatever is appropriate) from that information. Use
+	 * FileInfo::isDirInfo() to find out which.
+	 *
+	 * If the underlying syscall fails, this throws a SysCallException if
+	 * 'doThrow' is 'true', and it just returns 0 if it is 'false'.
+	 **/
+	static FileInfo * stat( const QString & url,
+				DirTree	      * tree,
+				DirInfo	      * parent	= 0,
+				bool		doThrow = true );
 
 
 	// Data members

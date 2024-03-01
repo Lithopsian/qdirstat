@@ -368,6 +368,16 @@ namespace QDirStat
 	 **/
 	const QIcon & unreadableDirIcon() const { return _unreadableDirIcon; }
 
+	/**
+	 * Return the resource path of the mount point icon.
+	 **/
+	const QIcon & mountPointIcon() const { return _mountPointIcon; }
+
+	/**
+	 * Return the resource path of the network mount point icon.
+	 **/
+	const QIcon & networkIcon() const { return _networkIcon; }
+
 
     protected slots:
 
@@ -607,6 +617,7 @@ namespace QDirStat
 	QIcon _symlinkIcon;
 	QIcon _unreadableDirIcon;
 	QIcon _mountPointIcon;
+	QIcon _networkIcon;
 	QIcon _stopIcon;
 	QIcon _excludedIcon;
 	QIcon _blockDeviceIcon;

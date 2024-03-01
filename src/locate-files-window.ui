@@ -18,7 +18,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Locate Files</string>
+      <string>Locate files</string>
      </property>
     </widget>
    </item>
@@ -27,15 +27,9 @@
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
      </property>
-     <property name="rootIsDecorated">
-      <bool>false</bool>
-     </property>
-     <property name="sortingEnabled">
+     <property name="uniformRowHeights">
       <bool>true</bool>
      </property>
-     <attribute name="headerStretchLastSection">
-      <bool>true</bool>
-     </attribute>
      <column>
       <property name="text">
        <string notr="true">1</string>
@@ -82,13 +76,15 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>closeButton</sender>
    <signal>clicked()</signal>
    <receiver>LocateFilesWindow</receiver>
-   <slot>reject()</slot>
+   <slot>deleteLater()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>349</x>

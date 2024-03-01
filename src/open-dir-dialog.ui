@@ -10,7 +10,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
      <property name="bottomMargin">
       <number>8</number>
      </property>
@@ -32,12 +32,6 @@
      </item>
      <item>
       <widget class="QSplitter" name="mainSplitter">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -80,7 +74,7 @@
              </property>
             </widget>
            </item>
-           <item>
+           <item alignment="Qt::AlignBottom">
             <widget class="QToolButton" name="upButton">
              <property name="text">
               <string>Up</string>
@@ -106,7 +100,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QTreeView" name="dirTreeView"/>
+          <widget class="QTreeView" name="dirTreeView">
+           <property name="uniformRowHeights">
+            <bool>true</bool>
+           </property>
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
          </item>
          <item>
           <widget class="QCheckBox" name="crossFilesystemsCheckBox">

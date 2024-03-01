@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>PanelMessage</class>
  <widget class="QWidget" name="PanelMessage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>379</width>
+    <height>91</height>
+   </rect>
+  </property>
   <layout class="QVBoxLayout" name="panelVBox">
    <item>
     <widget class="QFrame" name="frame">
@@ -50,7 +58,10 @@
         <item>
          <widget class="QLabel" name="detailsLinkLabel">
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;details&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1d96b9;&quot;&gt;Details...&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;details&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1d96b9;&quot;&gt;Details...&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::RichText</enum>
           </property>
           <property name="textInteractionFlags">
            <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>

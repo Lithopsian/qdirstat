@@ -1103,7 +1103,7 @@ const DirInfo * DirInfo::findNearestMountPoint() const
 {
     const DirInfo * dir = this;
 
-    while ( dir && ! dir->isMountPoint() )
+    while ( dir && dir->parent() && !dir->isMountPoint() )
 	dir = dir->parent();
 
     return dir;

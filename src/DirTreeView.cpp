@@ -28,15 +28,17 @@ using namespace QDirStat;
 
 DirTreeView::DirTreeView( QWidget * parent ):
     QTreeView ( parent ),
+    _percentBarDelegate { new PercentBarDelegate( this, PercentBarCol, 0, 2 ) },
+    _sizeColDelegate { new SizeColDelegate( this ) },
+    _headerTweaker { new HeaderTweaker( header(), this ) },
     _cleanupCollection { nullptr }
 {
-    _percentBarDelegate = new PercentBarDelegate( this, PercentBarCol, 0, 2 );
+    CHECK_NEW( _headerTweaker );
     CHECK_NEW( _percentBarDelegate );
-    setItemDelegateForColumn( PercentBarCol, _percentBarDelegate );
-
-    _sizeColDelegate = new SizeColDelegate( this );
     CHECK_NEW( _sizeColDelegate );
-    setItemDelegateForColumn( SizeCol, _sizeColDelegate );
+
+    setItemDelegateForColumn( PercentBarCol, _percentBarDelegate );
+    setItemDelegateForColumn( SizeCol,       _sizeColDelegate );
 
 //    setRootIsDecorated( true );
 //    setSortingEnabled( true );
@@ -44,9 +46,6 @@ DirTreeView::DirTreeView( QWidget * parent ):
 //    setContextMenuPolicy( Qt::CustomContextMenu );
 //    setTextElideMode( Qt::ElideMiddle );
 //    setUniformRowHeights( true ); // Important for very large directories
-
-    _headerTweaker = new HeaderTweaker( header(), this );
-    CHECK_NEW( _headerTweaker );
 
     connect( this, &DirTreeView::customContextMenuRequested,
 	     this, &DirTreeView::contextMenu );
@@ -86,25 +85,25 @@ void DirTreeView::contextMenu( const QPoint & pos )
     // especially on a laptop touchpad.
     const QStringList actions1 = { "actionGoUp",
                                    "actionGoToToplevel",
+                                 };
+    ActionManager::instance()->addActions( &menu, actions1 );
+
+    const QStringList actions2 = { "actionStopReading",
+	                           "actionRefreshAll",
+                                   "---",
+	                           "actionRefreshSelected",
+	                           "actionReadExcluded",
+	                           "actionContinueReading",
                                    "---",
                                    "actionCopyPath",
                                    "actionMoveToTrash",
-                                   "---"
-                                 };
-    ActionManager::instance()->addActions( &menu, actions1 );
+                                   "---",
+	                         };
+    ActionManager::instance()->addEnabledActions( &menu, actions2 );
 
     // User-defined cleanups
     if ( _cleanupCollection )
 	_cleanupCollection->addEnabledToMenu( &menu );
-
-    // Less commonly used menu options
-    const QStringList actions2 = { "---",
-	                           "actionStopReading",
-	                           "actionRefreshSelected",
-	                           "actionReadExcluded",
-	                           "actionContinueReading"
-	                         };
-    ActionManager::instance()->addEnabledActions( &menu, actions2 );
 
     // Submenu for the auxiliary views to keep the context menu short.
     //
@@ -121,11 +120,11 @@ void DirTreeView::contextMenu( const QPoint & pos )
     CHECK_MAGIC( item );
     if ( item->isDirInfo() )    // Not for files, symlinks etc.
     {
+        menu.addSeparator();
         QMenu * subMenu = menu.addMenu( tr( "View in" ) );
-
         QStringList actions = { "actionFileSizeStats",
                                 "actionFileTypeStats",
-                                "actionFileAgeStats"
+                                "actionFileAgeStats",
                               };
         ActionManager::instance()->addActions( subMenu, actions );
     }
@@ -136,19 +135,17 @@ void DirTreeView::contextMenu( const QPoint & pos )
 
 QModelIndexList DirTreeView::expandedIndexes() const
 {
-    QModelIndexList expandedList;
-
-    if ( ! model() )
+    if ( !model() )
 	return QModelIndexList();
 
     DirTreeModel * dirTreeModel = dynamic_cast<DirTreeModel *>( model() );
-
-    if ( ! dirTreeModel )
+    if ( !dirTreeModel )
     {
 	logError() << "Wrong model type to get this information" << Qt::endl;
 	return QModelIndexList();
     }
 
+    QModelIndexList expandedList;
     const auto indexList = dirTreeModel->persistentIndexList();
     for ( const QModelIndex & index : indexList )
     {
@@ -160,19 +157,16 @@ QModelIndexList DirTreeView::expandedIndexes() const
 }
 
 
-void DirTreeView::closeAllExcept( const QModelIndex & branch )
+void DirTreeView::closeAllExcept( const QModelIndex & )
 {
-    QModelIndexList branchesToClose = expandedIndexes();
+//    QModelIndexList branchesToClose = expandedIndexes();
 
     // Remove all ancestors of 'branch' from branchesToClose
 
-    QModelIndex index = branch;
-
-    while ( index.isValid() )
+//    for ( QModelIndex index = branch; index.isValid(); index = index.parent() )
     {
 	// logDebug() << "Not closing " << index << Qt::endl;
-	branchesToClose.removeAll( index );
-	index = index.parent();
+//	branchesToClose.removeAll( index );
     }
 
     // Close all items in branchesToClose
@@ -184,22 +178,21 @@ void DirTreeView::closeAllExcept( const QModelIndex & branch )
 //	collapse( index );
     }
 
+    // This re-opens the relevant branch
     scrollTo( currentIndex(), QAbstractItemView::PositionAtCenter );
 }
 
 
 void DirTreeView::setExpanded( FileInfo * item, bool expanded )
 {
-    DirTreeModel * dirTreeModel = dynamic_cast<DirTreeModel *>( model() );
-
-    if ( ! dirTreeModel )
+    const DirTreeModel * dirTreeModel = dynamic_cast<DirTreeModel *>( model() );
+    if ( !dirTreeModel )
     {
 	logError() << "Wrong model type" << Qt::endl;
         return;
     }
 
-    QModelIndex index = dirTreeModel->modelIndex( item );
-
+    const QModelIndex index = dirTreeModel->modelIndex( item );
     if ( index.isValid() )
         QTreeView::setExpanded( index, expanded );
 }
@@ -207,52 +200,37 @@ void DirTreeView::setExpanded( FileInfo * item, bool expanded )
 
 void DirTreeView::mousePressEvent( QMouseEvent * event )
 {
-    if ( event )
+    // Leave the the back / forward buttons on the mouse to act like the
+    // history back / forward buttons in the tool bar.
+    //
+    // By default, the QTreeView parent class uses them to act as
+    // cursor up / cursor down in the tree which defeats the idea of
+    // using them as history consistently throughout the application,
+    // making those mouse buttons pretty much unusable.
+    //
+    // So this makes sure those events are immediately propagated up to
+    // the parent widget.
+    if ( event && (event->button() == Qt::BackButton || event->button() == Qt::ForwardButton ) )
     {
-        switch ( event->button() )
-        {
-            // Leave the the back / forward buttons on the mouse to act like the
-            // history back / forward buttons in the tool bar.
-            //
-            // By default, the QTreeView parent class uses them to act as
-            // cursor up / cursor down in the tree which defeats the idea of
-            // using them as history consistently throughout the application,
-            // making those mouse buttons pretty much unusable.
-            //
-            // So this makes sure those events are immediately propagated up to
-            // the parent widget.
-
-            case Qt::BackButton:
-            case Qt::ForwardButton:
-                event->ignore();
-                break;
-
-            default:
-                QTreeView::mousePressEvent( event );
-                break;
-        }
+	event->ignore();
+	return;
     }
+
+    QTreeView::mousePressEvent( event );
 }
 
-
+/*
 void DirTreeView::keyPressEvent( QKeyEvent * event )
 {
-    if ( event )
-    {
-        switch ( event->key() )
-        {
-            case Qt::Key_Asterisk:
-                // By default, this opens all tree branches which completely
-                // kills our performance, negating all our lazy sorting in
-                // each branch in the DirTreeModel / DirInfo classes.
-                //
-                // So let's just ignore this key; we have better alternatives
-                // with "Tree" -> "Expand to Level" -> "Level 0" .. "Level 5".
-                return;
+    // By default, this opens all tree branches which completely
+    // kills our performance, negating all our lazy sorting in
+    // each branch in the DirTreeModel / DirInfo classes.
+    //
+    // So let's just ignore this key; we have better alternatives
+    // with "Tree" -> "Expand to Level" -> "Level 0" .. "Level 5".
+    if ( event && event->key() == Qt::Key_Asterisk )
+	return;
 
-            default:
-                QTreeView::keyPressEvent( event );
-                break;
-        }
-    }
+    QTreeView::keyPressEvent( event );
 }
+*/

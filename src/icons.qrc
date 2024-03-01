@@ -29,7 +29,6 @@
     <file>icons/go-right.png</file>
     <file>icons/go-top.png</file>
     <file>icons/go-up.png</file>
-    <file>icons/hard-disk.png</file>
     <file>icons/48x48/home-dir.png</file>
     <file>icons/lock-closed.png</file>
     <file>icons/open-dir.png</file>
@@ -45,6 +44,7 @@
     <file>icons/tree-medium/excluded.png</file>
     <file>icons/tree-medium/file.png</file>
     <file>icons/tree-medium/mount-point.png</file>
+    <file>icons/tree-medium/network.png</file>
     <file>icons/tree-medium/stop.png</file>
     <file>icons/tree-medium/symlink.png</file>
     <file>icons/tree-medium/unreadable-dir.png</file>
@@ -57,6 +57,7 @@
     <file>icons/tree-small/excluded.png</file>
     <file>icons/tree-small/file.png</file>
     <file>icons/tree-small/mount-point.png</file>
+    <file>icons/tree-small/network.png</file>
     <file>icons/tree-small/stop.png</file>
     <file>icons/tree-small/symlink.png</file>
     <file>icons/tree-small/unreadable-dir.png</file>

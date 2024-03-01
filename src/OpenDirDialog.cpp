@@ -102,7 +102,7 @@ void OpenDirDialog::initDirTree()
     _ui->dirTreeView->hideColumn( 3 );  // Date Modified
     _ui->dirTreeView->hideColumn( 2 );  // Type
     _ui->dirTreeView->hideColumn( 1 );  // Size
-    _ui->dirTreeView->setHeaderHidden( true );
+//    _ui->dirTreeView->setHeaderHidden( true );
 }
 
 
@@ -271,7 +271,7 @@ void OpenDirDialog::goUp()
     if ( ! pathComponents.isEmpty() )
         pathComponents.removeLast();
 
-    QString path = "/" + pathComponents.join( "/" );
+    const QString path = "/" + pathComponents.join( "/" );
 
     if ( path != _lastPath )
     {

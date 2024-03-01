@@ -7,7 +7,7 @@
  */
 
 
-#include <QSignalMapper>
+#include <QContextMenuEvent>
 
 #include "MainWindow.h"
 #include "DiscoverActions.h"
@@ -87,7 +87,7 @@ void MainWindow::connectTriggerActions()
         { _ui->actionDonate,             &MainWindow::showDonateDialog },
     } );
 
-    for ( auto action : actions )
+    for ( auto & action : actions )
         connect( action.first, &QAction::triggered, this, action.second );
 
     mapTreeExpandAction( _ui->actionCloseAllTreeLevels, 0 );
@@ -196,6 +196,26 @@ void MainWindow::openActionUrl()
 	logError() << "No URL in statusTip() for action " << action->objectName() << Qt::endl;
     else
 	SysUtil::openInBrowser( url );
+}
+
+
+void MainWindow::contextMenuEvent( QContextMenuEvent * event )
+{
+    QMenu * menu = createPopupMenu();
+    QAction * toolbarAction = menu->actions().first();
+    toolbarAction->setText( tr( "Show &Toolbar" ) );
+
+    menu->insertAction( toolbarAction, _ui->actionShowMenuBar );
+    menu->addAction( _ui->actionShowStatusBar );
+
+    menu->exec( event->globalPos() );
+
+    return;
+
+    if ( _ui->actionShowStatusBar->isChecked() )
+	setStatusBar( statusBar() );
+    else
+	setStatusBar( nullptr );
 }
 
 

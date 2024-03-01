@@ -36,7 +36,9 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	PanelMessage( QWidget * parent = 0 );
+	PanelMessage( QWidget		* parent,
+		      const QString	& heading,
+		      const QString	& msg );
 
 	/**
 	 * Destructor.
@@ -44,19 +46,9 @@ namespace QDirStat
 	virtual ~PanelMessage();
 
 	/**
-	 * Set the heading text.
+	 * Set the "Details..." link text.
 	 **/
-	void setHeading( const QString & headingText );
-
-	/**
-	 * Set the body text.
-	 **/
-	void setText( const QString & bodyText );
-
-	/**
-	 * Set the icon. If not set, a generic light bulb icon is used.
-	 **/
-	void setIcon( const QPixmap & pixmap );
+	void setDetails( const QString & urlText );
 
 	/**
 	 * Connect the "Details..." hyperlink to a receiver's slot.
@@ -69,16 +61,21 @@ namespace QDirStat
 	void connectDetailsLink( const QObject * receiver,
 				 const char    * slotName );
 
-        /**
-         * Connect the "Details..." hyperlink to a web URL that will be opened
-         * in an external browser.
-         **/
-        void setDetailsUrl( const QString url );
+	/**
+	 * Connect the "Details..." hyperlink to a web URL that will be opened
+	 * in an external browser.
+	 **/
+	void setDetailsUrl( const QString url );
 
-        /**
-         * Return the URL set with setDetailsUrl().
-         **/
-        QString detailsUrl() const { return _detailsUrl; }
+	/**
+	 * Return the URL set with setDetailsUrl().
+	 **/
+//	QString detailsUrl() const { return _detailsUrl; }
+
+	/**
+	 * Set the icon. If not set, a generic light bulb icon is used.
+	 **/
+	void setIcon( const QPixmap & pixmap );
 
 
     protected slots:

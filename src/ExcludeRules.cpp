@@ -91,10 +91,7 @@ bool ExcludeRule::match( const QString & fullPath, const QString & fileName )
 
     const QString matchText = _useFullPath ? fullPath : fileName;
 
-    if ( matchText.isEmpty() )
-	return false;
-
-    if ( _pattern.isEmpty() )
+    if ( matchText.isEmpty() || _pattern.isEmpty() )
 	return false;
 
     return isMatch( matchText );
@@ -109,14 +106,10 @@ bool ExcludeRule::matchDirectChildren( DirInfo * dir )
     if ( _pattern.isEmpty() )
         return false;
 
-    FileInfoIterator it( dir->dotEntry() ? dir->dotEntry() : dir );
-
-    while ( *it )
+    for ( FileInfoIterator it( dir->dotEntry() ? dir->dotEntry() : dir ); *it; ++it)
     {
-        if ( ! (*it)->isDir() && isMatch( (*it)->name() ) )
+        if ( !(*it)->isDir() && isMatch( (*it)->name() ) )
                 return true;
-
-        ++it;
     }
 
     return false;
@@ -259,7 +252,7 @@ const ExcludeRule * ExcludeRules::matchingRule( const QString & fullPath,
 						const QString & fileName )
 {
     if ( fullPath.isEmpty() || fileName.isEmpty() )
-	return 0;
+	return nullptr;
 
     for ( ExcludeRule * rule : _rules )
     {
@@ -267,7 +260,7 @@ const ExcludeRule * ExcludeRules::matchingRule( const QString & fullPath,
 	    return rule;
     }
 
-    return 0;
+    return nullptr;
 }
 */
 /*

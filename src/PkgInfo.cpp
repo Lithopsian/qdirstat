@@ -18,7 +18,7 @@ using namespace QDirStat;
 
 QString PkgInfo::url() const
 {
-    return isPkgUrl( _name ) ? "Pkg:/" + _name : "Pkg:/";
+    return isPkgUrl( _name ) ? "Pkg:/" : "Pkg:/" + _name;
 }
 
 
@@ -53,7 +53,7 @@ FileInfo * PkgInfo::locate( const QString & path )
         if ( pkgName != _name )
         {
             logError() << "Path " << path << " does not belong to " << this << Qt::endl;
-            return 0;
+            return nullptr;
         }
 
         if ( components.isEmpty() )
@@ -76,7 +76,7 @@ FileInfo * PkgInfo::locate( DirInfo *           subtree,
     // logDebug() << "Locating /" << pathComponents.join( "/" ) << " in " << subtree << Qt::endl;
 
     if ( ! subtree || pathComponents.isEmpty() )
-        return 0;
+        return nullptr;
 
     QStringList   components = pathComponents;
     const QString wanted     = components.takeFirst();
@@ -97,7 +97,7 @@ FileInfo * PkgInfo::locate( DirInfo *           subtree,
             else
             {
                 if ( ! (*it)->isDirInfo() )
-                    return 0;
+                    return nullptr;
                 else
                     return locate( (*it)->toDirInfo(), components );
             }
@@ -106,5 +106,5 @@ FileInfo * PkgInfo::locate( DirInfo *           subtree,
         ++it;
     }
 
-    return 0;
+    return nullptr;
 }

@@ -83,6 +83,11 @@ namespace QDirStat
 	static void writeItem( gzFile cache, const FileInfo * item );
 
 	/**
+	 * Return a strong representing the type of file.
+	 **/
+	static const char * fileType( const FileInfo * item );
+
+	/**
 	 * Return the 'path' in an URL-encoded form, i.e. with some special
 	 * characters escaped in percent notation (" " -> "%20").
 	 **/
@@ -212,6 +217,16 @@ namespace QDirStat
 	 * Use _fields to add one item to _tree.
 	 **/
 	void addItem();
+
+	/**
+	 * Map a character string to a mode.
+	 **/
+	static mode_t modeFromType( const char * type );
+
+	/**
+	 * Return the multiplier for a given suffix.
+	 **/
+	static FileSize multiplier( const char * suffix );
 
 	/**
 	 * Read the next line that is not empty or a comment and store it in

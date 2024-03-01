@@ -249,6 +249,12 @@ namespace QDirStat
 	static MountPoint * findNearestMountPoint( const QString & path );
 
 	/**
+	 * Return the device name where 'dir' is on if it's a mount point.
+	 * This uses MountPoints which reads /proc/mounts.
+	 **/
+	static QString device( const QString & url );
+
+	/**
 	 * Return 'true' if any mount point has filesystem type "btrfs".
 	 **/
 	static bool hasBtrfs();

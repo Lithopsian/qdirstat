@@ -630,14 +630,14 @@ namespace QDirStat
 	SelectionModelProxy	* _selectionModelProxy;
 	const CleanupCollection	* _cleanupCollection;
 
-	TreemapTile	    * _rootTile;
-//	TreemapTile	    * _currentTile;
-	HighlightRect	    * _currentTileHighlighter;
-        SceneMask           * _sceneMask;
-	FileInfo	    * _newRoot;
-//	TreemapTile         * _highlightedTile;
-        HighlightRectList     _parentHighlightList;
-	QString		      _savedRootUrl;
+	TreemapTile	* _rootTile;
+//	TreemapTile	* _currentTile;
+	HighlightRect	* _currentTileHighlighter;
+        SceneMask       * _sceneMask;
+	FileInfo	* _newRoot;
+//	TreemapTile     * _highlightedTile;
+        HighlightRectList _parentHighlightList;
+	QString		  _savedRootUrl;
 
 	bool   _colourPreviews;
 	bool   _squarify;

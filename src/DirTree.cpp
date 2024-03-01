@@ -6,6 +6,7 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <sys/stat.h>
 
 #include <QDir>
 #include <QFileInfo>
@@ -83,7 +84,7 @@ void DirTree::setRoot( DirInfo *newRoot )
 FileInfo * DirTree::firstToplevel() const
 {
     if ( !_root )
-	return 0;
+	return nullptr;
 
     FileInfo * result = _root->firstChild();
 
@@ -99,7 +100,7 @@ FileInfo * DirTree::firstToplevel() const
 
 bool DirTree::isTopLevel( FileInfo *item ) const
 {
-    return item && item->parent() && ! item->parent()->parent();
+    return item && item->parent() && !item->parent()->parent();
 }
 
 
@@ -147,7 +148,7 @@ void DirTree::startReading( const QString & rawUrl )
     _isBusy = true;
     emit startingReading();
 
-    FileInfo * item = LocalDirReadJob::stat( _url, this, _root );
+    FileInfo * item = stat( _url, this, _root );
     CHECK_PTR( item );
 
     if ( item )
@@ -433,7 +434,7 @@ void DirTree::sendReadJobFinished( DirInfo * dir )
 FileInfo * DirTree::locate( const QString & url, bool findPseudoDirs ) const
 {
     if ( ! _root )
-	return 0;
+	return nullptr;
 
     FileInfo * topItem = _root->firstChild();
 
@@ -677,5 +678,62 @@ void DirTree::detectClusterSize( FileInfo * item )
 //        logDebug() << "Derived from " << item << " " << formatSize( item->rawByteSize() )
 //                   << " (allocated: " << formatSize( item->rawAllocatedSize() ) << ")"
 //                   << Qt::endl;
+    }
+}
+
+
+FileInfo * DirTree::stat( const QString & url,
+				  DirTree	* tree,
+				  DirInfo	* parent,
+				  bool		  doThrow )
+{
+    struct stat statInfo;
+    // logDebug() << "url: \"" << url << "\"" << Qt::endl;
+
+    if ( lstat( url.toUtf8(), &statInfo ) == 0 ) // lstat() OK
+    {
+	QString name = url;
+
+	if ( parent && parent != tree->root() )
+	{
+	    QStringList components = url.split( "/", Qt::SkipEmptyParts );
+	    name = components.last();
+	}
+
+	if ( S_ISDIR( statInfo.st_mode ) )	// directory?
+	{
+	    DirInfo * dir = new DirInfo( parent, tree, name, &statInfo );
+	    CHECK_NEW( dir );
+
+	    if ( parent )
+	    {
+		parent->insertChild( dir );
+
+		if ( !tree->isTopLevel( dir ) && !parent->isPkgInfo() && dir->device() != parent->device() )
+		{
+		    logDebug() << dir << " is a mount point" << Qt::endl;
+		    dir->setMountPoint();
+		}
+	    }
+
+	    return dir;
+	}
+	else					// no directory
+	{
+	    FileInfo * file = new FileInfo( parent, tree, name, &statInfo );
+	    CHECK_NEW( file );
+
+	    if ( parent )
+		parent->insertChild( file );
+
+	    return file;
+	}
+    }
+    else // lstat() failed
+    {
+	if ( doThrow )
+	    THROW( SysCallFailedException( "lstat", url ) );
+
+	return nullptr;
     }
 }
