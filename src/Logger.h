@@ -210,7 +210,7 @@ public:
 
     /**
      * Return the user name (the login name) of the user owning this process.
-     * If that information cannot be obtained, this returns the UID as string.
+     * If that information cannot be obtained, this returns the UID as a string.
      **/
     static QString userName();
 

@@ -7,10 +7,12 @@
  */
 
 #include <QActionGroup>
+#include <QContextMenuEvent>
 
 #include "MainWindow.h"
-#include "QDirStatApp.h"
+#include "ActionManager.h"
 #include "HeaderTweaker.h"
+#include "QDirStatApp.h"
 #include "Settings.h"
 #include "Exception.h"
 #include "Logger.h"
@@ -86,21 +88,41 @@ void MainWindow::changeLayoutSlot()
 void MainWindow::changeLayout( const QString & name )
 {
     //logDebug() << "Changing to layout " << name << Qt::endl;
-
     _ui->dirTreeView->headerTweaker()->changeLayout( name );
 
     QAction * action = layoutAction( name );
     if ( action )
-	_ui->actionShowDetailsPanel->setChecked( action->data().toBool() );
+    {
+	// Just set the actions, toggled signals will actually change the widget visibility
+	_ui->actionShowBreadcrumbs->setChecked( layoutShowBreadcrumbs( action ) );
+	_ui->actionShowDetailsPanel->setChecked( layoutShowDetailsPanel( action ) );
+    }
     else
 	logError() << "No layout " << name << Qt::endl;
 }
 
 
-void MainWindow::updateLayout( bool detailsPanelVisible )
+void MainWindow::updateLayoutBreadcrumbs( bool breadcrumbsVisible )
 {
+    //logDebug() << breadcrumbsVisible << Qt::endl;
+    _ui->breadcrumbNavigator->setVisible( breadcrumbsVisible );
+
+    QAction * action = _layoutActionGroup->checkedAction();
+    auto layoutDetails = action->data().toList();
+    layoutDetails.first() = breadcrumbsVisible;
+    action->setData( layoutDetails );
+}
+
+
+void MainWindow::updateLayoutDetailsPanel( bool detailsPanelVisible )
+{
+    //logDebug() << detailsPanelVisible << Qt::endl;
     _ui->fileDetailsPanel->setVisible( detailsPanelVisible );
-    _layoutActionGroup->checkedAction()->setData( detailsPanelVisible );
+
+    QAction * action = _layoutActionGroup->checkedAction();
+    auto layoutDetails = action->data().toList();
+    layoutDetails.last() = detailsPanelVisible;
+    action->setData( layoutDetails );
 }
 
 
@@ -108,8 +130,12 @@ void MainWindow::readLayoutSetting( const QString & layoutName )
 {
     Settings settings;
     settings.beginGroup( "TreeViewLayout_" + layoutName );
-    layoutAction( layoutName )->setData( settings.value( "ShowDetailsPanel", false ).toBool() );
+    const bool showBreadcrumbs  = settings.value( "ShowCurrentPath",  true ).toBool();
+    const bool showDetailsPanel = settings.value( "ShowDetailsPanel", true ).toBool();
     settings.endGroup();
+
+    const auto layoutDetails = QList( { QVariant( showBreadcrumbs ), QVariant( showDetailsPanel ) } );
+    layoutAction( layoutName )->setData( layoutDetails );
 }
 
 
@@ -117,7 +143,8 @@ void MainWindow::writeLayoutSetting( const QAction * action )
 {
     Settings settings;
     settings.beginGroup( "TreeViewLayout_" + layoutName( action ) );
-    settings.setValue( "ShowDetailsPanel", action->data().toBool() );
+    settings.setValue( "ShowCurrentPath", layoutShowBreadcrumbs( action ) );
+    settings.setValue( "ShowDetailsPanel", layoutShowDetailsPanel( action ) );
     settings.endGroup();
 }
 
@@ -129,3 +156,45 @@ void MainWindow::writeLayoutSettings()
     writeLayoutSetting( _ui->actionLayout3 );
 }
 
+
+void MainWindow::showBars()
+{
+    menuBar()->setVisible( _ui->actionShowMenuBar->isChecked() );
+    statusBar()->setVisible( _ui->actionShowStatusBar->isChecked() );
+}
+
+
+void MainWindow::contextMenuEvent( QContextMenuEvent * event )
+{
+    QWidget * widget = QApplication::widgetAt( event->globalPos() );
+    while ( widget->parentWidget() )
+    {
+        if (widget == _ui->centralWidget )
+        {
+            QMenu menu;
+            const QStringList actions1 = { "actionShowBreadcrumbs",
+                                           "actionShowDetailsPanel",
+                                           "---",
+                                           "actionLayout1",
+                                           "actionLayout2",
+                                           "actionLayout3",
+                                         };
+            ActionManager::instance()->addActions( &menu, actions1 );
+
+            menu.exec( event->globalPos() );
+            return;
+        }
+        widget = widget->parentWidget();
+    }
+
+    QMenu * menu = createPopupMenu();
+    QAction * toolbarAction = menu->actions().first();
+    toolbarAction->setText( tr( "Show &Toolbar" ) );
+
+    menu->insertAction( toolbarAction, _ui->actionShowMenuBar );
+    menu->addAction( _ui->actionShowStatusBar );
+
+    menu->exec( event->globalPos() );
+
+    showBars();
+}

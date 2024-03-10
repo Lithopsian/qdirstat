@@ -45,10 +45,10 @@ namespace QDirStat
         /**
          * Constructor.
          **/
-        Subtree( DirTree * tree = 0 ):
-                 _tree { tree },
-                 _useRootFallback { true },
-                 _useParentFallback { false }
+        Subtree( DirTree * tree = nullptr ):
+	     _tree { tree },
+	     _useRootFallback { true },
+	     _useParentFallback { false }
         {}
 
         /**
@@ -130,7 +130,7 @@ namespace QDirStat
         /**
          * Clear the subtree (but keep the tree).
          **/
-        void clear() { set( 0 ); }
+        void clear() { set( nullptr ); }
 
         /**
          * Return 'true' if this subtree is empty, i.e. if it was cleared or if

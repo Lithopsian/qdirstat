@@ -12,17 +12,18 @@
 #include <QFileInfo>
 
 #include "DirTree.h"
+#include "Attic.h"
 #include "DirTreeCache.h"
 #include "DirTreeFilter.h"
 #include "DotEntry.h"
-#include "Attic.h"
+#include "ExcludeRules.h"
 #include "FileInfoIterator.h"
 #include "FileInfoSet.h"
-#include "ExcludeRules.h"
+#include "FormatUtil.h"
+#include "MountPoints.h"
 #include "PkgFilter.h"
 #include "PkgReader.h"
-#include "MountPoints.h"
-#include "FormatUtil.h"
+#include "SysUtil.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -43,11 +44,11 @@ DirTree::DirTree():
 {
     CHECK_NEW( _root );
 
-    connect( & _jobQueue, SIGNAL( finished()	 ),
-	     this,	  SLOT	( slotFinished() ) );
+    connect( & _jobQueue, &DirReadJobQueue::finished,
+	     this,	  &DirTree::sendFinished );
 
-    connect( this,	  SIGNAL( deletingChild	     ( FileInfo * ) ),
-	     & _jobQueue, SLOT	( deletingChildNotify( FileInfo * ) ) );
+    connect( this,	  &DirTree::deletingChild,
+	     & _jobQueue, &DirReadJobQueue::deletingChildNotify );
 }
 
 
@@ -55,11 +56,8 @@ DirTree::~DirTree()
 {
     _beingDestroyed = true;
 
-    if ( _root )
-	delete _root;
-
-    if ( _excludeRules )
-	delete _excludeRules;
+    delete _root;
+    delete _excludeRules;
 
     clearFilters();
 }
@@ -110,7 +108,6 @@ void DirTree::clear()
 
     if ( _root )
     {
-	logDebug() << Qt::endl;
 	emit clearing();
 	_root->clear();
     }
@@ -145,8 +142,7 @@ void DirTree::startReading( const QString & rawUrl )
     if ( _root->hasChildren() )
 	clear();
 
-    _isBusy = true;
-    emit startingReading();
+    sendStartingReading();
 
     FileInfo * item = stat( _url, this, _root );
     CHECK_PTR( item );
@@ -157,16 +153,16 @@ void DirTree::startReading( const QString & rawUrl )
 
 	if ( item->isDirInfo() )
 	{
-	    addJob( new LocalDirReadJob( this, item->toDirInfo() ) );
-	    emit readJobFinished( _root );
+	    LocalDirReadJob * job = new LocalDirReadJob( this, item->toDirInfo(), false );
+	    CHECK_NEW( job );
+	    addJob( job );
 	}
 	else
 	{
-	    finalizeTree();
-	    _isBusy = false;
-	    emit readJobFinished( _root );
-	    emit finished();
+	    sendFinished();
 	}
+
+	emit readJobFinished( _root );
     }
     else	// stat() failed
     {
@@ -235,11 +231,13 @@ void DirTree::refresh( DirInfo * subtree )
 
 	subtree->reset();
 	subtree->setExcluded( false );
-
-	_isBusy = true;
 	subtree->setReadState( DirReading );
-	emit startingReading();
-	addJob( new LocalDirReadJob( this, subtree ) );
+
+	sendStartingReading();
+
+	LocalDirReadJob * job = new LocalDirReadJob( this, subtree, false );
+	CHECK_NEW( job);
+	addJob( job );
     }
 }
 
@@ -269,14 +267,12 @@ void DirTree::finalizeTree()
     }
 }
 
-
+/*
 void DirTree::slotFinished()
 {
-    finalizeTree();
-    _isBusy = false;
-    emit finished();
+    sendFinished();
 }
-
+*/
 
 void DirTree::childAddedNotify( FileInfo * newChild )
 {
@@ -297,7 +293,7 @@ void DirTree::deletingChildNotify( FileInfo * deletedChild )
     emit deletingChild( deletedChild );
 
     if ( deletedChild == _root )
-	_root = 0;
+	_root = nullptr;
 }
 
 /*
@@ -332,7 +328,7 @@ void DirTree::deleteSubtree( FileInfo *subtree )
 		    parent->parent()->deleteEmptyDotEntry();
 
 		    delete parent;
-		    parent = 0;
+		    parent = nullptr;
 		}
 	    }
 	    else	// no parent - this should never happen (?)
@@ -361,7 +357,7 @@ void DirTree::deleteSubtree( FileInfo *subtree )
 
     if ( subtree == _root )
     {
-	_root = 0;
+	_root = nullptr;
     }
 
     emit childDeleted();
@@ -399,6 +395,7 @@ void DirTree::unblock( DirReadJob * job )
 
 void DirTree::sendStartingReading()
 {
+    _isBusy = true;
     emit startingReading();
 }
 
@@ -416,8 +413,8 @@ void DirTree::sendAborted()
     _isBusy = false;
     emit aborted();
 }
-*/
-/*
+
+
 void DirTree::sendStartingReading( DirInfo * dir )
 {
     emit startingReading( dir );
@@ -438,12 +435,8 @@ FileInfo * DirTree::locate( const QString & url, bool findPseudoDirs ) const
 
     FileInfo * topItem = _root->firstChild();
 
-    if ( topItem	      &&
-	 topItem->isPkgInfo() &&
-	 topItem->url() == url	)
-    {
+    if ( topItem && topItem->isPkgInfo() && topItem->url() == url )
 	return topItem;
-    }
 
     return _root->locate( url, findPseudoDirs );
 }
@@ -451,42 +444,41 @@ FileInfo * DirTree::locate( const QString & url, bool findPseudoDirs ) const
 
 bool DirTree::writeCache( const QString & cacheFileName )
 {
-    CacheWriter writer( cacheFileName.toUtf8(), this );
+    CacheWriter writer( cacheFileName, this );
     return writer.ok();
 }
 
 
 bool DirTree::readCache( const QString & cacheFileName )
 {
-    _isBusy = true;
-    emit startingReading();
-    CacheReadJob * readJob = new CacheReadJob( this, 0, cacheFileName );
+    sendStartingReading();
+
+    CacheReadJob * readJob = new CacheReadJob( this, cacheFileName );
     if ( !readJob->reader() )
     {
 	delete readJob;
 //	emit aborted();
 	return false;
-
     }
 
     addJob( readJob );
     return true;
 }
 
-
+/*
 void DirTree::clearAndReadCache( const QString & cacheFileName )
 {
     clear();
-    readCache( cacheFileName );
+    readCache( cacheFileName, true );
 }
-
+*/
 
 void DirTree::readPkg( const PkgFilter & pkgFilter )
 {
     clear();
-    _isBusy = true;
     _url    = pkgFilter.url();
-    emit startingReading();
+
+    sendStartingReading();
 
     // logDebug() << "Reading " << pkgFilter << Qt::endl;
     PkgReader reader( this );
@@ -496,8 +488,7 @@ void DirTree::readPkg( const PkgFilter & pkgFilter )
 
 void DirTree::setExcludeRules( ExcludeRules * newRules )
 {
-    if ( _excludeRules )
-	delete _excludeRules;
+    delete _excludeRules;
 
 #if VERBOSE_EXCLUDE_RULES
     if ( newRules )
@@ -695,10 +686,11 @@ FileInfo * DirTree::stat( const QString & url,
 	QString name = url;
 
 	if ( parent && parent != tree->root() )
-	{
-	    QStringList components = url.split( "/", Qt::SkipEmptyParts );
-	    name = components.last();
-	}
+	    name = SysUtil::baseName( url );
+//	{
+//	    const QStringList components = url.split( "/", Qt::SkipEmptyParts );
+//	    name = components.last();
+//	}
 
 	if ( S_ISDIR( statInfo.st_mode ) )	// directory?
 	{

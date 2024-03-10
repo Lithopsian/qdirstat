@@ -39,7 +39,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PathSelector();
+	~PathSelector() {}
 
 	/**
 	 * Add a path with the specified icon.
@@ -54,22 +54,6 @@ namespace QDirStat
 	 * Convenience function: Add the current user's home directory.
 	 **/
 	PathSelectorItem * addHomeDir();
-
-	/**
-	 * Add a mount point with an appropriate icon.
-	 *
-	 * This displays not only the mount point's path, but also some
-	 * additional information like the filesystem type and, if available,
-	 * the size of the partition / filesystem.
-	 **/
-	PathSelectorItem * addMountPoint( MountPoint * mountPoint );
-
-	/**
-	 * Add a mount point with the specified icon.
-	 * Notice that you can also specify QIcon() to suppress any icon.
-	 **/
-	PathSelectorItem * addMountPoint( MountPoint *	mountPoint,
-					  const QIcon & icon );
 
 	/**
 	 * Add a list of mount points with the appropriate icons.
@@ -117,6 +101,23 @@ namespace QDirStat
 
     protected:
 
+	/**
+	 * Add a mount point with an appropriate icon.
+	 *
+	 * This displays not only the mount point's path, but also some
+	 * additional information like the filesystem type and, if available,
+	 * the size of the partition / filesystem.
+	 **/
+	PathSelectorItem * addMountPoint( MountPoint * mountPoint );
+
+	/**
+	 * Add a mount point with the specified icon.
+	 * Notice that you can also specify QIcon() to suppress any icon.
+	 **/
+//	PathSelectorItem * addMountPoint( MountPoint *	mountPoint,
+//					  const QIcon & icon );
+
+
 	QFileIconProvider _iconProvider;
 
     };	// class PathSelector
@@ -147,7 +148,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PathSelectorItem();
+	~PathSelectorItem() {}
 
 	/**
 	 * Return the path for this item.

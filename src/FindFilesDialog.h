@@ -38,7 +38,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~FindFilesDialog();
+	~FindFilesDialog();
 
     public:
 	/**

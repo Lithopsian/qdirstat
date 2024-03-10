@@ -23,16 +23,13 @@ namespace QDirStat
 			   const char	   * entryName,
 			   const QColor	   & fallback )
     {
-	const QString colorName = settings.value( entryName ).toString();
-	QColor color( colorName );
-
+	const QColor color( settings.value( entryName ).toString() );
 	if ( ! color.isValid() )
 	{
-	    color = fallback;
 #if 0
-	    logDebug() << "Using fallback for " << entryName
-		       << ": " << color.name() << Qt::endl;
+	    logDebug() << "Using fallback for " << entryName << ": " << fallback.name() << Qt::endl;
 #endif
+	    return fallback;
 	}
 
 	return color;
@@ -54,11 +51,11 @@ namespace QDirStat
 	const QStringList strList = settings.value( entryName ).toStringList();
 	QList<QColor> colorList;
 
-	colorList.clear();
+//	colorList.clear();
 
 	for ( const QString & rgb : strList )
 	{
-	    QColor color( rgb );
+	    const QColor color( rgb );
 
 	    if ( color.isValid() )
 		colorList << color;
@@ -69,10 +66,7 @@ namespace QDirStat
 	    }
 	}
 
-	if ( colorList.isEmpty() )
-	    colorList = fallback;
-
-	return colorList;
+	return colorList.isEmpty() ? fallback : colorList;
     }
 
 
@@ -83,9 +77,7 @@ namespace QDirStat
 	QStringList strList;
 
 	for ( const QColor & color : colors )
-	{
 	    strList << color.name();
-	}
 
 	settings.setValue( entryName, strList );
     }
@@ -109,8 +101,8 @@ namespace QDirStat
 
 
     void writeFontEntry( QSettings    & settings,
-			  const char  * entryName,
-			  const QFont & font )
+			 const char  * entryName,
+			 const QFont & font )
     {
 	settings.setValue( entryName, font.toString() );
     }
@@ -126,18 +118,13 @@ namespace QDirStat
 	    return fallback;
 
 	const QString str = settings.value( entryName ).toString();
-	QMap<int, QString>::const_iterator it = enumMapping.constBegin();
-
-	while ( it != enumMapping.constEnd() )
+	for ( auto it = enumMapping.constBegin(); it != enumMapping.constEnd(); ++it )
 	{
 	    if ( it.value() == str )
 		return it.key();
-
-	    ++it;
 	}
 
-	logError() << "Invalid value for " << entryName
-		   << ": \"" << str << "\"" << Qt::endl;
+	logError() << "Invalid value for " << entryName << ": \"" << str << "\"" << Qt::endl;
 
 	return fallback;
     }

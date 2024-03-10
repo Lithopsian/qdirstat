@@ -45,7 +45,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~SelectionModel();
+	~SelectionModel() {}
 
 	/**
 	 * Return all currently selected items as a set.

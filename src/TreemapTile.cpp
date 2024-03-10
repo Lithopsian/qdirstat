@@ -131,7 +131,7 @@ void TreemapTile::init()
 {
     setPen( Qt::NoPen );
 
-    _parentView->setLastTile( this ); // only for logging
+//    _parentView->setLastTile( this ); // only for logging
 
     setFlags( ItemIsSelectable );
 
@@ -452,10 +452,10 @@ void TreemapTile::paint( QPainter            * painter,
 {
     CHECK_MAGIC( _orig );
 
-    if ( _firstTile )
+//    if ( _firstTile )
     {
 //        logDebug() << Qt::endl;
-        _parentView->rootTile()->_stopwatch.start();
+//        _parentView->rootTile()->_stopwatch.start();
     }
 
     // Don't paint tiles with children, the children will cover the parent, but double-check
@@ -533,8 +533,8 @@ void TreemapTile::paint( QPainter            * painter,
         painter->drawRect( selectionRect );
     }
 
-    if (_lastTile)
-        logDebug() << _parentView->rootTile()->_stopwatch.restart() << "ms" << Qt::endl;
+//    if (_lastTile)
+//        logDebug() << _parentView->rootTile()->_stopwatch.restart() << "ms" << Qt::endl;
 }
 
 void TreemapTile::drawOutline( QPainter * painter, const QRectF & rect, const QColor & color, int penScale )

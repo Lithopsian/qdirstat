@@ -48,7 +48,7 @@ public:
     /**
      * Destructor.
      **/
-    virtual ~OutputWindow();
+    ~OutputWindow();
 
     /**
      * Add a process to watch. Ownership of the process is transferred to this

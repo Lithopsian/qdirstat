@@ -45,7 +45,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PercentileStats()
+	~PercentileStats()
 	{}
 
 	/**

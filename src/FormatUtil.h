@@ -83,7 +83,7 @@ namespace QDirStat
     /**
      * Format a millisecond-based time
      **/
-    QString formatMillisec( qint64 millisec, bool showMillisec = true );
+    QString formatMillisec( qint64 millisec );
 
     /**
      * Format a percentage.

@@ -85,10 +85,8 @@ static bool mightBeSystemPath( const QString & path )
     {
         return true;
     }
-    else
-    {
-        return false;
-    }
+
+    return false;
 }
 
 
@@ -99,20 +97,16 @@ bool SystemFileChecker::isSystemFile( const FileInfo * file )
 
     if ( file->isPseudoDir() && file->parent() )
         file = file->parent();
-
     if ( file->parent() && file->parent()->url() == "/" )
         return true;
 
     QString path = file->url();
-
     if ( file->isDir() )
         path += "/";
-
     if ( isSystemPath( path ) )
         return true;
 
-    if ( file->hasUid() && isSystemUid( file->uid() ) &&
-         mightBeSystemPath( path ) )
+    if ( file->hasUid() && isSystemUid( file->uid() ) && mightBeSystemPath( path ) )
         return true;
 
     return false;

@@ -48,11 +48,10 @@ TreemapView::TreemapView( QWidget * parent ):
     QThreadPool::globalInstance()->setMaxThreadCount(100);
 
     // Very important, the resize/rescale can get ugly without this
-    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-    setVerticalScrollBarPolicy	( Qt::ScrollBarAlwaysOff );
-    setRenderHints( QPainter::SmoothPixmapTransform );
-    setOptimizationFlags( DontAdjustForAntialiasing | DontSavePainterState );
-
+//    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+//    setVerticalScrollBarPolicy	( Qt::ScrollBarAlwaysOff );
+//    setRenderHints( QPainter::SmoothPixmapTransform );
+//    setOptimizationFlags( DontAdjustForAntialiasing | DontSavePainterState );
 
     connect( &_watcher,  &QFutureWatcher<TreemapTile *>::finished,
              this,       &TreemapView::treemapFinished );
@@ -82,10 +81,10 @@ void TreemapView::clear()
     if ( scene() )
         qDeleteAll( scene()->items() );
 
-//    _currentTile     = 0;
-    _currentTileHighlighter = 0;
-    _rootTile        = 0;
-    _sceneMask       = 0;
+//    _currentTile     = nullptr;
+    _currentTileHighlighter = nullptr;
+    _rootTile        = nullptr;
+    _sceneMask       = nullptr;
     _parentHighlightList.clear();
 }
 
@@ -142,8 +141,7 @@ void TreemapView::setSelectionModel( SelectionModel * selectionModel )
              _selectionModel, &SelectionModel::setCurrentBranch );
 
     // Use the proxy for all receiving signals
-    if ( _selectionModelProxy )
-        delete _selectionModelProxy;
+    delete _selectionModelProxy;
 
     _selectionModelProxy = new SelectionModelProxy( selectionModel, this );
     CHECK_NEW( _selectionModelProxy );
@@ -340,7 +338,7 @@ bool TreemapView::canZoomOut() const
 void TreemapView::rebuildTreemap()
 {
     //logDebug() << _savedRootUrl << Qt::endl;
-    FileInfo * root = 0;
+    FileInfo * root = nullptr;
 
     if ( ! _savedRootUrl.isEmpty() )
     {
@@ -383,7 +381,7 @@ void TreemapView::rebuildTreemap( FileInfo * newRoot )
 
     _stopwatch.start();
 
-    _future = QtConcurrent::run( [ =, this ]() {
+    _future = QtConcurrent::run( [ this, newRoot, rect ]() {
         TreemapTile *tile = new TreemapTile( this,           // parentView
                                              newRoot,        // orig
                                              rect );
@@ -392,7 +390,7 @@ void TreemapView::rebuildTreemap( FileInfo * newRoot )
             // Logging is not thread-sage, use only for debugging
 //            logDebug() << "treemap cancelled, delete tiles" << Qt::endl;
             delete tile;
-            tile = 0;
+            tile = nullptr;
         }
 
         return tile;
@@ -452,7 +450,7 @@ void TreemapView::treemapFinished()
     emit treemapChanged();
 
     // << _stopwatch.restart() << "ms" << Qt::endl;
-    _lastTile->setLastTile();
+//    _lastTile->setLastTile();
 }
 
 
@@ -837,7 +835,7 @@ void TreemapView::highlightParents( const TreemapTile * tile )
     if ( currentHighlight && currentHighlight != parent )
         clearParentsHighlight();
 
-    const TreemapTile * topParent = 0;
+    const TreemapTile * topParent = nullptr;
 
     while ( parent && parent != _rootTile )
     {
@@ -862,7 +860,7 @@ void TreemapView::clearParentsHighlight()
 {
     qDeleteAll( _parentHighlightList );
     _parentHighlightList.clear();
-//    _highlightedTile = 0;
+//    _highlightedTile = nullptr;
     clearSceneMask();
 }
 
@@ -879,10 +877,8 @@ void TreemapView::toggleParentsHighlight( const TreemapTile * tile )
 
 void TreemapView::clearSceneMask()
 {
-    if ( _sceneMask )
-        delete _sceneMask;
-
-    _sceneMask = 0;
+    delete _sceneMask;
+    _sceneMask = nullptr;
 }
 
 

@@ -79,7 +79,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~AdaptiveTimer() {}
+        ~AdaptiveTimer() {}
 
         /**
          * Initialise the timers.

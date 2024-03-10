@@ -42,18 +42,12 @@ SelectionModel::SelectionModel( DirTreeModel * dirTreeModel, QObject * parent ):
 }
 
 
-SelectionModel::~SelectionModel()
-{
-    // NOP
-}
-
-
 void SelectionModel::clear()
 {
     _selectedItems.clear();
     _selectedItemsDirty = true;
-    _currentItem = 0;
-    _currentBranch = 0;
+    _currentItem = nullptr;
+    _currentBranch = nullptr;
 
     clearSelection();
 }
@@ -90,7 +84,7 @@ FileInfoSet SelectionModel::selectedItems()
 void SelectionModel::propagateCurrentChanged( const QModelIndex & newCurrentIndex,
 					      const QModelIndex & oldCurrentIndex )
 {
-    _currentItem = 0;
+    _currentItem = nullptr;
 
     if ( newCurrentIndex.isValid() )
     {
@@ -98,7 +92,7 @@ void SelectionModel::propagateCurrentChanged( const QModelIndex & newCurrentInde
 	CHECK_MAGIC( _currentItem );
     }
 
-    FileInfo * oldCurrentItem = 0;
+    FileInfo * oldCurrentItem = nullptr;
 
     if ( oldCurrentIndex.isValid() )
     {
@@ -226,7 +220,7 @@ void SelectionModel::setCurrentBranch( FileInfo * item )
 void SelectionModel::prepareRefresh( const FileInfoSet & refreshSet )
 {
     FileInfo * current = _currentItem ? _currentItem : refreshSet.first();
-    DirInfo  * dir = 0;
+    DirInfo  * dir = nullptr;
 
     if ( current )
     {
@@ -256,7 +250,7 @@ void SelectionModel::deletingChildNotify( FileInfo * deletedChild )
     _selectedItems.clear();
 
     if ( _currentItem && _currentItem->isInSubtree( deletedChild ) )
-	setCurrentItem( 0 );
+	setCurrentItem( nullptr );
 }
 
 

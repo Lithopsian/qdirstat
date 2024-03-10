@@ -56,7 +56,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~ShowUnpkgFilesDialog();
+	~ShowUnpkgFilesDialog();
 
         /**
          * Get all values from the widgets at once.

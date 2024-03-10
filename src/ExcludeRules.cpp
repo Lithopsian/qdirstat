@@ -23,31 +23,6 @@
 using namespace QDirStat;
 
 
-ExcludeRule::ExcludeRule( PatternSyntax   patternSyntax,
-			  const QString & pattern,
-			  bool            caseSensitive,
-			  bool            useFullPath,
-			  bool            checkAnyFileChild ):
-    QRegularExpression { formatPattern( patternSyntax, pattern ), makePatternOptions( caseSensitive ) },
-    _patternSyntax { patternSyntax },
-    _pattern { pattern },
-    _useFullPath { useFullPath },
-    _checkAnyFileChild { checkAnyFileChild }
-{
-#if VERBOSE_EXCLUDE_MATCHES
-    logDebug() << _patternSyntax << " " << _pattern << ( caseSensitive ? ", case-sensitive" : ", case-insensitive" << Qt::endl;
-#endif
-    // NOP
-}
-
-
-ExcludeRule::~ExcludeRule()
-{
-    //logDebug() << "ExcludeRule " << _pattern << " destructor" << Qt::endl;
-    // NOP
-}
-
-
 void ExcludeRule::setCaseSensitive( bool caseSensitive )
 {
     setPatternOptions( makePatternOptions( caseSensitive ) );
@@ -84,7 +59,7 @@ void ExcludeRule::setPattern( const QString & pattern )
 }
 
 
-bool ExcludeRule::match( const QString & fullPath, const QString & fileName )
+bool ExcludeRule::match( const QString & fullPath, const QString & fileName ) const
 {
     if ( _checkAnyFileChild )  // use matchDirectChildren() for those rules
         return false;
@@ -98,7 +73,7 @@ bool ExcludeRule::match( const QString & fullPath, const QString & fileName )
 }
 
 
-bool ExcludeRule::matchDirectChildren( DirInfo * dir )
+bool ExcludeRule::matchDirectChildren( DirInfo * dir ) const
 {
     if ( ! _checkAnyFileChild || ! dir )
         return false;
@@ -118,15 +93,10 @@ bool ExcludeRule::matchDirectChildren( DirInfo * dir )
 
 SettingsEnumMapping ExcludeRule::patternSyntaxMapping()
 {
-    static SettingsEnumMapping mapping;
-
-    if ( mapping.isEmpty() )
-    {
-	mapping[ RegExp      ] = "RegExp";
-	mapping[ Wildcard    ] = "Wildcard";
-	mapping[ FixedString ] = "FixedString";
-    }
-
+    static SettingsEnumMapping mapping = { { RegExp,      "RegExp" },
+					   { Wildcard,    "Wildcard" },
+					   { FixedString, "FixedString" },
+					 };
     return mapping;
 }
 
@@ -208,12 +178,12 @@ void ExcludeRules::remove( ExcludeRule * rule )
 }
 */
 
-bool ExcludeRules::match( const QString & fullPath, const QString & fileName )
+bool ExcludeRules::match( const QString & fullPath, const QString & fileName ) const
 {
     if ( fullPath.isEmpty() || fileName.isEmpty() )
 	return false;
 
-    for ( ExcludeRule * rule : _rules )
+    for ( const ExcludeRule * rule : _rules )
     {
 	if ( rule->match( fullPath, fileName ) )
 	{
@@ -228,12 +198,12 @@ bool ExcludeRules::match( const QString & fullPath, const QString & fileName )
 }
 
 
-bool ExcludeRules::matchDirectChildren( DirInfo * dir )
+bool ExcludeRules::matchDirectChildren( DirInfo * dir ) const
 {
     if ( ! dir )
 	return false;
 
-    for ( ExcludeRule * rule : _rules )
+    for ( const ExcludeRule * rule : _rules )
     {
 	if ( rule->matchDirectChildren( dir ) )
 	{

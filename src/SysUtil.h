@@ -116,7 +116,7 @@ namespace QDirStat
 	 * Open a URL in the desktop's default browser (using the
 	 * /usr/bin/xdg-open command).
 	 **/
-	void openInBrowser( const QString & url );
+//	void openInBrowser( const QString & url ); // replaced by DesktopServices::openUrl()
 
 	/**
 	 * Check if this program runs with root privileges, i.e. with effective
@@ -177,7 +177,32 @@ namespace QDirStat
          **/
         QByteArray readLink( const QByteArray & path );
 
+	/**
+	 * Return the last pathname component of a file name.
+	 *
+	 * Examples:
+	 *
+	 *	   "/home/bob/foo.txt"	-> "foo.txt"
+	 *	   "foo.txt"		-> "foo.txt"
+	 *	   "/usr/bin"		-> "bin"
+	 *	   "/usr/bin/"		-> "bin"
+	 *
+	 * Notice that FileInfo also has a member function baseName().
+	 **/
+	QString baseName( const QString & fileName );
+
+	/**
+	 * Return the user name of the owner.
+	 **/
+	QString userName( uid_t uid );
+
+	/**
+	 * Return the group name of the owner.
+	 **/
+	QString groupName( gid_t gid );
+
     }	// namespace SysUtil
+
 }	// namespace QDirStat
 
 

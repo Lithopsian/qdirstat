@@ -13,8 +13,6 @@
 #include <QStyledItemDelegate>
 #include <QTreeView>
 
-#include "DirTreeModel.h"
-
 
 namespace QDirStat
 {
@@ -36,14 +34,12 @@ namespace QDirStat
          **/
 	SizeColDelegate( QTreeView * treeView ):
 	    QStyledItemDelegate { treeView }
-//	    _treeView { treeView },
-//	    _model { 0 }
 	{}
 
         /**
          * Destructor.
          **/
-        virtual ~SizeColDelegate() {}
+        ~SizeColDelegate() {}
 
 	/**
 	 * Paint one cell in the view.
@@ -60,17 +56,8 @@ namespace QDirStat
 	QSize sizeHint( const QStyleOptionViewItem & option,
 			const QModelIndex	   & index) const Q_DECL_OVERRIDE;
 
+
     protected:
-
-        /**
-         * Get the model from a model index and store it in _model.
-         **/
-//        void ensureModel( const QModelIndex & index ) const;
-
-        /**
-         * Get the model from a model index and store it in _model.
-         **/
-//        static bool isDelegateItem( FileInfo * item );
 
         /**
          * Determine the color to use for the highlighted (allocated) porition
@@ -78,15 +65,10 @@ namespace QDirStat
 	 * colour of the cell, to account for both dark themes and whether the item
 	 * is selected.
          **/
-	static QColor highlightedText( const QStyleOptionViewItem & option, bool sparseFile );
+	inline static QColor highlightedText( const QStyleOptionViewItem & option,
+	                                      bool sparseFile,
+					      bool disabled );
 
-
-        //
-        // Data members
-        //
-
-//        QTreeView *             _treeView;
-//        mutable DirTreeModel *  _model;
 
     };  // class SizeColDelegate
 

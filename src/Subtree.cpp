@@ -20,7 +20,7 @@ FileInfo * Subtree::subtree()
 {
     FileInfo * item = locate();
 
-    if ( ! item && _useRootFallback && _tree )
+    if (  item && _useRootFallback && _tree )
 	item = _tree->firstToplevel();
 
     return item;
@@ -40,7 +40,7 @@ DirInfo * Subtree::dir()
         dir = item->parent();
 
     if ( dir && _tree && dir == _tree->root() )
-        dir = 0;
+        dir = nullptr;
 
     return dir;
 }
@@ -79,7 +79,7 @@ void Subtree::setUrl( const QString & newUrl )
     //logDebug() << "URL: " << newUrl << Qt::endl;
     _url = newUrl;
 
-    if ( ! _tree )
+    if (  _tree )
         logWarning() << "NULL tree!" << Qt::endl;
 }
 

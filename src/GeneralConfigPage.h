@@ -29,7 +29,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~GeneralConfigPage();
+        ~GeneralConfigPage();
 
 
     public slots:

@@ -63,15 +63,10 @@ void PkgReader::read( const PkgFilter & filter )
 
     const PkgManager * pkgManager = PkgQuery::primaryPkgManager();
 
-    if ( pkgManager && pkgManager->supportsFileListCache() &&
-	 _pkgList.size() >= _minCachePkgListSize )
-    {
+    if ( pkgManager && pkgManager->supportsFileListCache() && _pkgList.size() >= _minCachePkgListSize )
 	createCachePkgReadJobs();
-    }
     else
-    {
 	createAsyncPkgReadJobs();
-    }
 
     // Ownership of the PkgInfo * items in _pkgList was transferred to the
     // tree, so intentionally NOT calling qDeleteItems( _pkgList ) !
@@ -303,8 +298,9 @@ int PkgReadJob::_lstatCalls = 0;
 
 PkgReadJob::PkgReadJob( DirTree * tree,
 			PkgInfo * pkg  ):
-    ObjDirReadJob( tree, pkg ),
-    _pkg( pkg )
+    QObject (),
+    DirReadJob ( tree, pkg ),
+    _pkg { pkg }
 {
     ++_activeJobs;
 }

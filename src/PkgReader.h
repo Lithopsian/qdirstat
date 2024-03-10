@@ -148,7 +148,7 @@ namespace QDirStat
      *
      * See also AsyncPkgReadJob and CachePkgReadJob.
      **/
-    class PkgReadJob: public ObjDirReadJob
+    class PkgReadJob: public QObject, public DirReadJob
     {
         Q_OBJECT
 

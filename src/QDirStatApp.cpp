@@ -62,13 +62,13 @@ QDirStatApp * QDirStatApp::instance()
 
 DirTree * QDirStatApp::dirTree() const
 {
-    return _dirTreeModel ? _dirTreeModel->tree() : 0;
+    return _dirTreeModel ? _dirTreeModel->tree() : nullptr;
 }
 
 
 QWidget * QDirStatApp::findMainWindow() const
 {
-    QWidget * mainWin = 0;
+    QWidget * mainWin = nullptr;
     const QWidgetList toplevel = QApplication::topLevelWidgets();
 
     for ( QWidgetList::const_iterator it = toplevel.cbegin(); it != toplevel.cend() && !mainWin; ++it )
@@ -83,7 +83,7 @@ QWidget * QDirStatApp::findMainWindow() const
 
 FileInfo * QDirStatApp::root() const
 {
-    return dirTree() ? dirTree()->firstToplevel() : 0;
+    return dirTree() ? dirTree()->firstToplevel() : nullptr;
 }
 
 
@@ -98,7 +98,7 @@ FileInfo * QDirStatApp::selectedDirInfo() const
     const FileInfoSet selectedItems = _selectionModel->selectedItems();
     FileInfo * sel = selectedItems.first();
 
-    return sel && sel->isDirInfo() ? sel : 0;
+    return sel && sel->isDirInfo() ? sel : nullptr;
 }
 
 

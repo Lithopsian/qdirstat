@@ -68,7 +68,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~FileAgeStats();
+        ~FileAgeStats() {}
 
         /**
          * Recurse through all file elements in the subtree and calculate the

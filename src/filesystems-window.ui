@@ -2,28 +2,53 @@
 <ui version="4.0">
  <class>FilesystemsWindow</class>
  <widget class="QDialog" name="FilesystemsWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>744</width>
+    <height>351</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Mounted Filesystems</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0">
    <item>
-    <widget class="QLabel" name="heading">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>&amp;Mounted filesystems</string>
-     </property>
-     <property name="buddy">
-      <cstring>fsTree</cstring>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
+     <item>
+      <widget class="QLabel" name="heading">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>&amp;Mounted filesystems</string>
+       </property>
+       <property name="buddy">
+        <cstring>fsTree</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="normalCheckBox">
+       <property name="toolTip">
+        <string>Uncheck to see system mounts, bind mounts, and network mounts</string>
+       </property>
+       <property name="text">
+        <string>Only show &amp;normal filesystems</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QTreeWidget" name="fsTree">
@@ -50,7 +75,22 @@
     </widget>
    </item>
    <item>
-    <widget class="QDirStat::MessagePanel" name="messagePanel" native="true"/>
+    <widget class="QWidget" name="messagePanel" native="true">
+     <layout class="QVBoxLayout" name="vBox">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+     </layout>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="buttonsLayout">
@@ -116,14 +156,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QDirStat::MessagePanel</class>
-   <extends>QWidget</extends>
-   <header>MessagePanel.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="icons.qrc"/>
  </resources>

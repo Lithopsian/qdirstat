@@ -123,7 +123,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PkgQuery();
+	~PkgQuery();
 
         /**
          * Check which supported package managers are available and add them to

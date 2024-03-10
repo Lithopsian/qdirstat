@@ -121,42 +121,29 @@ QString QDirStat::symbolicMode( mode_t mode )
 }
 
 
-QString QDirStat::formatMillisec( qint64 millisec, bool showMillisec )
+QString QDirStat::formatMillisec( qint64 millisec )
 {
-    QString formattedTime;
-
     const int hours = millisec / 3600000L;	// 60*60*1000
     millisec %= 3600000L;
 
     const int min = millisec / 60000L;	// 60*1000
     millisec %= 60000L;
 
-    const int sec = millisec / 1000L;
-    millisec %= 1000L;
-
-    if ( hours < 1 && min < 1 && sec < 60 )
+    if ( hours < 1 && min < 1 && millisec < 60000 )
     {
-	formattedTime.setNum( sec );
-
-	if ( showMillisec )
-	{
-	    formattedTime += QString( ".%1" ).arg( millisec,
-						   3,	// fieldWidth
-						   10,	// base
-						   QChar( '0' ) ); // fillChar
-	}
-
-	formattedTime += " " + QObject::tr( "sec" );
+	// .arg doesn't offer enough control over decimal places and significant figures
+	// so do it manually, 3 decimal places up to 1 sec, then 1 up to 10 secs, then none
+	const int precision = millisec > 9999 ? 0 : millisec < 1000 ? 3 : 1;
+	const float sec = (float)millisec / 1000.0;
+	return QObject::tr( "%1 sec" ).arg( sec, 0, 'f', precision );
     }
     else
     {
-	formattedTime = QString( "%1:%2:%3" )
-	    .arg( hours, 2, 10, QChar( '0' ) )
+	const int sec = millisec / 1000L;
+	return QString( "%1:%2:%3" ).arg( hours, 2, 10, QChar( '0' ) )
 	    .arg( min,	 2, 10, QChar( '0' ) )
 	    .arg( sec,	 2, 10, QChar( '0' ) );
     }
-
-    return formattedTime;
 }
 
 

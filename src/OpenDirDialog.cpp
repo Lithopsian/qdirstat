@@ -177,6 +177,7 @@ void OpenDirDialog::setPath( const QString & path )
     // so any change would not become visible in the tree.
 
     populatePathComboBox( path );
+
     QLineEdit * lineEdit = _ui->pathComboBox->lineEdit();
     if ( lineEdit )
 	lineEdit->setText( path );
@@ -212,17 +213,13 @@ void OpenDirDialog::setPathAndAccept( const QString & path )
 
 void OpenDirDialog::pathEdited( bool ok )
 {
-    if ( _settingPath )
-        return;
-
-    if ( ! ok )
+    if ( !ok || _settingPath )
         return;
 
     const SignalBlocker sigBlockerComboBox ( _ui->pathComboBox );
     const SignalBlocker sigBlockerValidator( _validator );
 
     const QString path = _ui->pathComboBox->currentText();
-
     if ( path != _lastPath )
     {
 #if VERBOSE_SELECTION
@@ -268,7 +265,7 @@ void OpenDirDialog::goUp()
 {
     QStringList pathComponents = selectedPath().split( "/", Qt::SkipEmptyParts );
 
-    if ( ! pathComponents.isEmpty() )
+    if ( !pathComponents.isEmpty() )
         pathComponents.removeLast();
 
     const QString path = "/" + pathComponents.join( "/" );
@@ -294,7 +291,7 @@ void OpenDirDialog::readSettings()
     const QByteArray mainSplitterState = settings.value( "MainSplitter" , QByteArray() ).toByteArray();
     settings.endGroup();
 
-    if ( ! mainSplitterState.isNull() )
+    if ( !mainSplitterState.isNull() )
 	_ui->mainSplitter->restoreState( mainSplitterState );
 }
 

@@ -32,13 +32,13 @@ namespace QDirStat
 	 * Constructor.
 	 **/
 	ExistingDirValidator( QObject * parent ):
-	    QValidator( parent )
+	    QValidator ( parent )
 	{}
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~ExistingDirValidator()
+	~ExistingDirValidator()
 	{}
 
 	/**
@@ -74,7 +74,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~ExistingDirCompleter()
+        ~ExistingDirCompleter()
 	{}
 
     };  // class ExistingDirCompleter

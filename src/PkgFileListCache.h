@@ -56,7 +56,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PkgFileListCache()
+	~PkgFileListCache()
 	{}
 
 	/**

@@ -62,7 +62,7 @@ void HistoryButtons::historyGoForward()
 
 void HistoryButtons::addToHistory( FileInfo * item )
 {
-    if ( item && ! item->isDirInfo() && item->parent() )
+    if ( item && !item->isDirInfo() && item->parent() )
         item = item->parent();
 
     if ( item )
@@ -80,7 +80,7 @@ void HistoryButtons::addToHistory( FileInfo * item )
 void HistoryButtons::initHistoryButtons()
 {
     _historyMenu = new QMenu();
-    _historyMenu->addAction( "Dummy 1" );
+//    _historyMenu->addAction( "Dummy 1" );
 
     connect( _historyMenu, SIGNAL( aboutToShow()       ),
              this,         SLOT  ( updateHistoryMenu() ) );
@@ -108,7 +108,6 @@ void HistoryButtons::updateHistoryMenu()
         action->setCheckable( true );
         action->setChecked( i == current );
         action->setData( i );
-//        actionGroup->addAction( action );
         _historyMenu->addAction( action );
     }
 }
@@ -125,4 +124,3 @@ void HistoryButtons::historyMenuAction( QAction * action )
             navigateToUrl( _history->currentItem() );
     }
 }
-

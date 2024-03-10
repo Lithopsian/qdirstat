@@ -177,7 +177,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~QDirStatApp();
+        ~QDirStatApp();
 
 
         //

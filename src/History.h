@@ -35,7 +35,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~History();
+        ~History() {}
 
         /**
          * Add an item to the history stack. If the stack's capacity is
@@ -75,18 +75,18 @@ namespace QDirStat
          * Check if it is possible to go one item back in the history.
          * Use this to enable or disable the history "Back" button.
          **/
-        bool canGoBack() const;
+        bool canGoBack() const { return _current >= 1; }
 
         /**
          * Check if it is possible to go one item forward in the history.
          * Use this to enable or disable the history "Forward" button.
          **/
-        bool canGoForward() const;
+        bool canGoForward() const { return _current >= 0 && _current < _items.size() - 1; }
 
         /**
          * Return the current item in the history.
          **/
-        QString currentItem() const;
+        QString currentItem() const { return item( _current ); }
 
         /**
          * Return the index (from 0 on) of the current history item or -1 if

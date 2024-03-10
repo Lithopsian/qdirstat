@@ -13,6 +13,7 @@
 
 #define HISTORY_MAX     16
 
+
 using namespace QDirStat;
 
 
@@ -23,21 +24,10 @@ History::History():
 }
 
 
-History::~History()
-{
-}
-
-
 void History::clear()
 {
     _items.clear();
     _current = -1;
-}
-
-
-QString History::currentItem() const
-{
-    return item( _current );
 }
 
 
@@ -47,18 +37,6 @@ QString History::item( int index ) const
         return _items.at( index );
     else
         return "";
-}
-
-
-bool History::canGoBack() const
-{
-    return _current >= 1;
-}
-
-
-bool History::canGoForward() const
-{
-    return _current >= 0 && _current < _items.size() - 1;
 }
 
 
@@ -163,12 +141,7 @@ void History::dump() const
 
     for ( int i = 0; i < _items.size(); ++i )
     {
-        QString prefix( 6, ' ' );
-
-        if ( i == _current )
-            prefix = " ---> ";
-
-        logDebug() << prefix
+        logDebug() << ( i == _current ? " ---> " : QString( 6, ' ' ) )
                    << "#" << i
                    << ": \"" << _items.at( i ) << "\"" << Qt::endl;
     }

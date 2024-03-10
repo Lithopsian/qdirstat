@@ -84,7 +84,7 @@ protected:
     /**
      * Destructor.
      **/
-    virtual ~Trash() {}
+    ~Trash() {}
 
     /**
      * Find the toplevel directory (the mount point) for the device that 'path'

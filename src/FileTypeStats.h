@@ -60,7 +60,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~FileTypeStats();
+	~FileTypeStats();
 
     public slots:
 

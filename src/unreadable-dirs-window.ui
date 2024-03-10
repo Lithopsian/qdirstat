@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>UnreadableDirsWindow</class>
  <widget class="QDialog" name="UnreadableDirsWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>540</width>
+    <height>268</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Unreadable Directories</string>
   </property>
@@ -14,7 +22,7 @@
      <item>
       <widget class="QLabel" name="headingIcon">
        <property name="pixmap">
-        <pixmap resource="icons.qrc">:/icons/lock-closed.png</pixmap>
+        <pixmap>:/icons/lock-closed.png</pixmap>
        </property>
       </widget>
      </item>

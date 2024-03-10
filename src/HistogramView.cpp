@@ -10,8 +10,9 @@
 #include <math.h>
 #include <algorithm>
 
-#include <QResizeEvent>
 #include <QGraphicsItem>
+#include <QResizeEvent>
+#include <QTextDocument>
 
 #include "HistogramView.h"
 #include "HistogramItems.h"
@@ -43,15 +44,6 @@ HistogramView::HistogramView( QWidget * parent ):
     _percentileStep { 0 },
     _leftMarginPercentiles { 0 },
     _rightMarginPercentiles { 5 },
-    _panelBackground { QBrush( QColor( 0xF0, 0xF0, 0xF0 ) ) },
-    _barBrush { QBrush( QColor( 0xB0, 0xB0, 0xD0 ) ) },
-    _barPen { QPen( QColor( 0x40, 0x40, 0x50 ), 1 ) },
-    _medianPen { QPen( Qt::magenta, 2 ) },
-    _quartilePen { QPen( Qt::blue, 2 ) },
-    _percentilePen { QPen( QColor( 0xA0, 0xA0, 0xA0 ), 1 ) },
-    _decilePen { QPen( QColor( 0x30, 0x80, 0x30 ), 1 ) },
-    _piePen { QPen( Qt::black, 2 ) },
-    _overflowSliceBrush { QBrush( QColor( 0xD0, 0x40, 0x20 ) ) },
     _leftBorder { 40.0 },
     _rightBorder { 10.0 },
     _topBorder { 30.0 },
@@ -105,7 +97,7 @@ void HistogramView::init()
     _pieDiameter	  = 60.0;
     _pieSliceOffset	  = 10.0;
 
-    _panelBackground	  = QBrush( QColor( 0xF0, 0xF0, 0xF0 ) );
+    _panelBackground	  = scene()->palette().base();
     _barBrush		  = QBrush( QColor( 0xB0, 0xB0, 0xD0 ) );
     _barPen		  = QPen( QColor( 0x40, 0x40, 0x50 ), 1 );
 
@@ -387,7 +379,6 @@ bool HistogramView::autoLogHeightScale()
 
     _useLogHeightScale = false;
 
-
     if ( _buckets.size() > 3 )
     {
 	QRealList data = _buckets;
@@ -483,8 +474,7 @@ void HistogramView::fitToViewport()
 
     const QSize visibleSize = viewport()->size();
 
-    if ( rect.width()  <= visibleSize.width() &&
-	 rect.height() <= visibleSize.height()	 )
+    if ( rect.width()  <= visibleSize.width() && rect.height() <= visibleSize.height() )
     {
 #if VERBOSE_HISTOGRAM
 	logDebug() << "Histogram in " << rect.size()
@@ -521,13 +511,24 @@ void HistogramView::build()
     // ever created QGraphicsItems, which makes its sceneRect() call pretty
     // useless. Let's create a new one without those bad old memories.
 
-    if ( scene() )
-	delete scene();
+    delete scene();
 
     QGraphicsScene * newScene = new QGraphicsScene( this );
     CHECK_NEW( newScene);
     setScene( newScene );
-    scene()->setBackgroundBrush( Qt::white );
+
+    const QPalette palette = scene()->palette();
+    scene()->setBackgroundBrush( palette.base() );
+
+    _panelBackground	  = palette.alternateBase();
+    _barBrush		  = QColor( 0xB0, 0xB0, 0xD0 );
+    _barPen		  = QColor( 0x40, 0x40, 0x50 );
+    _medianPen		  = palette.linkVisited().color();
+    _quartilePen	  = palette.link().color();
+    _percentilePen	  = palette.buttonText().color();
+    _decilePen		  = palette.highlightedText().color();
+    _piePen		  = palette.text().color();
+    _overflowSliceBrush	  = QColor( 0xD0, 0x40, 0x20 );
 
     if ( _buckets.size() < 1 || _percentiles.size() != 101 )
     {
@@ -540,8 +541,6 @@ void HistogramView::build()
     addOverflowPanel();
 
     fitToViewport();
-
-    logDebug() << Qt::endl;
 }
 
 
@@ -585,7 +584,7 @@ void HistogramView::addHistogramBackground()
 
 void HistogramView::addAxes()
 {
-    QPen pen( QColor( Qt::black ), 1 );
+    QPen pen( QColor( scene()->palette().text().color() ), 1 );
 
     QGraphicsItem * xAxis = scene()->addLine( 0, 0, _histogramWidth, 0, pen );
     QGraphicsItem * yAxis = scene()->addLine( 0, 0, 0, -_histogramHeight, pen );
@@ -597,27 +596,22 @@ void HistogramView::addAxes()
 
 void HistogramView::addYAxisLabel()
 {
-    const QString labelText = _useLogHeightScale ? "log<sub>2</sub>(n)   -->" : "n";
-
     QGraphicsTextItem * item = scene()->addText( "" );
-    item->setHtml( labelText );
-
+    item->setHtml( _useLogHeightScale ? "log<sub>2</sub>(n)   -->" : "n" );
     setBold( item );
 
-    const qreal   textWidth	= item->boundingRect().width();
-    const qreal   textHeight	= item->boundingRect().height();
+    const qreal   textWidth   = item->boundingRect().width();
+    const qreal   textHeight  = item->boundingRect().height();
     const QPointF labelCenter = QPoint( -_leftBorder / 2, -_histogramHeight / 2 );
 
     if ( _useLogHeightScale )
     {
 	item->setRotation( 270 );
-	item->setPos( labelCenter.x() - textHeight / 2,
-		      labelCenter.y() + textWidth  / 2 );
+	item->setPos( labelCenter.x() - textHeight / 2, labelCenter.y() + textWidth  / 2 );
     }
     else
     {
-	item->setPos( labelCenter.x() - textWidth  / 2,
-		      labelCenter.y() - textHeight / 2 );
+	item->setPos( labelCenter.x() - textWidth  / 2, labelCenter.y() - textHeight / 2 );
     }
 
     item->setZValue( TextLayer );
@@ -628,16 +622,13 @@ void HistogramView::addXAxisLabel()
 {
     const QString labelText = tr( "File Size" ) + "  -->";
 
-    QGraphicsSimpleTextItem * item = scene()->addSimpleText( labelText );
-
+    QGraphicsTextItem * item = scene()->addText( labelText );
     setBold( item );
 
     const qreal   textWidth	= item->boundingRect().width();
     const qreal   textHeight	= item->boundingRect().height();
     const QPointF labelCenter	= QPoint( _histogramWidth / 2, _bottomBorder );
-
-    item->setPos( labelCenter.x() - textWidth / 2,
-		  labelCenter.y() - textHeight ); // Align bottom
+    item->setPos( labelCenter.x() - textWidth / 2, labelCenter.y() - textHeight ); // Align bottom
 
     item->setZValue( TextLayer );
 }
@@ -645,32 +636,25 @@ void HistogramView::addXAxisLabel()
 
 void HistogramView::addXStartEndLabels()
 {
-    QString startLabel = tr( "Min" );
-
-    if ( _startPercentile > 0 )
-	startLabel = QString( "P%1" ).arg( _startPercentile );
-
+    QString startLabel = _startPercentile == 0 ? tr( "Min" ) : QString( "P%1" ).arg( _startPercentile );
     startLabel += "\n" + formatSize( percentile( _startPercentile ) );
 
-    const QString endLabel = _endPercentile == 100 ? tr( "Max" ) : QString( "P%1" ).arg( _endPercentile );
-    const QString endSizeLabel = formatSize( percentile( _endPercentile ) );
+    QString endLabel = _endPercentile == 100 ? tr( "Max" ) : QString( "P%1" ).arg( _endPercentile );
+    endLabel += "\n" + formatSize( percentile( _endPercentile ) );
 
-    QGraphicsSimpleTextItem * startItem	  = scene()->addSimpleText( startLabel );
-    QGraphicsSimpleTextItem * endItem	  = scene()->addSimpleText( endLabel );
-    QGraphicsSimpleTextItem * endSizeItem = scene()->addSimpleText( endSizeLabel );
+    QGraphicsTextItem * startItem = scene()->addText( startLabel );
+    QGraphicsTextItem * endItem   = scene()->addText( endLabel );
 
-    const qreal endTextHeight	= endItem->boundingRect().height();
-    const qreal endTextWidth	= endItem->boundingRect().width();
-    const qreal endSizeWidth	= endSizeItem->boundingRect().width();
-    const qreal y		= _bottomBorder - 2 * endTextHeight;
+    const qreal endTextWidth = endItem->boundingRect().width();
+    endItem->setTextWidth( endTextWidth );
+    endItem->document()->setDefaultTextOption( QTextOption( Qt::AlignRight ) );
 
     startItem->setPos( 0, _bottomBorder - startItem->boundingRect().height() );
-    endItem->setPos( _histogramWidth - endTextWidth, y );
-    endSizeItem->setPos( _histogramWidth - endSizeWidth, y + endTextHeight );
+    endItem->setPos( _histogramWidth - endTextWidth, _bottomBorder - endItem->boundingRect().height() );
 
     startItem->setZValue( TextLayer );
     endItem->setZValue( TextLayer );
-    endSizeItem->setZValue( TextLayer );
+
 }
 
 
@@ -689,13 +673,13 @@ void HistogramView::addQuartileText()
 	const QString q3Text = tr( "Q3: %1" ).arg( formatSize( percentile( 75 ) ) );
 	const QString medianText = tr( "Median: %1" ).arg( formatSize( percentile( 50 ) ) );
 
-	QGraphicsSimpleTextItem * q1Item     = scene()->addSimpleText( q1Text );
-	QGraphicsSimpleTextItem * q3Item     = scene()->addSimpleText( q3Text );
-	QGraphicsSimpleTextItem * medianItem = scene()->addSimpleText( medianText );
+	QGraphicsTextItem * q1Item     = scene()->addText( q1Text );
+	QGraphicsTextItem * q3Item     = scene()->addText( q3Text );
+	QGraphicsTextItem * medianItem = scene()->addText( medianText );
 
-	q1Item->setBrush( _quartilePen.color() );
-	q3Item->setBrush( _quartilePen.color() );
-	medianItem->setBrush( _medianPen.color() );
+	q1Item->setDefaultTextColor( _quartilePen.color() );
+	q3Item->setDefaultTextColor( _quartilePen.color() );
+	medianItem->setDefaultTextColor( _medianPen.color() );
 
 	setBold( medianItem);
 	setBold( q1Item);
@@ -716,19 +700,14 @@ void HistogramView::addQuartileText()
 	medianItem->setZValue( TextLayer );
     }
 
-
-    //
     // Add text for the total number of files
-    //
-
-    const QString nText = tr( "Files (n): %1" ).arg( n );
-    QGraphicsSimpleTextItem * nTextItem = scene()->addSimpleText( nText );
+    QGraphicsTextItem * nTextItem = scene()->addText( tr( "Files (n): %1" ).arg( n ) );
     setBold( nTextItem );
 
     const QFontMetrics metrics( nTextItem->font() );
     const QChar sigma( UnicodeMathSigma );
     if ( metrics.inFont( sigma ) )
-	nTextItem->setText( QString( "%1n: %2" ).arg( sigma ).arg( n ) );
+	nTextItem->setPlainText( QString( "%1n: %2" ).arg( sigma ).arg( n ) );
 
     if ( n == 0 )
 	y -= nTextItem->boundingRect().height();
@@ -753,7 +732,6 @@ void HistogramView::addHistogramBars()
 	    val = log2( val );
 
 	const qreal fillHeight = maxVal == 0 ? 0.0 : val / maxVal * _histogramHeight;
-
 	HistogramBar * bar = new HistogramBar( this, i, rect, fillHeight );
 	CHECK_NEW( bar );
     }
@@ -799,12 +777,7 @@ void HistogramView::addMarkers()
                 continue;
         }
 
-	QPen pen = _percentilePen;
-
-	if ( _percentileStep != 0 && _percentileStep != 5 && i % 10 == 0 )
-	    pen = _decilePen;
-
-	// logDebug() << "Adding marker for P" << i << Qt::endl;
+	const QPen pen = _percentileStep != 0 && _percentileStep != 5 && i % 10 == 0 ? _decilePen : _percentilePen;
 	new PercentileMarker( this, i, "", zeroLine, pen );
     }
 
@@ -826,7 +799,7 @@ QGraphicsTextItem * HistogramView::addText( const QPointF & pos, const QString &
 {
     QGraphicsTextItem * textItem = scene()->addText( text );
     textItem->setPos( pos );
-    textItem->setDefaultTextColor( Qt::black );
+    textItem->setDefaultTextColor( scene()->palette().text().color() );
 
     return textItem;
 }

@@ -19,8 +19,8 @@
 
 
 #define DEFAULT_CACHE_NAME	".qdirstat.cache.gz"
-#define CACHE_FORMAT_VERSION	"1.0"
-#define MAX_CACHE_LINE_LEN	1024
+#define CACHE_FORMAT_VERSION	"2.1"
+#define MAX_CACHE_LINE_LEN	5000  // 4096 plus some
 #define MAX_FIELDS_PER_LINE	32
 
 
@@ -29,7 +29,6 @@ namespace QDirStat
 	class DirInfo;
 	class DirTree;
 	class FileInfo;
-
 
     class CacheWriter
     {
@@ -47,7 +46,7 @@ namespace QDirStat
 	/**
 	 * Destructor
 	 **/
-	virtual ~CacheWriter() {}
+	~CacheWriter() {}
 
 	/**
 	 * Returns true if writing the cache file went OK.
@@ -85,6 +84,11 @@ namespace QDirStat
 	/**
 	 * Return a strong representing the type of file.
 	 **/
+//	static void addUnreadEntry( gzFile cache, const char * reason );
+
+	/**
+	 * Return a string representing the type of file.
+	 **/
 	static const char * fileType( const FileInfo * item );
 
 	/**
@@ -102,24 +106,44 @@ namespace QDirStat
 
 
 
-    class CacheReader: public QObject
+    class CacheReader
     {
-	Q_OBJECT
+	/**
+	 * Private constructor.  Opens the cache file and checks that it is
+	 * a valid cache file.
+	 **/
+	CacheReader( const QString & fileName,
+		     DirTree	   * tree,
+		     DirInfo	   * parent,
+		     bool	     markFromCache );
 
     public:
 
 	/**
-	 * Begin reading cache file 'fileName'. The cache file remains open
-	 * until this object is destroyed.
+	 * Public constructor with only a filename a tree.  The contents of
+	 * the cache file will be placed at the new root of the tree.
+	 **/
+	CacheReader( const QString & fileName,
+		     DirTree	   * tree ):
+	    CacheReader ( fileName, tree, nullptr, false )
+	{}
+
+	/**
+	 * Public constructor with a DirInfo object, used to automatically
+	 * fill a portion of a tree while it is being read.  The cache file
+	 * is tested to see if its first entry matches the given directory.
+	 * Directories read from the cache file will be marked so the user
+	 * can be made aware of what has happened.
 	 **/
 	CacheReader( const QString & fileName,
 		     DirTree	   * tree,
-		     DirInfo	   * parent = 0 );
+		     DirInfo 	   * dir,
+		     DirInfo	   * parent );
 
 	/**
 	 * Destructor
 	 **/
-	virtual ~CacheReader();
+	~CacheReader();
 
 	/**
 	 * Read at most maxLines from the cache file (check with eof() if the
@@ -127,7 +151,7 @@ namespace QDirStat
 	 *
 	 * Returns true if OK and there is more to read, false otherwise.
 	 **/
-	bool read( int maxLines = 0 );
+	bool read( int maxLines );
 
 	/**
 	 * Returns true if the end of the cache file is reached (or if there
@@ -141,50 +165,41 @@ namespace QDirStat
 	bool ok() const { return _ok; }
 
 	/**
-	 * Resets the reader so all data lines of the cache can be read with
-	 * subsequent read() calls.
-	 **/
-	void rewind();
-
-	/**
-	 * Returns the absolute path of the first directory in this cache file
-	 * or an empty string if there is none.
-	 *
-	 * This method expects the cache file to be just opened without any
-	 * previous read() operations on the file. If this is not the case,
-	 * call rewind() immediately before firstDir().
-	 *
-	 * After firstDir(), some records of the cache file will be read.
-	 * Make sure to call rewind() if you intend to read from this cache
-	 * file afterwards.
-	 **/
-	QString firstDir();
-
-	/**
 	 * Returns the tree associated with this reader.
 	 **/
-	DirTree * tree() const { return _tree; }
+//	DirTree * tree() const { return _tree; }
 
 
     signals:
 
 	/**
-	 * Emitted when a child has been added.
-	 **/
-	void childAdded( FileInfo *newChild );
-
-	/**
 	 * Emitted when reading this cache is finished.
 	 **/
-	void finished();
+//	void finished();
 
 	/**
 	 * Emitted if there is a read error.
 	 **/
-	void error();
+//	void error();
 
 
     protected:
+
+	/**
+	 * Returns whether the absolute path of the first directory in this
+	 * cache file matches the given directory.
+	 *
+	 * This method expects the cache file to be just opened without any
+	 * previous read() operations on the file. If this is not the case,
+	 * call rewind() immediately before firstDir().
+	 **/
+	bool isDir( const QString & dirName );
+
+	/**
+	 * Converts a string representing a number of bytes into a FileSize
+	 * return value.
+	 **/
+	FileSize readSize( const char * size_str );
 
 	/**
 	 * Skip leading whitespace from a string.
@@ -211,7 +226,7 @@ namespace QDirStat
 	/**
 	 * Check this cache's header (see if it is a QDirStat cache at all)
 	 **/
-	bool checkHeader();
+	void checkHeader();
 
 	/**
 	 * Use _fields to add one item to _tree.
@@ -279,7 +294,12 @@ namespace QDirStat
 	 * Returns the number of fields in the current input line after
 	 * splitLine().
 	 **/
-	int fieldsCount() const { return _fieldsCount; }
+//	int fieldsCount() const { return _fieldsCount; }
+
+	/**
+	 * Called after the entire file has been read.
+	 **/
+//	void finalize();
 
 	/**
 	 * Recursively set the read status of all dirs from 'dir' on, send tree
@@ -299,20 +319,20 @@ namespace QDirStat
 	// Data members
 	//
 
-	DirTree *	_tree;
-	gzFile		_cache;
-	char		_buffer[ MAX_CACHE_LINE_LEN ];
-	char *		_line;
-	int		_lineNo;
-	QString		_fileName;
-	char *		_fields[ MAX_FIELDS_PER_LINE ];
-	int		_fieldsCount;
-	bool		_ok;
-        int             _errorCount;
-	DirInfo *	_toplevel;
-	DirInfo *	_lastDir;
-	DirInfo *	_lastExcludedDir;
-	QString		_lastExcludedDirUrl;
+	gzFile	  _cache;
+	char	  _buffer[ MAX_CACHE_LINE_LEN + 1 ];
+	char	* _line;
+	int	  _lineNo;
+	char	* _fields[ MAX_FIELDS_PER_LINE ];
+	int	  _fieldsCount;
+	bool	  _markFromCache;
+	bool	  _ok;
+        int	  _errorCount;
+
+	DirTree	* _tree;
+	DirInfo * _parent; // parent directory if there is one
+	DirInfo * _toplevel; // the parent if there is one, otherwise the top level of the cache file
+	DirInfo * _latestDir; // the latest drectory read from the cache file, parent to subsequent file children
 
         QRegularExpression	_multiSlash;
     };

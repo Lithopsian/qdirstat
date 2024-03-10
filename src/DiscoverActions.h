@@ -46,13 +46,13 @@ namespace QDirStat
 
         // Constructor
         DiscoverActions( QObject * parent = 0 ):
-                QObject( parent )
+            QObject { parent }
         {}
 
-	// Notice that _locateFilesWindow gets the main window as its widget
-	// parent, so it will automatically be destroyed when the main window and
-	// its child widgets are destroyed.
-        virtual ~DiscoverActions()
+        // Notice that _locateFilesWindow gets the main window as its widget
+        // parent, so it will automatically be destroyed when the main window and
+        // its child widgets are destroyed.
+        ~DiscoverActions()
         {}
 
     public slots:
@@ -61,7 +61,6 @@ namespace QDirStat
         // Actions that can be connected directly to a QAction in one of the
         // menus in the main window
         //
-
         void discoverLargestFiles();
         void discoverNewestFiles();
         void discoverOldestFiles();
@@ -69,19 +68,16 @@ namespace QDirStat
         void discoverBrokenSymLinks();
         void discoverSparseFiles();
 
-
         //
         // Actions that are meant to be connected to the FileAgeWindow's
         // 'locate...()' signals (but they can be used stand-alone as well).
         //
-
         void discoverFilesFromYear ( const QString & path, short year );
         void discoverFilesFromMonth( const QString & path, short year, short month );
 
         //
         // Other actions
         //
-
         void findFiles( const FileSearchFilter & filter );
 
     public:

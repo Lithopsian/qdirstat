@@ -10,6 +10,7 @@
 #define PanelMessage_h
 
 #include <QWidget>
+
 #include "ui_panel-message.h"
 
 
@@ -32,23 +33,29 @@ namespace QDirStat
     {
 	Q_OBJECT
 
+    protected:
+	/**
+	 * Constructor.
+	 **/
+	PanelMessage( QWidget * parent );
+
     public:
 	/**
 	 * Constructor.
 	 **/
-	PanelMessage( QWidget		* parent,
-		      const QString	& heading,
-		      const QString	& msg );
+//	PanelMessage( QWidget		* parent,
+//		      const QString	& heading,
+//		      const QString	& msg );
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PanelMessage();
+	~PanelMessage();
 
 	/**
 	 * Set the "Details..." link text.
 	 **/
-	void setDetails( const QString & urlText );
+//	void setDetails( const QString & urlText );
 
 	/**
 	 * Connect the "Details..." hyperlink to a receiver's slot.
@@ -58,24 +65,32 @@ namespace QDirStat
 	 *
 	 *   connectDetailsLink( someAction, SLOT( triggered() ) );
 	 **/
-	void connectDetailsLink( const QObject * receiver,
-				 const char    * slotName );
+//	void connectDetailsLink( const QObject * receiver,
+//				 const char    * slotName );
 
 	/**
 	 * Connect the "Details..." hyperlink to a web URL that will be opened
 	 * in an external browser.
 	 **/
-	void setDetailsUrl( const QString url );
+//	void setDetailsUrl( const QString url );
 
 	/**
 	 * Return the URL set with setDetailsUrl().
 	 **/
-//	QString detailsUrl() const { return _detailsUrl; }
+	const QLabel * detailsLinkLabel() const { return _ui->detailsLinkLabel; }
 
 	/**
 	 * Set the icon. If not set, a generic light bulb icon is used.
 	 **/
-	void setIcon( const QPixmap & pixmap );
+//	void setIcon( const QPixmap & pixmap );
+
+	/**
+	 * Show a panel message in the given container.
+	 **/
+	static PanelMessage * createMsg( QWidget * parent, QVBoxLayout * vBox );
+	static QPointer<PanelMessage> showPermissionsMsg( QWidget * parent, QVBoxLayout * vBox );
+	static QPointer<PanelMessage> showFilesystemsMsg( QWidget * parent, QVBoxLayout * vBox );
+	static QPointer<PanelMessage> showRpmMsg( QWidget * parent, QVBoxLayout * vBox );
 
 
     protected slots:
@@ -83,7 +98,7 @@ namespace QDirStat
         /**
          * Open the URL set with setDetailsUrl() in an external browser.
          **/
-        void openDetailsUrl() const;
+//        void openDetailsUrl( const QString & url ) const;
 
 
     protected:
@@ -92,10 +107,10 @@ namespace QDirStat
          * Override the HTML on the "Details..." label
          * to sanitize it from undesired styling (GitHub issue #213)
          */
-        void initDetailsLinkLabel();
+//        void initDetailsLinkLabel();
 
 	Ui::PanelMessage * _ui;
-        QString            _detailsUrl;
+//        QString            _detailsUrl;
 
     };	// class PanelMessage
 

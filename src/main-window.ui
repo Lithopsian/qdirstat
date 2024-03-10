@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>628</width>
-    <height>510</height>
+    <width>1115</width>
+    <height>687</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,7 +36,7 @@
         <number>8</number>
        </property>
        <widget class="QWidget" name="treeViewContainer" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -85,7 +85,22 @@
           </layout>
          </item>
          <item>
-          <widget class="QDirStat::MessagePanel" name="messagePanel" native="true"/>
+          <widget class="QWidget" name="messagePanel" native="true">
+           <layout class="QVBoxLayout" name="vBox">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+           </layout>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -102,13 +117,26 @@
            <x>0</x>
            <y>0</y>
            <width>79</width>
-           <height>214</height>
+           <height>302</height>
           </rect>
          </property>
         </widget>
        </widget>
       </widget>
-      <widget class="QDirStat::TreemapView" name="treemapView"/>
+      <widget class="QDirStat::TreemapView" name="treemapView">
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="renderHints">
+        <set>QPainter::SmoothPixmapTransform|QPainter::TextAntialiasing</set>
+       </property>
+       <property name="optimizationFlags">
+        <set>QGraphicsView::DontAdjustForAntialiasing|QGraphicsView::DontSavePainterState</set>
+       </property>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -118,7 +146,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>628</width>
+     <width>1115</width>
      <height>21</height>
     </rect>
    </property>
@@ -163,6 +191,7 @@
     <addaction name="actionLayout2"/>
     <addaction name="actionLayout3"/>
     <addaction name="separator"/>
+    <addaction name="actionShowBreadcrumbs"/>
     <addaction name="actionShowDetailsPanel"/>
     <addaction name="actionShowTreemap"/>
     <addaction name="separator"/>
@@ -209,17 +238,18 @@
      <addaction name="actionHeadlessServers"/>
     </widget>
     <addaction name="actionHelp"/>
-    <addaction name="actionAbout"/>
-    <addaction name="actionAboutQt"/>
-    <addaction name="actionTreemapHelp"/>
     <addaction name="separator"/>
+    <addaction name="actionTreemapHelp"/>
     <addaction name="actionPkgViewHelp"/>
     <addaction name="actionUnpkgViewHelp"/>
     <addaction name="actionFileAgeStatsHelp"/>
     <addaction name="separator"/>
     <addaction name="actionWhatsNew"/>
     <addaction name="menuProblemsAndSolutions"/>
+    <addaction name="separator"/>
     <addaction name="actionDonate"/>
+    <addaction name="actionAboutQt"/>
+    <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuCleanup">
     <property name="tearOffEnabled">
@@ -414,7 +444,7 @@
   <action name="actionAskWriteCache">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/document-export.png</normaloff>:/icons/document-export.png</iconset>
+     <normaloff>:/icons/export.png</normaloff>:/icons/export.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Write To Cache File...</string>
@@ -423,7 +453,7 @@
   <action name="actionAskReadCache">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/document-import.png</normaloff>:/icons/document-import.png</iconset>
+     <normaloff>:/icons/import.png</normaloff>:/icons/import.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Read Cache File...</string>
@@ -720,9 +750,6 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
    <property name="text">
     <string>Layout &amp;2 (Classic)</string>
    </property>
@@ -751,11 +778,6 @@
    </property>
    <property name="shortcut">
     <string>Alt+3</string>
-   </property>
-  </action>
-  <action name="actionDonate">
-   <property name="text">
-    <string>&amp;Donate...</string>
    </property>
   </action>
   <action name="actionWhatsNew">
@@ -995,14 +1017,24 @@
     <string>Show &amp;Menu Bar</string>
    </property>
   </action>
+  <action name="actionDonate">
+   <property name="text">
+    <string>&amp;Donate...</string>
+   </property>
+  </action>
+  <action name="actionShowBreadcrumbs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show &amp;Breadcrumbs</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>QDirStat::MessagePanel</class>
-   <extends>QWidget</extends>
-   <header>MessagePanel.h</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>QDirStat::DirTreeView</class>
    <extends>QTreeView</extends>

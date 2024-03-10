@@ -9,12 +9,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <pwd.h>	// getpwuid()
-#include <grp.h>	// getgrgid()
 #include <time.h>       // gmtime()
 #include <unistd.h>
 
-#include <QDateTime>
 #include <QFileInfo>
 
 #include "FileInfo.h"
@@ -56,6 +53,7 @@ FileInfo::FileInfo( DirInfo	  * parent,
     , _name { filename }
     , _isLocalFile { true }
     , _isIgnored { false }
+    , _hasUidGidPerm { true }
     , _allocatedSize { 0 }
 {
     CHECK_PTR( statInfo );
@@ -80,7 +78,7 @@ FileInfo::FileInfo( DirInfo	  * parent,
 
 	if ( _blocks == 0 && _size > 0 )
 	{
-	    if ( ! filesystemCanReportBlocks() )
+	    if ( !filesystemCanReportBlocks() )
 	    {
 		_allocatedSize = _size;
 
@@ -138,7 +136,7 @@ FileSize FileInfo::size() const
 {
     FileSize sz = _isSparseFile ? _allocatedSize : _size;
 
-    if ( _links > 1 && ! _ignoreHardLinks && isFile() )
+    if ( _links > 1 && !_ignoreHardLinks && isFile() )
 	sz /= _links;
 
     return sz;
@@ -149,21 +147,10 @@ FileSize FileInfo::allocatedSize() const
 {
     FileSize sz = _allocatedSize;
 
-    if ( _links > 1 && ! _ignoreHardLinks && isFile() )
+    if ( _links > 1 && !_ignoreHardLinks && isFile() )
 	sz /= _links;
 
     return sz;
-}
-
-
-int FileInfo::usedPercent() const
-{
-    int percent = 100;
-
-    if ( _allocatedSize > 0 && _size > 0 )
-        percent = qRound( ( 100.0 * size() ) / allocatedSize() );
-
-    return percent;
 }
 
 
@@ -176,7 +163,7 @@ QString FileInfo::url() const
 	if ( isPseudoDir() ) // don't append "/." for dot entries and attics
 	    return parentUrl;
 
-	if ( ! parentUrl.endsWith( "/" ) && ! _name.startsWith( "/" ) )
+	if ( !parentUrl.endsWith( "/" ) && !_name.startsWith( "/" ) )
 	    parentUrl += "/";
 
 	return parentUrl + _name;
@@ -198,7 +185,7 @@ QString FileInfo::path() const
 	if ( isPseudoDir() )
 	    return parentPath;
 
-	if ( ! parentPath.endsWith( "/" ) && ! _name.startsWith( "/" ) )
+	if ( !parentPath.endsWith( "/" ) && !_name.startsWith( "/" ) )
 	    parentPath += "/";
 
 	return parentPath + _name;
@@ -238,35 +225,21 @@ QString FileInfo::debugUrl() const
 
 int FileInfo::treeLevel() const
 {
-    int		level	= 0;
-    FileInfo *	parent	= _parent;
+    int level = 0;
 
-    while ( parent )
-    {
+    for ( FileInfo * parent = _parent; parent; parent = parent->parent() )
 	level++;
-	parent = parent->parent();
-    }
 
     return level;
 }
 
 
-bool FileInfo::hasChildren() const
-{
-    return firstChild() || dotEntry();
-}
-
-
 bool FileInfo::isInSubtree( const FileInfo *subtree ) const
 {
-    const FileInfo * ancestor = this;
-
-    while ( ancestor )
+    for ( const FileInfo * ancestor = this; ancestor; ancestor = ancestor->parent() )
     {
 	if ( ancestor == subtree )
 	    return true;
-
-	ancestor = ancestor->parent();
     }
 
     return false;
@@ -275,14 +248,12 @@ bool FileInfo::isInSubtree( const FileInfo *subtree ) const
 
 FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
 {
-    if ( ! _tree )
+    if ( !_tree )
 	return nullptr;
 
-    FileInfo * result = 0;
+    FileInfo * result = nullptr;
 
-    if ( ! url.startsWith( _name ) && this != _tree->root() )
-	return nullptr;
-    else					// URL starts with this node's name
+    if ( url.startsWith( _name ) || this == _tree->root() )
     {
 	if ( this != _tree->root() )		// The root item is invisible
 	{
@@ -296,31 +267,22 @@ FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
 	    else				// No path delimiter at the beginning
 	    {
 		if ( _name.right(1) != "/" &&	// and this is not the root directory
-		     ! isDotEntry() )		// or a dot entry:
+		     !isDotEntry() )		// or a dot entry:
 		{
 		    return nullptr;			// This can't be any of our children.
 		}
 	    }
 	}
 
-
 	// Search all children
-
-	FileInfo * child = firstChild();
-
-	while ( child )
+	for ( FileInfo * child = firstChild(); child; child = child->next() )
 	{
 	    FileInfo * foundChild = child->locate( url, findPseudoDirs );
-
 	    if ( foundChild )
 		return foundChild;
-	    else
-		child = child->next();
 	}
 
-
 	// Special case: One of the pseudo directories is requested.
-
 	if ( findPseudoDirs )
 	{
 	    if ( dotEntry() && url == dotEntryName() )
@@ -329,11 +291,8 @@ FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
 	    if ( attic() && url == atticName() )
 		return attic();
 
-	    if ( url == dotEntryName() + "/" + atticName() &&
-		 dotEntry() && dotEntry()->attic() )
-	    {
+	    if ( url == dotEntryName() + "/" + atticName() && dotEntry() && dotEntry()->attic() )
 		return dotEntry()->attic();
-	    }
 	}
 
 	// Search the dot entry if there is one - but only if there is no more
@@ -342,29 +301,23 @@ FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
 	// have children. This check is not strictly necessary, but it may
 	// speed up things a bit if we don't search the non-directory children
 	// if the rest of the URL consists of several pathname components.
-
-	if ( dotEntry() &&
-	     ! url.contains( "/" ) )	   // No (more) "/" in this URL
+	if ( dotEntry() && !url.contains( "/" ) )  // No (more) "/" in this URL
 	{
             // logDebug() << "Searching DotEntry for " << url << " in " << this << Qt::endl;
 
-            child = dotEntry()->firstChild();
-
-            while ( child )
+            for ( FileInfo * child = dotEntry()->firstChild(); child; child = child->next() )
             {
                 if ( child->name() == url )
                 {
                     // logDebug() << "Found " << url << " in " << dotEntry() << Qt::endl;
                     return child;
                 }
-
-                child = child->next();
             }
 
             // logDebug() << "Cant find " << url << " in DotEntry" << Qt::endl;
 	}
 
-	if ( ! result && attic() )
+	if ( !result && attic() )
 	    result = attic()->locate( url, findPseudoDirs );
     }
 
@@ -374,7 +327,7 @@ FileInfo * FileInfo::locate( QString url, bool findPseudoDirs )
 
 float FileInfo::subtreePercent()
 {
-    if ( ! parent()			 ||	// only if there is a parent as calculation base
+    if ( !parent()			 ||	// only if there is a parent as calculation base
 	 parent()->pendingReadJobs() > 0 ||	// not before subtree is finished reading
 	 parent()->totalSize() == 0	 ||	// avoid division by zero
 	 isExcluded() )				// not if this is an excluded object (dir)
@@ -388,7 +341,7 @@ float FileInfo::subtreePercent()
 
 float FileInfo::subtreeAllocatedPercent()
 {
-    if ( ! parent()			     ||	// only if there is a parent as calculation base
+    if ( !parent()			     ||	// only if there is a parent as calculation base
 	 parent()->pendingReadJobs() > 0     ||	// not before subtree is finished reading
 	 parent()->totalAllocatedSize() == 0 ||	// avoid division by zero
 	 isExcluded() )				// not if this is an excluded object (dir)
@@ -400,21 +353,10 @@ float FileInfo::subtreeAllocatedPercent()
 }
 
 
-QString FileInfo::dotEntryName()
-{
-    return QObject::tr( "<Files>" );
-}
-
-
-QString FileInfo::atticName()
-{
-    return QObject::tr( "<Ignored>" );
-}
-
-
+/*
 bool FileInfo::isCached() const
 {
-    if ( isDirInfo() && ! isPseudoDir() )
+    if ( isDirInfo() && !isPseudoDir() )
 	return readState() == DirCached;
     else
 	return _parent && _parent->readState() == DirCached;
@@ -423,59 +365,49 @@ bool FileInfo::isCached() const
 
 bool FileInfo::hasUid() const
 {
-    return ! isPkgInfo() && ! isCached();
+    if ( _hasUidGidPerm )
+	return true;
+
+    return !isPkgInfo() && !isCached();
 }
 
 
 bool FileInfo::hasGid() const
 {
-    return ! isPkgInfo() && ! isCached();
-}
+    if ( _hasUidGidPerm )
+	return true;
 
+    return !isPkgInfo() && !isCached();
+}
+*/
 
 QString FileInfo::userName() const
 {
-    if ( ! hasUid() )
-	return QString();
-
-    const struct passwd * pw = getpwuid( uid() );
-
-    if ( pw )
-	return pw->pw_name;
-    else
-	return QString::number( uid() );
+    return hasUid() ? SysUtil::userName( uid() ) : QString();
 }
 
 
 QString FileInfo::groupName() const
 {
-    if ( ! hasGid() )
-	return QString();
-
-    const struct group * grp = getgrgid( gid() );
-
-    if ( grp )
-	return grp->gr_name;
-    else
-	return QString::number( gid() );
+    return hasGid() ? SysUtil::groupName( gid() ) : QString();
 }
 
 
 QString FileInfo::symbolicPermissions() const
 {
-    return symbolicMode( _mode ); // omitTypeForRegularFiles
+    return hasPerm() ? symbolicMode( _mode ) : QString(); // omitTypeForRegularFiles
 }
 
 
 QString FileInfo::octalPermissions() const
 {
-    return octalMode( _mode );
+    return hasPerm() ? octalMode( _mode ) : QString();
 }
 
 
 QString FileInfo::baseName() const
 {
-    return QDirStat::baseName( _name );
+    return SysUtil::baseName( _name );
 }
 
 
@@ -522,14 +454,10 @@ PkgInfo * FileInfo::toPkgInfo()
 
 PkgInfo * FileInfo::pkgInfoParent() const
 {
-    FileInfo * pkg = _parent;
-
-    while ( pkg )
+    for ( FileInfo * pkg = _parent; pkg; pkg = pkg->parent() )
     {
 	if ( pkg->isPkgInfo() )
 	    return pkg->toPkgInfo();
-
-	pkg = pkg->parent();
     }
 
     return nullptr;
@@ -543,11 +471,11 @@ bool FileInfo::filesystemCanReportBlocks() const
     // Find the nearest real directory from here;
     // do not use a DotEntry or an Attic because they always have 0 blocks.
 
-    while ( ! dir->isDirInfo() || dir->isPseudoDir() )
+    while ( !dir->isDirInfo() || dir->isPseudoDir() )
     {
-	dir = dir ->parent();
+	dir = dir->parent();
 
-	if ( ! dir )
+	if ( !dir )
 	    return false;
     }
 
@@ -559,56 +487,11 @@ bool FileInfo::filesystemCanReportBlocks() const
 }
 
 
-bool FileInfo::isBrokenSymLink()
-{
-    if ( ! isSymLink() )
-        return false;
-
-    return !QFileInfo( QFileInfo( path() ).symLinkTarget() ).exists();
-//    return SysUtil::isBrokenSymLink( url() );
-}
-
-
 QString FileInfo::symLinkTarget()
 {
-    if ( ! isSymLink() )
-        return QString();
-
-    return SysUtil::symLinkTarget( path() );
+    return isSymLink() ? SysUtil::symLinkTarget( path() ) : QString();
 }
 
-/*
-short FileInfo::mtimeYear()
-{
-    if ( _mtimeYear == -1 )
-        processMtime();
-
-    return _mtimeYear;
-}
-
-
-short FileInfo::mtimeMonth()
-{
-    if ( _mtimeMonth == -1 )
-        processMtime();
-
-    return _mtimeMonth;
-}
-
-
-void  FileInfo::processMtime()
-{
-    if ( isPseudoDir() || isPkgInfo() )
-        return;
-
-    // Using gmtime() which is standard C/C++
-    // unlike gmtime_r() which is not
-    struct tm * mtime_tm = gmtime( &_mtime );
-
-    _mtimeYear  = mtime_tm->tm_year + 1900;
-    _mtimeMonth = mtime_tm->tm_mon  + 1;
-}
-*/
 
 QPair<short, short> FileInfo::yearAndMonth()
 {
@@ -617,10 +500,10 @@ QPair<short, short> FileInfo::yearAndMonth()
 
     // Using gmtime() which is standard C/C++
     // unlike gmtime_r() which is not
-    struct tm * mtime_tm = gmtime( &_mtime );
-
+    const struct tm * mtime_tm = gmtime( &_mtime );
     const short year = mtime_tm->tm_year + 1900;
     const short month = mtime_tm->tm_mon  + 1;
+
     return { year, month };
 }
 
@@ -629,17 +512,3 @@ bool FileInfo::isDominant()
 {
     return _parent ? _parent->isDominantChild( this ) : false;
 }
-
-
-//---------------------------------------------------------------------------
-
-
-// See also FileInfo::baseName()
-
-QString QDirStat::baseName( const QString & fileName )
-{
-    //logDebug() << fileName << Qt::endl;
-    QStringList segments = fileName.split( '/', Qt::SkipEmptyParts );
-    return segments.isEmpty() ? "" : segments.last();
-}
-

@@ -31,12 +31,6 @@ FileAgeStats::FileAgeStats( FileInfo * subtree )
 }
 
 
-FileAgeStats::~FileAgeStats()
-{
-    // NOP
-}
-
-
 void FileAgeStats::clear()
 {
     _yearStats.clear();

@@ -28,6 +28,8 @@
 #include <pwd.h>	// getpwuid()
 #include <sys/types.h>	// pid_t, getpwuid()
 
+#include "SysUtil.h"
+
 
 #define VERBOSE_ROTATE 0
 
@@ -39,7 +41,7 @@ static void qt_logger( QtMsgType msgType,
 		       const QString & msg );
 
 
-Logger * Logger::_defaultLogger = 0;
+Logger * Logger::_defaultLogger = nullptr;
 
 
 Logger::Logger( const QString &filename ):
@@ -84,7 +86,7 @@ Logger::~Logger()
 
     if ( this == _defaultLogger )
     {
-	_defaultLogger = 0;
+	_defaultLogger = nullptr;
 	qInstallMessageHandler(0); // Restore default message handler
     }
 }
@@ -119,15 +121,13 @@ void Logger::createNullStream()
 
 void Logger::openLogFile( const QString & filename )
 {
-    if ( ! _logFile.isOpen() || _logFile.fileName() != filename )
+    if ( !_logFile.isOpen() || _logFile.fileName() != filename )
     {
 	_logFile.setFileName( filename );
 
-	if ( _logFile.open( QIODevice::WriteOnly |
-			    QIODevice::Text	 |
-			    QIODevice::Append	   ) )
+	if ( _logFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append ) )
 	{
-	    if ( ! _defaultLogger )
+	    if ( !_defaultLogger )
 		setDefaultLogger();
 
 	    fprintf( stderr, "Logging to %s\n", qPrintable( filename ) );
@@ -159,7 +159,7 @@ QTextStream & Logger::log( Logger *	  logger,
 {
     static QTextStream stderrStream( stderr, QIODevice::WriteOnly );
 
-    if ( ! logger )
+    if ( !logger )
 	logger = Logger::defaultLogger();
 
     if ( logger )
@@ -194,7 +194,7 @@ QTextStream & Logger::log( const QString &srcFile,
 	       << "[" << (int) getpid() << "] "
 	       << sev << " ";
 
-    if ( ! srcFile.isEmpty() )
+    if ( !srcFile.isEmpty() )
     {
 	_logStream << srcFile;
 
@@ -203,7 +203,7 @@ QTextStream & Logger::log( const QString &srcFile,
 
 	_logStream << " ";
 
-	if ( ! srcFunction.isEmpty() )
+	if ( !srcFunction.isEmpty() )
 	_logStream << srcFunction << "():  ";
     }
 
@@ -213,7 +213,7 @@ QTextStream & Logger::log( const QString &srcFile,
 
 void Logger::newline( Logger *logger )
 {
-    if ( ! logger )
+    if ( !logger )
 	logger = Logger::defaultLogger();
 
     if ( logger )
@@ -223,7 +223,7 @@ void Logger::newline( Logger *logger )
 
 LogSeverity Logger::logLevel( Logger *logger )
 {
-    if ( ! logger )
+    if ( !logger )
 	logger = Logger::defaultLogger();
 
     if ( logger )
@@ -235,7 +235,7 @@ LogSeverity Logger::logLevel( Logger *logger )
 
 void Logger::setLogLevel( Logger *logger, LogSeverity newLevel )
 {
-    if ( ! logger )
+    if ( !logger )
 	logger = Logger::defaultLogger();
 
     if ( logger )
@@ -301,7 +301,7 @@ static void qt_logger( QtMsgType msgType,
 
         line.remove( "Reinstalling the application may fix this problem." );
 
-        if ( ! line.trimmed().isEmpty() )
+        if ( !line.trimmed().isEmpty() )
         {
             Logger::log( 0, // use default logger
                          context.file, context.line, context.function,
@@ -388,9 +388,7 @@ QString Logger::userName()
     // - The user owning the controlling terminal may or may not be the one
     //	 starting this program.
 
-    const struct passwd * pw = getpwuid( getuid() );
-
-    return pw ? pw->pw_name : QString::number( getuid() );
+    return QDirStat::SysUtil::userName( getuid() );
 }
 
 
@@ -400,7 +398,7 @@ QString Logger::createLogDir( const QString & rawLogDir )
     const QDir rootDir( "/" );
     bool created = false;
 
-    if ( ! rootDir.exists( logDir ) )
+    if ( !rootDir.exists( logDir ) )
     {
 	rootDir.mkpath( logDir );
 	created = true;
@@ -408,7 +406,7 @@ QString Logger::createLogDir( const QString & rawLogDir )
 
     const QFileInfo dirInfo( logDir );
 
-    if ( (uid_t) dirInfo.ownerId()  != getuid() )
+    if ( (uid_t) dirInfo.ownerId() != getuid() )
     {
 	logError() << "ERROR: Directory " << logDir
 		   << " is not owned by " << userName() << Qt::endl;
@@ -509,7 +507,7 @@ void Logger::logRotate( const QString & logDir,
     const QStringList matches = dir.entryList( QStringList() << oldNamePattern( filename ), QDir::Files );
     for ( const QString & match : matches )
     {
-	if ( ! keepers.contains( match ) )
+	if ( !keepers.contains( match ) )
 	{
 	    const bool success = dir.remove( match );
 	    Q_UNUSED( success );

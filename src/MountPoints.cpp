@@ -24,8 +24,7 @@ using namespace QDirStat;
 
 MountPoint::~MountPoint()
 {
-    if ( _storageInfo )
-        delete _storageInfo;
+    delete _storageInfo;
 }
 
 
@@ -49,7 +48,7 @@ bool MountPoint::isSystemMount() const
     // This check filters out system devices like "cgroup", "tmpfs", "sysfs"
     // and all those other kernel-table devices.
 
-    if ( ! _device.contains( "/" ) )	return true;
+    if ( !_device.contains( "/" ) )	return true;
 
     if ( _path.startsWith( "/dev"  ) )	return true;
     if ( _path.startsWith( "/proc" ) )	return true;
@@ -69,7 +68,7 @@ bool MountPoint::isSnapPackage() const
 
 QStorageInfo * MountPoint::storageInfo()
 {
-    if ( ! _storageInfo )
+    if ( !_storageInfo )
     {
         if ( isNetworkMount() )
             logDebug() << "Creating QStorageInfo for " << _path << Qt::endl;
@@ -111,7 +110,7 @@ FileSize MountPoint::freeSizeForRoot()
     return storageInfo()->bytesFree();
 }
 
-#else  // ! HAVE_Q_STORAGE_INFO
+#else  // !HAVE_Q_STORAGE_INFO
 
 // Qt before 5.4 does not have QStorageInfo,
 // and statfs() is Linux-specific (not POSIX).
@@ -122,7 +121,7 @@ FileSize MountPoint::reservedSize()	 { return -1; }
 FileSize MountPoint::freeSizeForUser()	 { return -1; }
 FileSize MountPoint::freeSizeForRoot()   { return -1; }
 
-#endif // ! HAVE_Q_STORAGE_INFO
+#endif // !HAVE_Q_STORAGE_INFO
 
 
 
@@ -169,11 +168,11 @@ MountPoint * MountPoints::findNearestMountPoint( const QString & startPath )
 
     MountPoint * mountPoint = findByPath( path );
 
-    if ( ! mountPoint )
+    if ( !mountPoint )
     {
 	QStringList pathComponents = startPath.split( "/", Qt::SkipEmptyParts );
 
-	while ( ! mountPoint && ! pathComponents.isEmpty() )
+	while ( !mountPoint && !pathComponents.isEmpty() )
 	{
 	    // Try one level upwards
 	    pathComponents.removeLast();
@@ -208,7 +207,7 @@ bool MountPoints::hasBtrfs()
 {
     instance()->ensurePopulated();
 
-    if ( ! instance()->_checkedForBtrfs )
+    if ( !instance()->_checkedForBtrfs )
     {
 	instance()->_hasBtrfs = instance()->checkForBtrfs();
 	instance()->_checkedForBtrfs = true;
@@ -227,14 +226,14 @@ void MountPoints::ensurePopulated()
 
     read( "/proc/mounts" ) || read( "/etc/mtab" );
 
-    if ( ! _isPopulated )
+    if ( !_isPopulated )
 	logError() << "Could not read either /proc/mounts or /etc/mtab" << Qt::endl;
 
 #endif
 
 #if HAVE_Q_STORAGE_INFO
 
-    if ( ! _isPopulated )
+    if ( !_isPopulated )
         readStorageInfo();
 
 #endif
@@ -248,7 +247,7 @@ bool MountPoints::read( const QString & filename )
 {
     QFile file( filename );
 
-    if ( ! file.open( QIODevice::ReadOnly | QIODevice::Text ) )
+    if ( !file.open( QIODevice::ReadOnly | QIODevice::Text ) )
     {
 	logWarning() << "Can't open " << filename << Qt::endl;
 	return false;
@@ -260,7 +259,7 @@ bool MountPoints::read( const QString & filename )
     int count  = 0;
     QString line = in.readLine();
 
-    while ( ! line.isNull() ) // in.atEnd() always returns true for /proc/*
+    while ( !line.isNull() ) // in.atEnd() always returns true for /proc/*
     {
 	++lineNo;
 	const QStringList fields = line.split( QRegularExpression( "\\s+" ), Qt::SkipEmptyParts );
@@ -323,7 +322,7 @@ void MountPoints::postProcess( MountPoint * mountPoint )
 
 //    logDebug() << mountPoint << Qt::endl;
 
-    if ( ( ! mountPoint->isSystemMount() ) && isDeviceMounted( mountPoint->device() ) )
+    if ( !mountPoint->isSystemMount() && isDeviceMounted( mountPoint->device() ) )
     {
         mountPoint->setDuplicate();
 
@@ -413,9 +412,9 @@ void MountPoints::findNtfsDevices()
     _ntfsDevices.clear();
     QString lsblkCommand = "/bin/lsblk";
 
-    if ( ! SysUtil::haveCommand( lsblkCommand ) )
+    if ( !SysUtil::haveCommand( lsblkCommand ) )
         lsblkCommand = "/usr/bin/lsblk";
-    if ( ! SysUtil::haveCommand( lsblkCommand ) )
+    if ( !SysUtil::haveCommand( lsblkCommand ) )
     {
         logInfo() << "No lsblk command available" << Qt::endl;
 
@@ -455,10 +454,10 @@ QList<MountPoint *> MountPoints::normalMountPoints()
 
     for ( MountPoint * mountPoint : instance()->_mountPointList )
     {
-	if ( ! mountPoint->isSystemMount()     &&
-             ! mountPoint->isDuplicate()       &&
-             ! mountPoint->isUnmountedAutofs() &&
-             ! mountPoint->isSnapPackage()        )
+	if ( !mountPoint->isSystemMount()     &&
+             !mountPoint->isDuplicate()       &&
+             !mountPoint->isUnmountedAutofs() &&
+             !mountPoint->isSnapPackage()        )
         {
 	    result << mountPoint;
         }
@@ -496,6 +495,16 @@ QString MountPoints::device( const QString & url )
 	return mountPoint->device();
 
     return QString();
+}
+
+
+bool MountPoints::isDuplicate( const QString & url )
+{
+    const MountPoint * mountPoint = MountPoints::findByPath( url );
+    if ( mountPoint )
+	return mountPoint->isDuplicate();
+
+    return false;
 }
 
 

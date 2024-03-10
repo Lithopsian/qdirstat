@@ -53,7 +53,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~OpenDirDialog();
+	~OpenDirDialog();
 
 	/**
 	 * The path of the directory the user selected.

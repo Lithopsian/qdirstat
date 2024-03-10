@@ -43,7 +43,7 @@ namespace QDirStat
 	/**
 	 * Destructor
 	 **/
-	virtual ~FileDetailsView();
+	~FileDetailsView();
 
 	/**
 	 * Show an empty page.
@@ -61,6 +61,11 @@ namespace QDirStat
 	 * summary for the top level of the package view.
 	 **/
 	void showDetails( FileInfo * fileInfo );
+
+	/**
+	 * Return a description of a FileInfo ReadState enum.
+	 **/
+	static QString readStateMsg( int readState );
 
 
     protected slots:
@@ -92,7 +97,7 @@ namespace QDirStat
 	/**
 	 * Show a summary of the current selection.
 	 **/
-	void showSelectionSummary( const FileInfoSet & selectedItems );
+//	void showSelectionSummary( const FileInfoSet & selectedItems );
 
 	/**
 	 * Show the packages summary (pkg:/).
@@ -180,7 +185,7 @@ namespace QDirStat
 	// Boilerplate widget setting methods
 
 	static QString subtreeMsg( const DirInfo * dir );
-	static QString pkgMsg( const PkgInfo * pkg );
+//	static QString pkgMsg( const PkgInfo * pkg );
 
 	void showFileInfo( FileInfo * file );
 	void showFilePkgInfo( const FileInfo * file );

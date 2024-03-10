@@ -16,27 +16,6 @@
 using namespace QDirStat;
 
 
-QString PkgInfo::url() const
-{
-    return isPkgUrl( _name ) ? "Pkg:/" : "Pkg:/" + _name;
-}
-
-
-bool PkgInfo::isPkgUrl( const QString & url )
-{
-    return url.startsWith( "Pkg:" );
-}
-
-
-QString PkgInfo::pkgUrl( const QString & path ) const
-{
-    if ( isPkgUrl( path ) )
-        return path;
-    else
-        return url() + path;
-}
-
-
 FileInfo * PkgInfo::locate( const QString & path )
 {
     QStringList components = path.split( "/", Qt::SkipEmptyParts );
@@ -48,7 +27,7 @@ FileInfo * PkgInfo::locate( const QString & path )
         if ( components.isEmpty() )
             return ( this == _tree->root() ) ? this : 0;
 
-        QString pkgName = components.takeFirst();
+        const QString pkgName = components.takeFirst();
 
         if ( pkgName != _name )
         {
@@ -61,12 +40,6 @@ FileInfo * PkgInfo::locate( const QString & path )
     }
 
     return locate( this, components );
-}
-
-
-FileInfo * PkgInfo::locate( const QStringList & pathComponents )
-{
-    return locate( this, pathComponents );
 }
 
 

@@ -11,6 +11,7 @@
 #include <unistd.h>	// access(), getuid(), geteduid(), readlink()
 #include <errno.h>
 #include <pwd.h>	// getpwuid()
+#include <grp.h>	// getgrgid()
 #include <limits.h>     // PATH_MAX
 #include <sys/stat.h>   // lstat()
 #include <sys/types.h>
@@ -18,7 +19,6 @@
 #include <QProcess>
 
 #include "SysUtil.h"
-//#include "DirSaver.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -147,14 +147,14 @@ QString SysUtil::runCommand( const QString &	 command,
     return output;
 }
 
-
+/*
 void SysUtil::openInBrowser( const QString & url )
 {
     logDebug() << "Opening URL " << url << Qt::endl;
 
     QProcess::startDetached( "/usr/bin/xdg-open", { url } );
 }
-
+*/
 
 bool SysUtil::haveCommand( const QString & command )
 {
@@ -275,4 +275,34 @@ QByteArray SysUtil::readLink( const QByteArray & path )
 
     buf.resize( len );
     return buf;
+}
+
+
+// See also FileInfo::baseName()
+
+QString SysUtil::baseName( const QString & fileName )
+{
+    //logDebug() << fileName << Qt::endl;
+    const QStringList segments = fileName.split( '/', Qt::SkipEmptyParts );
+    return segments.isEmpty() ? "" : segments.last();
+}
+
+
+QString SysUtil::userName( uid_t uid )
+{
+    const struct passwd * pw = getpwuid( uid );
+    if ( pw )
+	return pw->pw_name;
+    else
+	return QString::number( uid );
+}
+
+
+QString SysUtil::groupName( gid_t gid )
+{
+    const struct group * grp = getgrgid( gid );
+    if ( grp )
+	return grp->gr_name;
+    else
+	return QString::number( gid );
 }

@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>LocateFilesWindow</class>
  <widget class="QDialog" name="LocateFilesWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>605</width>
+    <height>297</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Locate Files</string>
   </property>

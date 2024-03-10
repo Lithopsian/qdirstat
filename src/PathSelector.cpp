@@ -15,14 +15,14 @@
 #include "Logger.h"
 #include "Exception.h"
 
-#define SHOW_SIZES_IN_TOOLTIP   0
+#define SHOW_SIZES_IN_TOOLTIP 0
 
 using namespace QDirStat;
 
 
 
 PathSelector::PathSelector( QWidget * parent ):
-    QListWidget( parent )
+    QListWidget ( parent )
 {
     setSpacing( 3 );
 
@@ -37,19 +37,13 @@ PathSelector::PathSelector( QWidget * parent ):
 }
 
 
-PathSelector::~PathSelector()
-{
-    // NOP
-}
-
-
 PathSelectorItem * PathSelector::addPath( const QString & path,
                                           const QIcon &   icon )
 {
     PathSelectorItem * item = new PathSelectorItem( path, this );
     CHECK_NEW( item );
 
-    if ( ! icon.isNull() )
+    if ( !icon.isNull() )
 	item->setIcon( icon );
 
     return item;
@@ -74,15 +68,13 @@ PathSelectorItem * PathSelector::addMountPoint( MountPoint * mountPoint )
     PathSelectorItem * item = new PathSelectorItem( mountPoint, this );
     CHECK_NEW( item );
 
-    const QIcon icon = _iconProvider.icon( mountPoint->isNetworkMount() ?
-                                           QFileIconProvider::Network :
-                                           QFileIconProvider::Drive      );
-    item->setIcon( icon );
+    const auto type = mountPoint->isNetworkMount() ? QFileIconProvider::Network : QFileIconProvider::Drive;
+    item->setIcon( _iconProvider.icon( type ) );
 
     return item;
 }
 
-
+/*
 PathSelectorItem * PathSelector::addMountPoint( MountPoint *  mountPoint,
                                                 const QIcon & icon )
 {
@@ -91,12 +83,12 @@ PathSelectorItem * PathSelector::addMountPoint( MountPoint *  mountPoint,
     PathSelectorItem * item = new PathSelectorItem( mountPoint, this );
     CHECK_NEW( item );
 
-    if ( ! icon.isNull() )
+    if ( !icon.isNull() )
 	item->setIcon( icon );
 
     return item;
 }
-
+*/
 
 void PathSelector::addMountPoints( const QList<MountPoint *> & mountPoints )
 {
@@ -139,11 +131,8 @@ void PathSelector::selectParentMountPoint( const QString & wantedPath )
 
         if ( current && wantedPath.startsWith( current->path() ) )
         {
-            if ( ! bestMatch ||
-                 current->path().length() > bestMatch->path().length() )
-            {
+            if ( !bestMatch || current->path().length() > bestMatch->path().length() )
                 bestMatch = current;
-            }
         }
     }
 
@@ -160,9 +149,9 @@ void PathSelector::selectParentMountPoint( const QString & wantedPath )
 
 PathSelectorItem::PathSelectorItem( const QString & path,
 				    PathSelector *  parent ):
-    QListWidgetItem( path, parent ),
-    _path( path ),
-    _mountPoint( 0 )
+    QListWidgetItem ( path, parent ),
+    _path { path },
+    _mountPoint { nullptr }
 {
 
 }
@@ -170,16 +159,14 @@ PathSelectorItem::PathSelectorItem( const QString & path,
 
 PathSelectorItem::PathSelectorItem( MountPoint *   mountPoint,
 				    PathSelector * parent ):
-    QListWidgetItem( parent ),
-    _path( mountPoint->path() ),
-    _mountPoint( mountPoint )
+    QListWidgetItem ( parent ),
+    _path { mountPoint->path() },
+    _mountPoint { mountPoint }
 {
     QString text = _path + "\n";
 
     if ( _mountPoint->hasSizeInfo() && _mountPoint->totalSize() > 0 )
-    {
 	text += formatSize( _mountPoint->totalSize() ) + "  ";
-    }
 
     text += _mountPoint->filesystemType();
     setText( text );
@@ -190,23 +177,11 @@ PathSelectorItem::PathSelectorItem( MountPoint *   mountPoint,
 
     if ( _mountPoint->hasSizeInfo() )
     {
-        tooltip += "\n";
-        tooltip += "\n" + QObject::tr( "Used: %1" )
-            .arg( formatSize( _mountPoint->usedSize() ) );
-
-        tooltip += "\n" + QObject::tr( "Free for users: %1" )
-            .arg( formatSize( _mountPoint->freeSizeForUser() ) );
-
-        tooltip += "\n" + QObject::tr( "Free for root: %1" )
-            .arg( formatSize( _mountPoint->freeSizeForRoot() ) );
+        tooltip += "\n\n" + QObject::tr( "Used: " ) + formatSize( _mountPoint->usedSize() );
+        tooltip += "\n" + QObject::tr( "Free for users: " ) + formatSize( _mountPoint->freeSizeForUser() );
+        tooltip += "\n" + QObject::tr( "Free for root: " ) +  formatSize( _mountPoint->freeSizeForRoot() );
     }
 #endif
 
     setToolTip( tooltip );
-}
-
-
-PathSelectorItem::~PathSelectorItem()
-{
-    // NOP
 }

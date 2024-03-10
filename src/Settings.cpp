@@ -70,21 +70,21 @@ void Settings::fixFileOwners()
 
 void Settings::setDefaultValue( const QString & key, bool newValue )
 {
-    if ( ! contains( key ) )
+    if ( !contains( key ) )
         setValue( key, newValue );
 }
 
 
 void Settings::setDefaultValue( const QString & key, int newValue )
 {
-    if ( ! contains( key ) )
+    if ( !contains( key ) )
         setValue( key, newValue );
 }
 
 
 void Settings::setDefaultValue( const QString & key, const QString & newValue )
 {
-    if ( ! contains( key ) )
+    if ( !contains( key ) )
         setValue( key, newValue );
 }
 
@@ -94,7 +94,7 @@ void Settings::fixFileOwner( const QString & filename )
     const QString sudoUid = QString::fromUtf8( qgetenv( "SUDO_UID" ) );
     const QString sudoGid = QString::fromUtf8( qgetenv( "SUDO_GID" ) );
 
-    if ( ! sudoUid.isEmpty() && ! sudoGid.isEmpty() )
+    if ( !sudoUid.isEmpty() && !sudoGid.isEmpty() )
     {
         const uid_t   uid     = sudoUid.toInt();
         const gid_t   gid     = sudoGid.toInt();
@@ -142,7 +142,7 @@ void Settings::fixFileOwner( const QString & filename )
 
 void Settings::ensureToplevel()
 {
-    while ( ! group().isEmpty() )	// ensure using toplevel settings
+    while ( !group().isEmpty() )	// ensure using toplevel settings
 	endGroup();
 }
 
@@ -195,7 +195,7 @@ void Settings::moveGroups( const QString & groupPrefix,
     CHECK_PTR( from );
     CHECK_PTR( to   );
 
-    if ( ! hasGroup( groupPrefix ) )
+    if ( !hasGroup( groupPrefix ) )
     {
 #if 0
 	logInfo() << "Migrating " << groupPrefix << "* to " << to->name() << Qt::endl;

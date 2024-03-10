@@ -53,7 +53,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~MountPoint();
+        ~MountPoint();
 
 	/**
 	 * Return the device that is mounted, something like "/dev/sda3",
@@ -255,6 +255,11 @@ namespace QDirStat
 	static QString device( const QString & url );
 
 	/**
+	 * Return whether the givfe url corresponds to a duplicate mount point.
+	 **/
+	static bool isDuplicate( const QString & url );
+
+	/**
 	 * Return 'true' if any mount point has filesystem type "btrfs".
 	 **/
 	static bool hasBtrfs();
@@ -267,6 +272,15 @@ namespace QDirStat
 	 * mounted (the same as in /proc/mounts or in /etc/mtab).
 	 **/
 	static QList<MountPoint *> normalMountPoints();
+
+	/**
+	 * Return a list of "normal" mount points, i.e. those that are not
+	 * system mounts, bind mounts or duplicate mounts.
+	 *
+	 * The result is sorted by the order in which the filesystems were
+	 * mounted (the same as in /proc/mounts or in /etc/mtab).
+	 **/
+	static QList<MountPoint *> allMountPoints() { return instance()->_mountPointList; }
 
 	/**
 	 * Return 'true' if size information for mount points is available.
@@ -296,7 +310,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~MountPoints();
+	~MountPoints();
 
 	/**
 	 * Clear the content of this class.

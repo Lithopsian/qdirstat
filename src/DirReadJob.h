@@ -56,7 +56,7 @@ namespace QDirStat
 	 *
 	 * This does not read anything yet. Call read() for that.
 	 **/
-	DirReadJob( DirTree *tree, DirInfo *dir = 0 );
+	DirReadJob( DirTree *tree, DirInfo *dir );
 
 	/**
 	 * Destructor.
@@ -164,7 +164,7 @@ namespace QDirStat
     };	// class DirReadJob
 
 
-
+#if 0
     /**
      * Wrapper class between DirReadJob and QObject
      **/
@@ -185,7 +185,7 @@ namespace QDirStat
 	void slotFinished()			  { finished(); }
 
     };	// ObjDirReadJob
-
+#endif
 
 
     /**
@@ -207,7 +207,7 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	LocalDirReadJob( DirTree * tree, DirInfo * dir );
+	LocalDirReadJob( DirTree * tree, DirInfo * dir, bool applyFileChildExcludeRules );
 
 	/**
 	 * Destructor.
@@ -223,8 +223,8 @@ namespace QDirStat
 	 *
 	 * The default is 'false'.
 	 **/
-//	bool applyFileChildExcludeRules() const
-//	    { return _applyFileChildExcludeRules; }
+	bool applyFileChildExcludeRules() const
+	    { return _applyFileChildExcludeRules; }
 
     protected:
 
@@ -312,7 +312,7 @@ namespace QDirStat
 	//
 
 	QString _dirName;
-//	bool	_applyFileChildExcludeRules;
+	bool	_applyFileChildExcludeRules;
 	bool	_checkedForNtfs;
 	bool	_isNtfs;
 
@@ -322,35 +322,29 @@ namespace QDirStat
 
 
 
-    class CacheReadJob: public ObjDirReadJob
+    class CacheReadJob: public DirReadJob
     {
-	Q_OBJECT
 
     public:
 
 	/**
-	 * Constructor for a cache reader that is already open.
+	 * Constructor that uses a cache file that is not open yet.
 	 *
-	 * The CacheReadJob takes over ownership of the CacheReader. In
-	 * particular, the CacheReader will be destroyed with 'delete' when the
-	 * read job is done.
-	 *
-	 * If 'parent' is 0, the content of the cache file will replace all
-	 * current tree items.
+	 * The cache file contents are loaded into the (empty) tree.
 	 **/
-	CacheReadJob( DirTree	  * tree,
-		      DirInfo	  * parent,
-		      CacheReader * reader );
+	CacheReadJob( DirTree		* tree,
+		      const QString	& cacheFileName );
 
 	/**
 	 * Constructor that uses a cache file that is not open yet.
 	 *
-	 * If 'parent' is 0, the content of the cache file will replace all
-	 * current tree items.
+	 * The cache reader first checks that the cache file contents
+	 * match the given toplevel
 	 **/
-	CacheReadJob( DirTree *	       tree,
-		      DirInfo *	       parent,
-		      const QString &  cacheFileName );
+	CacheReadJob( DirTree		* tree,
+		      DirInfo		* dir,
+		      DirInfo		* parent,
+		      const QString	& cacheFileName );
 
 	/**
 	 * Destructor.

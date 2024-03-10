@@ -74,7 +74,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PercentBarDelegate();
+	~PercentBarDelegate();
 
 	/**
 	 * Paint one cell in the view.
@@ -119,9 +119,10 @@ namespace QDirStat
 	void readSettings();
 
 	/**
-	 * Write parameters to the settings file.
+	 * Write parameters to the settings file.  Unnecessary at the moment as nothing
+	 * can change while the program is running.
 	 **/
-	void writeSettings();
+//	void writeSettings();
 
 
     protected:

@@ -61,12 +61,18 @@ namespace QDirStat
 	             const QString & pattern,
 		     bool            caseSensitive,
                      bool            useFullPath,
-                     bool            checkAnyFileChild );
+                     bool            checkAnyFileChild ):
+	    QRegularExpression ( formatPattern( patternSyntax, pattern ), makePatternOptions( caseSensitive ) ),
+	    _patternSyntax { patternSyntax },
+	    _pattern { pattern },
+	    _useFullPath { useFullPath },
+	    _checkAnyFileChild { checkAnyFileChild }
+	{}
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~ExcludeRule();
+	~ExcludeRule() {}
 
 	/**
 	 * Check a file name with or without its full path against this exclude
@@ -76,7 +82,7 @@ namespace QDirStat
 	 * Returns 'true' if the string matches, i.e. the file should be
 	 * excluded.
 	 **/
-	bool match( const QString & fullPath, const QString & fileName );
+	bool match( const QString & fullPath, const QString & fileName ) const;
 
         /**
          * If this exclude rule has the 'checkAnyFileChild' flag set, check if
@@ -85,7 +91,7 @@ namespace QDirStat
          *
          * This returns 'false' immediately if 'checkAnyFileChild' is not set.
          **/
-        bool matchDirectChildren( DirInfo * dir );
+        bool matchDirectChildren( DirInfo * dir ) const;
 
 	/**
 	 * Return 'true' if this exclude rule uses the full path to match
@@ -226,7 +232,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~ExcludeRules();
+	~ExcludeRules();
 
 	/**
 	 * Return the singleton object of this class.
@@ -244,7 +250,7 @@ namespace QDirStat
 	 *
 	 * Note that this operation will move current().
 	 **/
-	bool match( const QString & fullPath, const QString & fileName );
+	bool match( const QString & fullPath, const QString & fileName ) const;
 
         /**
          * Check the direct non-directory children of 'dir' against any rules
@@ -252,7 +258,7 @@ namespace QDirStat
          *
 	 * This will return 'true' if the text matches any rule.
          **/
-        bool matchDirectChildren( DirInfo * dir );
+        bool matchDirectChildren( DirInfo * dir ) const;
 
 	/**
 	 * Find the exclude rule that matches 'text'.
@@ -278,17 +284,17 @@ namespace QDirStat
 	 * Return 'true' if the exclude rules are empty, i.e. if there are no
 	 * exclue rules, 'false' otherwise.
 	 **/
-	bool isEmpty() { return _rules.isEmpty(); }
+	bool isEmpty() const { return _rules.isEmpty(); }
 
 	/**
 	 * Return a const iterator for the first exclude rule.
 	 **/
-	ExcludeRuleListIterator cbegin()	{ return _rules.constBegin(); }
+	ExcludeRuleListIterator cbegin() const { return _rules.constBegin(); }
 
 	/**
 	 * Return a const iterator for past the last exclude rule.
 	 **/
-	ExcludeRuleListIterator cend()	{ return _rules.constEnd(); }
+	ExcludeRuleListIterator cend() const { return _rules.constEnd(); }
 
 	/**
 	 * Write all exclude rules to the settings file.

@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <QFileInfo>
 #include <QList>
 #include <QtMath>
 #include <QTextStream>
@@ -50,7 +51,7 @@ namespace QDirStat
 	DirReading,		// Reading in progress
 	DirFinished,		// Reading finished and OK
 	DirOnRequestOnly,	// Will be read upon explicit request only (mount points)
-	DirCached,		// Content was read from a cache
+//	DirCached,		// Content was read from a cache, obsolete
 	DirAborted,		// Reading aborted upon user request
 	DirPermissionDenied,	// Insufficient permissions for reading
 	DirError		// Error while reading
@@ -78,7 +79,7 @@ namespace QDirStat
     public:
 
 	/**
-	 * Constructor from raw data values.
+	 * Constructor from raw data values.  Used by the cache reader.
 	 *
 	 * Don't make any assumptions about the file's tail. We might use
 	 *
@@ -93,6 +94,9 @@ namespace QDirStat
 		  mode_t	  mode,
 		  FileSize	  size,
 		  FileSize	  allocatedSize,
+		  bool		  withUidGidPerm,
+		  uid_t		  uid,
+		  gid_t		  gid,
 		  time_t	  mtime,
 		  bool		  isSparseFile,
 		  FileSize	  blocks,
@@ -105,11 +109,12 @@ namespace QDirStat
 	    _isLocalFile { true },
 	    _isSparseFile { isSparseFile },
 	    _isIgnored { false },
+	    _hasUidGidPerm { withUidGidPerm },
 	    _device { 0 },
 	    _mode { mode },
 	    _links { links },
-	    _uid { 0 },
-	    _gid { 0 },
+	    _uid { uid },
+	    _gid { gid },
 	    _size { size },
 	    _blocks { blocks },
 	    _allocatedSize { allocatedSize },
@@ -125,9 +130,38 @@ namespace QDirStat
 		  DirTree	* tree,
 		  const QString	& filename,
 		  mode_t	  mode,
+		  FileSize	  size ):
+	    FileInfo ( parent, tree, filename, mode, size, size, false, 0, 0, 0, false, blocksFromSize( size ), 1 )
+	{}
+
+	/**
+	 * Constructor from a more complete set of raw data.  Used to create FileInfo
+	 * objects from the DirInfo constructor.
+	 *
+	 **/
+	FileInfo( DirInfo	* parent,
+		  DirTree	* tree,
+		  const QString	& filename,
+		  mode_t	  mode,
 		  FileSize	  size,
+		  FileSize	  allocatedSize,
+		  bool		  withUidGidPerm,
+		  uid_t		  uid,
+		  gid_t		  gid,
 		  time_t	  mtime ):
-	    FileInfo ( parent,tree, filename, mode, size, size, mtime, false, blocksFromSize( size ), 1 )
+	    FileInfo ( parent,
+		       tree,
+		       filename,
+		       mode,
+		       size,
+		       allocatedSize,
+		       withUidGidPerm,
+		       uid,
+		       gid,
+		       mtime,
+		       false,
+		       blocksFromSize( size ),
+		       1 )
 	{}
 
 	/**
@@ -136,7 +170,7 @@ namespace QDirStat
 	FileInfo( DirInfo	* parent,
 		  DirTree	* tree,
 		  const QString	& filename ):
-	    FileInfo ( parent, tree, filename, 0, 0, 0, 0, false, 0, 1 )
+	    FileInfo ( parent, tree, filename, 0, 0, 0, false, 0, 0, 0, false, 0, 1 )
 	{}
 
 	/**
@@ -264,7 +298,7 @@ namespace QDirStat
 	 * It might not have that information e.g. if it was read from a cache
 	 * file.
 	 **/
-	bool hasUid() const;
+	bool hasUid() const { return _hasUidGidPerm; }
 
 	/**
 	 * Group ID of the owner.
@@ -288,7 +322,15 @@ namespace QDirStat
 	 * It might not have that information e.g. if it was read from a cache
 	 * file.
 	 **/
-	bool hasGid() const;
+	bool hasGid() const { return _hasUidGidPerm; }
+
+	/**
+	 * Return 'true' if this FileInfo has valid permissions in the mode.
+	 *
+	 * It might not have that information e.g. if it was read from a cache
+	 * file.
+	 **/
+	bool hasPerm() const { return _hasUidGidPerm; }
 
 	/**
 	 * File permissions formatted like in "ls -l", i.e. "-rwxrwxrwx",
@@ -346,7 +388,8 @@ namespace QDirStat
 	/**
 	 * The ratio of size() / allocatedSize() in percent.
 	 **/
-	int usedPercent() const;
+	int usedPercent() const
+	    { return _allocatedSize > 0 && _size > 0 ? qRound( ( 100.0 * size() ) / allocatedSize() ) : 100; }
 
 	/**
 	 * The allocated size without taking multiple hard links into account.
@@ -419,7 +462,7 @@ namespace QDirStat
 	 * excluding this item.
 	 * Derived classes that have children should overwrite this.
 	 **/
-	virtual int totalNonDirItems() { return 0; }
+//	virtual int totalNonDirItems() { return 0; }
 
 	/**
 	 * Returns the total number of ignored (non-directory!) items in this
@@ -551,7 +594,6 @@ namespace QDirStat
 	 **/
 	bool filesystemCanReportBlocks() const;
 
-
 	/**
 	 * Return 'true' if this is a dominant item among its siblings, i.e. if
 	 * its total size is much larger than the other items on the same level.
@@ -611,7 +653,7 @@ namespace QDirStat
 	/**
 	 * Returns true if this entry has any children.
 	 **/
-	virtual bool hasChildren() const;
+	virtual bool hasChildren() const { return firstChild() || dotEntry(); }
 
 	/**
 	 * Returns true if this entry is in subtree 'subtree', i.e. if this is
@@ -679,6 +721,12 @@ namespace QDirStat
 	virtual bool isDotEntry() const { return false; }
 
 	/**
+	 * (Translated) user-visible string for a "Dot Entry" ("<Files>").
+	 **/
+	inline static QString dotEntryName()
+	    { return QObject::tr( "<Files>" ); }
+
+	/**
 	 * Return the "Attic" entry for this node if there is one (or 0
 	 * otherwise): This is a pseudo entry that directory nodes use to store
 	 * ignored files and directories separately from the normal tree
@@ -697,14 +745,10 @@ namespace QDirStat
 	virtual bool isAttic() const { return false; }
 
 	/**
-	 * (Translated) user-visible string for a "Dot Entry" ("<Files>").
-	 **/
-	static QString dotEntryName();
-
-	/**
 	 * (Translated) user-visible string for the "Attic" ("<Ignored>").
 	 **/
-	static QString atticName();
+	inline static QString atticName()
+	    { return QObject::tr( "<Ignored>" ); }
 
 	/**
 	 * Returns the tree level (depth) of this item.
@@ -829,7 +873,7 @@ namespace QDirStat
 	/**
 	 * Returns true if this FileInfo was read from a cache file.
 	 **/
-	bool isCached() const;
+//	bool isCached() const;
 
 	/**
 	 * Returns true if this FileInfo was ignored by some rule (e.g. in the
@@ -869,7 +913,6 @@ namespace QDirStat
 	 * Returns true if this is a symbolic link.
 	 **/
 	bool isSymLink()	const { return S_ISLNK( _mode ) ? true : false; }
-
 
 	/**
 	 * Returns true if this is a (block or character) device.
@@ -916,7 +959,8 @@ namespace QDirStat
          * day use cached information and do lazy initialization on its first
          * call.
          **/
-        bool isBrokenSymLink();
+        bool isBrokenSymLink()
+	    { return isSymLink() ? !QFileInfo( QFileInfo( path() ).symLinkTarget() ).exists() : false; }
 
         /**
          * Return the (direct) target path if this is a symlink. This does not
@@ -960,13 +1004,6 @@ namespace QDirStat
 
     protected:
 
-        /**
-         * Calculate values that are dependent on _mtime, yet quite expensive
-	     * to calculate, and cache them: _mtimeYear, _mtimeMonth
-         **/
-//        void processMtime();
-
-
 	// Data members.
 	//
 	// Keep this short in order to use as little memory as possible -
@@ -978,9 +1015,10 @@ namespace QDirStat
 
 	short		_magic;			// magic number to detect if this object is valid
 	QString		_name;			// the file name (without path!)
-	bool		_isLocalFile  :1;	// flag: local or remote file?
-	bool		_isSparseFile :1;	// (cache) flag: sparse file (file with "holes")?
-	bool		_isIgnored    :1;	// flag: ignored by rule?
+	bool		_isLocalFile   :1;	// flag: local or remote file?
+	bool		_isSparseFile  :1;	// (cache) flag: sparse file (file with "holes")?
+	bool		_isIgnored     :1;	// flag: ignored by rule?
+	bool		_hasUidGidPerm :1;	// flag: was this constructed with uid/guid/ and permissions
 	dev_t		_device;		// device this object resides on
 	mode_t		_mode;			// file permissions + object type
 	nlink_t		_links;			// number of links
@@ -1004,21 +1042,6 @@ namespace QDirStat
     //----------------------------------------------------------------------
     //			       Static Functions
     //----------------------------------------------------------------------
-
-
-    /**
-     * Return the last pathname component of a file name.
-     *
-     * Examples:
-     *
-     *	   "/home/bob/foo.txt"	-> "foo.txt"
-     *	   "foo.txt"		-> "foo.txt"
-     *	   "/usr/bin"		-> "bin"
-     *	   "/usr/bin/"		-> "bin"
-     *
-     * Notice that FileInfo also has a member function baseName().
-     **/
-    QString baseName( const QString & fileName );
 
 
     /**

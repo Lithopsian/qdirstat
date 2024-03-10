@@ -61,14 +61,14 @@ FindFilesDialog::~FindFilesDialog()
 
 FileSearchFilter FindFilesDialog::fileSearchFilter()
 {
-    FileInfo * subtree = 0;
+    FileInfo * subtree = nullptr;
 
     if ( _ui->wholeTreeRadioButton->isChecked() )
         subtree = app()->root();
     else if ( _ui->currentSubtreeRadioButton->isChecked() )
         subtree = currentSubtree();
 
-    FileSearchFilter filter( subtree ? subtree->toDirInfo() : 0,
+    FileSearchFilter filter( subtree ? subtree->toDirInfo() : nullptr,
                              _ui->patternField->text(),
                              ( SearchFilter::FilterMode )_ui->filterModeComboBox->currentIndex(),
                              _ui->caseSensitiveCheckBox->isChecked() );
@@ -113,7 +113,7 @@ DirInfo * FindFilesDialog::currentSubtree()
         }
     }
 
-    return subtree ? subtree->toDirInfo() : 0;
+    return subtree ? subtree->toDirInfo() : nullptr;
 }
 
 
