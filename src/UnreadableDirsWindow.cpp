@@ -33,6 +33,7 @@ UnreadableDirsWindow::UnreadableDirsWindow( QWidget * parent ):
 
     CHECK_NEW( _ui );
     _ui->setupUi( this );
+
     initWidgets();
     readWindowSettings( this, "UnreadableDirsWindow" );
 
@@ -69,10 +70,6 @@ void UnreadableDirsWindow::clear()
 
 void UnreadableDirsWindow::initWidgets()
 {
-//    QFont font = _ui->heading->font();
-//    font.setBold( true );
-//    _ui->heading->setFont( font );
-
     const QStringList headerLabels = { tr( "Directory" ),
 				       tr( "User" ),
 				       tr( "Group" ),
@@ -88,8 +85,6 @@ void UnreadableDirsWindow::initWidgets()
     for ( int col = 1; col < headerLabels.size(); ++col )
 	_ui->treeWidget->headerItem()->setTextAlignment( col, Qt::AlignHCenter );
 
-//    _ui->treeWidget->setSortingEnabled( false );
-//    _ui->treeWidget->header()->setStretchLastSection( false );
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
 }
 

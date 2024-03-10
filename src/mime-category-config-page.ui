@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>MimeCategoryConfigPage</class>
  <widget class="QWidget" name="MimeCategoryConfigPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>550</width>
+    <height>488</height>
+   </rect>
+  </property>
   <layout class="QHBoxLayout" name="horizontalLayout_6">
    <item>
     <widget class="QSplitter" name="horizontalSplitter">
@@ -151,6 +159,9 @@
       </layout>
      </widget>
      <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
       <widget class="QWidget" name="tab_17">
        <attribute name="title">
         <string>&amp;Patterns</string>
@@ -274,6 +285,18 @@
            </property>
            <property name="toolTip">
             <string>Preview treemap appearance</string>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="renderHints">
+            <set>QPainter::SmoothPixmapTransform|QPainter::TextAntialiasing</set>
+           </property>
+           <property name="optimizationFlags">
+            <set>QGraphicsView::DontAdjustForAntialiasing|QGraphicsView::DontSavePainterState</set>
            </property>
           </widget>
           <widget class="QWidget" name="layoutWidget2">

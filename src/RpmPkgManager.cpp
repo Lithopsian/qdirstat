@@ -13,10 +13,11 @@
 #include <QPointer>
 
 #include "RpmPkgManager.h"
-#include "PkgFileListCache.h"
-#include "Settings.h"
-#include "MessagePanel.h"
+#include "MainWindow.h"
 #include "PanelMessage.h"
+#include "PkgFileListCache.h"
+#include "QDirStatApp.h"
+#include "Settings.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -241,24 +242,15 @@ void RpmPkgManager::rebuildRpmDbWarning() const
 
     // Add a panel message so the user is sure to see this message.
     //
-    // This is a bit out of place in this class, but a full-fledged user
-    // messaging system seemed to be overkill just for this one message.
-
     // Need a guarded pointer because the [x] close button in the PanelMessage
     // deletes the instance.
-
     static QPointer<PanelMessage> panelMessage;
 
-    if ( MessagePanel::haveInstance() && ! panelMessage )
+    if ( !panelMessage )
     {
-	panelMessage = new PanelMessage( MessagePanel::firstInstance(),
-			 QObject::tr( "RPM is very slow." ),
-			 QObject::tr( "Open a shell window and run:<br/><code>sudo rpm --rebuilddb</code>" ) );
-	CHECK_NEW( panelMessage );
-
-	panelMessage->setIcon( QPixmap( ":/icons/warning.png" ) );
-
-	MessagePanel::firstInstance()->add( panelMessage );
+	MainWindow * mainWindow = (MainWindow *)app()->findMainWindow();
+	if ( mainWindow )
+	    panelMessage = PanelMessage::showRpmMsg( mainWindow, mainWindow->messagePanelContainer() );
     }
 
     issuedWarning = true;

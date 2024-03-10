@@ -108,6 +108,12 @@ namespace QDirStat
 	 **/
 	void copyDeviceToClipboard();
 
+	/**
+	 * Switch between displaying all or just normal filesystems.
+	 **/
+	void normalStateChanged( int );
+
+
     protected:
 
 	/**
@@ -124,6 +130,11 @@ namespace QDirStat
 	 * Show panel message warning about Btrfs and how it reports free sizes
 	 **/
 	void showBtrfsFreeSizeWarning();
+
+	/**
+	 * Returns the icon filename for the give mount point.
+	 **/
+	QString icon( const MountPoint * mountPoint );
 
 	/**
 	 * Custom context menu signalled.

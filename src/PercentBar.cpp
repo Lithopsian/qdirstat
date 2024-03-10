@@ -39,7 +39,7 @@ PercentBarDelegate::PercentBarDelegate( QTreeView * treeView,
 
 PercentBarDelegate::~PercentBarDelegate()
 {
-    writeSettings();
+//    writeSettings(); // nothing can change
 }
 
 
@@ -74,7 +74,7 @@ void PercentBarDelegate::readSettings()
     settings.endGroup();
 }
 
-
+/*
 void PercentBarDelegate::writeSettings()
 {
     Settings settings;
@@ -87,70 +87,35 @@ void PercentBarDelegate::writeSettings()
 
     settings.endGroup();
 }
-
+*/
 
 void PercentBarDelegate::paint( QPainter		   * painter,
 				const QStyleOptionViewItem & option,
 				const QModelIndex	   & index ) const
 {
+    // Let the default delegate draw what it can, which should be the appropriate background for us
+    QStyledItemDelegate::paint( painter, option, index );
+
     if ( index.isValid() && index.column() == _percentBarCol )
     {
-	// We are responsible even for the highlight background of selected rows
-//	painter->eraseRect( option.rect );
-	if ( option.state & QStyle::State_Selected )
-	    painter->fillRect( option.rect, option.palette.highlight() );
-
-	QVariant data = index.data( RawDataRole );
-    //    QVariant data = percentData( index );
+	const QVariant data = index.data( RawDataRole );
 	bool ok = true;
 	float percent = data.toFloat( &ok );
 
-	if ( ok && percent >= 0.0 )
+	if ( ok && percent >= 0.0f )
 	{
 	    if ( percent > 100.0f )
 	    {
-		if ( percent > 103.0f )
-		    logError() << "Percent maxed out: " << percent << Qt::endl;
+//		if ( percent > 103.0f )
+//		    logError() << "Percent maxed out: " << percent << Qt::endl;
 		percent = 100.0f;
 	    }
 
-	    PercentBarDelegate::paintPercentBar( painter,
-						 option,
-						 index,
-						 percent );
-
-	    return;
+	    PercentBarDelegate::paintPercentBar( painter, option, index, percent );
 	}
     }
-
-    QStyledItemDelegate::paint( painter, option, index );
 }
 
-/*
-QVariant PercentBarDelegate::percentData( const QModelIndex & index ) const
-{
-    QVariant data = index.data( Qt::DisplayRole );
-    if ( !data.isValid() )
-	return QVariant();
-
-    // This expects a string value formatted like "42.0%"
-    QString text = data.toString();
-    if ( text.isEmpty() )
-	return data;
-
-    text.remove( '%' );
-
-    bool ok = true;
-    const float percent = text.toFloat( &ok );
-    if ( ! ok )
-    {
-	logWarning() << "float conversion failed from \"" << text << "\"" << Qt::endl;
-	return data;
-    }
-
-    return QVariant( percent );
-}
-*/
 
 int PercentBarDelegate::treeLevel( const QModelIndex & index ) const
 {
@@ -174,8 +139,6 @@ QSize PercentBarDelegate::sizeHint( const QStyleOptionViewItem & option,
     size.setHeight( qMax( size.height(), MIN_PERCENT_BAR_HEIGHT ) );
 
     return size;
-
-    return QStyledItemDelegate::sizeHint( option, index );
 }
 
 

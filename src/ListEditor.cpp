@@ -8,7 +8,6 @@
 
 
 #include <QAbstractButton>
-#include <QMessageBox>
 
 #include "ListEditor.h"
 #include "Logger.h"

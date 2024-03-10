@@ -10,6 +10,7 @@
 #include <QClipboard>
 #include <QContextMenuEvent>
 #include <QMenu>
+#include <QPointer>
 
 #include "FilesystemsWindow.h"
 #include "DirTreeModel.h"
@@ -48,7 +49,11 @@ FilesystemsWindow::~FilesystemsWindow()
 
 void FilesystemsWindow::populate()
 {
-    const auto mountPoints = MountPoints::normalMountPoints();
+    clear();
+
+    const auto mountPoints = _ui->normalCheckBox->isChecked() ?
+			     MountPoints::normalMountPoints() :
+			     MountPoints::allMountPoints();
     for ( MountPoint * mountPoint : mountPoints )
     {
 	CHECK_PTR( mountPoint);
@@ -56,10 +61,7 @@ void FilesystemsWindow::populate()
 	FilesystemItem * item = new FilesystemItem( mountPoint, _ui->fsTree );
 	CHECK_NEW( item );
 
-	if ( mountPoint->isNetworkMount() )
-	    item->setIcon( 0, app()->dirTreeModel()->networkIcon() );
-	else
-	    item->setIcon( 0, app()->dirTreeModel()->mountPointIcon() );
+	item->setIcon( 0, QIcon( app()->dirTreeModel()->treeIconDir() + icon( mountPoint ) ) );
     }
 
     if ( MountPoints::hasBtrfs() )
@@ -67,24 +69,25 @@ void FilesystemsWindow::populate()
 }
 
 
+QString FilesystemsWindow::icon( const MountPoint * mountPoint )
+{
+    if ( mountPoint->isNetworkMount() ) return "network.png";
+    if ( mountPoint->isSystemMount()  ) return "system.png";
+    if ( mountPoint->isDuplicate()    ) return "bind-mount.png";
+
+    return "mount-point.png";
+}
+
+
 void FilesystemsWindow::showBtrfsFreeSizeWarning()
 {
-    PanelMessage * msg = new PanelMessage( _ui->messagePanel,
-			   tr( "Btrfs free and used size information are misleading!" ),
-			   tr( "Snapshots and copy-on-write may consume additional disk space." ) );
-    CHECK_NEW( msg );
-
-    msg->setDetailsUrl( "https://github.com/shundhammer/qdirstat/blob/master/doc/Btrfs-Free-Size.md" );
-    msg->setIcon( QPixmap( ":/icons/information.png" ) );
-
-    _ui->messagePanel->add( msg );
+    PanelMessage::showFilesystemsMsg( this, _ui->vBox );
 }
 
 
 void FilesystemsWindow::refresh()
 {
     MountPoints::reload();
-    clear();
     populate();
 }
 
@@ -98,7 +101,7 @@ void FilesystemsWindow::reject()
 void FilesystemsWindow::clear()
 {
     _ui->fsTree->clear();
-    _ui->messagePanel->clear();
+//    _ui->messagePanel->clear();
 }
 
 
@@ -125,26 +128,29 @@ void FilesystemsWindow::initWidgets()
 
     enableActions();
 
-    connect( _ui->refreshButton, &QAbstractButton::clicked,
-	     this,		 &FilesystemsWindow::refresh );
+    connect( _ui->normalCheckBox, &QCheckBox::stateChanged,
+	     this,		  &FilesystemsWindow::normalStateChanged );
 
-    connect( _ui->fsTree,	 &QTreeWidget::customContextMenuRequested,
-	      this,		 &FilesystemsWindow::contextMenu);
+    connect( _ui->refreshButton,  &QAbstractButton::clicked,
+	     this,		  &FilesystemsWindow::refresh );
 
-    connect( _ui->fsTree,	 &QTreeWidget::itemDoubleClicked,
-	     _ui->actionRead,	 &QAction::triggered );
+    connect( _ui->fsTree,	  &QTreeWidget::customContextMenuRequested,
+	      this,		  &FilesystemsWindow::contextMenu);
 
-    connect( _ui->readButton,	 &QAbstractButton::clicked,
-	     _ui->actionRead,	 &QAction::triggered );
+    connect( _ui->fsTree,	  &QTreeWidget::itemDoubleClicked,
+	     _ui->actionRead,	  &QAction::triggered );
 
-    connect( _ui->actionRead,	 &QAction::triggered,
-	     this,		 &FilesystemsWindow::readSelectedFilesystem );
+    connect( _ui->readButton,	  &QAbstractButton::clicked,
+	     _ui->actionRead,	  &QAction::triggered );
 
-    connect( _ui->actionCopy,	 &QAction::triggered,
-	     this,		 &FilesystemsWindow::copyDeviceToClipboard );
+    connect( _ui->actionRead,	  &QAction::triggered,
+	     this,		  &FilesystemsWindow::readSelectedFilesystem );
 
-    connect( _ui->fsTree,	 &QTreeWidget::itemSelectionChanged,
-	     this,		 &FilesystemsWindow::enableActions );
+    connect( _ui->actionCopy,	  &QAction::triggered,
+	     this,		  &FilesystemsWindow::copyDeviceToClipboard );
+
+    connect( _ui->fsTree,	  &QTreeWidget::itemSelectionChanged,
+	     this,		  &FilesystemsWindow::enableActions );
 }
 
 
@@ -186,6 +192,12 @@ void FilesystemsWindow::copyDeviceToClipboard()
     const FilesystemItem * currentItem = dynamic_cast<FilesystemItem *>( _ui->fsTree->currentItem() );
     if ( currentItem )
 	QApplication::clipboard()->setText( currentItem->device().trimmed() );
+}
+
+
+void FilesystemsWindow::normalStateChanged( int )
+{
+    refresh();
 }
 
 

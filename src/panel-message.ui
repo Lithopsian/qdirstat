@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>PanelMessage</class>
  <widget class="QWidget" name="PanelMessage">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>379</width>
-    <height>91</height>
-   </rect>
-  </property>
   <layout class="QVBoxLayout" name="panelVBox">
    <item>
     <widget class="QFrame" name="frame">
@@ -22,53 +14,162 @@
      <property name="lineWidth">
       <number>1</number>
      </property>
-     <layout class="QHBoxLayout" name="frameHBox" stretch="0,1,0">
+     <layout class="QHBoxLayout" name="frameHBox">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item>
-       <widget class="QLabel" name="iconLabel">
-        <property name="pixmap">
-         <pixmap resource="icons.qrc">:/icons/information.png</pixmap>
-        </property>
-        <property name="margin">
-         <number>8</number>
-        </property>
+       <widget class="QStackedWidget" name="stackedWidget">
+        <widget class="QWidget" name="permissionsPage">
+         <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+          <item>
+           <widget class="QLabel" name="iconLabel">
+            <property name="pixmap">
+             <pixmap resource="icons.qrc">:/icons/lock-closed.png</pixmap>
+            </property>
+            <property name="margin">
+             <number>8</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="contentVBox">
+            <item>
+             <widget class="QLabel" name="headingLabel">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Some directories could not be read</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="msgLabel">
+              <property name="text">
+               <string>You might not have sufficient permissions.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="detailsLinkLabel">
+              <property name="text">
+               <string notr="true">&lt;a href&gt;Show unreadable directories...&lt;/a&gt;</string>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="rpmPage">
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
+          <item>
+           <widget class="QLabel" name="iconLabel_4">
+            <property name="pixmap">
+             <pixmap resource="icons.qrc">:/icons/warning.png</pixmap>
+            </property>
+            <property name="margin">
+             <number>8</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="contentVBox_3">
+            <item>
+             <widget class="QLabel" name="headingLabel_4">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>RPM is very slow</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="msgLabel_4">
+              <property name="text">
+               <string>Open a shell window and run:&lt;br/&gt;&lt;code&gt;sudo rpm --rebuilddb&lt;/code&gt;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="filesystemsPage">
+         <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1">
+          <item>
+           <widget class="QLabel" name="iconLabel_3">
+            <property name="pixmap">
+             <pixmap resource="icons.qrc">:/icons/information.png</pixmap>
+            </property>
+            <property name="margin">
+             <number>8</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="contentVBox_2">
+            <item>
+             <widget class="QLabel" name="headingLabel_3">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Btrfs free and used size information are misleading!</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="msgLabel_3">
+              <property name="text">
+               <string>Snapshots and copy-on-write may consume additional disk space.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="detailsLinkLabel_3">
+              <property name="text">
+               <string notr="true">&lt;a href=&quot;https://github.com/shundhammer/qdirstat/blob/master/doc/Btrfs-Free-Size.md&quot;&gt;Details...&lt;/a&gt;</string>
+              </property>
+              <property name="textFormat">
+               <enum>Qt::AutoText</enum>
+              </property>
+              <property name="openExternalLinks">
+               <bool>true</bool>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="contentVBox">
-        <item>
-         <widget class="QLabel" name="headingLabel">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Some directories could not be read.</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="msgLabel">
-          <property name="text">
-           <string>You might not have sufficient permissions.</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="detailsLinkLabel">
-          <property name="text">
-           <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;details&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1d96b9;&quot;&gt;Details...&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="textFormat">
-           <enum>Qt::RichText</enum>
-          </property>
-          <property name="textInteractionFlags">
-           <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
       <item>
        <layout class="QVBoxLayout" name="closeButtonVBox">

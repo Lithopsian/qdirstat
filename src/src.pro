@@ -94,7 +94,7 @@ SOURCES	  = main.cpp			\
 	    MainWindowLayout.cpp	\
 	    MainWindowMenus.cpp		\
 	    MainWindowUnpkg.cpp		\
-	    MessagePanel.cpp		\
+#	    MessagePanel.cpp		\
 	    MimeCategorizer.cpp		\
 	    MimeCategory.cpp		\
 	    MimeCategoryConfigPage.cpp	\
@@ -188,7 +188,7 @@ HEADERS	  =				\
 	    LocateFilesWindow.h		\
 	    Logger.h			\
 	    MainWindow.h		\
-	    MessagePanel.h		\
+#	    MessagePanel.h		\
 	    MimeCategorizer.h		\
 	    MimeCategory.h		\
 	    MimeCategoryConfigPage.h	\
@@ -251,7 +251,7 @@ FORMS	  = main-window.ui		   \
 	    general-config-page.ui	   \
 	    locate-file-type-window.ui	   \
 	    locate-files-window.ui	   \
-	    message-panel.ui		   \
+#	    message-panel.ui		   \
 	    mime-category-config-page.ui   \
 	    open-dir-dialog.ui		   \
 	    open-pkg-dialog.ui		   \

@@ -53,8 +53,12 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isDotEntry() const Q_DECL_OVERRIDE
-	    { return true; }
+	virtual bool isDotEntry() const Q_DECL_OVERRIDE { return true; }
+
+	/**
+	 * Sets a flag that this is the root directory of a cache file read.
+	 **/
+	virtual bool isFromCache() const Q_DECL_OVERRIDE { return _parent && _parent->isFromCache(); }
 
 	/**
 	 * Insert a child into the children list.
@@ -80,7 +84,8 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual DirReadState readState() const Q_DECL_OVERRIDE;
+	virtual DirReadState readState() const Q_DECL_OVERRIDE
+		{ return _parent ? _parent->readState() : _readState; }
 
 	/**
 	 * Reset to the same status like just after construction in preparation

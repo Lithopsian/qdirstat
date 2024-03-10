@@ -24,7 +24,6 @@ namespace QDirStat
 {
     class FileInfo;
 
-
     /**
      * Cleanup action to be performed for DirTree items.
      **/

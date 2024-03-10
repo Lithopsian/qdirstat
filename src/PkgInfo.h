@@ -25,6 +25,28 @@ namespace QDirStat
      **/
     class PkgInfo: public DirInfo
     {
+        /**
+         * Private constructor, the public ones delegate to this.  Note that the
+         * relevant DirInfo constructor is critical, it does not create a DotEntry
+         * because PkgInfo objects do not have DotEntry direct children.
+         **/
+        PkgInfo( DirTree          * tree,
+                 DirInfo          * parent,
+                 const QString    & name,
+                 const QString    & version,
+                 const QString    & arch,
+                 const PkgManager * pkgManager ):
+            DirInfo( parent,
+                     tree,
+                     name ),
+            _baseName { name },
+            _version { version },
+            _arch { arch },
+            _pkgManager ( pkgManager ),
+            _multiVersion { false },
+            _multiArch { false }
+        {}
+
     public:
 
         /**
@@ -35,14 +57,14 @@ namespace QDirStat
                  const QString    & version,
                  const QString    & arch,
                  const PkgManager * pkgManager ):
-            PkgInfo( 0, 0, name, version, arch, pkgManager )
+            PkgInfo ( 0, 0, name, version, arch, pkgManager )
         {}
 
         PkgInfo( DirTree          * tree,
                  DirInfo          * parent,
                  const QString    & name,
                  const PkgManager * pkgManager ):
-            PkgInfo( tree, parent, name, QString(), QString(), pkgManager )
+            PkgInfo ( tree, parent, name, QString(), QString(), pkgManager )
         {}
 
         /**
@@ -115,26 +137,25 @@ namespace QDirStat
          *
          * Reimplemented - inherited from FileInfo.
          **/
-        virtual bool isPkgInfo() const Q_DECL_OVERRIDE
-            { return true; }
+        virtual bool isPkgInfo() const Q_DECL_OVERRIDE { return true; }
 
 	/**
 	 * Returns the full URL of this object with full path.
 	 *
          * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual QString url() const Q_DECL_OVERRIDE;
+	virtual QString url() const Q_DECL_OVERRIDE { return isPkgUrl( _name ) ? "Pkg:/" : "Pkg:/" + _name; }
 
         /**
          * Return 'true' if this is a package URL, i.e. it starts with "Pkg:".
          **/
-        static bool isPkgUrl( const QString & url );
+        static bool isPkgUrl( const QString & url ) { return url.startsWith( "Pkg:" ); }
 
         /**
          * Create a package URL from 'path'. If it already is a package URL,
          * just return 'path'.
          **/
-        QString pkgUrl( const QString & path ) const;
+        QString pkgUrl( const QString & path ) const { return isPkgUrl( path ) ? path : url() + path; }
 
         /**
          * Locate a path in this PkgInfo subtree:
@@ -147,7 +168,7 @@ namespace QDirStat
          * PkgInfo subtree: Return the corresponding FileInfo or 0 if not
          * found.
          **/
-        FileInfo * locate( const QStringList & pathComponents );
+        FileInfo * locate( const QStringList & pathComponents ) { return locate( this, pathComponents ); }
 
         /**
          * Locate a path that is already split up into its components within a
@@ -157,31 +178,6 @@ namespace QDirStat
                            const QStringList & pathComponents );
 
     protected:
-
-        /**
-         * Private constructor, the public ones delegate to this.  Note that the
-         * relevant DirInfo constructor is critical, it does not create a DotEntry
-         * because PkgInfo objects do not have DotEntry direct children.
-         **/
-        PkgInfo( DirTree          * tree,
-                 DirInfo          * parent,
-                 const QString    & name,
-                 const QString    & version,
-                 const QString    & arch,
-                 const PkgManager * pkgManager ):
-            DirInfo( parent,
-                     tree,
-                     name ),
-//                     0,   // mode
-//                     0,   // size
-//                     0 ), // mtime
-            _baseName( name ),
-            _version( version ),
-            _arch( arch ),
-            _pkgManager( pkgManager ),
-            _multiVersion( false ),
-            _multiArch( false )
-        {}
 
         // Data members
 

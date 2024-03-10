@@ -74,7 +74,7 @@ void DirTreeView::contextMenu( const QPoint & pos )
     QModelIndex index = indexAt( pos );
     if ( ! index.isValid() )
     {
-	logDebug() << "No item at this position" << Qt::endl;
+	//logDebug() << "No item at this position" << Qt::endl;
 	return;
     }
 

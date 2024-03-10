@@ -55,9 +55,6 @@ namespace QDirStat
 	 **/
 	virtual ~DirTree();
 
-
-     public slots:
-
 	/**
 	 * Actually start reading.
 	 *
@@ -107,9 +104,6 @@ namespace QDirStat
 	 * Finalize the complete tree after all read jobs are done.
 	 **/
 	void finalizeTree();
-
-
-    public:
 
 	/**
 	 * Return the URL of this tree if it has any elements or an empty
@@ -233,11 +227,6 @@ namespace QDirStat
 	void sendStartingReading();
 
 	/**
-	 * Send a finished() signal.
-	 **/
-	void sendFinished();
-
-	/**
 	 * Send a aborted() signal.
 	 **/
 //	void sendAborted();
@@ -272,7 +261,7 @@ namespace QDirStat
 	/**
 	 * Clear the tree and read a cache file.
 	 **/
-	void clearAndReadCache( const QString & cacheFileName );
+//	void clearAndReadCache( const QString & cacheFileName );
 
 	/**
 	 * Read installed packages that match the specified PkgFilter and their
@@ -362,11 +351,6 @@ namespace QDirStat
 	void childAdded( FileInfo * newChild );
 
 	/**
-	 * Emitted when the tree is about to be cleared.
-	 **/
-	void clearing();
-
-	/**
 	 * Emitted when a child is about to be deleted.
 	 **/
 	void deletingChild( FileInfo * deletedChild );
@@ -380,6 +364,11 @@ namespace QDirStat
 	 * e.g., when entire subtrees are deleted.
 	 **/
 	void childDeleted();
+
+	/**
+	 * Emitted when the tree is about to be cleared.
+	 **/
+	void clearing();
 
 	/**
 	 * Emitted when a subtree is about to be cleared, i.e. all its children
@@ -423,16 +412,16 @@ namespace QDirStat
 	 * changes - typically when a new directory is being read. Connect to a
 	 * status bar etc. to keep the user entertained.
 	 **/
-	void progressInfo( const QString & infoLine );
+//	void progressInfo( const QString & infoLine );
 
 
-    protected slots:
+    public slots:
 
 	/**
 	 * Notification that all jobs in the job queue are finished.
-	 * This will emit the finished() signal.
+	 * This will finalize the tree and emit the finished() signal.
 	 **/
-	void slotFinished();
+	void sendFinished();
 
 
     protected:

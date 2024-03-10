@@ -546,7 +546,8 @@ namespace QDirStat
 	 * Returns whether the item will currently be lacking certain information.
 	 **/
 	bool limitedInfo( FileInfo * item ) const
-	    { return item->isPseudoDir() || item->readState() == DirCached || item->isPkgInfo(); }
+	    { return item->isPseudoDir() || item->isPkgInfo(); }
+//	    { return item->isPseudoDir() || item->readState() == DirCached || item->isPkgInfo(); }
 
 	/**
 	 * Start removing rows.

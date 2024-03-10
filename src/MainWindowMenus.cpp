@@ -6,8 +6,8 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
-
-#include <QContextMenuEvent>
+#include <QDesktopServices>
+#include <QMouseEvent>
 
 #include "MainWindow.h"
 #include "DiscoverActions.h"
@@ -116,6 +116,7 @@ void MainWindow::connectToggleActions()
     QList<QPair<QAction *, void( MainWindow::* )( bool )>> actions(
     {
         // View menu
+        { _ui->actionShowBreadcrumbs,    &MainWindow::setBreadcrumbsVisible },
         { _ui->actionShowDetailsPanel,   &MainWindow::setDetailsPanelVisible },
         { _ui->actionShowTreemap,        &MainWindow::showTreemapView },
         { _ui->actionTreemapAsSidePanel, &MainWindow::treemapAsSidePanel },
@@ -195,27 +196,37 @@ void MainWindow::openActionUrl()
     if ( url.isEmpty() )
 	logError() << "No URL in statusTip() for action " << action->objectName() << Qt::endl;
     else
-	SysUtil::openInBrowser( url );
+	QDesktopServices::openUrl( url );
+//	SysUtil::openInBrowser( url );
 }
 
 
-void MainWindow::contextMenuEvent( QContextMenuEvent * event )
+void MainWindow::mousePressEvent( QMouseEvent * event )
 {
-    QMenu * menu = createPopupMenu();
-    QAction * toolbarAction = menu->actions().first();
-    toolbarAction->setText( tr( "Show &Toolbar" ) );
+    if ( event )
+    {
+        switch ( event->button() )
+        {
+            // Handle the back / forward buttons on the mouse to act like the
+            // history back / forward buttons in the tool bar
 
-    menu->insertAction( toolbarAction, _ui->actionShowMenuBar );
-    menu->addAction( _ui->actionShowStatusBar );
+            case Qt::BackButton:
+                // logDebug() << "BackButton" << Qt::endl;
+		if ( _ui->actionGoBack->isEnabled() )
+		    _ui->actionGoBack->trigger();
+                break;
 
-    menu->exec( event->globalPos() );
+            case Qt::ForwardButton:
+                // logDebug() << "ForwardButton" << Qt::endl;
+		if ( _ui->actionGoForward->isEnabled() )
+		    _ui->actionGoForward->trigger();
+                break;
 
-    return;
-
-    if ( _ui->actionShowStatusBar->isChecked() )
-	setStatusBar( statusBar() );
-    else
-	setStatusBar( nullptr );
+            default:
+                QMainWindow::mousePressEvent( event );
+                break;
+        }
+    }
 }
 
 

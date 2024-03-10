@@ -6,6 +6,8 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <QPointer>
+
 #include "PanelMessage.h"
 #include "SysUtil.h"
 #include "Logger.h"
@@ -15,6 +17,17 @@
 using namespace QDirStat;
 
 
+PanelMessage::PanelMessage( QWidget * parent ):
+    QWidget ( parent ),
+    _ui { new Ui::PanelMessage }
+{
+    CHECK_NEW( _ui );
+    _ui->setupUi( this );
+
+//    connect( _ui->detailsLinkLabel,	&QLabel::linkActivated,
+//	     this,			&PanelMessage::openDetailsUrl );
+}
+/*
 PanelMessage::PanelMessage( QWidget	  * parent,
 			    const QString & headingText,
 			    const QString & msgText ):
@@ -31,12 +44,12 @@ PanelMessage::PanelMessage( QWidget	  * parent,
     _ui->detailsLinkLabel->hide();
 }
 
-
+*/
 PanelMessage::~PanelMessage()
 {
     delete _ui;
 }
-
+/*
 
 void PanelMessage::setDetails( const QString & urlText )
 {
@@ -61,9 +74,10 @@ void PanelMessage::setDetailsUrl( const QString url )
 }
 
 
-void PanelMessage::openDetailsUrl() const
+void PanelMessage::openDetailsUrl( const QString & url ) const
 {
-    SysUtil::openInBrowser( _detailsUrl );
+    logDebug() << url << Qt::endl;
+    SysUtil::openInBrowser( url );
 }
 
 
@@ -79,3 +93,56 @@ void PanelMessage::setIcon( const QPixmap & pixmap )
 	_ui->iconLabel->show();
     }
 }
+*/
+
+PanelMessage * PanelMessage::createMsg( QWidget * parent, QVBoxLayout * vBox )
+{
+    CHECK_PTR(vBox);
+
+    PanelMessage * msg = new PanelMessage( parent );
+    CHECK_NEW( msg );
+    vBox->addWidget( msg );
+
+    return msg;
+}
+
+
+QPointer<PanelMessage> PanelMessage::showPermissionsMsg( QWidget * parent, QVBoxLayout * vBox )
+{
+    static QPointer<PanelMessage> permissionsMsg;
+    if ( !permissionsMsg )
+    {
+	permissionsMsg = createMsg( parent, vBox );
+	permissionsMsg->_ui->stackedWidget->setCurrentWidget( permissionsMsg->_ui->permissionsPage );
+    }
+
+    return permissionsMsg;
+}
+
+
+QPointer<PanelMessage> PanelMessage::showFilesystemsMsg( QWidget * parent, QVBoxLayout * vBox )
+{
+    static QPointer<PanelMessage> filesystemsMsg;
+    if ( !filesystemsMsg )
+    {
+	filesystemsMsg = createMsg( parent, vBox );
+	filesystemsMsg->_ui->stackedWidget->setCurrentWidget( filesystemsMsg->_ui->filesystemsPage );
+    }
+
+    return filesystemsMsg;
+}
+
+
+QPointer<PanelMessage> PanelMessage::showRpmMsg( QWidget * parent, QVBoxLayout * vBox )
+{
+    static QPointer<PanelMessage> rpmMsg;
+    if ( !rpmMsg )
+    {
+	rpmMsg = createMsg( parent, vBox );
+	rpmMsg->_ui->stackedWidget->setCurrentWidget( rpmMsg->_ui->rpmPage );
+    }
+
+    return rpmMsg;
+}
+
+

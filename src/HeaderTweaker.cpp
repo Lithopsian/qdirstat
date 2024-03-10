@@ -102,7 +102,11 @@ QAction * HeaderTweaker::createAction( QMenu * menu, const QString & title, void
 void HeaderTweaker::contextMenu( const QPoint & pos )
 {
     _currentSection = _header->logicalIndexAt( pos );
-    QString colName = this->colName( _currentSection );
+    if ( _currentSection == -1 )
+	return;
+
+    const QString colName = this->colName( _currentSection );
+    //logDebug() << colName << Qt::endl;
 
     QMenu menu;
 //    menu.addAction( tr( "Column \"%1\"" ).arg( colName ) );

@@ -44,11 +44,3 @@ void DotEntry::insertChild( FileInfo * newChild )
     childAdded( newChild );		// update summaries
 }
 
-
-DirReadState DotEntry::readState() const
-{
-    if ( _parent )
-	return _parent->readState();
-    else // This should never happen
-	return _readState;
-}

@@ -9,7 +9,6 @@
 
 #include <QPushButton>
 #include <QLineEdit>
-#include <QMessageBox>
 
 #include "OpenUnpkgDialog.h"
 #include "ExistingDir.h"

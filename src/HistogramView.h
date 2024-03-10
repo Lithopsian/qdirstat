@@ -474,17 +474,17 @@ namespace QDirStat
 
 	// Brushes and Pens
 
-	const QBrush	  _panelBackground = QBrush( QColor( 0xF0, 0xF0, 0xF0 ) );
-	const QBrush	  _barBrush = QBrush( QColor( 0xB0, 0xB0, 0xD0 ) );
-	const QPen	  _barPen = QPen( QColor( 0x40, 0x40, 0x50 ), 1 );
+	QBrush	  _panelBackground;
+	QBrush	  _barBrush;
+	QPen	  _barPen;
 
-	const QPen	  _medianPen = QPen( Qt::magenta, 2 );
-	const QPen	  _quartilePen = QPen( Qt::blue, 2 );
-	const QPen	  _percentilePen = QPen( QColor( 0xA0, 0xA0, 0xA0 ), 1 );
-	const QPen	  _decilePen = QPen( QColor( 0x30, 0x80, 0x30 ), 1 );
+	QPen	  _medianPen;
+	QPen	  _quartilePen;
+	QPen	  _percentilePen;
+	QPen	  _decilePen;
 
-	const QPen	  _piePen = QPen( Qt::black, 2 );
-	const QBrush	  _overflowSliceBrush = QBrush( QColor( 0xD0, 0x40, 0x20 ) );
+	QPen	  _piePen;
+	QBrush	  _overflowSliceBrush;
 
 	// Geometry
 

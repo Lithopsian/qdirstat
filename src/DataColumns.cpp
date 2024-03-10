@@ -196,7 +196,7 @@ void DataColumns::ensureNameColFirst( DataColumnList & colList )
 {
     if ( colList.first() != NameCol )
     {
-	//~ logError() << "NameCol is required to be first!" << Qt::endl;
+	// logError() << "NameCol is required to be first!" << Qt::endl;
 	colList.removeAll( NameCol );
 	colList.prepend( NameCol );
 	logError() << "Fixed column list: " << toStringList( colList ) << Qt::endl;

@@ -36,6 +36,7 @@ namespace QDirStat
     class FileInfo;
     class FilesystemsWindow;
     class HistoryButtons;
+    class PanelMessage;
     class PkgFilter;
     class PkgManager;
     class TreemapView;
@@ -66,6 +67,11 @@ public:
      * cache file.
      **/
     void readCache( const QString & cacheFileName );
+
+    /**
+     * Return the message panel widget to enable a PanelMessage to be displayed.
+     **/
+    QVBoxLayout * messagePanelContainer() { return _ui->vBox; }
 
 public slots:
 
@@ -262,7 +268,11 @@ protected slots:
      **/
     void readingAborted();
 
-void layoutChanged( const QList<QPersistentModelIndex> &, QAbstractItemModel::LayoutChangeHint );
+    /**
+     * Refresh after the tree has been sorted.
+     **/
+    void layoutChanged( const QList<QPersistentModelIndex> &, QAbstractItemModel::LayoutChangeHint );
+
     /**
      * Change display mode to "busy" (while reading a directory tree):
      * Sort tree view by read jobs, hide treemap view.
@@ -363,7 +373,12 @@ void layoutChanged( const QList<QPersistentModelIndex> &, QAbstractItemModel::La
      * Handle the config dialog closing.  It is configured to delete on close,
      * so this resets the dangling pointer.
      **/
-    void configDialogFinished( int result );
+//    void configDialogFinished( int result );
+
+    /**
+     * Show or hide the breadcrumbs.
+     **/
+    void setBreadcrumbsVisible( bool breadcrumbsVisible );
 
     /**
      * Show or hide the details view.
@@ -486,6 +501,11 @@ protected:
     void changeLayout( const QString & layoutName );
 
     /**
+     * Show or hide the menu bar and status bar.
+     **/
+    void showBars();
+
+    /**
      * Create the different top layouts.
      **/
     void initLayouts( const QString & currentLayoutName );
@@ -496,9 +516,22 @@ protected:
     void initLayout( const QString & layoutName, const QString & currentLayoutName );
 
     /**
-     * Save whether the details panel is visible to the current layout action.
+     * Get the layout details show values from an action.
      **/
-    void updateLayout( bool detailsPanelVisible );
+     bool layoutShowBreadcrumbs( const QAction * action ) const
+        { return action->data().toList().first().toBool(); }
+     bool layoutShowDetailsPanel( const QAction * action ) const
+        { return action->data().toList().last().toBool(); }
+
+    /**
+     * Save whether the breadcrumbs are visible in the current layout.
+     **/
+    void updateLayoutBreadcrumbs( bool breadcrumbsVisible );
+
+    /**
+     * Save whether the details panel is visible in the current layout.
+     **/
+    void updateLayoutDetailsPanel( bool detailsPanelVisible );
 
     /**
      * Apply a layout to the current settings.
@@ -583,7 +616,7 @@ protected:
 
 private:
     Ui::MainWindow		 * _ui;
-    QDirStat::ConfigDialog	 * _configDialog;
+//    QDirStat::ConfigDialog	 * _configDialog;
     QDirStat::HistoryButtons     * _historyButtons;
     QDirStat::DiscoverActions    * _discoverActions;
     QActionGroup		 * _layoutActionGroup;
@@ -609,27 +642,4 @@ private:
 
 }; // class MainWindow
 
-
-/**
- * Helper class for the different layouts of the tree view layout that
- * correspond to the [L1], [L2], [L3] buttons in the tool bar where you can
- * switch what columns are displayed, and whether or not to display the
- * details panel.
- *
- * Notice that the column layouts are handled in the HeaderTweaker and its
- * ColumnLayout helper class; see also HeaderTweaker.h and HeaderTweaker.cpp.
-
-class TreeLayout
-{
-public:
-    TreeLayout( const QString & name ):
-	_name( name ),
-	_showDetailsPanel( true )
-	{}
-
-    QString _name;
-    bool    _showDetailsPanel;
-
-}; // class TreeLayout
-**/
 #endif // MainWindow_H
