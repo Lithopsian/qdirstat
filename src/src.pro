@@ -46,7 +46,7 @@ SOURCES	  = main.cpp			\
 	    CleanupConfigPage.cpp	\
 	    ConfigDialog.cpp		\
 	    DataColumns.cpp		\
-	    DebugHelpers.cpp		\
+#	    DebugHelpers.cpp		\
 	    DirInfo.cpp			\
 	    DirReadJob.cpp		\
 	    DirTree.cpp			\
@@ -70,7 +70,7 @@ SOURCES	  = main.cpp			\
 	    FileInfoSet.cpp		\
 	    FileInfoSorter.cpp		\
 	    FileMTimeStats.cpp		\
-	    FileSearchFilter.cpp	\
+#	    FileSearchFilter.cpp	\
 	    FileSizeLabel.cpp		\
 	    FileSizeStats.cpp		\
 	    FileSizeStatsWindow.cpp	\
@@ -94,7 +94,6 @@ SOURCES	  = main.cpp			\
 	    MainWindowLayout.cpp	\
 	    MainWindowMenus.cpp		\
 	    MainWindowUnpkg.cpp		\
-#	    MessagePanel.cpp		\
 	    MimeCategorizer.cpp		\
 	    MimeCategory.cpp		\
 	    MimeCategoryConfigPage.cpp	\
@@ -149,7 +148,7 @@ HEADERS	  =				\
 	    CleanupConfigPage.h		\
 	    ConfigDialog.h		\
 	    DataColumns.h		\
-	    DebugHelpers.h		\
+#	    DebugHelpers.h		\
 	    DirInfo.h			\
 	    DirReadJob.h		\
 	    DirTree.h			\
@@ -188,7 +187,6 @@ HEADERS	  =				\
 	    LocateFilesWindow.h		\
 	    Logger.h			\
 	    MainWindow.h		\
-#	    MessagePanel.h		\
 	    MimeCategorizer.h		\
 	    MimeCategory.h		\
 	    MimeCategoryConfigPage.h	\
@@ -251,14 +249,12 @@ FORMS	  = main-window.ui		   \
 	    general-config-page.ui	   \
 	    locate-file-type-window.ui	   \
 	    locate-files-window.ui	   \
-#	    message-panel.ui		   \
 	    mime-category-config-page.ui   \
 	    open-dir-dialog.ui		   \
 	    open-pkg-dialog.ui		   \
 	    open-unpkg-dialog.ui	   \
 	    output-window.ui		   \
 	    panel-message.ui		   \
-#	    show-unpkg-files-dialog.ui	   \
 	    unreadable-dirs-window.ui
 
 

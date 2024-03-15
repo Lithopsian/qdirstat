@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>563</width>
-    <height>529</height>
+    <height>549</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -39,7 +39,7 @@
          <item>
           <widget class="QToolButton" name="moveToTopButton">
            <property name="toolTip">
-            <string>Move the current cleanup action to the top of the list.</string>
+            <string>Move the current cleanup action to the top of the list</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -50,7 +50,7 @@
          <item>
           <widget class="QToolButton" name="moveUpButton">
            <property name="toolTip">
-            <string>Move the current cleanup action one position up in the list.</string>
+            <string>Move the current cleanup action up one place in the list</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -74,8 +74,7 @@
          <item>
           <widget class="QToolButton" name="addButton">
            <property name="toolTip">
-            <string>Create a new cleanup action.
-You can create as many as you like.</string>
+            <string>&lt;p style='white-space:pre'&gt;Create a new cleanup action.  You can create&lt;br/&gt;as many as you like&lt;/p&gt;</string>
            </property>
            <property name="icon">
             <iconset resource="../../qdirstat-master/src/icons.qrc">
@@ -86,7 +85,7 @@ You can create as many as you like.</string>
          <item>
           <widget class="QToolButton" name="removeButton">
            <property name="toolTip">
-            <string>Remove the current cleanup action.</string>
+            <string>Remove the current cleanup action</string>
            </property>
            <property name="icon">
             <iconset resource="../../qdirstat-master/src/icons.qrc">
@@ -101,8 +100,8 @@ You can create as many as you like.</string>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>20</width>
-             <height>40</height>
+             <width>0</width>
+             <height>0</height>
             </size>
            </property>
           </spacer>
@@ -110,7 +109,7 @@ You can create as many as you like.</string>
          <item>
           <widget class="QToolButton" name="moveDownButton">
            <property name="toolTip">
-            <string>Move the current cleanup action one position down in the list.</string>
+            <string>Move the current cleanup action down one place in the list</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -121,7 +120,7 @@ You can create as many as you like.</string>
          <item>
           <widget class="QToolButton" name="moveToBottomButton">
            <property name="toolTip">
-            <string>Move the current cleanup action to the bottom of the list.</string>
+            <string>Move the current cleanup action to the bottom of the list</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -159,9 +158,10 @@ You can create as many as you like.</string>
          <item>
           <widget class="QLineEdit" name="titleLineEdit">
            <property name="toolTip">
-            <string>Enter a title for this cleanup action.
-This will show up in the menus.
-You can add a hotkey with &quot;&amp;&quot;.</string>
+            <string>&lt;p style='white-space:pre'&gt;Enter a title for this cleanup action; this will show&lt;br/&gt;in the menus (use '&amp;' for keyboard shortcuts)&lt;/p&gt;</string>
+           </property>
+           <property name="placeholderText">
+            <string>required</string>
            </property>
           </widget>
          </item>
@@ -213,7 +213,10 @@ You can add a hotkey with &quot;&amp;&quot;.</string>
 Each command will be executed with a shell.
 
 If multiple items are selected, the command
-will be executed once for each selected item.</string>
+will be executed once for each selected item</string>
+            </property>
+            <property name="placeholderText">
+             <string>required</string>
             </property>
            </widget>
           </item>
@@ -238,9 +241,7 @@ executed multiple times.</string>
           <item>
            <widget class="QCheckBox" name="recurseCheckBox">
             <property name="toolTip">
-             <string>Select if the command should be executed recursively
-for each directory in the selected branch.
-The command will be called separately for each directory level.</string>
+             <string>&lt;p style='white-space:pre'&gt;Select if the command should be executed recursively for&lt;br/&gt;each directory in the selected branch; the command will be&lt;br/&gt;called separately for each directory level&lt;/p&gt;</string>
             </property>
             <property name="text">
              <string>&amp;Recurse into subdirectories</string>
@@ -250,11 +251,7 @@ The command will be called separately for each directory level.</string>
           <item>
            <widget class="QCheckBox" name="askForConfirmationCheckBox">
             <property name="toolTip">
-             <string>Check this if a confirmation dialog should be
-opened before executing the command.
-There will be only one confirmation dialog,
-even if multiple items are selected or if
-the command is executed recursively.</string>
+             <string>Check this for a confirmation dialog before executing the commands</string>
             </property>
             <property name="text">
              <string>As&amp;k for confirmation</string>
@@ -282,30 +279,29 @@ the command is executed recursively.</string>
             <item>
              <widget class="QComboBox" name="refreshPolicyComboBox">
               <property name="toolTip">
-               <string>This specifies if and how the directory tree should be
-re-read from disk after the cleanup action is finished.</string>
+               <string>&lt;p style='white-space:pre'&gt;This specifies if and how the directory tree should be re-read&lt;br/&gt;from disk after the cleanup action is finished.&lt;/p&gt;</string>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <item>
                <property name="text">
-                <string>No Refresh</string>
+                <string>No refresh</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>Refresh This Item</string>
+                <string>Refresh only this item</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>Refresh This Item's Parent</string>
+                <string>Refresh this item's parent</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>Assume Item Has Been Deleted</string>
+                <string>Assume item has been deleted</string>
                </property>
               </item>
              </widget>
@@ -317,11 +313,11 @@ re-read from disk after the cleanup action is finished.</string>
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>200</height>
+              <height>220</height>
              </size>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="worksForPage">
              <property name="geometry">
@@ -329,7 +325,7 @@ re-read from disk after the cleanup action is finished.</string>
                <x>0</x>
                <y>0</y>
                <width>234</width>
-               <height>116</height>
+               <height>136</height>
               </rect>
              </property>
              <attribute name="label">
@@ -341,7 +337,7 @@ re-read from disk after the cleanup action is finished.</string>
                 <item>
                  <widget class="QCheckBox" name="worksForDirCheckBox">
                   <property name="toolTip">
-                   <string>Check this if the command can be applied to directories.</string>
+                   <string>Check this if the command can be applied to directories</string>
                   </property>
                   <property name="text">
                    <string>&amp;Directories</string>
@@ -351,7 +347,7 @@ re-read from disk after the cleanup action is finished.</string>
                 <item>
                  <widget class="QCheckBox" name="worksForFilesCheckBox">
                   <property name="toolTip">
-                   <string>Check this if the command can be applied to files.</string>
+                   <string>Check this if the command can be applied to files</string>
                   </property>
                   <property name="text">
                    <string>&amp;Files</string>
@@ -361,8 +357,7 @@ re-read from disk after the cleanup action is finished.</string>
                 <item>
                  <widget class="QCheckBox" name="worksForDotEntriesCheckBox">
                   <property name="toolTip">
-                   <string>Check this if the command can be applied to the &lt;Files&gt; entries in the tree.
-Note that they don't really have a counterpart on the disk.</string>
+                   <string>&lt;p style='white-space:pre'&gt;Check this if the command can be applied to the &lt;Files&gt; entries&lt;br/&gt;in the tree which group together all the files in a directory&lt;/p&gt;</string>
                   </property>
                   <property name="text">
                    <string>&lt;Files&gt; pseudo &amp;entries</string>
@@ -392,7 +387,7 @@ Note that they don't really have a counterpart on the disk.</string>
                <x>0</x>
                <y>0</y>
                <width>234</width>
-               <height>116</height>
+               <height>136</height>
               </rect>
              </property>
              <attribute name="label">
@@ -411,40 +406,7 @@ Note that they don't really have a counterpart on the disk.</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <widget class="QComboBox" name="outputWindowPolicyComboBox">
-                  <property name="toolTip">
-                   <string>Select if and when to open a window for the output of the command.
-If there is an error, the output window is always opened unless
-&quot;Never Show&quot; is selected here.
-&quot;Show After Timeout&quot; is a useful setting for most cases.</string>
-                  </property>
-                  <property name="currentIndex">
-                   <number>2</number>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>Show Always</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Show If Error Output</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Show After Timeout</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Never Show</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item row="1" column="0">
+                <item row="2" column="0">
                  <widget class="QLabel" name="outputWindowTimeoutCaption">
                   <property name="text">
                    <string>Ti&amp;meout:</string>
@@ -454,14 +416,23 @@ If there is an error, the output window is always opened unless
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="1">
+                <item row="3" column="0" colspan="2">
+                 <widget class="QCheckBox" name="outputWindowAutoClose">
+                  <property name="toolTip">
+                   <string>&lt;p style='white-space:pre'&gt;Check this to automatically close the output window if the command completes&lt;br/&gt;with no errors; if you are interested in the output of your command, uncheck this&lt;/p&gt;</string>
+                  </property>
+                  <property name="text">
+                   <string>Auto close if no &amp;error</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
                  <widget class="QDoubleSpinBox" name="outputWindowTimeoutSpinBox">
                   <property name="toolTip">
-                   <string>Set the timeout for the &quot;Show After Timeout&quot; setting.
-Don't underestimate your computer: It can get more
-done in half a second than you might think.
-On the other hand, waiting for half a second feels
-longer than you might think.</string>
+                   <string>&lt;p style='white-space:pre'&gt;The delay before an output window is shown for this Cleanup.&lt;br/&gt;If the command finishes with no error before the timeout,&lt;br/&gt;then no window is shown,&lt;/p&gt;</string>
                   </property>
                   <property name="suffix">
                    <string> sec</string>
@@ -469,27 +440,57 @@ longer than you might think.</string>
                   <property name="decimals">
                    <number>1</number>
                   </property>
+                  <property name="minimum">
+                   <double>0.100000000000000</double>
+                  </property>
                   <property name="maximum">
                    <double>300.000000000000000</double>
+                  </property>
+                  <property name="stepType">
+                   <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
                   </property>
                   <property name="value">
                    <double>0.500000000000000</double>
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0" colspan="2">
-                 <widget class="QCheckBox" name="outputWindowAutoCloseCheckBox">
+                <item row="0" column="1">
+                 <widget class="QComboBox" name="outputWindowPolicyComboBox">
                   <property name="toolTip">
-                   <string>Check this to automatically close the
-output window if there was no error.
-If you are interested in the output of your
-command, uncheck this.</string>
+                   <string>If and when to open a window for the output of the Cleanup command</string>
+                  </property>
+                  <property name="currentIndex">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Always show</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Show If error output</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Show after timeout</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Never show</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="1" column="0" colspan="2">
+                 <widget class="QCheckBox" name="outputWindowDefaultTimeout">
+                  <property name="toolTip">
+                   <string>&lt;p style='white-space:pre'&gt;Use the default timeout configured for output windows&lt;br/&gt;(can only be changed by manually editing the config file)&lt;/p&gt;</string>
                   </property>
                   <property name="text">
-                   <string>Auto c&amp;lose if no error</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
+                   <string>&amp;Use default timeout</string>
                   </property>
                  </widget>
                 </item>
@@ -515,8 +516,8 @@ command, uncheck this.</string>
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>254</width>
-               <height>101</height>
+               <width>234</width>
+               <height>136</height>
               </rect>
              </property>
              <attribute name="label">
@@ -538,13 +539,7 @@ command, uncheck this.</string>
                 <item>
                  <widget class="QComboBox" name="shellComboBox">
                   <property name="toolTip">
-                   <string>Select a shell here or enter your favourite one.
-
-Each command is executed with a shell and the &quot;-c&quot; option.
-Shells may behave differently for wildcards and special characters.
-
-If you are setting this up for other users, better stay on the safe side
-and select a shell with a well-known behaviour like /bin/bash.</string>
+                   <string>&lt;p style='white-space:pre'&gt;Select a shell here or enter your favourite one.&lt;br/&gt;&lt;br/&gt;Each command is executed with a shell and the &quot;-c&quot; option.&lt;br/&gt;&lt;br/&gt;Shells may behave differently for wildcards and special characters.&lt;br/&gt;&lt;br/&gt;If you are setting this up for other users, stay on the safe side and select a shell&lt;br/&gt;with a well-known behaviour like /bin/bash.&lt;/p&gt;</string>
                   </property>
                   <property name="editable">
                    <bool>true</bool>
@@ -571,8 +566,10 @@ and select a shell with a well-known behaviour like /bin/bash.</string>
               <item>
                <widget class="QLabel" name="shellMiniHelp">
                 <property name="text">
-                 <string>Each command is executed with a shell
-and the '-c' option.</string>
+                 <string>Each command is executed with a shell and the '-c' option.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -617,6 +614,7 @@ and the '-c' option.</string>
  </widget>
  <resources>
   <include location="../../qdirstat-master/src/icons.qrc"/>
+  <include location="icons.qrc"/>
   <include location="icons.qrc"/>
  </resources>
  <connections/>

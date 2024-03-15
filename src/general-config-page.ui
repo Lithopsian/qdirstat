@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>GeneralConfigPage</class>
  <widget class="QWidget" name="GeneralConfigPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>371</width>
+    <height>402</height>
+   </rect>
+  </property>
   <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
    <property name="leftMargin">
     <number>24</number>
@@ -29,7 +37,7 @@
         <item>
          <widget class="QCheckBox" name="urlInWindowTitleCheckBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Whether to include the current root directory in the titlebar (eg. &lt;nobr&gt;&quot;QDirStat /tmp&quot;&lt;/nobr&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;p style='white-space:pre'&gt;Whether to include the current root directory&lt;br/&gt;in the titlebar (eg. &lt;nobr&gt;&quot;QDirStat /tmp&quot;&lt;/nobr&gt;)&lt;/p&gt;</string>
           </property>
           <property name="text">
            <string>Show URL in &amp;window title</string>
@@ -39,7 +47,7 @@
         <item>
          <widget class="QCheckBox" name="crossFilesystemsCheckBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The default setting for whether to read across filesystem boundaries&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;p style='white-space:pre'&gt;The default setting for whether to read across the&lt;br/&gt;boundaries of mounted filesystems&lt;/p&gt;</string>
           </property>
           <property name="text">
            <string>&amp;Cross filesystem boundaries while reading
@@ -65,7 +73,7 @@
         <item row="0" column="0" colspan="2">
          <widget class="QCheckBox" name="useBoldForDominantCheckBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Whether the dominant (ie. largest) items in each directory should be displayed in bold&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;p style='white-space:pre'&gt;Whether the dominant (ie. largest) items in&lt;br/&gt;each directory should be displayed in bold&lt;/p&gt;</string>
           </property>
           <property name="text">
            <string>Use &amp;bold font for dominant tree items</string>
@@ -74,9 +82,6 @@
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="treeIconThemeCaption">
-          <property name="toolTip">
-           <string>The size of the directory icons in the tree</string>
-          </property>
           <property name="text">
            <string>&amp;Icon size</string>
           </property>
@@ -88,7 +93,8 @@
         <item row="1" column="1">
          <widget class="QComboBox" name="treeIconThemeComboBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The size of the directory and package icons in the tree view&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>The size of the directory and package icons in the tree view
+</string>
           </property>
           <item>
            <property name="text">
@@ -104,9 +110,6 @@
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="treeUpdateIntervalCaption">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of milliseconds between updates of the tree while reading a filesystem&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>&amp;Update interval while reading:</string>
           </property>
@@ -118,7 +121,7 @@
         <item row="2" column="1">
          <widget class="QSpinBox" name="treeUpdateIntervalSpinBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How often the tree view is updated while files are still being read&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>How often the tree view is updated while files are still being read</string>
           </property>
           <property name="suffix">
            <string> millisec</string>
@@ -149,7 +152,7 @@
         <item row="0" column="0" colspan="2">
          <widget class="QCheckBox" name="useTreemapHoverCheckBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Whether to show each directory that the mouse hovers over in the statusbar, and also when tiles are selected&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;p style='white-space:pre'&gt;Whether to show each directory that the mouse&lt;br/&gt;hovers over in the statusbar, and also the&lt;br/&gt;name when tiles are selected&lt;/p&gt;</string>
           </property>
           <property name="text">
            <string>Show &amp;hovered treemap directory</string>
@@ -175,7 +178,7 @@
         <item row="1" column="1">
          <widget class="QDoubleSpinBox" name="statusBarShortTimeoutSpinBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The length of time that user action progress messages remain visible in the status bar&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;p style='white-space:pre'&gt;The length of time that user action progress messages&lt;br/&gt;remain visible in the status bar&lt;/p&gt;</string>
           </property>
           <property name="suffix">
            <string> sec</string>
@@ -216,7 +219,7 @@
         <item row="2" column="1">
          <widget class="QSpinBox" name="statusBarLongTimeoutSpinBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The length of time that messages about the completion of tree reading remain visible in the status bar&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;p style='white-space:pre'&gt;The length of time that messages about the completion&lt;br/&gt;of tree reading remain visible in the status bar&lt;/p&gt;</string>
           </property>
           <property name="suffix">
            <string> sec</string>
@@ -240,6 +243,12 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
       </spacer>
      </item>
     </layout>
@@ -248,6 +257,12 @@
     <spacer name="horizontalSpacer_3">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
      </property>
     </spacer>
    </item>

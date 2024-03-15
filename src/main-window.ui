@@ -58,7 +58,11 @@
             <number>4</number>
            </property>
            <item>
-            <widget class="QDirStat::BreadcrumbNavigator" name="breadcrumbNavigator"/>
+            <widget class="QDirStat::BreadcrumbNavigator" name="breadcrumbNavigator">
+             <property name="textInteractionFlags">
+              <set>Qt::TextBrowserInteraction</set>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QDirStat::DirTreeView" name="dirTreeView">
@@ -435,7 +439,7 @@
     <string>&amp;Stop Reading</string>
    </property>
    <property name="toolTip">
-    <string>Stop reading immediately</string>
+    <string>Stop reading immediately - some directories may be left in an aborted state</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -580,7 +584,7 @@
     <string>&amp;Up One Level</string>
    </property>
    <property name="toolTip">
-    <string>Go up up one level</string>
+    <string>Go up one level in the directory tree</string>
    </property>
    <property name="shortcut">
     <string>Alt+Up</string>
@@ -595,7 +599,7 @@
     <string>To &amp;Toplevel</string>
    </property>
    <property name="toolTip">
-    <string>Navigate to the toplevel directory of this tree</string>
+    <string>Navigate to the top level directory of this tree</string>
    </property>
    <property name="shortcut">
     <string>Alt+Home</string>
@@ -656,7 +660,7 @@
     <string>Verbose Selection</string>
    </property>
    <property name="toolTip">
-    <string>Switch verbose logging of selecting and unselecting items on or off.</string>
+    <string>Switch verbose logging of selecting and unselecting items on or off</string>
    </property>
    <property name="shortcut">
     <string>Shift+F7</string>
@@ -680,6 +684,9 @@
   <action name="actionDumpSelection">
    <property name="text">
     <string>Dump Selection to Log</string>
+   </property>
+   <property name="toolTip">
+    <string>Dump selected items to the log file</string>
    </property>
    <property name="shortcut">
     <string>F7</string>
@@ -918,7 +925,7 @@
     <string>&amp;Treemap as side panel</string>
    </property>
    <property name="toolTip">
-    <string>Show the Treeemap beside the directory tree, otherwise it will be shown beneath.</string>
+    <string>Show the Treeemap to the right of the directory tree, otherwise it will be shown below it</string>
    </property>
   </action>
   <action name="actionFileAgeStats">
@@ -961,7 +968,7 @@
     <string>&amp;Forward</string>
    </property>
    <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Go forward again to the next directory (after going back)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>Go forward again to the next directory (after going back)</string>
    </property>
    <property name="shortcut">
     <string>Alt+Right</string>

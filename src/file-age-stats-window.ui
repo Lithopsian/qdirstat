@@ -25,9 +25,6 @@
        <bold>true</bold>
       </font>
      </property>
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Year of the modification time of the file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;&lt;</string>
-     </property>
      <property name="text">
       <string>File age</string>
      </property>
@@ -62,11 +59,8 @@
      </item>
      <item>
       <widget class="QPushButton" name="locateButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Locate the files from that year&lt;/p&gt;&lt;p&gt;(only if no more than 1000)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;p style='white-space:pre'&gt;Locate the files from that year and month&lt;br/&gt;(only if no more than 10,000)&lt;/p&gt;</string>
        </property>
        <property name="text">
         <string>&amp;Locate</string>
@@ -87,7 +81,7 @@
           </sizepolicy>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked: If a different directory is selected in the main window, automatically update the content of this window with data from that other directory of the main window.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;p style='white-space:pre'&gt;If checked: when a different directory is selected in the main&lt;br/&gt;window, the content of this window is automatically updated&lt;/p&gt;</string>
          </property>
          <property name="text">
           <string>&amp;Sync with main window</string>

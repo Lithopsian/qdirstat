@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>663</width>
-    <height>524</height>
+    <width>529</width>
+    <height>378</height>
    </rect>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -39,7 +39,7 @@
          <item>
           <widget class="QToolButton" name="moveToTopButton">
            <property name="toolTip">
-            <string>Move the current exclude rule to the top of the list.</string>
+            <string>Move the current exclude rule to the top of the list</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -50,7 +50,7 @@
          <item>
           <widget class="QToolButton" name="moveUpButton">
            <property name="toolTip">
-            <string>Move the current exclude rule one position up in the list.</string>
+            <string>Move the current exclude rule up one place in the list</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -74,8 +74,7 @@
          <item>
           <widget class="QToolButton" name="addButton">
            <property name="toolTip">
-            <string>Create a new exclude rule.
-You can create as many as you like.</string>
+            <string>&lt;p style='white-space:pre'&gt;Create a new exclude rule.  You can create&lt;br/&gt;as many as you like&lt;/p&gt;</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -86,7 +85,7 @@ You can create as many as you like.</string>
          <item>
           <widget class="QToolButton" name="removeButton">
            <property name="toolTip">
-            <string>Remove the current exclude rule.</string>
+            <string>Remove the current exclude rule</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -110,7 +109,7 @@ You can create as many as you like.</string>
          <item>
           <widget class="QToolButton" name="moveDownButton">
            <property name="toolTip">
-            <string>Move the current exclude rule one position down in the list.</string>
+            <string>Move the current exclude rule down one place in the list</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -121,7 +120,7 @@ You can create as many as you like.</string>
          <item>
           <widget class="QToolButton" name="moveToBottomButton">
            <property name="toolTip">
-            <string>Move the current exclude rule to the bottom of the list.</string>
+            <string>Move the current exclude rule to the bottom of the list</string>
            </property>
            <property name="icon">
             <iconset resource="icons.qrc">
@@ -168,12 +167,22 @@ You can create as many as you like.</string>
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="patternLineEdit"/>
+            <widget class="QLineEdit" name="patternLineEdit">
+             <property name="toolTip">
+              <string>&lt;p style='white-space:pre'&gt;A pattern to match against to exclude files or directories&lt;br/&gt;from reading (except in the packaged files view)&lt;/p&gt;</string>
+             </property>
+             <property name="placeholderText">
+              <string>required</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
          <item>
           <widget class="QCheckBox" name="caseSensitiveCheckBox">
+           <property name="toolTip">
+            <string>Whether to use case-senitive matching</string>
+           </property>
            <property name="text">
             <string>&amp;Case sensitive</string>
            </property>
@@ -193,7 +202,7 @@ You can create as many as you like.</string>
           <item>
            <widget class="QRadioButton" name="fixedStringRadioButton">
             <property name="toolTip">
-             <string>Matches the entire exact path or name.  No wildcards.</string>
+             <string>Matches the entire exact path or name; no wildcards</string>
             </property>
             <property name="text">
              <string>&amp;Fixed string</string>
@@ -203,7 +212,7 @@ You can create as many as you like.</string>
           <item>
            <widget class="QRadioButton" name="wildcardsRadioButton">
             <property name="toolTip">
-             <string>Simple wildcards *, ?, and [], matching the whole name or path.</string>
+             <string>Simple wildcards *, ?, and [], matching the whole name or path</string>
             </property>
             <property name="text">
              <string>&amp;Wildcards</string>
@@ -213,7 +222,7 @@ You can create as many as you like.</string>
           <item>
            <widget class="QRadioButton" name="regexpRadioButton">
             <property name="toolTip">
-             <string>Matches any portion of the name or path using a regular expression.</string>
+             <string>Matches any portion of the name or path using a regular expression</string>
             </property>
             <property name="text">
              <string>&amp;Regular expression</string>
@@ -235,7 +244,7 @@ You can create as many as you like.</string>
           <item>
            <widget class="QRadioButton" name="dirNameWithoutPathRadioButton">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Matches on the name of a directory only, don't enter any slahes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>Matches on the name of a directory only; don't use any slahes</string>
             </property>
             <property name="text">
              <string>&amp;Directory name without path</string>
@@ -245,11 +254,7 @@ You can create as many as you like.</string>
           <item>
            <widget class="QRadioButton" name="fullPathRadioButton">
             <property name="toolTip">
-             <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Matches on the full path, including an initial slash.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>Matches on the full path, including an initial slash</string>
             </property>
             <property name="text">
              <string>Full &amp;path</string>
@@ -259,7 +264,7 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QRadioButton" name="checkAnyFileChildRadioButton">
             <property name="toolTip">
-             <string>Matches a filename excluding the path, and&lt;br/&gt;excludes the directory containing that file.</string>
+             <string>&lt;p style='white-space:pre'&gt;Matches a filename excluding the path, and excludes&lt;br/&gt;the directory containing that file&lt;/p&gt;</string>
             </property>
             <property name="text">
              <string>&amp;Any file in a directory</string>
@@ -291,8 +296,8 @@ p, li { white-space: pre-wrap; }
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>13</width>
-           <height>13</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>

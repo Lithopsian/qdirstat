@@ -62,7 +62,7 @@
          <item>
           <widget class="QLineEdit" name="nameLineEdit">
            <property name="toolTip">
-            <string>Edit the name of the current category.</string>
+            <string>Edit the name of the current category</string>
            </property>
            <property name="placeholderText">
             <string>Enter category name</string>
@@ -76,7 +76,7 @@
          <item>
           <widget class="QPushButton" name="categoryColorButton">
            <property name="toolTip">
-            <string>Select a color for the current category</string>
+            <string>Select a colour for the current category</string>
            </property>
            <property name="text">
             <string>&amp;Colour</string>
@@ -92,7 +92,7 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>Enter RGB colour code directly</string>
+            <string>Enter an RGB colour code directly</string>
            </property>
            <property name="placeholderText">
             <string>Category colour</string>
@@ -217,7 +217,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add filename patterns here, each one on a separate line. Use * or ? as wildcards and [] for matching sets of characters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;p style='white-space:pre'&gt;Add filename patterns here, each one on a separate line.&lt;br/&gt;Use * or ? as wildcards and [] for matching sets of characters.&lt;/p&gt;</string>
               </property>
               <property name="verticalScrollBarPolicy">
                <enum>Qt::ScrollBarAlwaysOff</enum>
@@ -253,7 +253,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add filename patterns here, each one on a separate line. Use * or ? as wildcards and [] for matching sets of characters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;p style='white-space:pre'&gt;Add filename patterns here, each one on a separate line.&lt;br/&gt;Use * or ? as wildcards and [] for matching sets of characters.&lt;/p&gt;</string>
               </property>
              </widget>
             </item>
@@ -327,7 +327,7 @@
             <item>
              <widget class="QCheckBox" name="cushionShadingCheckBox">
               <property name="toolTip">
-               <string>Whether to draw curved 3-dimensional tile surfaces</string>
+               <string>Whether to draw raised 3-dimensional tile surfaces</string>
               </property>
               <property name="text">
                <string>Cushion &amp;shading</string>
@@ -445,7 +445,7 @@
               <item>
                <widget class="QPushButton" name="tileColorButton">
                 <property name="toolTip">
-                 <string>Use the same colour for all tiles</string>
+                 <string>Choose the same colour for all tiles</string>
                 </property>
                 <property name="text">
                  <string>Fi&amp;xed colour</string>
@@ -461,7 +461,7 @@
                  </sizepolicy>
                 </property>
                 <property name="toolTip">
-                 <string>Use the same colour for all tiles</string>
+                 <string>Enter an RGB colour code directly to use for all tiles</string>
                 </property>
                 <property name="text">
                  <string/>
@@ -506,7 +506,7 @@
                  </sizepolicy>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The smallest tile size that will be placed into the treemap&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>The smallest tile size that will be placed into the treemap</string>
                 </property>
                 <property name="maximum">
                  <number>10</number>
