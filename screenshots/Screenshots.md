@@ -11,45 +11,45 @@ License: GPL V2
 
 ## QDirStat Main Window
 
-![Main Window Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-main-win.png)
+![Main Window Screenshot](QDirStat-main-win.png)
 
 
 ### Different Main Window Layouts
 
-![Layout 1 (short)](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-details-file-L1.png)
+![Layout 1 (short)](QDirStat-details-file-L1.png)
 _Layout 1 (short): Only the bare minimum of tree columns plus the details panel for the selected item._
 
-![Layout 2 (classic)](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-details-file-L2.png)
+![Layout 2 (classic)](QDirStat-details-file-L2.png)
 _Layout 2 (classic): The classic QDirStat tree columns plus the details panel for the selected item._
 
-![Layout 3 (full)](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-details-file-L3.png)
+![Layout 3 (full)](QDirStat-details-file-L3.png)
 _Layout 3 (full): All tree columns including file owner, group and permissions in both "rwxrwxrwx" and octal,
 but no details panel to make room for all the columns._
 
 
 ### Details Panel
 
-![Details Panel for a File](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-details-file-L2.png)
+![Details Panel for a File](QDirStat-details-file-L2.png)
 
 _File selected. Notice the "Package" field: For system files, QDirStat queries
 the package manager (dpkg / rpm / pacman) which package the file belongs to._
 
-![Details Panel for a Directory](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-details-dir.png)
+![Details Panel for a Directory](QDirStat-details-dir.png)
 
 _Directory selected_
 
-![Details Panel for a "Files" Pseudo Directory](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-details-dot-entry.png)
+![Details Panel for a "Files" Pseudo Directory](QDirStat-details-dot-entry.png)
 
 _"Files" pseudo directory selected_
 
-![Details Panel for Multiple Selected Items](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-details-multi-sel.png)
+![Details Panel for Multiple Selected Items](QDirStat-details-multi-sel.png)
 
 _Multi-selection_
 
 
 ## Open Directory Dialog
 
-![Custom Open Directory Dialog Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-open-dir-dialog.png)
+![Custom Open Directory Dialog Screenshot](QDirStat-open-dir-dialog.png)
 
 _Custom "Open Directory" dialog with quick access to the home directory and to
 mounted filesystems. The "Cross Filesystems" check box here is a temporary
@@ -59,21 +59,21 @@ name._
 
 ## Output During Cleanup Actions
 
-![Cleanup Action Output Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-cleanup-output.png)
+![Cleanup Action Output Screenshot](QDirStat-cleanup-output.png)
 
 _Screenshot of output during cleanup actions. Of course this window is purely optional._
 
 
 ## Error Reporting
 
-![Reporting Directory Read Errors Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-err-dirs-light.png)
+![Reporting Directory Read Errors Screenshot](QDirStat-err-dirs-light.png)
 
 _Reporting errors during directory reading. Typically this is because of
 missing permissions, so it may or may not be important to the user. Those
 errors are reported in small panels at the bottom of the directory tree
 widget. The user can leave them open or close them._
 
-![Details about Directory Read Errors](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-unreadable-dirs-window.png)
+![Details about Directory Read Errors](QDirStat-unreadable-dirs-window.png)
 
 _Clicking on the "Details..." link opens a separate window that lists all the
 directories that could not be read. This window is non-modal, i.e. the user can
@@ -84,7 +84,7 @@ branches and scrolls to ensure that directory is visible._
 
 ## Mounted Filesystems Window
 
-![Custom Open Directory Dialog Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-filesystems-window.png)
+![Custom Open Directory Dialog Screenshot](QDirStat-filesystems-window.png)
 
 _This window (opened from the menu with View -> Show Mounted Filesystems) shows
 the currently mounted filesystems. It does not show system mounts like /dev,
@@ -97,18 +97,18 @@ root user; "Free" is what is available for non-privileged users._
 
 ## File Type Statistics
 
-![File Type Statistics Window Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-file-type-stats.png)
+![File Type Statistics Window Screenshot](QDirStat-file-type-stats.png)
 
 _Menu View -> File Type Statistics..._
 
 
 ## Locating Files by Type
 
-![Locate Files Window](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-locate-file-types-window.png)
+![Locate Files Window](QDirStat-locate-file-types-window.png)
 
 _Results after clicking on the "Locate" button in the "File Type Statistics" window._
 
-![Locating Files](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-locating-file-types.png)
+![Locating Files](QDirStat-locating-file-types.png)
 
 _Locating files with a specific extension. That branch is automatically opened
 in the tree view in the main window, and all matching files in that directory are selected._
@@ -116,7 +116,7 @@ in the tree view in the main window, and all matching files in that directory ar
 
 ## File Age Statistics
 
-![File Age Statistics: Years](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-file-age-years.png)
+![File Age Statistics: Years](QDirStat-file-age-years.png)
 
 _This window (opened fom the menu with View -> Show File Age Statistics) shows
 the modification time (mtime) of files (not directories) in the selected
@@ -130,7 +130,7 @@ of that total size relative to the total size of that subtree, again as a
 percentage bar and as a number._
 
 
-![File Age Statistics: Years and Months](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-file-age-months.png)
+![File Age Statistics: Years and Months](QDirStat-file-age-months.png)
 
 _File age statistics with the months of the current year expanded. It goes into
 finer detail for the months of the current year and the year before, i.e. the
@@ -142,7 +142,7 @@ and the year before, no matter in what year any activity in that subtree
 starts._
 
 
-![File Age Statistics: Some Years Ago](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-file-age-long-ago.png)
+![File Age Statistics: Some Years Ago](QDirStat-file-age-long-ago.png)
 
 _File age statistics for a subtree where there was no activity at all for the
 last couple of years. Notice how the years up to that first active year are
@@ -152,7 +152,7 @@ was some years ago, even without looking at the year numbers._
 
 ## Discovering Files
 
-![Discovering Files](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-discover.png)
+![Discovering Files](QDirStat-discover.png)
 
 _Discovering files of certain categories. Similar to "locating by type" above,
 clicking a file in the list selects it in the tree view in the main window._
@@ -160,24 +160,24 @@ clicking a file in the list selects it in the tree view in the main window._
 
 ## Packages View
 
-![Packages View Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-pkg-details.png)
+![Packages View Screenshot](QDirStat-pkg-details.png)
 
 _Packages view: All packages of a Xubuntu 18.04 LTS installation. Notice that
 each directory contains only the files that belong to that package: /usr/bin
 only contains the chromium-browser binary in this view._
 
 
-![Packages Summary Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-pkg-summary.png)
+![Packages Summary Screenshot](QDirStat-pkg-summary.png)
 
 _Packages Summary_
 
 
-![Packages View Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-pkg-emacs.png)
+![Packages View Screenshot](QDirStat-pkg-emacs.png)
 
 _Packages view limited to package names starting with "emacs"._
 
 
-!["Open Packages" Dialog Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-open-pkg-dialog.png)
+!["Open Packages" Dialog Screenshot](QDirStat-open-pkg-dialog.png)
 
 _Dialog for selecting which packages to display. Use menu "File" -> "Show
 Installed Packages"._
@@ -189,7 +189,7 @@ Directory" dialog)._
 
 ## Unpackaged Files View
 
-![Unpackaged Files Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-unpkg-usr-share-qt5.png)
+![Unpackaged Files Screenshot](QDirStat-unpkg-usr-share-qt5.png)
 
 _Unpackaged files view: Some files that obviously belong to Qt 5 on openSUSE
 Tumbleweed, but that are not in the file list of any package. It is still
@@ -200,12 +200,12 @@ _Notice the greyed-out ignored directories which only contain files that are
 properly packaged._
 
 
-![Unpackaged Files Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-unpkg-boot-grub2.png)
+![Unpackaged Files Screenshot](QDirStat-unpkg-boot-grub2.png)
 
 _Unpackaged files view: I created my own font for Grub2 which clearly stands out as an unpackaged file._
 
 
-!["Show Unpackaged Files" Dialog Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-show-unpkg-dialog.png)
+!["Show Unpackaged Files" Dialog Screenshot](QDirStat-show-unpkg-dialog.png)
 
 _Dialog to start the "unpackaged files" view (Menu "File" -> "Show Unpackaged
 Files"). Some directories are excluded by default because they are expected to
@@ -221,27 +221,27 @@ the predefined one._
 ## Configuration
 
 
-![Cleanup Action Configuration Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-config-cleanups.png)
+![Cleanup Action Configuration Screenshot](QDirStat-config-cleanups.png)
 
 _Screenshot of cleanup actions configuration._
 
-![MIME Categories Configuration Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-config-mime.png)
+![MIME Categories Configuration Screenshot](QDirStat-config-mime.png)
 
 _Screenshot of MIME category configuration where you can set the treemap colors
 for different file types (MIME types), complete with a real treemap widget as preview._
 
-![Exclude Rules Configuration Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-config-exclude.png)
+![Exclude Rules Configuration Screenshot](QDirStat-config-exclude.png)
 
 _Screenshot of the exclude rules configuration where you can define rules which
 directories to exclude when reading directory trees._
 
-![General Options Configuration Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-config-general.png)
+![General Options Configuration Screenshot](QDirStat-config-general.png)
 
 _Screenshot of the general (miscellaneous) configuration options._
 
 ------------------
 
-![Tree Column Configuration Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-column-config.png)
+![Tree Column Configuration Screenshot](QDirStat-column-config.png)
 
 _Context menu of the tree header where you can configure the columns._
 
@@ -251,54 +251,54 @@ _Context menu of the tree header where you can configure the columns._
 ## File Size Statistics
 
 
-![File Size Histogram Screenshot](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-histogram.png)
+![File Size Histogram Screenshot](QDirStat-histogram.png)
 
 _File size histogram for a directory_
 
-![Histogram with only JPGs](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-histogram-jpg-work.png)
+![Histogram with only JPGs](QDirStat-histogram-jpg-work.png)
 
 _File size histogram for all files of type .jpg (start from the File Type Statistics window)_
 
-![Histogram Options](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-histogram-options.png)
+![Histogram Options](QDirStat-histogram-options.png)
 
 _Histogram settings can be tweaked_
 
-![Logarithmic Scale](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-histogram-log-scale.png)
+![Logarithmic Scale](QDirStat-histogram-log-scale.png)
 
 _Logarithmic scale for the vertical axis if needed_
 
 
-![Histogram with P100](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-histogram-P100.png)
+![Histogram with P100](QDirStat-histogram-P100.png)
 
 _Degenerated histogram if the last percentiles are too far spread out_
 
-![Histogram with P99](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-histogram-P99.png)
+![Histogram with P99](QDirStat-histogram-P99.png)
 
 _Just one percentile less makes all the difference: Scaled down from P100 to P99_
 
 
 
-![Percentiles Table](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-percentiles-table.png)
+![Percentiles Table](QDirStat-percentiles-table.png)
 
 _Numeric percentiles table_
 
 
-![Full Percentiles Table](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-percentiles-table-full.png)
+![Full Percentiles Table](QDirStat-percentiles-table-full.png)
 
 _Full percentiles table_
 
-![Extreme Percentiles](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-percentiles-extreme.png)
+![Extreme Percentiles](QDirStat-percentiles-extreme.png)
 
 _Notice the leap from P99 to P100_
 
 
 
-![Buckets Table](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-buckets-table.png)
+![Buckets Table](QDirStat-buckets-table.png)
 
 _Buckets table (information also available by tooltips in the histogram)_
 
 
-![File Size Help](https://github.com/Lithopsian/qdirstat/tree/Qt6threaded/screenshots/QDirStat-stats-help.png)
+![File Size Help](QDirStat-stats-help.png)
 
 _Dedicated help start page for file size statistics_
 
