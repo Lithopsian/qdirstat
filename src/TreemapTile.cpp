@@ -16,16 +16,141 @@
 
 #include "TreemapTile.h"
 #include "ActionManager.h"
-#include "CleanupCollection.h"
-#include "Exception.h"
 #include "FileInfoIterator.h"
 #include "MimeCategorizer.h"
 #include "SelectionModel.h"
 #include "TreemapView.h"
+#include "Exception.h"
 #include "Logger.h"
 
 
 using namespace QDirStat;
+
+
+/**
+ * Just a helper for an unwieldy common term
+ **/
+static FileSize itemTotalSize( FileInfo *it )
+{
+    return it->totalAllocatedSize() ? it->totalAllocatedSize() : it->totalSize();
+}
+
+
+/**
+ * Try to include members referred to by 'it' into 'rect' so that they achieve
+ * the most "square" appearance.  Items are added until the aspect ratio of the
+ * first and last items doesn't get better any more.  Returns the total size of
+ * the items for the row.
+ **/
+static FileSize squarify( const QRectF & rect,
+                          FileInfoSortedBySizeIterator & it,
+                          FileSize remainingTotal )
+{
+    //logDebug() << "squarify() " << this << " " << rect << Qt::endl;
+
+    // We only care about ratios, so scale everything for speed of calculation
+    // rowHeightScale = rowHeight / remainingTotal, scale this to 1
+    // rowWidthScale = rowWidth, scaled to rowWidth / rowHeight * remainingTotal
+    const double rowRatio = rect.width() < rect.height() ? rect.width() / rect.height() : rect.height() / rect.width();
+    const double rowWidthScale = rowRatio * remainingTotal; // really rectWidth
+
+    const FileSize firstSize = itemTotalSize( *it );
+    FileSize sum = 0;
+    double bestAspectRatio = 0;
+    while ( *it )
+    {
+        FileSize size = itemTotalSize( *it );
+        if ( size > 0 )
+        {
+            sum += size;
+
+            // Again, only ratios matter, so avoid the size / sum division by multiplying both by sum
+            const double rowHeight = ( double )sum * sum; // * really sum * rowHeight / remainingTotal
+            const double rowScale = rowWidthScale; // really rowWidth * size / sum
+            const double aspectRatio = qMin( rowHeight / (rowScale * firstSize), rowScale * size / rowHeight );
+            if ( aspectRatio < bestAspectRatio )
+            {
+                // "Forget" the offending tile that made things worse
+                // Leave the iterator pointing to the first item after this row
+                sum -= size;
+                break;
+            }
+
+            // Aspect ratio of the two (or perhaps only one so far) end tiles still approaching one
+            bestAspectRatio = aspectRatio;
+        }
+
+        ++it;
+    }
+
+    return sum;
+}
+
+
+static QRgb contrastingColor( QRgb col )
+{
+    if ( qGray( col ) < 128 )
+        return qRgb( qRed( col ) * 2, qGreen( col ) * 2, qBlue( col ) * 2 );
+    else
+        return qRgb( qRed( col ) / 2, qGreen( col ) / 2, qBlue( col ) / 2 );
+}
+
+
+static void enforceContrast( QImage & image )
+{
+    if ( image.width() > 5 )
+    {
+        // Check contrast along the right image boundary:
+        //
+        // Compare samples from the outmost boundary to samples a few pixels to
+        // the inside and count identical pixel values. A number of identical
+        // pixels are tolerated, but not too many.
+        int x1 = image.width() - 6;
+        int x2 = image.width() - 1;
+        int interval = qMax( image.height() / 10, 5 );
+        int sameColorCount = 0;
+
+        // Take samples
+        for ( int y = interval; y < image.height(); y+= interval )
+        {
+            if ( image.pixel( x1, y ) == image.pixel( x2, y ) )
+            sameColorCount++;
+        }
+
+        if ( sameColorCount * 10 > image.height() )
+        {
+            // Add a line at the right boundary
+            QRgb val = contrastingColor( image.pixel( x2, image.height() / 2 ) );
+            for ( int y = 0; y < image.height(); y++ )
+                image.setPixel( x2, y, val );
+        }
+    }
+
+    if ( image.height() > 5 )
+    {
+        // Check contrast along the bottom boundary
+
+        int y1 = image.height() - 6;
+        int y2 = image.height() - 1;
+        int interval = qMax( image.width() / 10, 5 );
+        int sameColorCount = 0;
+
+        for ( int x = interval; x < image.width(); x += interval )
+        {
+            if ( image.pixel( x, y1 ) == image.pixel( x, y2 ) )
+            sameColorCount++;
+        }
+
+        if ( sameColorCount * 10 > image.height() )
+        {
+            // Add a grey line at the bottom boundary
+            QRgb val = contrastingColor( image.pixel( image.width() / 2, y2 ) );
+            for ( int x = 0; x < image.width(); x++ )
+                image.setPixel( x, y2, val );
+        }
+    }
+}
+
 
 // constructor with no parent tile, only used for the root tile
 TreemapTile::TreemapTile( TreemapView * parentView,
@@ -271,50 +396,6 @@ void TreemapTile::createSquarifiedChildren( const QRectF & rect )
     }
 }
 
-FileSize TreemapTile::squarify( const QRectF & rect,
-                                FileInfoSortedBySizeIterator & it,
-                                FileSize remainingTotal )
-{
-    //logDebug() << "squarify() " << this << " " << rect << Qt::endl;
-
-    // We only care about ratios, so scale everything for speed of calculation
-    // rowHeightScale = rowHeight / remainingTotal, scale this to 1
-    // rowWidthScale = rowWidth, scaled to rowWidth / rowHeight * remainingTotal
-    const double rowRatio = rect.width() < rect.height() ? rect.width() / rect.height() : rect.height() / rect.width();
-    const double rowWidthScale = rowRatio * remainingTotal; // really rectWidth
-
-    const FileSize firstSize = itemTotalSize( *it );
-    FileSize sum = 0;
-    double bestAspectRatio = 0;
-    while ( *it )
-    {
-        FileSize size = itemTotalSize( *it );
-        if ( size > 0 )
-        {
-            sum += size;
-
-            // Again, only ratios matter, so avoid the size / sum division by multiplying both by sum
-            const double rowHeight = ( double )sum * sum; // * really sum * rowHeight / remainingTotal
-            const double rowScale = rowWidthScale; // really rowWidth * size / sum
-            const double aspectRatio = qMin( rowHeight / (rowScale * firstSize), rowScale * size / rowHeight );
-            if ( aspectRatio < bestAspectRatio )
-            {
-                // "Forget" the offending tile that made things worse
-                // Leave the iterator pointing to the first item after this row
-                sum -= size;
-                break;
-            }
-
-            // Aspect ratio of the two (or perhaps only one so far) end tiles still approaching one
-            bestAspectRatio = aspectRatio;
-        }
-
-        ++it;
-    }
-
-    return sum;
-}
-
 void TreemapTile::layoutRow( Orientation dir,
                              QRectF & rect,
                              FileInfoSortedBySizeIterator & it,
@@ -391,11 +472,6 @@ void TreemapTile::layoutRow( Orientation dir,
 //        rect.adjust(height, 0, 0, 0);
 
     //logDebug() << "Left over:" << " " << newRect << " " << this << Qt::endl;
-}
-
-inline FileSize TreemapTile::itemTotalSize( FileInfo *it )
-{
-    return it->totalAllocatedSize() ? it->totalAllocatedSize() : it->totalSize();
 }
 
 void TreemapTile::addRenderThread( TreemapTile *tile, int minThreadTileSize )
@@ -555,11 +631,15 @@ QPixmap TreemapTile::renderCushion( const QRectF & rect )
 {
     //logDebug() << rect << Qt::endl;
 
+	static const double _lightX = 0.09759;
+	static const double _lightY = 0.19518;
+	static const double _lightZ = 0.97590;
+
     static const double ambientIntensity = ( double )_parentView->ambientLight() / 255;
     static const double intensityScaling = 1.0 - ambientIntensity;
-    static const double lightX = _parentView->lightX() * intensityScaling;
-    static const double lightY = _parentView->lightY() * intensityScaling;
-    static const double lightZ = _parentView->lightZ() * intensityScaling;
+    static const double lightX = _lightX * intensityScaling;
+    static const double lightY = _lightY * intensityScaling;
+    static const double lightZ = _lightZ * intensityScaling;
 
     const QColor color = tileColor( _orig );
 
@@ -598,70 +678,9 @@ QPixmap TreemapTile::renderCushion( const QRectF & rect )
 
 const QColor & TreemapTile::tileColor( FileInfo * file ) const
 {
-    return _parentView->fixedColor().isValid() ? _parentView->fixedColor() : MimeCategorizer::instance()->color( file );
-}
-
-void TreemapTile::enforceContrast( QImage & image )
-{
-    if ( image.width() > 5 )
-    {
-        // Check contrast along the right image boundary:
-        //
-        // Compare samples from the outmost boundary to samples a few pixels to
-        // the inside and count identical pixel values. A number of identical
-        // pixels are tolerated, but not too many.
-        int x1 = image.width() - 6;
-        int x2 = image.width() - 1;
-        int interval = qMax( image.height() / 10, 5 );
-        int sameColorCount = 0;
-
-        // Take samples
-        for ( int y = interval; y < image.height(); y+= interval )
-        {
-            if ( image.pixel( x1, y ) == image.pixel( x2, y ) )
-            sameColorCount++;
-        }
-
-        if ( sameColorCount * 10 > image.height() )
-        {
-            // Add a line at the right boundary
-            QRgb val = contrastingColor( image.pixel( x2, image.height() / 2 ) );
-            for ( int y = 0; y < image.height(); y++ )
-                image.setPixel( x2, y, val );
-        }
-    }
-
-    if ( image.height() > 5 )
-    {
-        // Check contrast along the bottom boundary
-
-        int y1 = image.height() - 6;
-        int y2 = image.height() - 1;
-        int interval = qMax( image.width() / 10, 5 );
-        int sameColorCount = 0;
-
-        for ( int x = interval; x < image.width(); x += interval )
-        {
-            if ( image.pixel( x, y1 ) == image.pixel( x, y2 ) )
-            sameColorCount++;
-        }
-
-        if ( sameColorCount * 10 > image.height() )
-        {
-            // Add a grey line at the bottom boundary
-            QRgb val = contrastingColor( image.pixel( image.width() / 2, y2 ) );
-            for ( int x = 0; x < image.width(); x++ )
-                image.setPixel( x, y2, val );
-        }
-    }
-}
-
-QRgb TreemapTile::contrastingColor( QRgb col )
-{
-    if ( qGray( col ) < 128 )
-        return qRgb( qRed( col ) * 2, qGreen( col ) * 2, qBlue( col ) * 2 );
-    else
-        return qRgb( qRed( col ) / 2, qGreen( col ) / 2, qBlue( col ) / 2 );
+    return _parentView->fixedColor().isValid() ?
+        _parentView->fixedColor() :
+        MimeCategorizer::instance()->color( file );
 }
 
 const CushionHeightSequence * TreemapTile::calculateCushionHeights( double cushionHeight, double scaleFactor )
@@ -892,11 +911,10 @@ void TreemapTile::contextMenuEvent( QGraphicsSceneContextMenuEvent * event )
                                    "actionMoveToTrash",
                                    "---"
                                  };
-    ActionManager::instance()->addActions( &menu, actions1 );
+    ActionManager::addActions( &menu, actions1 );
 
     // User-defined cleanups
-    if ( _parentView->cleanupCollection() )
-    _parentView->cleanupCollection()->addEnabledToMenu( &menu );
+    ActionManager::addEnabledCleanups( &menu );
 
     menu.exec( event->screenPos() );
 }

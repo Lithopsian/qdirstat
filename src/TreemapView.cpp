@@ -11,12 +11,13 @@
 
 #include "TreemapView.h"
 #include "TreemapTile.h"
-#include "CleanupCollection.h"
-#include "DirTree.h"
+//#include "CleanupCollection.h"
 #include "DirInfo.h"
+#include "DirTree.h"
 #include "MimeCategorizer.h"
 #include "SelectionModel.h"
 #include "Settings.h"
+#include "SettingsHelpers.h"
 #include "SignalBlocker.h"
 #include "Exception.h"
 #include "Logger.h"
@@ -29,7 +30,7 @@ TreemapView::TreemapView( QWidget * parent ):
     _tree { nullptr },
     _selectionModel { nullptr },
     _selectionModelProxy { nullptr },
-    _cleanupCollection { nullptr },
+//    _cleanupCollection { nullptr },
     _rootTile { nullptr },
 //    _currentTile { nullptr },
     _currentTileHighlighter { nullptr },
@@ -91,12 +92,12 @@ void TreemapView::clear()
 
 void TreemapView::setDirTree( const DirTree * newTree )
 {
-    if ( ! newTree )
+    if ( !newTree )
         return;
 
     _tree = newTree;
 
-//    if ( ! _rootTile && _tree->firstToplevel() ) // we won't be enabled here. so can't build treemap
+//    if ( !_rootTile && _tree->firstToplevel() ) // we won't be enabled here. so can't build treemap
 //        rebuildTreemap( _tree->firstToplevel() );
 
     // This signal indicates that a subtree is going to be removed.  This occurs
@@ -109,24 +110,18 @@ void TreemapView::setDirTree( const DirTree * newTree )
              this,  &TreemapView::deleteNotify );
 //    connect( _tree, &DirTree::childDeleted,
 //             this,  &TreemapView::enable );
-//             this,  qOverload<>( &TreemapView::rebuildTreemap ) );
+//             this,  &TreemapView::rebuildTreemapSlot );
 
     // Clear the treemap before the DirTree disappears
     // Also disable, although nobody should trigger us to rebuild until it is safe.
     connect( _tree, &DirTree::clearing,
              this,  &TreemapView::disable );
-
-    // This signal always arrives when we are disabled.  It is also always followed
-    // by a direct call from idleDisplay() so it is a bit pointless reacting to it.
-//    connect( _tree, &DirTree::finished,
-//             this,  &TreemapView::readingFinished );
-//             this,  qOverload<>( &TreemapView::rebuildTreemap ) );
 }
 
 
 void TreemapView::setSelectionModel( SelectionModel * selectionModel )
 {
-    if ( ! selectionModel )
+    if ( !selectionModel )
         return;
 
     _selectionModel = selectionModel;
@@ -142,7 +137,6 @@ void TreemapView::setSelectionModel( SelectionModel * selectionModel )
 
     // Use the proxy for all receiving signals
     delete _selectionModelProxy;
-
     _selectionModelProxy = new SelectionModelProxy( selectionModel, this );
     CHECK_NEW( _selectionModelProxy );
 
@@ -155,20 +149,6 @@ void TreemapView::setSelectionModel( SelectionModel * selectionModel )
     // Connect this one here because it is only relevant in the real treemap
     connect( MimeCategorizer::instance(), &MimeCategorizer::categoriesChanged,
              this,                        &TreemapView::changeTreemapColors );
-}
-
-
-void TreemapView::setCleanupCollection( const CleanupCollection * collection )
-{
-    if ( ! collection )
-        return;
-
-    _cleanupCollection = collection;
-
-    // Signal when a cleanup with a refresh policy of assumeDeleted is complete.
-    // This follow after a deletingChild signal from DirTree.
-    connect( _cleanupCollection, &CleanupCollection::assumedDeleted,
-             this,               &TreemapView::enable );
 }
 
 
@@ -252,7 +232,7 @@ void TreemapView::writeOptionalColorEntry( Settings & settings, const char * set
 void TreemapView::zoomTo()
 {
     // this does all the sanity checks so we know we are good
-    if ( ! canZoomIn() )
+    if ( !canZoomIn() )
         return;
 
     // Work from the FileInfo tree because there might not be a tile for the current item
@@ -267,7 +247,7 @@ void TreemapView::zoomTo()
 void TreemapView::zoomIn()
 {
     // this does all the sanity checks so we know we are good
-    if ( ! canZoomIn() )
+    if ( !canZoomIn() )
         return;
 
     // Work up the FileInfo tree because there might not be a tile for the current item
@@ -283,7 +263,7 @@ void TreemapView::zoomIn()
 void TreemapView::zoomOut()
 {
     // this does all the sanity checks so we know we are good
-    if ( ! canZoomOut() )
+    if ( !canZoomOut() )
         return;
 
     FileInfo * newRoot = _rootTile->orig();
@@ -328,26 +308,26 @@ bool TreemapView::canZoomIn() const
 
 bool TreemapView::canZoomOut() const
 {
-    if ( ! _rootTile || ! _tree->firstToplevel() )
+    if ( !_rootTile || !_tree->firstToplevel() )
         return false;
 
     return _rootTile->orig() != _tree->firstToplevel();
 }
 
 
-void TreemapView::rebuildTreemap()
+void TreemapView::rebuildTreemapSlot()
 {
     //logDebug() << _savedRootUrl << Qt::endl;
     FileInfo * root = nullptr;
 
-    if ( ! _savedRootUrl.isEmpty() )
+    if ( !_savedRootUrl.isEmpty() )
     {
         logDebug() << "Restoring old treemap with root " << _savedRootUrl << Qt::endl;
 
         root = _tree->locate( _savedRootUrl, true );        // node, findPseudoDirs
     }
 
-    if ( ! root )
+    if ( !root )
         root = _rootTile ? _rootTile->orig() : _tree->firstToplevel();
 
     clear();
@@ -483,7 +463,7 @@ void TreemapView::configChanged( const QColor & fixedColor,
     calculateSettings();
 
     if ( treemapChanged )
-        rebuildTreemap();
+        rebuildTreemapSlot();
     else
         changeTreemapColors();
 }
@@ -529,7 +509,7 @@ void TreemapView::deleteNotify( FileInfo * )
         if ( _rootTile->orig() != _tree->firstToplevel() )
         {
             // If the user zoomed the treemap in, save the root's URL so the
-            // current state can be restored upon the next rebuildTreemap()
+            // current state can be restored upon the next rebuildTreemapSlot()
             // call (which is triggered by the childDeleted() signal that the
             // tree emits after deleting is done).
             //
@@ -606,7 +586,7 @@ void TreemapView::showTreemap()
 {
     logDebug() << "Showing treemap view " << Qt::endl;
 
-    if ( ! isVisible() )
+    if ( !isVisible() )
         show();
 //        scheduleRebuildTreemap( _tree->firstToplevel() );
 
@@ -630,7 +610,7 @@ void TreemapView::enable()
     _disabled = false;
 //        scheduleRebuildTreemap( _tree->firstToplevel() );
     // Use the slow function to pick up any saved root on a refresh
-    rebuildTreemap(); // will emit treemapChanged() when complete
+    rebuildTreemapSlot(); // will emit treemapChanged() when complete
 }
 
 
@@ -645,7 +625,7 @@ void TreemapView::setCurrentTile( const TreemapTile * tile )
         if ( highlightedParent() != tile->parentTile() )
             clearParentsHighlight();
 
-        if ( ! _currentTileHighlighter )
+        if ( !_currentTileHighlighter )
             _currentTileHighlighter = new CurrentTileHighlighter( this );
     }
 
@@ -681,7 +661,7 @@ void TreemapView::setCurrentItem( FileInfo * node )
     // Check if the new current item is inside the current treemap
     // (it might be zoomed).
 
-    while ( ! node->isInSubtree( treemapRoot ) &&
+    while ( !node->isInSubtree( treemapRoot ) &&
             treemapRoot->parent() &&
             treemapRoot->parent() != _tree->root() )
         treemapRoot = treemapRoot->parent(); // try one level higher
@@ -739,7 +719,7 @@ void TreemapView::updateSelection( const FileInfoSet & newSelection )
 
 void TreemapView::sendSelection( const TreemapTile *tile)
 {
-    if ( ! scene() || ! _selectionModel )
+    if ( !scene() || !_selectionModel )
         return;
 
     SignalBlocker sigBlocker( _selectionModelProxy );
@@ -775,7 +755,7 @@ void TreemapView::updateCurrentItem( FileInfo * currentItem )
 {
     //logDebug() << currentItem << " " << _stopwatch.restart() << "ms" << Qt::endl;
 
-    if ( ! scene() )
+    if ( !scene() )
         return;
 
     SignalBlocker sigBlocker( this );
@@ -822,7 +802,7 @@ void TreemapView::setFixedColor( const QColor & color )
 
 void TreemapView::highlightParents( const TreemapTile * tile )
 {
-    if ( ! tile )
+    if ( !tile )
     {
         clearParentsHighlight();
         return;
@@ -944,7 +924,7 @@ HighlightRect::HighlightRect( const TreemapTile * tile,
 
 QPainterPath HighlightRect::shape() const
 {
-    if ( ! _tile )
+    if ( !_tile )
         return QGraphicsRectItem::shape();
 
     // Return just the outline as the shape so any tooltip is only displayed on
@@ -975,7 +955,7 @@ void HighlightRect::highlight()
         tileRect.moveTo( mapFromScene( _tile->mapToScene( tileRect.topLeft() ) ) );
         setRect( tileRect );
 
-        if ( ! isVisible() )
+        if ( !isVisible() )
             show();
     }
     else

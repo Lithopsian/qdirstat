@@ -23,18 +23,14 @@ using QDirStat::readFontEntry;
 using QDirStat::writeFontEntry;
 
 
-#define CONNECT_ACTION(ACTION, RECEIVER, RCVR_SLOT) \
-    connect( (ACTION), SIGNAL( triggered() ), (RECEIVER), SLOT( RCVR_SLOT ) )
-
-
 OutputWindow::OutputWindow( QWidget * parent, bool autoClose ):
-    QDialog( parent ),
-    _ui( new Ui::OutputWindow ),
-    _showOnStderr( false ),
-    _noMoreProcesses( false ),
-    _closed( false ),
-    _killedAll( false ),
-    _errorCount( 0 )
+    QDialog ( parent ),
+    _ui { new Ui::OutputWindow },
+    _showOnStderr { false },
+    _noMoreProcesses { false },
+    _closed { false },
+    _killedAll { false },
+    _errorCount { 0 }
 {
     CHECK_NEW( _ui );
     _ui->setupUi( this );
@@ -45,10 +41,17 @@ OutputWindow::OutputWindow( QWidget * parent, bool autoClose ):
     _ui->terminal->clear();
     setAutoClose( autoClose );
 
-    CONNECT_ACTION( _ui->actionZoomIn,	    this, zoomIn()    );
-    CONNECT_ACTION( _ui->actionZoomOut,	    this, zoomOut()   );
-    CONNECT_ACTION( _ui->actionResetZoom,   this, resetZoom() );
-    CONNECT_ACTION( _ui->actionKillProcess, this, killAll()   );
+    connect( _ui->actionZoomIn,       &QAction::triggered,
+             this,                    &OutputWindow::zoomIn );
+
+    connect( _ui->actionZoomOut,      &QAction::triggered,
+             this,                    &OutputWindow::zoomOut );
+
+    connect( _ui->actionResetZoom,    &QAction::triggered,
+             this,                    &OutputWindow::resetZoom );
+
+    connect( _ui->actionKillProcess,  &QAction::triggered,
+             this,                    &OutputWindow::killAll );
 
     updateActions();
 }
@@ -58,7 +61,7 @@ OutputWindow::~OutputWindow()
 {
     //logDebug() << "Destructor" << Qt::endl;
 
-    if ( ! _processList.isEmpty() )
+    if ( !_processList.isEmpty() )
     {
 	logWarning() << _processList.size() << " processes left over" << Qt::endl;
 
@@ -88,23 +91,23 @@ void OutputWindow::addProcess( QProcess * process )
     _processList << process;
     // logDebug() << "Adding " << process << Qt::endl;
 
-    connect( process, SIGNAL( readyReadStandardOutput() ),
-	     this,    SLOT( readStdout() ) );
+    connect( process, &QProcess::readyReadStandardOutput,
+	     this,    &OutputWindow::readStdout );
 
-    connect( process, SIGNAL( readyReadStandardError() ),
-	     this,    SLOT( readStderr() ) );
+    connect( process, &QProcess::readyReadStandardError,
+	     this,    &OutputWindow::readStderr );
 
 #if (QT_VERSION < QT_VERSION_CHECK( 5, 6, 0 ))
-    connect( process, SIGNAL( error( QProcess::ProcessError ) ),
-	     this,    SLOT( processError( QProcess::ProcessError ) ) );
+    connect( process, qOverload<QProcess::ProcessError >( &QProcess::error ),
+	     this,    &OutputWindow::processError );
 #else
-    connect( process, SIGNAL( errorOccurred( QProcess::ProcessError ) ),
-	     this,    SLOT( processError( QProcess::ProcessError ) ) );
+    connect( process, &QProcess::errorOccurred,
+	     this,    &OutputWindow::processError );
 #endif
-    connect( process, SIGNAL( finished( int, QProcess::ExitStatus ) ),
-	     this,    SLOT( processFinished( int, QProcess::ExitStatus ) ) );
+    connect( process, qOverload<int, QProcess::ExitStatus>( &QProcess::finished ),
+	     this,    &OutputWindow::processFinishedSlot );
 
-    if ( ! hasActiveProcess() )
+    if ( !hasActiveProcess() )
 	startNextProcess();
 }
 
@@ -127,7 +130,7 @@ void OutputWindow::addStderr( const QString output )
     addText( output, _stderrColor );
     logWarning() << output << ( output.endsWith( "\n" ) ? "" : "\n" );
 
-    if ( _showOnStderr && ! isVisible() && ! _closed )
+    if ( _showOnStderr && !isVisible() && !_closed )
 	show();
 }
 
@@ -139,7 +142,7 @@ void OutputWindow::addText( const QString & rawText, const QColor & textColor )
 
     QString text = rawText;
 
-    if ( ! text.endsWith( "\n" ) )
+    if ( !text.endsWith( "\n" ) )
 	text += "\n";
 
     _ui->terminal->moveCursor( QTextCursor::End );
@@ -161,8 +164,7 @@ void OutputWindow::clearOutput()
 QProcess * OutputWindow::senderProcess( const char * function ) const
 {
     QProcess * process = qobject_cast<QProcess *>( sender() );
-
-    if ( ! process )
+    if ( !process )
     {
 	if ( sender() )
 	{
@@ -183,7 +185,6 @@ QProcess * OutputWindow::senderProcess( const char * function ) const
 void OutputWindow::readStdout()
 {
     QProcess * process = senderProcess( __FUNCTION__ );
-
     if ( process )
 	addStdout( QString::fromUtf8( process->readAllStandardOutput() ) );
 }
@@ -192,13 +193,12 @@ void OutputWindow::readStdout()
 void OutputWindow::readStderr()
 {
     QProcess * process = senderProcess( __FUNCTION__ );
-
     if ( process )
 	addStderr( QString::fromUtf8( process->readAllStandardError() ) );
 }
 
 
-void OutputWindow::processFinished( int exitCode, QProcess::ExitStatus exitStatus )
+void OutputWindow::processFinishedSlot( int exitCode, QProcess::ExitStatus exitStatus )
 {
     switch ( exitStatus )
     {
@@ -228,18 +228,9 @@ void OutputWindow::processFinished( int exitCode, QProcess::ExitStatus exitStatu
     }
 
     QProcess * process = senderProcess( __FUNCTION__ );
-
     if ( process )
     {
-	_processList.removeAll( process );
-
-	if ( _processList.isEmpty() && _noMoreProcesses )
-	{
-	    //logDebug() << "Emitting lastProcessFinished() err: " << _errorCount << Qt::endl;
-	    emit lastProcessFinished( _errorCount );
-	}
-
-	process->deleteLater();
+	processFinished( process );
 	closeIfDone();
     }
 
@@ -277,31 +268,34 @@ void OutputWindow::processError( QProcess::ProcessError error )
 	    break;
     }
 
-    if ( ! msg.isEmpty() )
+    if ( !msg.isEmpty() )
     {
 	logError() << msg << Qt::endl;
 	addStderr( msg );
     }
 
     QProcess * process = senderProcess( __FUNCTION__ );
-
     if ( process )
-    {
-	_processList.removeAll( process );
-
-	if ( _processList.isEmpty() && _noMoreProcesses )
-	{
-	    //logDebug() << "Emitting lastProcessFinished() err: " << _errorCount << Qt::endl;
-	    emit lastProcessFinished( _errorCount );
-	}
-
-	process->deleteLater();
-    }
+	processFinished( process );
 
     startNextProcess(); // this also calls updateActions()
 
-    if ( ! _showOnStderr && ! isVisible() )
+    if ( !_showOnStderr && !isVisible() )
 	closeIfDone();
+}
+
+
+void OutputWindow::processFinished( QProcess * process )
+{
+    _processList.removeAll( process );
+
+    if ( _processList.isEmpty() && _noMoreProcesses )
+    {
+	//logDebug() << "Emitting lastProcessFinished() err: " << _errorCount << Qt::endl;
+	emit lastProcessFinished( _errorCount );
+    }
+
+    process->deleteLater();
 }
 
 
@@ -335,7 +329,6 @@ void OutputWindow::noMoreProcesses()
 void OutputWindow::zoom( qreal factor )
 {
     QFont font = _ui->terminal->font();
-
     if ( font.pixelSize() != -1 )
     {
 	int pixelSize = font.pixelSize() * factor;
@@ -462,7 +455,7 @@ QString OutputWindow::command( QProcess * process )
     //	  /bin/sh -c theRealCommand arg1 arg2 arg3 ...
     QStringList args = process->arguments();
 
-    if ( ! args.isEmpty() )
+    if ( !args.isEmpty() )
 	args.removeFirst();		// Remove the "-c"
 
     if ( args.isEmpty() )		// Nothing left?
@@ -495,15 +488,15 @@ void OutputWindow::updateActions()
 void OutputWindow::showAfterTimeout( int timeoutMillisec )
 {
     if ( timeoutMillisec <= 0 )
-	timeoutMillisec = _defaultShowTimeout;
+	timeoutMillisec = defaultShowTimeout();
 
-    QTimer::singleShot( timeoutMillisec, this, SLOT( timeoutShow() ) );
+    QTimer::singleShot( timeoutMillisec, this, &OutputWindow::timeoutShow );
 }
 
 
 void OutputWindow::timeoutShow()
 {
-    if ( ! isVisible() && ! _closed )
+    if ( !isVisible() && !_closed )
 	show();
 }
 
@@ -518,7 +511,6 @@ void OutputWindow::readSettings()
     _stdoutColor	 = readColorEntry( settings, "StdoutTextColor"	 , QColor( 0xff, 0xaa, 0x00 ) );
     _stderrColor	 = readColorEntry( settings, "StdErrTextColor"	 , QColor( Qt::red    ) );
     _terminalDefaultFont = readFontEntry ( settings, "TerminalFont"	 , _ui->terminal->font() );
-    _defaultShowTimeout	 = settings.value( "DefaultShowTimeoutMillisec", 500 ).toInt();
 
     settings.endGroup();
 
@@ -536,7 +528,26 @@ void OutputWindow::writeSettings()
     writeColorEntry( settings, "StdoutTextColor"   , _stdoutColor	  );
     writeColorEntry( settings, "StdErrTextColor"   , _stderrColor	  );
     writeFontEntry ( settings, "TerminalFont"	   , _terminalDefaultFont );
-    settings.setValue( "DefaultShowTimeoutMillisec", _defaultShowTimeout  );
+    settings.setValue( "DefaultShowTimeoutMillisec", defaultShowTimeout() );
 
     settings.endGroup();
+}
+
+
+int OutputWindow::defaultShowTimeout()
+{
+    // Keep this in a static variable so it can be accessed from outside the class
+    // in a static function call.  This is used from CleanupConfigPage and from
+    // CleanupCollection.
+    int _defaultShowTimeout = -1;
+
+    if ( _defaultShowTimeout == -1 )
+    {
+	QDirStat::Settings settings;
+	settings.beginGroup( "OutputWindow" );
+	_defaultShowTimeout = settings.value( "DefaultShowTimeoutMillisec", 500 ).toInt();
+	settings.endGroup();
+    }
+
+    return _defaultShowTimeout;
 }

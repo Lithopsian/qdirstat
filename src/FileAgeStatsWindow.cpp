@@ -6,34 +6,41 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <QFont>
+#include <QPointer>
 
 #include "FileAgeStatsWindow.h"
 #include "DirTree.h"
+#include "DiscoverActions.h"
 #include "HeaderTweaker.h"
 #include "PercentBar.h"
+#include "QDirStatApp.h"
+#include "SelectionModel.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
+#include "Exception.h"
 #include "FormatUtil.h"
 #include "Logger.h"
-#include "Exception.h"
 
 // Remember to adapt the tooltip text for the "Locate" button in the .ui file
 // and the method docs in the .h file if this value is changed
-
-#define MAX_LOCATE_FILES        1000
+#define MAX_LOCATE_FILES        10000
 
 using namespace QDirStat;
 
 
-FileAgeStatsWindow::FileAgeStatsWindow( QWidget * parent ):
-    QDialog( parent ),
-    _ui( new Ui::FileAgeStatsWindow ),
-    _stats( new FileAgeStats( 0 ) ),
-    _filesPercentBarDelegate( 0 ),
-    _sizePercentBarDelegate( 0 ),
-    _startGapsWithCurrentYear( true )
+FileAgeStatsWindow::FileAgeStatsWindow( QWidget         * parent,
+					SelectionModel  * selectionModel ):
+    QDialog ( parent ),
+    _ui { new Ui::FileAgeStatsWindow },
+    _stats { new FileAgeStats( 0 ) },
+    _filesPercentBarDelegate { 0 },
+    _sizePercentBarDelegate { 0 },
+    _startGapsWithCurrentYear { true }
 {
     // logDebug() << "init" << Qt::endl;
+
+    setAttribute( Qt::WA_DeleteOnClose );
 
     CHECK_NEW( _ui );
     CHECK_NEW( _stats );
@@ -41,15 +48,61 @@ FileAgeStatsWindow::FileAgeStatsWindow( QWidget * parent ):
     _ui->setupUi( this );
     initWidgets();
     readSettings();
+
+    connect( _ui->refreshButton, &QPushButton::clicked,
+             this,               &FileAgeStatsWindow::refresh );
+
+    connect( _ui->locateButton,  &QPushButton::clicked,
+             this,               &FileAgeStatsWindow::locateFiles );
+
+    connect( _ui->treeWidget,	 &QTreeWidget::itemDoubleClicked,
+	     this,		 &FileAgeStatsWindow::locateFiles );
+
+    connect( _ui->treeWidget,    &QTreeWidget::itemSelectionChanged,
+             this,               &FileAgeStatsWindow::enableActions );
+
+    connect( this, &FileAgeStatsWindow::locateFilesFromYear, &DiscoverActions::discoverFilesFromYear );
+
+    connect( this, &FileAgeStatsWindow::locateFilesFromMonth, &DiscoverActions::discoverFilesFromMonth );
+
+    connect( selectionModel, qOverload<FileInfo *, const FileInfo *>( &SelectionModel::currentItemChanged ),
+	     this,           &FileAgeStatsWindow::syncedPopulate );
+
+    // Set the row height based on the configured DirTree icon height
+    const QSize size = app()->dirTreeModel()->mountPointIcon().actualSize( QSize( 22, 22 ) );
+    if ( size.height() > 16 )
+    {
+        QFont biggerFont = font();
+        biggerFont.setPointSizeF( biggerFont.pointSizeF() * 1.1 );
+        _ui->treeWidget->setFont( biggerFont );
+    }
+//    setStyleSheet( QString( "QTreeView::item { min-height: %1px; }" ).arg( size.height() ) );
 }
 
 
 FileAgeStatsWindow::~FileAgeStatsWindow()
 {
+    //logDebug() << "destroying" << Qt::endl;
+
     writeSettings();
 
     delete _stats;
     delete _ui;
+}
+
+
+FileAgeStatsWindow * FileAgeStatsWindow::sharedInstance( QWidget         * parent,
+							 SelectionModel  * selectionModel )
+{
+    static QPointer<FileAgeStatsWindow> _sharedInstance = nullptr;
+
+    if ( !_sharedInstance )
+    {
+	_sharedInstance = new FileAgeStatsWindow( parent, selectionModel );
+	CHECK_NEW( _sharedInstance );
+    }
+
+    return _sharedInstance;
 }
 
 
@@ -68,14 +121,6 @@ void FileAgeStatsWindow::refresh()
 
 void FileAgeStatsWindow::initWidgets()
 {
-//    QFont font = _ui->heading->font();
-//    font.setBold( true );
-//    _ui->heading->setFont( font );
-
-    // _ui->heading->setText( text );
-
-    // _ui->treeWidget->setColumnCount( YearListColumnCount );
-
     const QStringList headers = { tr( "Year"    ),
                                   tr( "Files"   ),
                                   tr( "Files %" ),  // percent bar
@@ -84,12 +129,9 @@ void FileAgeStatsWindow::initWidgets()
                                   tr( "Size %"  ),  // percent bar
                                   tr( "%"       ),  // percent value
                                 };
-
     _ui->treeWidget->setHeaderLabels( headers );
-//    _ui->treeWidget->header()->setStretchLastSection( false );
 
     // Delegates for the percent bars
-
     _filesPercentBarDelegate = new PercentBarDelegate( _ui->treeWidget, YearListFilesPercentBarCol, 7, 1 );
     CHECK_NEW( _filesPercentBarDelegate );
     _ui->treeWidget->setItemDelegateForColumn( YearListFilesPercentBarCol, _filesPercentBarDelegate );
@@ -98,42 +140,33 @@ void FileAgeStatsWindow::initWidgets()
     CHECK_NEW( _sizePercentBarDelegate );
     _ui->treeWidget->setItemDelegateForColumn( YearListSizePercentBarCol, _sizePercentBarDelegate );
 
-
     // Center the column headers
-    QTreeWidgetItem * hItem = _ui->treeWidget->headerItem();
-    for ( int col = 0; col < headers.size(); ++col )
-        hItem->setTextAlignment( col, Qt::AlignHCenter );
+    _ui->treeWidget->header()->setDefaultAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
 
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
-
-
-    connect( _ui->refreshButton, &QPushButton::clicked,
-             this,               &FileAgeStatsWindow::refresh );
-
-    connect( _ui->locateButton,  &QPushButton::clicked,
-             this,               &FileAgeStatsWindow::locateFiles );
-
-    connect( _ui->treeWidget,	 &QTreeWidget::itemDoubleClicked,
-	     this,		 &FileAgeStatsWindow::locateFiles );
-
-    connect( _ui->treeWidget,    &QTreeWidget::itemSelectionChanged,
-             this,               &FileAgeStatsWindow::enableActions );
 }
 
 
-void FileAgeStatsWindow::reject()
+void FileAgeStatsWindow::populateSharedInstance( QWidget         * mainWindow,
+                                                 FileInfo        * subtree,
+						 SelectionModel  * selectionModel )
 {
-    deleteLater();
+    if ( !subtree || !selectionModel )
+        return;
+
+    // Get the shared instance, creating it if necessary
+    FileAgeStatsWindow * instance = sharedInstance( mainWindow, selectionModel );
+
+    instance->populate( subtree );
+
+    instance->show();
 }
 
 
 void FileAgeStatsWindow::syncedPopulate( FileInfo * newSubtree )
 {
-    if ( _ui->syncCheckBox->isChecked() &&
-         newSubtree && newSubtree->isDir() )
-    {
+    if ( _ui->syncCheckBox->isChecked() && newSubtree && newSubtree->isDir() )
         populate( newSubtree );
-    }
 }
 
 
@@ -226,7 +259,7 @@ YearsList FileAgeStatsWindow::findGaps()
 
     for ( short yr = years.first(); yr <= lastYear; yr++ )
     {
-        if ( ! years.contains( yr ) )
+        if ( !years.contains( yr ) )
             gaps << yr;
     }
 
@@ -245,8 +278,7 @@ const YearListItem * FileAgeStatsWindow::selectedItem() const
 void FileAgeStatsWindow::locateFiles()
 {
     const YearListItem * item = selectedItem();
-
-    if ( item )
+    if ( item && canLocate( item ) )
     {
         const short month = item->stats().month;
         const short year  = item->stats().year;
@@ -261,9 +293,13 @@ void FileAgeStatsWindow::locateFiles()
 
 void FileAgeStatsWindow::enableActions()
 {
-    const YearListItem * sel = selectedItem();
-    const bool locateEnabled = sel && sel->stats().filesCount > 0 && sel->stats().filesCount <= MAX_LOCATE_FILES;
-    _ui->locateButton->setEnabled( locateEnabled );
+    _ui->locateButton->setEnabled( canLocate( selectedItem() ) );
+}
+
+
+bool FileAgeStatsWindow::canLocate( const YearListItem * item ) const
+{
+    return item && item->stats().filesCount > 0 && item->stats().filesCount <= MAX_LOCATE_FILES;
 }
 
 
@@ -298,8 +334,8 @@ void FileAgeStatsWindow::writeSettings()
 
 
 YearListItem::YearListItem( const YearStats & yearStats ) :
-    QTreeWidgetItem( QTreeWidgetItem::UserType ),
-    _stats( yearStats )
+    QTreeWidgetItem ( QTreeWidgetItem::UserType ),
+    _stats { yearStats }
 {
     if ( _stats.month > 0 )
         setText( YearListYearCol,            monthAbbreviation( yearStats.month ) );
@@ -322,14 +358,10 @@ QVariant YearListItem::data( int column, int role ) const
 {
     if ( role == Qt::TextAlignmentRole )
     {
-        // Vertical alignment can't be set in any easier way (?)
-        int alignment = Qt::AlignVCenter;
         if ( column == YearListYearCol )
-            alignment |= Qt::AlignLeft;
+            return QVariant( Qt::AlignVCenter | Qt::AlignLeft );
         else
-            alignment |= Qt::AlignRight;
-
-        return alignment;
+            return QVariant( Qt::AlignVCenter | Qt::AlignRight );
     }
 
     return QTreeWidgetItem::data( column, role );

@@ -26,22 +26,6 @@ AdaptiveTimer::AdaptiveTimer( QObject * parent, QList<float> delays, QList<int> 
     _cooldowns { cooldowns },
     _defaultDelay { 0 }
 {
-    init();
-}
-
-/*
-AdaptiveTimer::AdaptiveTimer( QObject * parent, int defaultDelay ):
-    QObject ( parent ),
-    _payloadTime { 0 },
-    _delayStage { 0 },
-    _defaultDelay { defaultDelay }
-{
-    init();
-}
-*/
-
-void AdaptiveTimer::init()
-{
     connect( &_deliveryTimer, &QTimer::timeout,
              this,            &AdaptiveTimer::deliveryTimeout );
 
@@ -75,24 +59,9 @@ void AdaptiveTimer::deliveryTimeout()
 
     //logDebug() << "deliveryTime=" << _deliveryTime << Qt::endl;
 
-//    deliveryComplete();
-//    emit deliverRequest( _payload );
-
     _cooldownTimer.start( cooldownPeriod() );
 }
 
-
-/*
-void AdaptiveTimer::deliveryComplete()
-{
-    _deliveryTime = _deliveryStopwatch.elapsed();
-    // logDebug() << "deliveryTime=" << _deliveryTime << Qt::endl;
-
-    _deliveryTimer.setInterval( _deliveryTime * _delays[ _delayStage ] );
-
-    _cooldownTimer.start();
-}
-*/
 
 int AdaptiveTimer::currentDelay() const
 {

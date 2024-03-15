@@ -11,14 +11,13 @@
 #include "Logger.h"
 #include "Exception.h"
 
-#define HISTORY_MAX     16
 
 
 using namespace QDirStat;
 
 
 History::History():
-    _current( -1 )
+    _current { -1 }
 {
     _items.reserve( HISTORY_MAX );
 }
@@ -31,24 +30,10 @@ void History::clear()
 }
 
 
-QString History::item( int index ) const
-{
-    if ( index >= 0 && index < _items.size() )
-        return _items.at( index );
-    else
-        return "";
-}
-
-
-int History::capacity() const
-{
-    return HISTORY_MAX;
-}
-
 
 QString History::goBack()
 {
-    if ( ! canGoBack() )
+    if ( !canGoBack() )
     {
         logWarning() << "Can't go back any more";
         return "";
@@ -63,7 +48,7 @@ QString History::goBack()
 
 QString History::goForward()
 {
-    if ( ! canGoForward() )
+    if ( !canGoForward() )
     {
         logWarning() << "Can't go forward any more";
         return "";
@@ -100,10 +85,7 @@ void History::add( const QString & item )
     // Remove all items after the current one
 
     while ( canGoForward() )
-    {
-        _items.removeLast();
-        // _current remains the same!
-    }
+        _items.removeLast();  // _current remains the same!
 
 
     // If the history capacity is reached, remove the oldest items
@@ -148,4 +130,3 @@ void History::dump() const
 
     logNewline();
 }
-

@@ -6,16 +6,17 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <QPointer>
 
 #include "LocateFileTypeWindow.h"
-#include "QDirStatApp.h"        // SelectionModel
 #include "DirTree.h"
 #include "DirTreeModel.h"
 #include "DotEntry.h"
+#include "FormatUtil.h"
+#include "HeaderTweaker.h"
+#include "QDirStatApp.h"        // SelectionModel, findMainWindow()
 #include "SelectionModel.h"
 #include "SettingsHelpers.h"
-#include "HeaderTweaker.h"
-#include "FormatUtil.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -27,6 +28,8 @@ LocateFileTypeWindow::LocateFileTypeWindow( QWidget * parent ):
     _ui { new Ui::LocateFileTypeWindow }
 {
     // logDebug() << "init" << Qt::endl;
+
+    setAttribute( Qt::WA_DeleteOnClose );
 
     CHECK_NEW( _ui );
     _ui->setupUi( this );
@@ -43,9 +46,23 @@ LocateFileTypeWindow::LocateFileTypeWindow( QWidget * parent ):
 
 LocateFileTypeWindow::~LocateFileTypeWindow()
 {
-    // logDebug() << "destroying" << Qt::endl;
+    //logDebug() << "destroying" << Qt::endl;
     writeWindowSettings( this, "LocateFileTypeWindow" );
     delete _ui;
+}
+
+
+LocateFileTypeWindow * LocateFileTypeWindow::sharedInstance()
+{
+    static QPointer<LocateFileTypeWindow> _sharedInstance = nullptr;
+
+    if ( !_sharedInstance )
+    {
+	_sharedInstance = new LocateFileTypeWindow( app()->findMainWindow() );
+	CHECK_NEW( _sharedInstance );
+    }
+
+    return _sharedInstance;
 }
 
 
@@ -74,16 +91,21 @@ void LocateFileTypeWindow::initWidgets()
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
 }
 
-/*
-void LocateFileTypeWindow::reject()
-{
-    deleteLater();
-}
-*/
 
 QString LocateFileTypeWindow::searchSuffix() const
 {
     return QString( "*" ) + _searchSuffix;
+}
+
+
+void LocateFileTypeWindow::populateSharedInstance( const QString & suffix, FileInfo * subtree )
+{
+    if ( suffix.isEmpty() || !subtree )
+        return;
+
+    sharedInstance()->populate( suffix, subtree );
+    sharedInstance()->show();
+    sharedInstance()->raise();
 }
 
 
@@ -133,7 +155,7 @@ void LocateFileTypeWindow::populate( const QString & suffix, FileInfo * newSubtr
     // So let's make sure the topmost item is always selected.
 
     QString intro = ( count == 1 ? tr( "1 directory" ) : tr( "%1 directories" ).arg( count ) );
-    _ui->heading->setText( ( intro + " with %2 files in %3" ).arg( searchSuffix() ).arg( _subtree.url() ) );
+    _ui->heading->setText( ( intro + " with %2 files below %3" ).arg( searchSuffix() ).arg( _subtree.url() ) );
 
     _ui->treeWidget->setCurrentItem( _ui->treeWidget->topLevelItem( 0 ) );
 }
@@ -199,9 +221,9 @@ void LocateFileTypeWindow::selectResult( QTreeWidgetItem * item )
     if ( !item )
 	return;
 
-    SuffixSearchResultItem * searchResult =
-	dynamic_cast<SuffixSearchResultItem *>( item );
+    SuffixSearchResultItem * searchResult = dynamic_cast<SuffixSearchResultItem *>( item );
     CHECK_DYNAMIC_CAST( searchResult, "SuffixSearchResultItem" );
+
     CHECK_PTR( _subtree.tree() );
 
     FileInfo * dir = _subtree.tree()->locate( searchResult->path() );

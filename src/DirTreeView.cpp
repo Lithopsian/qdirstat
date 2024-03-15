@@ -11,15 +11,14 @@
 #include <QKeyEvent>
 
 #include "DirTreeView.h"
-#include "DirTreeModel.h"
-#include "SelectionModel.h"
 #include "ActionManager.h"
-#include "CleanupCollection.h"
-#include "PercentBar.h"
-#include "SizeColDelegate.h"
-#include "HeaderTweaker.h"
 #include "DirTree.h"
+#include "DirTreeModel.h"
 #include "FormatUtil.h"
+#include "HeaderTweaker.h"
+#include "PercentBar.h"
+#include "SelectionModel.h"
+#include "SizeColDelegate.h"
 #include "Exception.h"
 #include "Logger.h"
 
@@ -30,8 +29,7 @@ DirTreeView::DirTreeView( QWidget * parent ):
     QTreeView ( parent ),
     _percentBarDelegate { new PercentBarDelegate( this, PercentBarCol, 0, 2 ) },
     _sizeColDelegate { new SizeColDelegate( this ) },
-    _headerTweaker { new HeaderTweaker( header(), this ) },
-    _cleanupCollection { nullptr }
+    _headerTweaker { new HeaderTweaker( header(), this ) }
 {
     CHECK_NEW( _headerTweaker );
     CHECK_NEW( _percentBarDelegate );
@@ -40,15 +38,11 @@ DirTreeView::DirTreeView( QWidget * parent ):
     setItemDelegateForColumn( PercentBarCol, _percentBarDelegate );
     setItemDelegateForColumn( SizeCol,       _sizeColDelegate );
 
-//    setRootIsDecorated( true );
-//    setSortingEnabled( true );
-//    setSelectionMode( ExtendedSelection );
-//    setContextMenuPolicy( Qt::CustomContextMenu );
-//    setTextElideMode( Qt::ElideMiddle );
-//    setUniformRowHeights( true ); // Important for very large directories
+    connect( (SelectionModel *)selectionModel(), qOverload<const QModelIndex &>( &SelectionModel::currentBranchChanged ),
+	     this,             &DirTreeView::closeAllExcept );
 
-    connect( this, &DirTreeView::customContextMenuRequested,
-	     this, &DirTreeView::contextMenu );
+    connect( this,             &DirTreeView::customContextMenuRequested,
+	     this,             &DirTreeView::contextMenu );
 }
 
 
@@ -57,6 +51,23 @@ DirTreeView::~DirTreeView()
     delete _headerTweaker;
     delete _percentBarDelegate;
     delete _sizeColDelegate;
+}
+
+
+void DirTreeView::setStyles( const QString & treeIconDir )
+{
+    QString treeCss;
+    QString headerCss;
+
+    if ( treeIconDir.contains( "medium" ) )
+    {
+        const QString css = QString( "{ font-size: %1pt }" ).arg( font().pointSizeF() * 1.1 );
+        treeCss = "QTreeView " + css;
+        headerCss = "QHeaderView::section " + css;
+    }
+
+    setStyleSheet( treeCss );
+    header()->setStyleSheet( headerCss );
 }
 
 
@@ -86,7 +97,7 @@ void DirTreeView::contextMenu( const QPoint & pos )
     const QStringList actions1 = { "actionGoUp",
                                    "actionGoToToplevel",
                                  };
-    ActionManager::instance()->addActions( &menu, actions1 );
+    ActionManager::addActions( &menu, actions1 );
 
     const QStringList actions2 = { "actionStopReading",
 	                           "actionRefreshAll",
@@ -99,11 +110,10 @@ void DirTreeView::contextMenu( const QPoint & pos )
                                    "actionMoveToTrash",
                                    "---",
 	                         };
-    ActionManager::instance()->addEnabledActions( &menu, actions2 );
+    ActionManager::addEnabledActions( &menu, actions2 );
 
     // User-defined cleanups
-    if ( _cleanupCollection )
-	_cleanupCollection->addEnabledToMenu( &menu );
+    ActionManager::addEnabledCleanups( &menu );
 
     // Submenu for the auxiliary views to keep the context menu short.
     //
@@ -126,7 +136,7 @@ void DirTreeView::contextMenu( const QPoint & pos )
                                 "actionFileTypeStats",
                                 "actionFileAgeStats",
                               };
-        ActionManager::instance()->addActions( subMenu, actions );
+        ActionManager::addActions( subMenu, actions );
     }
 
     menu.exec( mapToGlobal( pos ) );

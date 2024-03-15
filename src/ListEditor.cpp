@@ -7,7 +7,7 @@
  */
 
 
-#include <QAbstractButton>
+#include <QPushButton>
 
 #include "ListEditor.h"
 #include "Logger.h"
@@ -20,53 +20,50 @@ void ListEditor::setListWidget( QListWidget * listWidget )
 {
     _listWidget = listWidget;
 
-    connect( _listWidget, SIGNAL( currentItemChanged( QListWidgetItem *, QListWidgetItem * ) ),
-	     this,	  SLOT( currentItemChanged( QListWidgetItem *, QListWidgetItem * ) ) );
+    connect( _listWidget, &QListWidget::currentItemChanged,
+	     this,	  &ListEditor::currentItemChanged );
 }
 
-
-#define CONNECT_BUTTON(BUTTON, RCVR_SLOT) \
-    connect( (BUTTON), SIGNAL( clicked() ), this, SLOT( RCVR_SLOT ) )
 
 void ListEditor::setMoveUpButton( QAbstractButton * button )
 {
     _moveUpButton = button;
-    CONNECT_BUTTON( button, moveUp() );
+    connect( button, &QPushButton::clicked, this, &ListEditor::moveUp );
 }
 
 
 void ListEditor::setMoveDownButton( QAbstractButton * button )
 {
     _moveDownButton = button;
-    CONNECT_BUTTON( button, moveDown() );
+    connect( button, &QPushButton::clicked, this, &ListEditor::moveDown );
 }
 
 
 void ListEditor::setMoveToTopButton( QAbstractButton * button )
 {
     _moveToTopButton = button;
-    CONNECT_BUTTON( button, moveToTop() );
+    connect( button, &QPushButton::clicked, this, &ListEditor::moveToTop );
 }
 
 
 void ListEditor::setMoveToBottomButton( QAbstractButton * button )
 {
     _moveToBottomButton = button;
-    CONNECT_BUTTON( button, moveToBottom() );
+    connect( button, &QPushButton::clicked, this, &ListEditor::moveToBottom );
 }
 
 
 void ListEditor::setAddButton( QAbstractButton * button )
 {
     _addButton = button;
-    CONNECT_BUTTON( button, add() );
+    connect( button, &QPushButton::clicked, this, &ListEditor::add );
 }
 
 
 void ListEditor::setRemoveButton( QAbstractButton * button )
 {
     _removeButton = button;
-    CONNECT_BUTTON( button, remove() );
+    connect( button, &QPushButton::clicked, this, &ListEditor::remove );
 }
 
 
@@ -84,7 +81,6 @@ void ListEditor::moveUp()
 	_listWidget->takeItem( currentRow );
 	_listWidget->insertItem( currentRow - 1, currentItem );
 	_listWidget->setCurrentItem( currentItem );
-//        moveValue( value( currentItem ), "moveUp" );
 	_updatesLocked = false;
     }
 }
@@ -104,7 +100,6 @@ void ListEditor::moveDown()
 	_listWidget->takeItem( currentRow );
 	_listWidget->insertItem( currentRow + 1, currentItem );
 	_listWidget->setCurrentItem( currentItem );
-//        moveValue( value( currentItem ), "moveDown" );
 	_updatesLocked = false;
     }
 }
@@ -124,7 +119,6 @@ void ListEditor::moveToTop()
 	_listWidget->takeItem( currentRow );
 	_listWidget->insertItem( 0, currentItem );
 	_listWidget->setCurrentItem( currentItem );
-//        moveValue( value( currentItem ), "moveToTop" );
 	_updatesLocked = false;
     }
 }
@@ -144,7 +138,6 @@ void ListEditor::moveToBottom()
 	_listWidget->takeItem( currentRow );
 	_listWidget->addItem( currentItem );
 	_listWidget->setCurrentItem( currentItem );
-//        moveValue( value( currentItem ), "moveToBottom" );
 	_updatesLocked = false;
     }
 }
@@ -235,11 +228,3 @@ void ListEditor::enableButton( QAbstractButton * button, bool enabled )
     if ( button )
 	button->setEnabled( enabled );
 }
-
-/*
-void ListEditor::moveValue( void * value, const char * operation )
-{
-    Q_UNUSED( value );
-    Q_UNUSED( operation );
-}
-*/

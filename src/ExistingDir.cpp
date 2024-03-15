@@ -20,7 +20,7 @@ using namespace QDirStat;
 
 QValidator::State ExistingDirValidator::validate( QString & input, int &) const
 {
-    const bool ok = ! input.isEmpty() && QDir( input ).exists();
+    const bool ok = !input.isEmpty() && QDir( input ).exists();
 
     // This is a complex way to do
     //    emit isOk( ok );
@@ -40,7 +40,7 @@ QValidator::State ExistingDirValidator::validate( QString & input, int &) const
 
 
 ExistingDirCompleter::ExistingDirCompleter( QObject * parent ):
-    QCompleter( parent )
+    QCompleter ( parent )
 {
     QFileSystemModel * model = new QFileSystemModel( this );
     CHECK_NEW( model );

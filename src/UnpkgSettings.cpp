@@ -16,6 +16,19 @@
 using namespace QDirStat;
 
 
+static QString defaultStartingDir()
+    { return "/"; }
+
+static QStringList defaultExcludeDirs()
+    { return { "/home", "/root", "/tmp", "/var", "/snap", "/usr/lib/sysimage/rpm", "/usr/local" }; }
+
+static QStringList defaultIgnorePatterns()
+    { return { "*.pyc" }; }
+
+static bool defaultCrossFilesystems()
+    { return false; }
+
+
 UnpkgSettings::UnpkgSettings()
 {
     read();

@@ -18,7 +18,7 @@
 #include "FileInfoIterator.h"
 #include "FileInfoSorter.h"
 #include "FormatUtil.h"
-#include "DebugHelpers.h"
+//#include "DebugHelpers.h"
 #include "Exception.h"
 #include "Logger.h"
 
@@ -32,6 +32,17 @@
 #define DIRECT_CHILDREN_COUNT_SANITY_CHECK       0
 
 using namespace QDirStat;
+
+
+inline static void dumpChildrenList( const FileInfo     * dir,
+			      const FileInfoList & children )
+{
+    logDebug() << "Children of " << dir << Qt::endl;
+
+    for ( int i=0; i < children.size(); ++i )
+	logDebug() << "    #" << i << ": " << children.at(i) << Qt::endl;
+}
+
 
 
 DirInfo::DirInfo( DirInfo	* parent,
@@ -965,7 +976,6 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
     if ( _dotEntry )
 	_sortedChildren->append( _dotEntry );
 
-
     // Sort
 
     // logDebug() << "Sorting children of " << this << " by " << sortCol << Qt::endl;
@@ -978,25 +988,16 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
 			  FileInfoSorter( NameCol, Qt::AscendingOrder ) );
     }
 
-
     // Primary sorting by sortCol ascending or descending (as specified in sortOrder)
     std::stable_sort( _sortedChildren->begin(),
 		      _sortedChildren->end(),
 		      FileInfoSorter( sortCol, sortOrder ) );
 
-    if ( includeAttic && _attic )
-	_sortedChildren->append( _attic );
-
-    _lastSortCol      = sortCol;
-    _lastSortOrder    = sortOrder;
-    _lastIncludeAttic = includeAttic;
-
-
 #if DIRECT_CHILDREN_COUNT_SANITY_CHECK
-
+    // Do the sanity check before adding the attic, because it isn't a direct child
     if ( _sortedChildren->size() != _directChildrenCount )
     {
-	Debug::dumpChildrenList( this, *_sortedChildren );
+	dumpChildrenList( this, *_sortedChildren );
 
 	THROW( Exception( QString( "_directChildrenCount of %1 corrupted; is %2, should be %3" )
 			  .arg( debugUrl() )
@@ -1004,6 +1005,13 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
 			  .arg( _sortedChildren->size() ) ) );
     }
 #endif
+
+    if ( includeAttic && _attic )
+	_sortedChildren->append( _attic );
+
+    _lastSortCol      = sortCol;
+    _lastSortOrder    = sortOrder;
+    _lastIncludeAttic = includeAttic;
 
     return *_sortedChildren;
 }

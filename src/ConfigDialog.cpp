@@ -17,22 +17,10 @@
 
 using namespace QDirStat;
 
-#define CONNECT_CONFIG_PAGE(PAGE)			\
-							\
-    connect( this,   SIGNAL( reinit() ),		\
-	     (PAGE), SLOT  ( setup()  ) );		\
-							\
-    connect( this,   SIGNAL( applyChanges() ),		\
-	     (PAGE), SLOT  ( applyChanges() ) );	\
-							\
-    connect( this,   SIGNAL( discardChanges() ),	\
-	     (PAGE), SLOT  ( discardChanges() ) )
-
-
 
 ConfigDialog::ConfigDialog( QWidget * parent ):
-    QDialog( parent ),
-    _ui( new Ui::ConfigDialog )
+    QDialog ( parent ),
+    _ui { new Ui::ConfigDialog }
 {
     CHECK_NEW( _ui );
     _ui->setupUi( this );
@@ -53,44 +41,27 @@ ConfigDialog::ConfigDialog( QWidget * parent ):
     CHECK_NEW( _excludeRulesConfigPage );
     _ui->pagesTabWidget->addTab( _excludeRulesConfigPage, tr( "Exclude Rules" ) );
 
-    connect( _ui->applyButton,	 SIGNAL( clicked() ),
-	     this,		 SLOT  ( apply()   ) );
-
-    CONNECT_CONFIG_PAGE( _cleanupConfigPage      );
-    CONNECT_CONFIG_PAGE( _mimeCategoryConfigPage );
-    CONNECT_CONFIG_PAGE( _excludeRulesConfigPage );
-    CONNECT_CONFIG_PAGE( _generalConfigPage      );
+    connect( _ui->applyButton,	 &QPushButton::clicked,
+	     this,		 &ConfigDialog::applyChanges );
 }
 
 
 ConfigDialog::~ConfigDialog()
 {
-    // logDebug() << "ConfigDialog destructor" << Qt::endl;;
+    // logDebug() << "ConfigDialog destructor" << Qt::endl;
     delete _ui;
-}
-
-
-void ConfigDialog::setup()
-{
-    emit reinit();
-}
-
-
-void ConfigDialog::apply()
-{
-    emit applyChanges();
 }
 
 
 void ConfigDialog::accept()
 {
-    apply();
+    emit applyChanges();
     done( Accepted );
 }
 
 
 void ConfigDialog::reject()
 {
-    emit discardChanges();
+//    emit discardChanges(); // currently no takers for this signal
     done( Rejected );
 }

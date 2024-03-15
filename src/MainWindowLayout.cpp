@@ -179,7 +179,7 @@ void MainWindow::contextMenuEvent( QContextMenuEvent * event )
                                            "actionLayout2",
                                            "actionLayout3",
                                          };
-            ActionManager::instance()->addActions( &menu, actions1 );
+            ActionManager::addActions( &menu, actions1 );
 
             menu.exec( event->globalPos() );
             return;

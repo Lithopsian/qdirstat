@@ -8,6 +8,7 @@
 
 
 #include "GeneralConfigPage.h"
+#include "ConfigDialog.h"
 #include "DirTreeModel.h"
 #include "MainWindow.h"
 #include "QDirStatApp.h"
@@ -19,13 +20,17 @@
 using namespace QDirStat;
 
 
-GeneralConfigPage::GeneralConfigPage( QWidget * parent ):
+GeneralConfigPage::GeneralConfigPage( ConfigDialog * parent ):
     QWidget( parent ),
     _ui( new Ui::GeneralConfigPage )
 {
     CHECK_NEW( _ui );
-
     _ui->setupUi( this );
+
+    setup();
+
+    connect( parent, &ConfigDialog::applyChanges,
+	     this,   &GeneralConfigPage::applyChanges );
 }
 
 
@@ -50,7 +55,8 @@ void GeneralConfigPage::setup()
         _ui->useBoldForDominantCheckBox->setChecked ( dirTreeModel->useBoldForDominantItems() );
         _ui->treeUpdateIntervalSpinBox->setValue    ( dirTreeModel->updateTimerMillisec() );
         const QString treeIconDir = dirTreeModel->treeIconDir();
-        _ui->treeIconThemeComboBox->setCurrentIndex( treeIconDir.contains( "/tree-small" ) ? 1 : 0 );
+        _ui->treeIconThemeComboBox->setCurrentIndex( treeIconDir.contains( "/tree-medium" ) ?
+                                                     DTIS_Medium : DTIS_Small );
     }
 
     _ui->urlInWindowTitleCheckBox->setChecked( mainWindow->urlInWindowTitle() );
@@ -71,23 +77,20 @@ void GeneralConfigPage::applyChanges()
     DirTreeModel *dirTreeModel = app()->dirTreeModel();
     if ( dirTreeModel )
     {
-        const QString treeIconDir = _ui->treeIconThemeComboBox->currentIndex() == 1 ?
+        const QString treeIconDir = _ui->treeIconThemeComboBox->currentIndex() == DTIS_Small ?
                                     ":/icons/tree-small/" :
                                     ":/icons/tree-medium/";
         dirTreeModel->updateSettings( _ui->crossFilesystemsCheckBox->isChecked(),
                                       _ui->useBoldForDominantCheckBox->isChecked(),
                                       treeIconDir,
                                       _ui->treeUpdateIntervalSpinBox->value() );
+
+        mainWindow->dirTreeView()->setStyles( treeIconDir );
     }
 
     mainWindow->updateSettings( _ui->urlInWindowTitleCheckBox->isChecked(),
                                 _ui->useTreemapHoverCheckBox->isChecked(),
                                 1000 * _ui->statusBarShortTimeoutSpinBox->value(),
                                 1000 * _ui->statusBarLongTimeoutSpinBox->value() );
-}
 
-
-void GeneralConfigPage::discardChanges()
-{
-    //logDebug() << Qt::endl;
 }

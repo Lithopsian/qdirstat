@@ -30,7 +30,7 @@ using namespace QDirStat;
 
 
 
-MimeCategoryConfigPage::MimeCategoryConfigPage( QWidget * parent ):
+MimeCategoryConfigPage::MimeCategoryConfigPage( ConfigDialog * parent ):
     ListEditor ( parent ),
     _ui { new Ui::MimeCategoryConfigPage },
     _dirTree { nullptr },
@@ -39,15 +39,13 @@ MimeCategoryConfigPage::MimeCategoryConfigPage( QWidget * parent ):
     //logDebug() << "MimeCategoryConfigPage constructor" << Qt::endl;
 
     CHECK_NEW( _ui );
-
     _ui->setupUi( this );
 
     setListWidget  ( _ui->listWidget   );
     setAddButton   ( _ui->addButton    );
     setRemoveButton( _ui->removeButton );
 
-    populateTreemapView();
-    _ui->treemapView->setFixedColor( Qt::white );
+    setup();
 
     connect( _ui->nameLineEdit,	 	&QLineEdit::textChanged,
 	     this,			&MimeCategoryConfigPage::nameChanged );
@@ -91,8 +89,11 @@ MimeCategoryConfigPage::MimeCategoryConfigPage( QWidget * parent ):
     connect( _ui->actionRemove_category,	&QAction::triggered,
 	     this,				&MimeCategoryConfigPage::removeTriggered );
 
-//    connect( (ConfigDialog *)parent,		&ConfigDialog::finished,
-//	     this,				&MimeCategoryConfigPage::finished );
+    connect( parent, &ConfigDialog::applyChanges,
+	     this,   &MimeCategoryConfigPage::applyChanges );
+
+//    connect( parent, &ConfigDialog::discardChanges,
+//	     this,   &MimeCategoryConfigPage::discardChanges );
 }
 
 
@@ -114,6 +115,9 @@ MimeCategoryConfigPage::~MimeCategoryConfigPage()
 void MimeCategoryConfigPage::setup()
 {
     //logDebug() << Qt::endl;
+
+    populateTreemapView();
+    _ui->treemapView->setFixedColor( Qt::white );
 
     // Populate the category list
     fillListWidget();
@@ -174,18 +178,6 @@ void MimeCategoryConfigPage::applyChanges()
 }
 
 
-void MimeCategoryConfigPage::discardChanges()
-{
-    // logDebug() << Qt::endl;
-
-//    _categorizer->readSettings(); haven't touched the live categories
-//    _categorizer->resetDirty();
-
-    // The dialog is closing, but be tidy anyway
-    _dirty = false;
-}
-
-
 void MimeCategoryConfigPage::fillListWidget()
 {
 //    const int currentRow = listWidget()->currentRow();
@@ -212,7 +204,7 @@ void MimeCategoryConfigPage::fillListWidget()
 
 void MimeCategoryConfigPage::updateActions()
 {
-    ListEditor::updateActions();
+//    ListEditor::updateActions();
 
     setActions( listWidget()->currentItem() );
 }
@@ -294,8 +286,6 @@ void MimeCategoryConfigPage::setActions( const QListWidgetItem * currentItem )
     _ui->actionRemove_category->setEnabled( currentItem && !isSymlink && !isExecutable );
     enableButton( _ui->removeButton, currentItem && !isSymlink && !isExecutable );
     enableButton( _ui->categoryColorButton, currentItem );
-//    _ui->actionAdd_new_category->setEnabled( true ); // always enabled, and enabled by ListEditor
-
 }
 
 
@@ -620,21 +610,6 @@ void MimeCategoryConfigPage::removeTriggered( bool )
     ListEditor::remove();
 }
 
-/*
-void MimeCategoryConfigPage::finished( int )
-{
-    // The dialog is going to close although may not be destroyed,
-    // so behave as if this is a destructor
-
-//    _ui->treemapView->setDirTree(0);
-
-//	delete _dirTree;
-
-    // Delete the working categories
-//    for ( int i = 0; i < listWidget()->count(); ++i )
-//	delete CATEGORY_CAST( value( listWidget()->item( i ) ) );
-}
-*/
 
 void MimeCategoryConfigPage::add()
 {

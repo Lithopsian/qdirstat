@@ -61,6 +61,11 @@ HistogramView::HistogramView( QWidget * parent ):
 }
 
 
+HistogramView::~HistogramView()
+{
+}
+
+
 void HistogramView::init()
 {
     _histogramPanel = 0;

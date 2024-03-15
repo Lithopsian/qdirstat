@@ -21,6 +21,9 @@
 #include "Exception.h"
 
 
+/**
+ * Return the device of file or directory 'path'.
+ **/
 static dev_t device( const QString & path )
 {
     dev_t dev = 0;
@@ -40,6 +43,10 @@ static dev_t device( const QString & path )
 }
 
 
+/**
+ * Find the toplevel directory (the mount point) for the device that 'path'
+ * is on.
+ **/
 static QString toplevel( const QString & rawPath )
 {
     const dev_t dev = device( rawPath );
@@ -64,12 +71,15 @@ static QString toplevel( const QString & rawPath )
 }
 
 
+using namespace QDirStat;
+
+/*
 Trash * Trash::instance()
 {
     static Trash _instance;
     return &_instance;
 }
-
+*/
 
 Trash::Trash():
     _homeTrashDir { nullptr }
@@ -157,14 +167,14 @@ bool Trash::trash( const QString & path )
 {
     try
     {
-	TrashDir * trashDir = instance()->trashDir( path );
+	TrashDir * dir = trashDir( path );
 
-	if ( ! trashDir )
+	if ( !dir )
 	    return false;
 
-	const QString targetName = trashDir->uniqueName( path );
-	trashDir->createTrashInfo( path, targetName );
-	trashDir->move( path, targetName );
+	const QString targetName = dir->uniqueName( path );
+	dir->createTrashInfo( path, targetName );
+	dir->move( path, targetName );
     }
     catch ( const FileException & ex )
     {
@@ -200,6 +210,29 @@ void Trash::empty()
 }
 */
 
+
+
+static bool ensureDirExists( const QString & path,
+				mode_t		mode,
+				bool		doThrow )
+{
+    const QDir dir( path );
+
+    if ( dir.exists() )
+	return true;
+
+    logInfo() << "mkdir " << path << Qt::endl;
+    const int result = mkdir( path.toUtf8(), mode );
+
+    if ( result < 0 && doThrow )
+    {
+	THROW( FileException( path,
+			      QString( "Could not create directory %1: %2" )
+			      .arg( path ).arg( formatErrno() ) ) );
+    }
+
+    return result >= 0;
+}
 
 
 
@@ -242,29 +275,6 @@ QString TrashDir::uniqueName( const QString & path )
     // safely be overwritten.
 
     return name;
-}
-
-
-bool TrashDir::ensureDirExists( const QString & path,
-				mode_t		mode,
-				bool		doThrow )
-{
-    const QDir dir( path );
-
-    if ( dir.exists() )
-	return true;
-
-    logInfo() << "mkdir " << path << Qt::endl;
-    const int result = mkdir( path.toUtf8(), mode );
-
-    if ( result < 0 && doThrow )
-    {
-	THROW( FileException( path,
-			      QString( "Could not create directory %1: %2" )
-			      .arg( path ).arg( formatErrno() ) ) );
-    }
-
-    return result >= 0;
 }
 
 

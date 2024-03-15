@@ -34,7 +34,8 @@ HistoryButtons::HistoryButtons( QAction * actionGoBack,
 
 HistoryButtons::~HistoryButtons()
 {
-    delete _historyMenu;
+//    delete _backMenu;
+//    delete _forwardMenu;
     delete _history;
 }
 
@@ -79,25 +80,37 @@ void HistoryButtons::addToHistory( FileInfo * item )
 
 void HistoryButtons::initHistoryButtons()
 {
-    _historyMenu = new QMenu();
-//    _historyMenu->addAction( "Dummy 1" );
+    // Two menus - they'll always look the same, but positioning is subtly different
+    QMenu * backMenu    = new QMenu();
+    QMenu * forwardMenu = new QMenu();
 
-    connect( _historyMenu, SIGNAL( aboutToShow()       ),
-             this,         SLOT  ( updateHistoryMenu() ) );
 
-    connect( _historyMenu, SIGNAL( triggered        ( QAction * ) ),
-             this,         SLOT  ( historyMenuAction( QAction * ) ) );
+    connect( backMenu, &QMenu::aboutToShow,
+             this,     &HistoryButtons::updateHistoryMenu );
 
-    _actionGoBack->setMenu   ( _historyMenu );
-    _actionGoForward->setMenu( _historyMenu );
+    connect( backMenu, &QMenu::triggered,
+             this,     &HistoryButtons::historyMenuAction );
+
+    connect( forwardMenu, &QMenu::aboutToShow,
+             this,        &HistoryButtons::updateHistoryMenu );
+
+    connect( forwardMenu, &QMenu::triggered,
+             this,        &HistoryButtons::historyMenuAction );
+
+    _actionGoBack->setMenu   ( backMenu );
+    _actionGoForward->setMenu( forwardMenu );
 }
 
 
 void HistoryButtons::updateHistoryMenu()
 {
-    _historyMenu->clear();
+    QMenu *menu = qobject_cast<QMenu *>( sender() );
+    if ( !menu )
+        return;
 
-    QActionGroup * actionGroup = new QActionGroup( _historyMenu );
+    menu->clear();
+
+    QActionGroup * actionGroup = new QActionGroup( menu );
 
     const QStringList items = _history->allItems();
     const int current = _history->currentIndex();
@@ -108,7 +121,7 @@ void HistoryButtons::updateHistoryMenu()
         action->setCheckable( true );
         action->setChecked( i == current );
         action->setData( i );
-        _historyMenu->addAction( action );
+        menu->addAction( action );
     }
 }
 
@@ -117,8 +130,7 @@ void HistoryButtons::historyMenuAction( QAction * action )
 {
     if ( action )
     {
-        const QVariant data = action->data();
-        const int index = data.toInt();
+        const int index = action->data().toInt();
 
         if ( _history->setCurrentIndex( index ) )
             navigateToUrl( _history->currentItem() );

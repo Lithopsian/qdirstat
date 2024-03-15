@@ -33,11 +33,12 @@ using namespace QDirStat;
 
 
 DirTree::DirTree():
-    QObject {},
+    QObject (),
     _root { new DirInfo( this ) },
     _crossFilesystems { false },
     _isBusy { false },
     _excludeRules { nullptr },
+    _tmpExcludeRules { nullptr },
     _beingDestroyed { false },
     _haveClusterSize { false },
     _blocksPerCluster { 0 }
@@ -58,6 +59,7 @@ DirTree::~DirTree()
 
     delete _root;
     delete _excludeRules;
+    delete _tmpExcludeRules;
 
     clearFilters();
 }
@@ -122,7 +124,7 @@ void DirTree::clear()
 void DirTree::reset()
 {
     clear();
-    clearExcludeRules();
+    clearTmpExcludeRules();
     clearFilters();
 }
 
@@ -486,19 +488,25 @@ void DirTree::readPkg( const PkgFilter & pkgFilter )
 }
 
 
-void DirTree::setExcludeRules( ExcludeRules * newRules )
+void DirTree::setExcludeRules()
 {
     delete _excludeRules;
+    _excludeRules = new ExcludeRules();
+    CHECK_NEW( _excludeRules );
+}
+
+
+void DirTree::setTmpExcludeRules( ExcludeRules * newTmpRules )
+{
+    delete _tmpExcludeRules;
 
 #if VERBOSE_EXCLUDE_RULES
-    if ( newRules )
+    if ( newTmpRules )
     {
 	logDebug() << "New tmp exclude rules:" << Qt::endl;
 
-	for ( ExcludeRuleListIterator it = newRules->begin(); it != newRules->end(); ++it )
-	{
+	for ( ExcludeRuleListIterator it = newTmpRules->cbegin(); it != newTmpRules->cend(); ++it )
 	    logDebug() << *it << Qt::endl;
-	}
     }
     else
     {
@@ -506,7 +514,7 @@ void DirTree::setExcludeRules( ExcludeRules * newRules )
     }
 #endif
 
-    _excludeRules = newRules;
+    _tmpExcludeRules = newTmpRules;
 }
 
 
@@ -539,7 +547,7 @@ bool DirTree::checkIgnoreFilters( const QString & path )
 void DirTree::moveIgnoredToAttic( DirInfo * dir )
 {
     if ( !dir )
-	return;;
+	return;
 
     if ( dir->totalIgnoredItems() == 0 && dir->totalUnignoredItems() > 0 )
 	return;

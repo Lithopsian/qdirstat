@@ -22,6 +22,16 @@
 using namespace QDirStat;
 
 
+[[gnu::unused]] static void dumpNormalMountPoints()
+{
+    const auto mountPoints = MountPoints::normalMountPoints();
+    for ( const MountPoint * mountPoint : mountPoints )
+	logDebug() << mountPoint->path() << Qt::endl;
+}
+
+
+
+
 MountPoint::~MountPoint()
 {
     delete _storageInfo;
@@ -139,14 +149,6 @@ MountPoints::~MountPoints()
     qDeleteAll( _mountPointList );
     _mountPointList.clear();
     _mountPointMap.clear();
-}
-
-
-bool MountPoints::isEmpty()
-{
-    instance()->ensurePopulated();
-
-    return instance()->_mountPointList.isEmpty();
 }
 
 
@@ -464,14 +466,6 @@ QList<MountPoint *> MountPoints::normalMountPoints()
     }
 
     return result;
-}
-
-
-void MountPoints::dumpNormalMountPoints()
-{
-    const auto mountPoints = normalMountPoints();
-    for ( const MountPoint * mountPoint : mountPoints )
-	logDebug() << mountPoint->path() << Qt::endl;
 }
 
 

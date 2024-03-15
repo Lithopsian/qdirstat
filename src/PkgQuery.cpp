@@ -61,11 +61,10 @@ void PkgQuery::checkPkgManagers()
     checkPkgManager( new RpmPkgManager()    );
     checkPkgManager( new PacManPkgManager() );
 
-    _pkgManagers += _secondaryPkgManagers;
-    _secondaryPkgManagers.clear();
-
+    // The following is just for logging
     if ( _pkgManagers.isEmpty() )
         logInfo() << "No supported package manager found." << Qt::endl;
+#if VERBOSE_PKG_QUERY
     else
     {
         QStringList available;
@@ -75,6 +74,7 @@ void PkgQuery::checkPkgManagers()
 
         logInfo() << "Found " << available.join( ", " )  << Qt::endl;
     }
+#endif
 }
 
 
@@ -84,16 +84,19 @@ void PkgQuery::checkPkgManager( const PkgManager * pkgManager )
 
     if ( pkgManager->isPrimaryPkgManager() )
     {
+	// Primaries at the start of the list
 	logInfo() << "Found primary package manager " << pkgManager->name() << Qt::endl;
-	_pkgManagers << pkgManager;
+	_pkgManagers.prepend( pkgManager );
     }
     else if ( pkgManager->isAvailable() )
     {
+	// Secondaries at the end of the list
 	logInfo() << "Found secondary package manager " << pkgManager->name() << Qt::endl;
-	_secondaryPkgManagers << pkgManager;
+	_pkgManagers.append( pkgManager) ;
     }
     else
     {
+	// Not in the list at all
 	delete pkgManager;
     }
 }
@@ -103,26 +106,22 @@ QString PkgQuery::getOwningPackage( const QString & path )
 {
     QString pkg = "";
     QString foundBy;
-    bool haveResult = false;
 
     if ( _cache.contains( path ) )
     {
-	haveResult = true;
 	foundBy	   = "Cache";
 	pkg	   = *( _cache[ path ] );
     }
 
 
-    if ( ! haveResult )
+    if ( foundBy.isEmpty() )
     {
 	for ( const PkgManager * pkgManager : _pkgManagers )
 	{
 	    pkg = pkgManager->owningPkg( path );
-
-	    if ( ! pkg.isEmpty() )
+	    if ( !pkg.isEmpty() )
 	    {
-		haveResult = true;
-		foundBy	   = pkgManager->name();
+		foundBy = pkgManager->name();
 		break;
 	    }
 	}
@@ -150,9 +149,7 @@ PkgInfoList PkgQuery::getInstalledPkg() const
     PkgInfoList pkgList;
 
     for ( const PkgManager * pkgManager : _pkgManagers )
-    {
         pkgList.append( pkgManager->installedPkg() );
-    }
 
     return pkgList;
 }
@@ -163,7 +160,6 @@ QStringList PkgQuery::getFileList( const PkgInfo * pkg ) const
     for ( const PkgManager * pkgManager : _pkgManagers )
     {
         const QStringList fileList = pkgManager->fileList( pkg );
-
         if ( ! fileList.isEmpty() )
             return fileList;
     }

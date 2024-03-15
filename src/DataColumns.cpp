@@ -24,8 +24,8 @@ DataColumns * DataColumns::instance()
 }
 
 
-DataColumns::DataColumns():
-    QObject()
+DataColumns::DataColumns()
+//    QObject()
 {
     _columns = defaultColumns();
 
@@ -90,10 +90,10 @@ void DataColumns::writeSettings()
 }
 
 
-void DataColumns::setColumns( const DataColumnList & newColumns )
+void DataColumns::instanceSetColumns( const DataColumnList & newColumns )
 {
     _columns = newColumns;
-    emit columnsChanged();
+//    emit columnsChanged();
 }
 
 

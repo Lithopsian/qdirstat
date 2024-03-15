@@ -208,7 +208,7 @@ void FileTypeStats::removeCruft()
 	}
     }
 
-#if 1
+#if 0
     logDebug() << "Merged " << (int)cruft.size() << " suffixes to <NO SUFFIX>: "
 	       << cruft.join( ", " ) << Qt::endl;
 #endif

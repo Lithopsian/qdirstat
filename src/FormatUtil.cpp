@@ -16,6 +16,15 @@
 using namespace QDirStat;
 
 
+QString QDirStat::elideMiddle( const QString & text, int maxLen )
+{
+    if ( maxLen < 4 || text.size() < maxLen )
+        return text;
+
+    return text.left( maxLen / 2 ) + "…" + text.right( maxLen / 2 - 1 );
+}
+
+
 QString QDirStat::formatSize( FileSize lSize, int precision )
 {
     static QStringList units = { QObject::tr( " bytes" ),

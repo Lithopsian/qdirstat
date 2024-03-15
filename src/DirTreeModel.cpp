@@ -12,6 +12,7 @@
 #include "DirTreeModel.h"
 #include "DirInfo.h"
 #include "DirTree.h"
+#include "ExcludeRules.h"
 #include "FileInfoIterator.h"
 #include "DataColumns.h"
 #include "SelectionModel.h"
@@ -20,13 +21,89 @@
 #include "Logger.h"
 #include "FormatUtil.h"
 #include "Exception.h"
-#include "DebugHelpers.h"
 
 // Number of clusters up to which a file will be considered small and will also
 // display the allocated size like (4k).
 #define SMALL_FILE_CLUSTERS     2
 
 using namespace QDirStat;
+
+
+// Debug helpers: inline static so they should disappear if they aren't being used.
+[[gnu::unused]] static void dumpDirectChildren( const FileInfo * dir )
+{
+    if ( ! dir )
+	return;
+
+    FileInfoIterator it( dir );
+
+    if ( dir->hasChildren() )
+    {
+	logDebug() << "Children of " << dir
+		   << "  (" << (void *) dir << ")"
+		   << Qt::endl;
+	int count = 0;
+
+	while ( *it )
+	{
+	    logDebug() << "	   #" << count++ << ": "
+		       << (void *) *it
+		       << "	 " << *it
+		       << Qt::endl;
+	    ++it;
+	}
+    }
+    else
+    {
+	logDebug() << "    No children in " << dir << Qt::endl;
+    }
+}
+
+
+inline static void dumpPersistentIndexList( QModelIndexList persistentList )
+{
+    logDebug() << persistentList.size() << " persistent indexes" << Qt::endl;
+
+    for ( int i=0; i < persistentList.size(); ++i )
+    {
+	const QModelIndex index = persistentList.at(i);
+
+	FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
+	CHECK_MAGIC( item );
+
+	logDebug() << "#" << i
+		   << " Persistent index "
+		   << index
+		   << Qt::endl;
+    }
+}
+
+
+/**
+ * For sparse files, return a list of three strings for the delegate:
+ * text describing the size, eg. "1.0MB "; text describing the allocated
+ * size, eg. "(1.0kB)"; and text descriving the number of hard links, eg.
+ * " / 3 links", which will be empty if there are not at least 2
+ * hard links.
+ **/
+static QStringList sparseSizeText( FileInfo * item )
+{
+    const QString sizeText = formatSize( item->rawByteSize() );
+    const QString allocText = " (" % formatSize( item->rawAllocatedSize() ) % ")";
+    const QString linksText = formatLinksInline( item->links() );
+    return { sizeText, allocText, linksText };
+}
+
+
+/**
+ * Return text formatted as "42.0kB / 4 links".  This would normally only
+ * ve called if the number of hard links is more than one.
+ **/
+static QString linksSizeText( FileInfo * item )
+{
+    return QString( formatSize( item->rawByteSize() ) % formatLinksInline( item->links() ) );
+}
+
 
 
 DirTreeModel::DirTreeModel( QObject * parent ):
@@ -47,8 +124,8 @@ DirTreeModel::DirTreeModel( QObject * parent ):
 
     _updateTimer.setInterval( _updateTimerMillisec );
 
-    connect( &_updateTimer, SIGNAL( timeout()		 ),
-	     this,	    SLOT  ( sendPendingUpdates() ) );
+    connect( &_updateTimer, &QTimer::timeout,
+	     this,	    &DirTreeModel::sendPendingUpdates );
 }
 
 
@@ -144,31 +221,32 @@ void DirTreeModel::createTree()
     _tree = new DirTree();
     CHECK_NEW( _tree );
 
+    _tree->setExcludeRules();
     _tree->setCrossFilesystems( _crossFilesystems );
 
-    connect( _tree, SIGNAL( startingReading() ),
-	     this,  SLOT  ( busyDisplay() ) );
+    connect( _tree, qOverload<>( &DirTree::startingReading ),
+	     this,  &DirTreeModel::busyDisplay );
 
-    connect( _tree, SIGNAL( finished()	      ),
-	     this,  SLOT  ( readingFinished() ) );
+    connect( _tree, &DirTree::finished,
+	     this,  &DirTreeModel::readingFinished );
 
-    connect( _tree, SIGNAL( aborted()	      ),
-	     this,  SLOT  ( readingFinished() ) );
+    connect( _tree, &DirTree::aborted,
+	     this,  &DirTreeModel::readingFinished );
 
-    connect( _tree, SIGNAL( readJobFinished( DirInfo * ) ),
-	     this,  SLOT  ( readJobFinished( DirInfo * ) ) );
+    connect( _tree, &DirTree::readJobFinished,
+	     this,  &DirTreeModel::readJobFinished );
 
-    connect( _tree, SIGNAL( deletingChild( FileInfo * ) ),
-	     this,  SLOT  ( deletingChild( FileInfo * ) ) );
+    connect( _tree, &DirTree::deletingChild,
+	     this,  &DirTreeModel::deletingChild );
 
-    connect( _tree, SIGNAL( clearingSubtree( DirInfo * ) ),
-	     this,  SLOT  ( clearingSubtree( DirInfo * ) ) );
+    connect( _tree, &DirTree::clearingSubtree,
+	     this,  &DirTreeModel::clearingSubtree );
 
-    connect( _tree, SIGNAL( subtreeCleared( DirInfo * ) ),
-	     this,  SLOT  ( subtreeCleared( DirInfo * ) ) );
+    connect( _tree, &DirTree::subtreeCleared,
+	     this,  &DirTreeModel::subtreeCleared );
 
-    connect( _tree, SIGNAL( childDeleted() ),
-	     this,  SLOT  ( childDeleted() ) );
+    connect( _tree, &DirTree::childDeleted,
+	     this,  &DirTreeModel::childDeleted );
 }
 
 
@@ -179,13 +257,13 @@ void DirTreeModel::clear()
 	beginResetModel();
 
 	// logDebug() << "After beginResetModel()" << Qt::endl;
-	// dumpPersistentIndexList();
+	// dumpPersistentIndexList( persistentIndexList() );
 
 	_tree->clear();
 	endResetModel();
 
 	// logDebug() << "After endResetModel()" << Qt::endl;
-	// dumpPersistentIndexList();
+	// dumpPersistentIndexList( persistentIndexList() );
     }
 }
 
@@ -244,7 +322,7 @@ void DirTreeModel::loadIcons()
 void DirTreeModel::setColumns( const DataColumnList & columns )
 {
     beginResetModel();
-    DataColumns::instance()->setColumns( columns );
+    DataColumns::setColumns( columns );
     endResetModel();
 }
 
@@ -262,7 +340,8 @@ FileInfo * DirTreeModel::findChild( DirInfo * parent, int childNo ) const
 	logError() << "Child #" << childNo << " is out of range: 0.."
 		   << childrenList.size()-1 << " children for "
 		   << parent << Qt::endl;
-	Debug::dumpChildrenList( parent, childrenList );
+
+	dumpDirectChildren( parent );
 
 	return nullptr;
     }
@@ -281,7 +360,6 @@ int DirTreeModel::rowNumber( FileInfo * child ) const
 									 true ); // includeAttic
 
     const int row = childrenList.indexOf( child );
-
     if ( row < 0 )
     {
 	// Not found
@@ -290,7 +368,7 @@ int DirTreeModel::rowNumber( FileInfo * child ) const
 		   << " not found in \""
 		   << child->parent() << "\"" << Qt::endl;
 
-	Debug::dumpDirectChildren( child->parent() );
+	dumpDirectChildren( child->parent() );
     }
 
     return row;
@@ -494,15 +572,19 @@ QVariant DirTreeModel::headerData( int		   section,
 	    }
 
 	case Qt::TextAlignmentRole:
-	    switch ( DataColumns::fromViewCol( section ) )
-	    {
-		case NameCol:	return Qt::AlignLeft;
-		default:	return Qt::AlignHCenter;
-	    }
+	    if ( DataColumns::fromViewCol( section ) == NameCol )
+		return QVariant( Qt::AlignVCenter | Qt::AlignLeft );
+	    else
+		return QVariant();
+//	    switch ( DataColumns::fromViewCol( section ) )
+//	    {
+//		case NameCol:	return QVariant( Qt::AlignVCenter | Qt::AlignLeft );
+//		default:	return QVariant( Qt::AlignVCenter | Qt::AlignHCenter );
+//	    }
 
-	default:
-	    return QVariant();
     }
+
+    return QVariant();
 }
 
 
@@ -580,7 +662,7 @@ void DirTreeModel::sort( int column, Qt::SortOrder order )
 	       << Qt::endl;
 
     // logDebug() << "Before layoutAboutToBeChanged()" << Qt::endl;
-    // dumpPersistentIndexList();
+    //dumpPersistentIndexList( persistentIndexList() );
 
     emit layoutAboutToBeChanged();
     _sortCol = DataColumns::fromViewCol( column );
@@ -589,7 +671,7 @@ void DirTreeModel::sort( int column, Qt::SortOrder order )
     emit layoutChanged( QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint );
 
     //logDebug() << "After layoutChanged()" << Qt::endl;
-    // dumpPersistentIndexList();
+    // dumpPersistentIndexList( persistentIndexList() );
 }
 
 
@@ -814,21 +896,6 @@ int DirTreeModel::directChildrenCount( FileInfo * subtree ) const
 }
 
 
-QStringList DirTreeModel::sparseSizeText( FileInfo * item )
-{
-    const QString sizeText = formatSize( item->rawByteSize() );
-    const QString allocText = " (" % formatSize( item->rawAllocatedSize() ) % ")";
-    const QString linksText = formatLinksInline( item->links() );
-    return { sizeText, allocText, linksText };
-}
-
-
-QString DirTreeModel::linksSizeText( FileInfo * item )
-{
-    return QString( formatSize( item->rawByteSize() ) % formatLinksInline( item->links() ) );
-}
-
-
 QStringList DirTreeModel::smallSizeText( FileInfo * item )
 {
     const FileSize size = item->size();
@@ -838,7 +905,6 @@ QStringList DirTreeModel::smallSizeText( FileInfo * item )
 }
 
 
-//bool DirTreeModel::isSmallFileOrSymLink( FileInfo * item )
 bool DirTreeModel::useSmallFileSizeText( FileInfo * item )
 {
     if ( !item || !item->tree() || item->blocks() == 0 || !( item->isFile() || item->isSymLink() ) )
@@ -974,7 +1040,7 @@ void DirTreeModel::newChildrenNotify( DirInfo * dir )
 
     const QModelIndex index = modelIndex( dir );
     const int count = directChildrenCount( dir );
-    // Debug::dumpDirectChildren( dir );
+    // dumpDirectChildren( dir );
 
     if ( count > 0 )
     {
@@ -1027,7 +1093,7 @@ void DirTreeModel::dataChangedNotify( DirInfo * dir )
 
     if ( dir->isTouched() ) // only if the view ever requested data about this dir
     {
-	const int colCount = DataColumns::instance()->colCount();
+	const int colCount = DataColumns::colCount();
 	const QModelIndex topLeft	= modelIndex( dir, 0 );
 	const QModelIndex bottomRight	= createIndex( topLeft.row(), colCount - 1, dir );
 
@@ -1052,29 +1118,8 @@ void DirTreeModel::readingFinished()
     idleDisplay();
     sendPendingUpdates();
 
-    // dumpPersistentIndexList();
-    // Debug::dumpDirectChildren( _tree->root(), "root" );
-}
-
-
-void DirTreeModel::dumpPersistentIndexList() const
-{
-    QModelIndexList persistentList = persistentIndexList();
-
-    logDebug() << persistentList.size() << " persistent indexes" << Qt::endl;
-
-    for ( int i=0; i < persistentList.size(); ++i )
-    {
-	const QModelIndex index = persistentList.at(i);
-
-	FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
-	CHECK_MAGIC( item );
-
-	logDebug() << "#" << i
-		   << " Persistent index "
-		   << index
-		   << Qt::endl;
-    }
+    // dumpPersistentIndexList( persistentIndexList() );
+    // dumpDirectChildren( _tree->root(), "root" );
 }
 
 

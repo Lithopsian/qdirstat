@@ -45,17 +45,17 @@ OpenUnpkgDialog::OpenUnpkgDialog( QWidget * parent ):
     if ( lineEdit )
         lineEdit->setClearButtonEnabled( true );
 
-    connect( validator, SIGNAL( isOk( bool ) ),
-	     _okButton, SLOT( setEnabled( bool ) ) );
-
-    connect( this, SIGNAL( accepted() ),
-	     this, SLOT( writeSettings() ) );
-
     QPushButton * resetButton = _ui->buttonBox->button( QDialogButtonBox::RestoreDefaults );
     CHECK_PTR( resetButton );
 
-    connect( resetButton, SIGNAL( clicked() ),
-	     this,	  SLOT( restoreDefaults() ) );
+    connect( resetButton, &QPushButton::clicked,
+	     this,	  &OpenUnpkgDialog::restoreDefaults );
+
+    connect( validator, &ExistingDirValidator::isOk,
+	     _okButton, &QPushButton::setEnabled );
+
+    connect( this, &OpenUnpkgDialog::accepted,
+	     this, &OpenUnpkgDialog::writeSettings );
 
     readSettings();
 }

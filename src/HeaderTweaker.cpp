@@ -29,12 +29,9 @@ HeaderTweaker::HeaderTweaker( QHeaderView * header, DirTreeView * parent ):
 {
     CHECK_PTR( _header );
 
-//    _header->setSortIndicator( NameCol, Qt::AscendingOrder );
-//    _header->setStretchLastSection( false );
     _header->setContextMenuPolicy( Qt::CustomContextMenu );
+    _header->setDefaultAlignment( Qt::AlignVCenter | Qt::AlignHCenter );
 
-//    setAllColumnsAutoSize( true );
-//    createActions();
     createColumnLayouts();
 
     connect( _header, &QHeaderView::sectionCountChanged,
@@ -168,7 +165,7 @@ QMenu * HeaderTweaker::createHiddenColMenu( QWidget * parent )
 
 QString HeaderTweaker::colName( int section ) const
 {
-    const DataColumn col = DataColumns::instance()->reverseMappedCol( static_cast<DataColumn>( section ) );
+    const DataColumn col = DataColumns::toViewCol( section );
     const QString name = _treeView->model()->headerData( col, Qt::Horizontal, Qt::DisplayRole ).toString();
     if ( col == UndefinedCol )
 	logError() << "No column at section " << section << Qt::endl;
@@ -389,7 +386,7 @@ void HeaderTweaker::setColumnVisibility( const DataColumnList & columns )
 
 void HeaderTweaker::addMissingColumns( DataColumnList & colList )
 {
-    for ( const DataColumn col : DataColumns::instance()->defaultColumns() )
+    for ( const DataColumn col : DataColumns::defaultColumns() )
     {
 	if ( ! colList.contains( col ) )
 	     colList << col;
@@ -485,5 +482,5 @@ DataColumnList ColumnLayout::defaultColumns( const QString & layoutName )
 		 LatestMTimeCol
 	       };
 
-    return DataColumns::instance()->allColumns();
+    return DataColumns::allColumns();
 }

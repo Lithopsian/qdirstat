@@ -15,7 +15,7 @@
 #include "DirTree.h"
 #include "FileInfoSet.h"
 #include "SelectionModel.h"
-#include "CleanupCollection.h"
+//#include "CleanupCollection.h"
 #include "MainWindow.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -35,9 +35,6 @@ QDirStatApp::QDirStatApp()
     CHECK_NEW( _selectionModel );
 
     _dirTreeModel->setSelectionModel( _selectionModel );
-
-    _cleanupCollection = new CleanupCollection( _selectionModel );
-    CHECK_NEW( _cleanupCollection );
 }
 
 
@@ -45,7 +42,6 @@ QDirStatApp::~QDirStatApp()
 {
     // logDebug() << "Destroying app" << Qt::endl;
 
-    delete _cleanupCollection;
     delete _selectionModel;
     delete _dirTreeModel;
 
@@ -74,7 +70,7 @@ QWidget * QDirStatApp::findMainWindow() const
     for ( QWidgetList::const_iterator it = toplevel.cbegin(); it != toplevel.cend() && !mainWin; ++it )
         mainWin = qobject_cast<MainWindow *>( *it );
 
-    if ( ! mainWin )
+    if ( !mainWin )
         logWarning() << "NULL mainWin for shared instance" << Qt::endl;
 
     return mainWin;

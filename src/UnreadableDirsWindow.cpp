@@ -31,6 +31,8 @@ UnreadableDirsWindow::UnreadableDirsWindow( QWidget * parent ):
 {
     // logDebug() << "init" << Qt::endl;;
 
+    setAttribute( Qt::WA_DeleteOnClose );
+
     CHECK_NEW( _ui );
     _ui->setupUi( this );
 
@@ -52,7 +54,7 @@ UnreadableDirsWindow::~UnreadableDirsWindow()
 
 UnreadableDirsWindow * UnreadableDirsWindow::sharedInstance()
 {
-    if ( ! _sharedInstance )
+    if ( !_sharedInstance )
     {
 	_sharedInstance = new UnreadableDirsWindow( app()->findMainWindow() );
 	CHECK_NEW( _sharedInstance );
@@ -81,23 +83,23 @@ void UnreadableDirsWindow::initWidgets()
     _ui->treeWidget->setColumnCount( headerLabels.size() );
     _ui->treeWidget->setHeaderLabels( headerLabels );
 
-    // Center the column headers except the first
-    for ( int col = 1; col < headerLabels.size(); ++col )
-	_ui->treeWidget->headerItem()->setTextAlignment( col, Qt::AlignHCenter );
+    // Center the column headers except the first (Directory).
+    _ui->treeWidget->header()->setDefaultAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+    _ui->treeWidget->headerItem()->setTextAlignment( 0, Qt::AlignLeft | Qt::AlignVCenter );
 
     HeaderTweaker::resizeToContents( _ui->treeWidget->header() );
 }
 
-
+/*
 void UnreadableDirsWindow::reject()
 {
     deleteLater();
 }
-
+*/
 
 void UnreadableDirsWindow::populateSharedInstance( FileInfo * subtree )
 {
-    if ( ! subtree )
+    if ( !subtree )
         return;
 
     sharedInstance()->populate( subtree );
@@ -107,10 +109,9 @@ void UnreadableDirsWindow::populateSharedInstance( FileInfo * subtree )
 
 void UnreadableDirsWindow::closeSharedInstance()
 {
+    // Just close, it will delete itself automatically and the QPointer will also reset
     if ( _sharedInstance )
-        _sharedInstance->deleteLater();
-
-    // The QPointer will automatically reset itself
+        _sharedInstance->close();
 }
 
 
@@ -152,7 +153,7 @@ void UnreadableDirsWindow::populate( FileInfo * newSubtree )
 
 void UnreadableDirsWindow::populateRecursive( FileInfo * subtree )
 {
-    if ( ! subtree || ! subtree->isDirInfo() )
+    if ( !subtree || !subtree->isDirInfo() )
 	return;
 
     const DirInfo * dir = subtree->toDirInfo();
@@ -173,14 +174,10 @@ void UnreadableDirsWindow::populateRecursive( FileInfo * subtree )
 
     // Recurse through any subdirectories
 
-    FileInfo * child = dir->firstChild();
-
-    while ( child )
+    for ( FileInfo * child = dir->firstChild(); child; child = child->next() )
     {
 	if ( child->isDir() )
 	    populateRecursive( child );
-
-	child = child->next();
     }
 
     if ( dir->attic() )
@@ -193,7 +190,7 @@ void UnreadableDirsWindow::populateRecursive( FileInfo * subtree )
 
 void UnreadableDirsWindow::selectResult( QTreeWidgetItem * item )
 {
-    if ( ! item )
+    if ( !item )
 	return;
 
     const UnreadableDirListItem * searchResult = dynamic_cast<UnreadableDirListItem *>( item );

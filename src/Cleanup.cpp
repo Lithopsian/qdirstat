@@ -26,7 +26,7 @@
 
 using namespace QDirStat;
 
-
+/*
 Cleanup::Cleanup( QObject            * parent,
 		  bool                 active,
 		  QString              title,
@@ -58,9 +58,9 @@ Cleanup::Cleanup( QObject            * parent,
     _outputWindowAutoClose { outputWindowAutoClose },
     _shell { shell }
 {
-    QAction::setEnabled( true );
+//    QAction::setEnabled( true );
 }
-
+*/
 
 Cleanup::Cleanup( const Cleanup * other ):
     Cleanup ( 0, other->_active, other->_title, other->_command,
@@ -69,8 +69,8 @@ Cleanup::Cleanup( const Cleanup * other ):
               other->_outputWindowPolicy, other->_outputWindowTimeout, other->_outputWindowAutoClose,
               other->_shell, other->_iconName )
 {
-//    setIcon ( other->iconName() ); // not currently in the config dialog
-    setShortcut( other->shortcut() );
+//    setIcon ( other->iconName() ); // not currently editable in the config dialog
+//    setShortcut( other->shortcut() ); // not currently in the config dialog
 }
 
 
@@ -349,7 +349,9 @@ const QMap<QString, QString> & Cleanup::desktopSpecificApps()
 	QString desktop = QString::fromUtf8( qgetenv( "QDIRSTAT_DESKTOP" ) );
 
 	if ( desktop.isEmpty() )
+	{
 	     desktop = QString::fromUtf8( qgetenv( "XDG_CURRENT_DESKTOP" ) );
+	}
 	else
 	{
 	    logDebug() << "Overriding $XDG_CURRENT_DESKTOP with $QDIRSTAT_DESKTOP (\""

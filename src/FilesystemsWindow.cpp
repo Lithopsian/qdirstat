@@ -32,8 +32,11 @@ FilesystemsWindow::FilesystemsWindow( QWidget * parent ):
     QDialog( parent ),
     _ui( new Ui::FilesystemsWindow )
 {
+    setAttribute( Qt::WA_DeleteOnClose );
+
     CHECK_NEW( _ui );
     _ui->setupUi( this );
+
     MountPoints::reload();
     initWidgets();
     readWindowSettings( this, "FilesystemsWindow" );
@@ -47,25 +50,19 @@ FilesystemsWindow::~FilesystemsWindow()
 }
 
 
-void FilesystemsWindow::populate()
+FilesystemsWindow * FilesystemsWindow::sharedInstance( QWidget * parent )
 {
-    clear();
+    //logDebug() << _sharedInstance << Qt::endl;
 
-    const auto mountPoints = _ui->normalCheckBox->isChecked() ?
-			     MountPoints::normalMountPoints() :
-			     MountPoints::allMountPoints();
-    for ( MountPoint * mountPoint : mountPoints )
+    static QPointer<FilesystemsWindow> _sharedInstance = nullptr;
+
+    if ( ! _sharedInstance )
     {
-	CHECK_PTR( mountPoint);
-
-	FilesystemItem * item = new FilesystemItem( mountPoint, _ui->fsTree );
-	CHECK_NEW( item );
-
-	item->setIcon( 0, QIcon( app()->dirTreeModel()->treeIconDir() + icon( mountPoint ) ) );
+	_sharedInstance = new FilesystemsWindow( parent );
+	CHECK_NEW( _sharedInstance );
     }
 
-    if ( MountPoints::hasBtrfs() )
-	showBtrfsFreeSizeWarning();
+    return _sharedInstance;
 }
 
 
@@ -92,12 +89,6 @@ void FilesystemsWindow::refresh()
 }
 
 
-void FilesystemsWindow::reject()
-{
-    deleteLater();
-}
-
-
 void FilesystemsWindow::clear()
 {
     _ui->fsTree->clear();
@@ -116,9 +107,10 @@ void FilesystemsWindow::initWidgets()
     _ui->fsTree->setIconSize( app()->dirTreeModel()->mountPointIcon().actualSize( QSize( 22, 22 ) ) );
 
     // Center the column headers except the furst two
+    _ui->fsTree->header()->setDefaultAlignment( Qt::AlignVCenter | Qt::AlignHCenter );
     QTreeWidgetItem * hItem = _ui->fsTree->headerItem();
-    for ( int col = FS_TypeCol; col < headers.size(); ++col )
-	hItem->setTextAlignment( col, Qt::AlignHCenter );
+    hItem->setTextAlignment( FS_DeviceCol, Qt::AlignVCenter | Qt::AlignLeft );
+    hItem->setTextAlignment( FS_MountPathCol, Qt::AlignVCenter | Qt::AlignLeft );
 
     hItem->setToolTip( FS_ReservedSizeCol, tr( "Reserved for root" ) );
     hItem->setToolTip( FS_FreeSizeCol,	   tr( "Free for unprivileged users" ) );
@@ -151,6 +143,38 @@ void FilesystemsWindow::initWidgets()
 
     connect( _ui->fsTree,	  &QTreeWidget::itemSelectionChanged,
 	     this,		  &FilesystemsWindow::enableActions );
+}
+
+
+FilesystemsWindow * FilesystemsWindow::populateSharedInstance( QWidget  * mainWindow )
+{
+    FilesystemsWindow * instance = sharedInstance( mainWindow );
+    instance->populate();
+    instance->show();
+
+    return instance;
+}
+
+
+void FilesystemsWindow::populate()
+{
+    clear();
+
+    const auto mountPoints = _ui->normalCheckBox->isChecked() ?
+			     MountPoints::normalMountPoints() :
+			     MountPoints::allMountPoints();
+    for ( MountPoint * mountPoint : mountPoints )
+    {
+	CHECK_PTR( mountPoint);
+
+	FilesystemItem * item = new FilesystemItem( mountPoint, _ui->fsTree );
+	CHECK_NEW( item );
+
+	item->setIcon( 0, QIcon( app()->dirTreeModel()->treeIconDir() + icon( mountPoint ) ) );
+    }
+
+    if ( MountPoints::hasBtrfs() )
+	showBtrfsFreeSizeWarning();
 }
 
 

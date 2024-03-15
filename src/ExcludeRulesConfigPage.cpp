@@ -9,7 +9,9 @@
 
 #include "ExcludeRulesConfigPage.h"
 #include "ConfigDialog.h"
+#include "DirTree.h"
 #include "ExcludeRules.h"
+#include "QDirStatApp.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -22,13 +24,13 @@
 using namespace QDirStat;
 
 
-ExcludeRulesConfigPage::ExcludeRulesConfigPage( QWidget * parent ):
+ExcludeRulesConfigPage::ExcludeRulesConfigPage( ConfigDialog * parent ):
     ListEditor { parent },
     _ui { new Ui::ExcludeRulesConfigPage }
 {
     CHECK_NEW( _ui );
-
     _ui->setupUi( this );
+
     setListWidget( _ui->listWidget );
 
     setMoveUpButton	 ( _ui->moveUpButton	   );
@@ -39,12 +41,14 @@ ExcludeRulesConfigPage::ExcludeRulesConfigPage( QWidget * parent ):
     setRemoveButton	 ( _ui->removeButton	   );
 
     enableEditRuleWidgets( false );
+    fillListWidget();
+    updateActions();
 
     connect( _ui->patternLineEdit,	&QLineEdit::textChanged,
 	     this,			&ExcludeRulesConfigPage::patternChanged );
 
-//    connect( (ConfigDialog *)parent,	&ConfigDialog::finished,
-//	     this,			&ExcludeRulesConfigPage::finished );
+    connect( parent,             &ConfigDialog::applyChanges,
+	     this,		 &ExcludeRulesConfigPage::applyChanges );
 }
 
 
@@ -57,13 +61,6 @@ ExcludeRulesConfigPage::~ExcludeRulesConfigPage()
 	delete EXCLUDE_RULE_CAST( value( listWidget()->item( i ) ) );
 
     delete _ui;
-}
-
-
-void ExcludeRulesConfigPage::setup()
-{
-    fillListWidget();
-    updateActions();
 }
 
 
@@ -81,27 +78,18 @@ void ExcludeRulesConfigPage::applyChanges()
     }
 
     // Check if anything changed before writing, just for fun
-    ExcludeRuleListIterator it = ExcludeRules::instance()->cbegin();
-    for ( int i = 0; i < rules.size() || it != ExcludeRules::instance()->cend(); ++i, ++it )
+    ExcludeRules * excludeRules = app()->dirTree()->excludeRules();
+    ExcludeRuleListIterator it = excludeRules->cbegin();
+    for ( int i = 0; i < rules.size() || it != excludeRules->cend(); ++i, ++it )
     {
 	// If we ran past the end of either list, or the rules don't match ...
-	if ( it == ExcludeRules::instance()->cend() || i == rules.size() || !equal( *it, rules.at( i ) ) )
+	if ( it == excludeRules->cend() || i == rules.size() || !equal( *it, rules.at( i ) ) )
 	{
-	    ExcludeRules::instance()->writeSettings( rules );
+	    excludeRules->writeSettings( rules );
+	    app()->dirTree()->setExcludeRules();
 	    return;
 	}
     }
-}
-
-
-void ExcludeRulesConfigPage::discardChanges()
-{
-    // Will clear on the finished signal
-//    listWidget()->clear();
-
-    // Haven't touched the live rules
-//    ExcludeRules::instance()->clear();
-//    ExcludeRules::instance()->readSettings();
 }
 
 
@@ -109,9 +97,8 @@ void ExcludeRulesConfigPage::fillListWidget()
 {
     listWidget()->clear();
 
-    for ( ExcludeRuleListIterator it = ExcludeRules::instance()->cbegin();
-	  it != ExcludeRules::instance()->cend();
-	  ++it )
+    const ExcludeRules * excludeRules =app()->dirTree()->excludeRules();
+    for ( ExcludeRuleListIterator it = excludeRules->cbegin(); it != excludeRules->cend(); ++it )
     {
 	// Make a deep copy so the config dialog can work without disturbing the real rules
 	ExcludeRule * rule = new ExcludeRule( *( *it ) );

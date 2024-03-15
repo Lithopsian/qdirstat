@@ -49,6 +49,7 @@ FileDetailsView::FileDetailsView( QWidget * parent ):
     CHECK_NEW( _pkgUpdateTimer );
 
     _ui->setupUi( this );
+
     clear();
 //    readSettings();
 
@@ -594,21 +595,8 @@ void FileDetailsView::setLabel( FileSizeLabel	* label,
 void FileDetailsView::setLabelLimited( QLabel * label, const QString & text )
 {
     CHECK_PTR( label );
-    const QString limitedText = limitText( text );
+    const QString limitedText = elideMiddle( text, _labelLimit );
     label->setText( limitedText );
-}
-
-
-QString FileDetailsView::limitText( const QString & text ) const
-{
-    if ( _labelLimit < 1 || text.size() < _labelLimit )
-	return text;
-
-    const QString limited = text.left( _labelLimit / 2 - 2 ) + "..." + text.right( _labelLimit / 2 - 1 );
-
-    logDebug() << "Limiting \"" << text << "\"" << Qt::endl;
-
-    return limited;
 }
 
 /*

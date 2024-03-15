@@ -21,20 +21,14 @@ using namespace QDirStat;
 BusyPopup::BusyPopup( const QString & text,
 		      QWidget *	      parent,
 		      bool	      autoPost ):
-    QLabel( text, parent, Qt::SplashScreen ),
-    _posted( false )
+    QLabel ( text, parent, Qt::SplashScreen ),
+    _posted { false }
 {
     setMargin( 15 );
     setWindowTitle( " " );
 
     if ( autoPost )
 	post();
-}
-
-
-BusyPopup::~BusyPopup()
-{
-    // NOP
 }
 
 

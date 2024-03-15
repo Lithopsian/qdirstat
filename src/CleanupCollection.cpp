@@ -12,7 +12,6 @@
 #include <QMessageBox>
 
 #include "CleanupCollection.h"
-#include "Cleanup.h"
 #include "StdCleanup.h"
 #include "DirTree.h"
 #include "FormatUtil.h"
@@ -30,21 +29,45 @@
 using namespace QDirStat;
 
 
-CleanupCollection::CleanupCollection( SelectionModel * selectionModel,
-				      QObject	     * parent ):
-    QObject( parent ),
-    _selectionModel( selectionModel )
-//    _listMover( _cleanupList )
+static void removeAllFromWidget( QWidget * widget )
 {
+    if ( !widget )
+	return;
+
+    for ( QAction * action : widget->actions() )
+    {
+	Cleanup * cleanup = dynamic_cast<Cleanup *>( action );
+
+	if ( cleanup )
+	    widget->removeAction( cleanup );
+    }
+}
+
+
+
+CleanupCollection::CleanupCollection( QObject	     * parent,
+				      SelectionModel * selectionModel,
+				      QToolBar	     * toolBar,
+				      QMenu	     * menu ):
+    QObject ( parent ),
+    _selectionModel { selectionModel },
+    _trash { new Trash() }
+{
+    CHECK_NEW( _trash );
+
     readSettings();
+
+    // Add to the toolbar and menu, and keep these in sync with this object
+    addToToolBar( toolBar );
+    addToMenu( menu );
 
     // Just initialize to show the current status in the log;
     // the contents are cached anyway.
 
-    (void) Cleanup::desktopSpecificApps();
+    (void)Cleanup::desktopSpecificApps();
 
-    connect( selectionModel, SIGNAL( selectionChanged() ),
-	     this,	     SLOT  ( updateActions()	) );
+    connect( selectionModel, qOverload<>( &SelectionModel::selectionChanged ),
+	     this,	     &CleanupCollection::updateActions );
 }
 
 
@@ -59,8 +82,8 @@ void CleanupCollection::add( Cleanup * cleanup )
 {
     _cleanupList << cleanup;
 
-    connect( cleanup, SIGNAL( triggered() ),
-	     this,    SLOT  ( execute()	  ) );
+    connect( cleanup, &Cleanup::triggered,
+	     this,    &CleanupCollection::execute );
 
     updateMenusAndToolBars();
 }
@@ -110,7 +133,7 @@ int CleanupCollection::indexOf( Cleanup * cleanup ) const
 }
 
 
-Cleanup * CleanupCollection::at( int index ) const
+const Cleanup * CleanupCollection::at( int index ) const
 {
     if ( index >= 0 && index < _cleanupList.size() )
 	return _cleanupList.at( index );
@@ -147,24 +170,17 @@ void CleanupCollection::updateActions()
     const bool dotEntrySelected = sel.containsDotEntry();
     const bool busy		= sel.containsBusyItem();
     const bool treeBusy		= sel.treeIsBusy();
+    const bool canCleanup	= !pkgSelected && !busy && !empty;
 
     for ( Cleanup * cleanup : _cleanupList )
     {
-	if ( ! cleanup->active() ||
-	     ( treeBusy		&& cleanup->refreshPolicy() != Cleanup::NoRefresh ) ||
-	     ( dirSelected	&& ! cleanup->worksForDir() ) ||
-	     ( dotEntrySelected	&& ! cleanup->worksForDotEntry() ) ||
-	     ( fileSelected	&& ! cleanup->worksForFile() ) ||
-             pkgSelected ||
-	     busy ||
-	     empty )
-	{
-	    cleanup->setEnabled( false );
-	}
-	else
-	{
-	    cleanup->setEnabled( true );
-	}
+	const bool enable = canCleanup &&
+	     cleanup->isActive() &&
+	     ( !treeBusy || cleanup->refreshPolicy() == Cleanup::NoRefresh ) &&
+	     ( !dirSelected || cleanup->worksForDir() ) &&
+	     ( !dotEntrySelected || cleanup->worksForDotEntry() ) &&
+	     ( !fileSelected || cleanup->worksForFile() );
+	cleanup->setEnabled( enable );
     }
 }
 
@@ -178,13 +194,7 @@ void CleanupCollection::updateMenus()
 	if ( menu )
 	{
 	    // Remove all Cleanups from this menu
-	    for ( QAction * action : menu->actions() )
-	    {
-		Cleanup * cleanup = dynamic_cast<Cleanup *>( action );
-
-		if ( cleanup )
-		    menu->removeAction( cleanup );
-	    }
+	    removeAllFromWidget( menu );
 
 	    // Add the current cleanups in the current order
 	    addToMenu( menu );
@@ -202,13 +212,7 @@ void CleanupCollection::updateToolBars()
 	if ( toolBar )
 	{
 	    // Remove all Cleanups from this tool bar
-	    for ( QAction * action : toolBar->actions() )
-	    {
-		Cleanup * cleanup = dynamic_cast<Cleanup *>( action );
-
-		if ( cleanup )
-		    toolBar->removeAction( cleanup );
-	    }
+	    removeAllFromWidget( toolBar );
 
 	    // Add the current cleanups in the current order
 	    addToToolBar( toolBar );
@@ -220,23 +224,20 @@ void CleanupCollection::updateToolBars()
 void CleanupCollection::execute()
 {
     Cleanup * cleanup = qobject_cast<Cleanup *>( sender() );
-
-    if ( ! cleanup )
+    if ( !cleanup )
     {
-	logError() << "Wrong sender type: "
-		   << sender()->metaObject()->className() << Qt::endl;
+	logError() << "Wrong sender type: " << sender()->metaObject()->className() << Qt::endl;
 	return;
     }
 
     const FileInfoSet selection = _selectionModel->selectedItems();
-
     if ( selection.isEmpty() )
     {
 	logWarning() << "Nothing selected" << Qt::endl;
 	return;
     }
 
-    if ( cleanup->askForConfirmation() && ! confirmation( cleanup, selection ) )
+    if ( cleanup->askForConfirmation() && !confirmation( cleanup, selection ) )
     {
 	logDebug() << "User declined confirmation" << Qt::endl;
 	return;
@@ -269,12 +270,12 @@ void CleanupCollection::execute()
 	 cleanup->refreshPolicy() == Cleanup::RefreshParent )
     {
 	createRefresher( outputWindow, cleanup->refreshPolicy() == Cleanup::RefreshParent ?
-	    Refresher::parents( selection ) :
+	    selection.parents() :
 	    selection );
     }
 
-    connect( outputWindow, SIGNAL( lastProcessFinished( int ) ),
-	     this,	   SIGNAL( cleanupFinished    ( int ) ) );
+    connect( outputWindow, &OutputWindow::lastProcessFinished,
+	     this,	   &CleanupCollection::cleanupFinished );
 
 
     // Intentionally not using the normalized FileInfoSet here: If a user
@@ -285,20 +286,15 @@ void CleanupCollection::execute()
     for ( FileInfo * item : selection )
     {
 	if ( cleanup->worksFor( item ) )
-	{
 	    cleanup->execute( item, outputWindow );
-	}
 	else
-	{
-	    logWarning() << "Cleanup " << cleanup
-			 << " does not work for " << item << Qt::endl;
-	}
+	    logWarning() << "Cleanup " << cleanup << " does not work for " << item << Qt::endl;
     }
 
     if ( cleanup->refreshPolicy() == Cleanup::AssumeDeleted )
     {
-	connect( outputWindow,	SIGNAL( lastProcessFinished( int ) ),
-		 this,		SIGNAL( assumedDeleted() ) );
+	connect( outputWindow,	&OutputWindow::lastProcessFinished,
+		 this,		&CleanupCollection::assumedDeleted );
 
         // It is important to use the normalized FileInfoSet here to avoid a
         // segfault because we are iterating over items whose ancestors we just
@@ -351,7 +347,7 @@ bool CleanupCollection::confirmation( Cleanup * cleanup, const FileInfoSet & ite
 
 	    urls << dirs << "" << nonDirs;
 	}
-	else // ! isMixed
+	else // !isMixed
 	{
 	    // Build a list of the first couple of selected items (7 max)
 
@@ -385,8 +381,7 @@ QStringList CleanupCollection::filteredUrls( const FileInfoSet & items,
 
     for ( FileInfoSet::const_iterator it = items.begin(); it != items.end(); ++it )
     {
-	if ( ( dirs    &&   (*it)->isDir() ) ||
-	     ( nonDirs && ! (*it)->isDir() )   )
+	if ( ( dirs && (*it)->isDir() ) || ( nonDirs && !(*it)->isDir() ) )
 	{
 	    const QString name = (*it)->url();
 
@@ -406,34 +401,42 @@ QStringList CleanupCollection::filteredUrls( const FileInfoSet & items,
 }
 
 
-void CleanupCollection::addToMenu( QMenu * menu, bool keepUpdated )
+void CleanupCollection::addToMenu( QMenu * menu )
 {
     CHECK_PTR( menu );
 
-    for ( Cleanup * cleanup : _cleanupList )
-    {
-	if ( cleanup->active() )
-	    menu->addAction( cleanup );
-    }
+    addActive( menu );
 
-    if ( keepUpdated && ! _menus.contains( menu ) )
+    if ( !_menus.contains( menu ) )
 	_menus << menu;
 }
 
 
-void CleanupCollection::addEnabledToMenu( QMenu * menu ) const
+void CleanupCollection::addActive( QWidget * widget ) const
 {
-    CHECK_PTR( menu );
+    CHECK_PTR( widget );
 
     for ( Cleanup * cleanup : _cleanupList )
     {
-	if ( cleanup->active() && cleanup->isEnabled() )
-	    menu->addAction( cleanup );
+	if ( cleanup->isActive() )
+	    widget->addAction( cleanup );
     }
 }
 
 
-void CleanupCollection::addToToolBar( QToolBar * toolBar, bool keepUpdated )
+void CleanupCollection::addEnabled( QWidget * widget ) const
+{
+    CHECK_PTR( widget );
+
+    for ( Cleanup * cleanup : _cleanupList )
+    {
+	if ( cleanup->isEnabled() )
+	    widget->addAction( cleanup );
+    }
+}
+
+
+void CleanupCollection::addToToolBar( QToolBar * toolBar )
 {
     CHECK_PTR( toolBar );
 
@@ -441,11 +444,11 @@ void CleanupCollection::addToToolBar( QToolBar * toolBar, bool keepUpdated )
     {
 	// Add only cleanups that have an icon to avoid overcrowding the
 	// toolbar with actions that only have a text.
-	if ( cleanup->active() && ! cleanup->icon().isNull() )
+	if ( cleanup->isActive() && !cleanup->icon().isNull() )
 	    toolBar->addAction( cleanup );
     }
 
-    if ( keepUpdated && ! _toolBars.contains( toolBar ) )
+    if ( !_toolBars.contains( toolBar ) )
 	_toolBars << toolBar;
 }
 
@@ -457,7 +460,7 @@ void CleanupCollection::readSettings()
     CleanupSettings settings;
     const QStringList cleanupGroups = settings.findGroups( settings.groupPrefix() );
 
-    if ( ! cleanupGroups.isEmpty() )
+    if ( !cleanupGroups.isEmpty() )
     {
 	// Read all settings groups [Cleanup_xx] that were found
 
@@ -496,7 +499,6 @@ void CleanupCollection::readSettings()
 	    }
 	    else
 	    {
-//		Cleanup * cleanup = new Cleanup( command, title, this );
 		Cleanup * cleanup = new Cleanup( this, active, title, command,
 						 recurse, askForConfirmation,
 						 static_cast<Cleanup::RefreshPolicy>( refreshPolicy ),
@@ -506,26 +508,14 @@ void CleanupCollection::readSettings()
 						 shell );
 		CHECK_NEW( cleanup );
 		add( cleanup );
-/*
-		cleanup->setActive	    ( active	       );
-		cleanup->setWorksForDir	    ( worksForDir      );
-		cleanup->setWorksForFile    ( worksForFile     );
-		cleanup->setWorksForDotEntry( worksForDotEntry );
-		cleanup->setRecurse	    ( recurse	       );
-		cleanup->setShell	    ( shell	       );
-		cleanup->setAskForConfirmation	 ( askForConfirmation	 );
-		cleanup->setOutputWindowAutoClose( outputWindowAutoClose );
-		cleanup->setOutputWindowTimeout	 ( outputWindowTimeout	 );
-		cleanup->setRefreshPolicy     ( static_cast<Cleanup::RefreshPolicy>( refreshPolicy ) );
-		cleanup->setOutputWindowPolicy( static_cast<Cleanup::OutputWindowPolicy>( outputWindowPolicy ) );
-*/
-		if ( ! iconName.isEmpty() )
+
+		if ( !iconName.isEmpty() )
 		    cleanup->setIcon( iconName );
 
-		if ( ! hotkey.isEmpty() )
+		if ( !hotkey.isEmpty() )
 		    cleanup->setShortcut( hotkey );
 
-		// if ( ! shell.isEmpty() )
+		// if ( !shell.isEmpty() )
 		//    logDebug() << "Using custom shell " << shell << " for " << cleanup << Qt::endl;
 	    }
 
@@ -565,10 +555,12 @@ void CleanupCollection::writeSettings( const CleanupList & newCleanups)
 	settings.beginGroup( "Cleanup", i+1 );
 
 	const Cleanup * cleanup = newCleanups.at(i);
+	if ( !cleanup || cleanup->command().isEmpty() || cleanup->title().isEmpty() )
+	    continue;
 
 	settings.setValue( "Command"		  , cleanup->command()		     );
 	settings.setValue( "Title"		  , cleanup->title()		     );
-	settings.setValue( "Active"		  , cleanup->active()		     );
+	settings.setValue( "Active"		  , cleanup->isActive()		     );
 	settings.setValue( "WorksForDir"	  , cleanup->worksForDir()	     );
 	settings.setValue( "WorksForFile"	  , cleanup->worksForFile()	     );
 	settings.setValue( "WorksForDotEntry"	  , cleanup->worksForDotEntry()	     );
@@ -576,8 +568,9 @@ void CleanupCollection::writeSettings( const CleanupList & newCleanups)
 	settings.setValue( "AskForConfirmation"	  , cleanup->askForConfirmation()    );
 	settings.setValue( "OutputWindowAutoClose", cleanup->outputWindowAutoClose() );
 
+	// Leave empty to use the OutputWindow default timeout
 	if ( cleanup->outputWindowTimeout() > 0 )
-	    settings.setValue( "OutputWindowTimeout" , cleanup->outputWindowTimeout() );
+	    settings.setValue( "OutputWindowTimeout", cleanup->outputWindowTimeout() );
 
 	writeEnumEntry( settings, "RefreshPolicy",
 			cleanup->refreshPolicy(),
@@ -587,13 +580,13 @@ void CleanupCollection::writeSettings( const CleanupList & newCleanups)
 			cleanup->outputWindowPolicy(),
 			Cleanup::outputWindowPolicyMapping() );
 
-	if ( ! cleanup->shell().isEmpty() )
+	if ( !cleanup->shell().isEmpty() )
 	     settings.setValue( "Shell", cleanup->shell() );
 
-	if ( ! cleanup->iconName().isEmpty() )
+	if ( !cleanup->iconName().isEmpty() )
 	    settings.setValue( "Icon", cleanup->iconName() );
 
-	if ( ! cleanup->shortcut().isEmpty() )
+	if ( !cleanup->shortcut().isEmpty() )
 	    settings.setValue( "Hotkey", cleanup->shortcut().toString() );
 
 	settings.endGroup(); // [Cleanup_01], [Cleanup_02], ...
@@ -613,7 +606,7 @@ void CleanupCollection::moveToTrash()
     CHECK_NEW( outputWindow );
 
     // Prepare refresher
-    createRefresher( outputWindow, Refresher::parents( selectedItems ) );
+    createRefresher( outputWindow, selectedItems.parents() );
 
     // Window will never show for quick and successful trashes
     outputWindow->showAfterTimeout();
@@ -622,7 +615,7 @@ void CleanupCollection::moveToTrash()
     for ( const FileInfo * item : selectedItems )
     {
 	QCoreApplication::processEvents(); // give the output window a chance
-	if ( Trash::trash( item->path() ) )
+	if ( _trash->trash( item->path() ) )
 	    outputWindow->addStdout( tr( "Moved to trash: " ) + item->path() );
 	else
 	    outputWindow->addStderr( tr( "Move to trash failed for " ) + item->path() );

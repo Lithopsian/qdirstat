@@ -8,14 +8,15 @@
 
 
 #include "CleanupConfigPage.h"
-#include "CleanupCollection.h"
+#include "ActionManager.h"
 #include "Cleanup.h"
-#include "SettingsHelpers.h"
+#include "CleanupCollection.h"
+#include "ConfigDialog.h"
+#include "OutputWindow.h"
+//#include "SettingsHelpers.h"
 #include "Logger.h"
 #include "Exception.h"
 
-
-#define DEFAULT_OUTPUT_WINDOW_SHOW_TIMEOUT	500
 
 // This is a mess that became necessary because Qt's moc cannot handle template
 // classes. Yes, this is ugly.
@@ -24,14 +25,13 @@
 using namespace QDirStat;
 
 
-CleanupConfigPage::CleanupConfigPage( QWidget * parent ):
+CleanupConfigPage::CleanupConfigPage( ConfigDialog * parent ):
     ListEditor ( parent ),
-    _ui { new Ui::CleanupConfigPage },
-    _cleanupCollection { nullptr }
+    _ui { new Ui::CleanupConfigPage }
 {
     CHECK_NEW( _ui );
-
     _ui->setupUi( this );
+
     setListWidget( _ui->listWidget );
 
     setMoveUpButton	 ( _ui->moveUpButton	   );
@@ -42,9 +42,22 @@ CleanupConfigPage::CleanupConfigPage( QWidget * parent ):
     setRemoveButton	 ( _ui->removeButton	   );
 
     enableEditWidgets( false );
+    fillListWidget();
+    _ui->toolBox->setCurrentIndex( 0 );
+    enableWidgets();
+    updateActions();
+
+    connect( _ui->outputWindowPolicyComboBox, qOverload<int>( &QComboBox::currentIndexChanged ),
+	     this,		              &CleanupConfigPage::enableWidgets );
+
+    connect( _ui->outputWindowDefaultTimeout, &QCheckBox::stateChanged,
+	     this,		              &CleanupConfigPage::enableWidgets );
 
     connect( _ui->titleLineEdit, &QLineEdit::textChanged,
 	     this,		 &CleanupConfigPage::titleChanged );
+
+    connect( parent,             &ConfigDialog::applyChanges,
+	     this,		 &CleanupConfigPage::applyChanges );
 }
 
 
@@ -57,20 +70,6 @@ CleanupConfigPage::~CleanupConfigPage()
 	delete CLEANUP_CAST( value( listWidget()->item( i ) ) );
 
     delete _ui;
-}
-
-
-void CleanupConfigPage::setCleanupCollection( CleanupCollection * collection )
-{
-    _cleanupCollection = collection;
-}
-
-
-void CleanupConfigPage::setup()
-{
-    fillListWidget();
-    _ui->toolBox->setCurrentIndex( 0 );
-    updateActions();
 }
 
 
@@ -90,37 +89,26 @@ void CleanupConfigPage::applyChanges()
     }
 
     // Check if anything changed before writing, just for fun
-    for ( int iOld = 0, iNew = 0; iNew < cleanups.size() || iOld <_cleanupCollection->size(); ++iOld, ++iNew )
+    CleanupCollection * collection = ActionManager::cleanupCollection();
+    for ( int iOld = 0, iNew = 0; iNew < cleanups.size() || iOld < collection->size(); ++iOld, ++iNew )
     {
 	// If we ran past the end of either list, or the cleanups don't match ...
 	if ( iNew == cleanups.size() ||
-	     iOld == _cleanupCollection->size() ||
-	     !equal( cleanups.at( iNew ), _cleanupCollection->at( iOld ) ) )
+	     iOld == collection->size() ||
+	     !equal( cleanups.at( iNew ), collection->at( iOld ) ) )
 	{
-	    _cleanupCollection->writeSettings( cleanups );
+	    collection->writeSettings( cleanups );
 	    return;
 	}
     }
 }
 
 
-void CleanupConfigPage::discardChanges()
-{
-    // logDebug() << Qt::endl;
-
-//    listWidget()->clear();
-//    _cleanupCollection->clear();
-//    _cleanupCollection->addStdCleanups();
-//    _cleanupCollection->readSettings();
-}
-
-
 void CleanupConfigPage::fillListWidget()
 {
-    CHECK_PTR( _cleanupCollection );
     listWidget()->clear();
 
-    for ( const Cleanup * cleanup : _cleanupCollection->cleanupList() )
+    for ( const Cleanup * cleanup : ActionManager::cleanupCollection()->cleanupList() )
     {
 	// Make a deep copy so the config dialog can work without disturbing the real rules
 	Cleanup * newCleanup = new Cleanup( cleanup );
@@ -131,9 +119,28 @@ void CleanupConfigPage::fillListWidget()
     }
 
     QListWidgetItem * firstItem = listWidget()->item(0);
-
     if ( firstItem )
 	listWidget()->setCurrentItem( firstItem );
+}
+
+
+void CleanupConfigPage::enableWidgets()
+{
+    const int policyIndex = _ui->outputWindowPolicyComboBox->currentIndex();
+    const bool show = policyIndex != Cleanup::ShowNever;
+    const bool showAfterTimeout = policyIndex == Cleanup::ShowAfterTimeout;
+    const bool showIfNoError = show && policyIndex != Cleanup::ShowIfErrorOutput;
+    const bool useDefault = _ui->outputWindowDefaultTimeout->isChecked();
+
+    _ui->outputWindowDefaultTimeout->setEnabled( show );
+
+    _ui->outputWindowDefaultTimeout->setEnabled( showAfterTimeout );
+    _ui->outputWindowTimeoutCaption->setEnabled( showAfterTimeout && !useDefault );
+    _ui->outputWindowTimeoutSpinBox->setEnabled( showAfterTimeout && !useDefault );
+    if ( useDefault )
+	_ui->outputWindowTimeoutSpinBox->setValue( OutputWindow::defaultShowTimeout() / 1000.0 );
+
+    _ui->outputWindowAutoClose->setEnabled( showIfNoError );
 }
 
 
@@ -155,7 +162,7 @@ void CleanupConfigPage::save( void * value )
     Cleanup * cleanup = CLEANUP_CAST( value );
     // logDebug() << cleanup << Qt::endl;
 
-    if ( ! cleanup || updatesLocked() )
+    if ( !cleanup || updatesLocked() )
 	return;
 
     cleanup->setActive ( _ui->activeGroupBox->isChecked() );
@@ -180,15 +187,10 @@ void CleanupConfigPage::save( void * value )
     const int outputPolicy = _ui->outputWindowPolicyComboBox->currentIndex();
     cleanup->setOutputWindowPolicy( static_cast<Cleanup::OutputWindowPolicy>( outputPolicy ) );
 
-    int timeout = _ui->outputWindowTimeoutSpinBox->value() * 1000;
+    const bool useDefaultTimeout = _ui->outputWindowDefaultTimeout->isChecked();
+    cleanup->setOutputWindowTimeout( useDefaultTimeout ? 0 : _ui->outputWindowTimeoutSpinBox->value() * 1000 );
 
-    if ( timeout == DEFAULT_OUTPUT_WINDOW_SHOW_TIMEOUT ) // FIXME: Get this from OutputWindow
-	timeout = 0;
-
-    cleanup->setOutputWindowTimeout( timeout );
-
-    cleanup->setOutputWindowAutoClose( _ui->outputWindowAutoCloseCheckBox->isChecked() );
-
+    cleanup->setOutputWindowAutoClose( _ui->outputWindowAutoClose->isChecked() );
 }
 
 
@@ -200,13 +202,11 @@ void CleanupConfigPage::enableEditWidgets( bool enable )
 
 void CleanupConfigPage::load( void * value )
 {
-    Cleanup * cleanup = CLEANUP_CAST( value );
-    // logDebug() << cleanup << Qt::endl;
-
     if ( updatesLocked() )
 	return;
 
-    if ( ! cleanup )
+    Cleanup * cleanup = CLEANUP_CAST( value );
+    if ( !cleanup )
     {
 	enableEditWidgets( false );
 
@@ -215,7 +215,7 @@ void CleanupConfigPage::load( void * value )
 
     enableEditWidgets( true );
 
-    _ui->activeGroupBox->setChecked( cleanup->active() );
+    _ui->activeGroupBox->setChecked( cleanup->isActive() );
     _ui->titleLineEdit->setText( cleanup->title() );
     _ui->icon->setPixmap( cleanup->iconName() );
     _ui->commandLineEdit->setText( cleanup->command() );
@@ -225,23 +225,20 @@ void CleanupConfigPage::load( void * value )
     else
 	_ui->shellComboBox->setEditText( cleanup->shell() );
 
-    _ui->recurseCheckBox->setChecked	       ( cleanup->recurse()	       );
+    _ui->recurseCheckBox->setChecked	       ( cleanup->recurse()            );
     _ui->askForConfirmationCheckBox->setChecked( cleanup->askForConfirmation() );
-    _ui->refreshPolicyComboBox->setCurrentIndex( cleanup->refreshPolicy() );
-    _ui->worksForDirCheckBox->setChecked       ( cleanup->worksForDir()	       );
+    _ui->refreshPolicyComboBox->setCurrentIndex( cleanup->refreshPolicy()      );
+
+    _ui->worksForDirCheckBox->setChecked       ( cleanup->worksForDir()        );
     _ui->worksForFilesCheckBox->setChecked     ( cleanup->worksForFile()       );
     _ui->worksForDotEntriesCheckBox->setChecked( cleanup->worksForDotEntry()   );
 
     _ui->outputWindowPolicyComboBox->setCurrentIndex( cleanup->outputWindowPolicy() );
 
-    int timeout = cleanup->outputWindowTimeout();
-
-    if ( timeout == 0 )
-	timeout = DEFAULT_OUTPUT_WINDOW_SHOW_TIMEOUT; // FIXME: Get this from OutputWindow
-
+    const int cleanupTimeout = cleanup->outputWindowTimeout();
+    const int timeout = cleanupTimeout == 0 ? OutputWindow::defaultShowTimeout() : cleanupTimeout;
     _ui->outputWindowTimeoutSpinBox->setValue( timeout / 1000.0 );
-    _ui->outputWindowAutoCloseCheckBox->setChecked( cleanup->outputWindowAutoClose() );
-
+    _ui->outputWindowAutoClose->setChecked( cleanup->outputWindowAutoClose() );
 }
 
 
@@ -280,7 +277,7 @@ bool CleanupConfigPage::equal( const Cleanup * cleanup1, const Cleanup * cleanup
     if ( cleanup1 == cleanup2 )
         return true;
 
-    if ( cleanup1->active()                != cleanup2->active()                ||
+    if ( cleanup1->isActive()              != cleanup2->isActive()              ||
          cleanup1->title()                 != cleanup2->title()                 ||
          cleanup1->command()               != cleanup2->command()               ||
 //         cleanup1->iconName()              != cleanup2->iconName()              || // not currently in the

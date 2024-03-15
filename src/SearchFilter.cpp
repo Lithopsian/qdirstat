@@ -109,6 +109,7 @@ bool SearchFilter::matches( const QString & str ) const
     }
 
     logError() << "Undefined filter mode " << ( int )_filterMode << Qt::endl;
+
     return false;
 }
 

@@ -26,14 +26,14 @@ PathSelector::PathSelector( QWidget * parent ):
 {
     setSpacing( 3 );
 
-    connect( this, SIGNAL( currentItemChanged( QListWidgetItem *, QListWidgetItem * ) ),
-	     this, SLOT	 ( slotItemSelected  ( QListWidgetItem * ) ) );
+    connect( this, &PathSelector::currentItemChanged,
+	     this, &PathSelector::slotItemSelected );
 
-    connect( this, SIGNAL( itemClicked       ( QListWidgetItem * ) ),
-	     this, SLOT	 ( slotItemSelected  ( QListWidgetItem * ) ) );
+    connect( this, &PathSelector::itemClicked,
+	     this, &PathSelector::slotItemSelected );
 
-    connect( this, SIGNAL( itemActivated        ( QListWidgetItem * ) ),
-	     this, SLOT	 ( slotItemDoubleClicked( QListWidgetItem * ) ) );
+    connect( this, &PathSelector::itemActivated,
+	     this, &PathSelector::slotItemDoubleClicked );
 }
 
 

@@ -32,13 +32,12 @@ FileInfoIterator::FileInfoIterator( const FileInfo * parent,
 
 void FileInfoIterator::next()
 {
-    if ( ! _directChildrenProcessed )
+    if ( !_directChildrenProcessed )
     {
 	// Process direct children
-
 	_current = _current ? _current->next() : _parent->firstChild();
 
-	if ( ! _current )
+	if ( !_current )
 	{
 	    _directChildrenProcessed = true;
 	    next();
@@ -46,10 +45,9 @@ void FileInfoIterator::next()
     }
     else // _directChildrenProcessed
     {
-	if ( ! _dotEntryProcessed )
+	if ( !_dotEntryProcessed )
 	{
 	    // Process dot entry
-
 	    _current = _parent->dotEntry();
 	    _dotEntryProcessed = true;
 	}

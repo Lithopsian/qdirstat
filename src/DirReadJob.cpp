@@ -29,6 +29,71 @@
 using namespace QDirStat;
 
 
+/**
+ * Return the device name where 'dir' is on if it's a mount point.
+ * This uses MountPoints which reads /proc/mounts.
+ **/
+static QString device( const DirInfo * dir )
+{
+    return MountPoints::device( dir->url() );
+}
+
+
+/**
+ * Check if going from 'parent' to 'child' would cross a filesystem
+ * boundary. This take Btrfs subvolumes into account.
+ **/
+static bool crossingFilesystems( DirTree * tree, DirInfo * parent, DirInfo * child )
+{
+    if ( parent->device() == child->device() )
+	return false;
+
+    const QString childDevice	= device( child );
+    QString parentDevice	= device( parent->findNearestMountPoint() );
+    if ( parentDevice.isEmpty() )
+	parentDevice = tree->device();
+
+    // Not safe to assume that empty devices indicate filesystem crossing.
+    // Calling something a mountpoint when it isn't causes findNearestMountPoint()
+    // to return null and things then crash.
+    const bool crossing = !parentDevice.isEmpty() && !childDevice.isEmpty() && parentDevice != childDevice;
+    if ( crossing )
+	logInfo() << "Filesystem boundary at mount point " << child << " on device " << childDevice << Qt::endl;
+    else
+	logInfo() << "Mount point " << child << " is still on the same device " << childDevice << Qt::endl;
+
+    return crossing;
+}
+
+
+/**
+ * Check if we really should cross into a mounted filesystem; don't do
+ * it if this is a system mount, a bind mount, a filesystem mounted
+ * multiple times, or a network mount (NFS / Samba).
+ **/
+static bool shouldCrossIntoFilesystem( const DirInfo * dir )
+{
+    const MountPoint * mountPoint = MountPoints::findByPath( dir->url() );
+
+    if ( !mountPoint )
+    {
+        logError() << "Can't find mount point for " << dir->url() << Qt::endl;
+
+        return false;
+    }
+
+    const bool doCross = !mountPoint->isSystemMount()  &&	//  /dev, /proc, /sys, ...
+			 !mountPoint->isDuplicate()    &&	//  bind mount or multiple mounted
+			 !mountPoint->isNetworkMount();		//  NFS or CIFS (Samba)
+
+//    logDebug() << ( doCross ? "Reading" : "Not reading" )
+//	       << " mounted filesystem " << mountPoint->path() << Qt::endl;
+
+    return doCross;
+}
+
+
+
 DirReadJob::DirReadJob( DirTree * tree,
 			DirInfo * dir  ):
     _tree { tree },
@@ -97,56 +162,6 @@ void DirReadJob::deletingChild( FileInfo *deletedChild )
     _tree->deletingChildNotify( deletedChild );
 }
 
-
-bool DirReadJob::crossingFilesystems( DirTree * tree, DirInfo * parent, DirInfo * child )
-{
-    if ( parent->device() == child->device() )
-	return false;
-
-    const QString childDevice	= device( child );
-    QString parentDevice	= device( parent->findNearestMountPoint() );
-    if ( parentDevice.isEmpty() )
-	parentDevice = tree->device();
-
-    // Not safe to assume that empty devices indicate filesystem crossing.
-    // Calling something a mountpoint when it isn't causes findNearestMountPoint()
-    // to return null and things then crash.
-    const bool crossing = !parentDevice.isEmpty() && !childDevice.isEmpty() && parentDevice != childDevice;
-    if ( crossing )
-	logInfo() << "Filesystem boundary at mount point " << child << " on device " << childDevice << Qt::endl;
-    else
-	logInfo() << "Mount point " << child << " is still on the same device " << childDevice << Qt::endl;
-
-    return crossing;
-}
-
-
-QString DirReadJob::device( const DirInfo * dir )
-{
-    return MountPoints::device( dir->url() );
-}
-
-
-bool DirReadJob::shouldCrossIntoFilesystem( const DirInfo * dir ) const
-{
-    const MountPoint * mountPoint = MountPoints::findByPath( dir->url() );
-
-    if ( !mountPoint )
-    {
-        logError() << "Can't find mount point for " << dir->url() << Qt::endl;
-
-        return false;
-    }
-
-    const bool doCross = !mountPoint->isSystemMount()  &&	//  /dev, /proc, /sys, ...
-			 !mountPoint->isDuplicate()    &&	//  bind mount or multiple mounted
-			 !mountPoint->isNetworkMount();		//  NFS or CIFS (Samba)
-
-//    logDebug() << ( doCross ? "Reading" : "Not reading" )
-//	       << " mounted filesystem " << mountPoint->path() << Qt::endl;
-
-    return doCross;
-}
 
 
 
@@ -308,7 +323,8 @@ void LocalDirReadJob::startReading()
 	//
 	// Check all entries against exclude rules that match against any
 	// direct non-directory entry.  Don't do this check for the top-level
-	// directory.
+	// directory.  This is only relevant to the main set of exclude rules;
+	// the temporary rules cannot include this type of rule.
 	//
 	// Doing this now is a performance optimization: This could also be
 	// done immediately after each entry is read, but that would mean
@@ -322,7 +338,7 @@ void LocalDirReadJob::startReading()
 	// immediately, so the performance impact is minimal.
 
 	const bool excludeLate = _applyFileChildExcludeRules &&
-				 ExcludeRules::instance()->matchDirectChildren( _dir );
+				 _tree->excludeRules()->matchDirectChildren( _dir );
 	if ( excludeLate )
 	    excludeDirLate();
 
@@ -384,13 +400,13 @@ bool LocalDirReadJob::matchesExcludeRule( const QString & entryName ) const
 {
     const QString full = fullName( entryName );
 
-    if ( ExcludeRules::instance()->match( full, entryName ) )
+    if ( _tree->excludeRules() && _tree->excludeRules()->match( full, entryName ) )
 	return true;
 
-    if ( !_tree->excludeRules() )
-	return false;
+    if ( _tree->tmpExcludeRules() && _tree->tmpExcludeRules()->match( full, entryName ) )
+	return true;
 
-    return _tree->excludeRules()->match( full, entryName );
+    return false;
 }
 
 

@@ -24,12 +24,11 @@
 
 using namespace QDirStat;
 
-bool PkgReader::_verboseMissingPkgFiles = false;
-
 PkgReader::PkgReader( DirTree * tree ):
-    _tree( tree ),
-    _maxParallelProcesses( DEFAULT_PARALLEL_PROCESSES ),
-    _minCachePkgListSize( DEFAULT_CACHE_PKG_LIST_SIZE )
+    _tree { tree },
+    _maxParallelProcesses { DEFAULT_PARALLEL_PROCESSES },
+    _minCachePkgListSize { DEFAULT_CACHE_PKG_LIST_SIZE },
+    _verboseMissingPkgFiles { false }
 {
     // logInfo() << Qt::endl;
     readSettings();
@@ -130,7 +129,7 @@ void PkgReader::createDisplayName( const QString & pkgName )
 	    sameArch = false;
     }
 
-    if ( ! sameVersion )
+    if ( !sameVersion )
     {
 	logDebug() << "Found multi version pkg " << pkgName
 		   << " same arch: " << sameArch
@@ -141,13 +140,13 @@ void PkgReader::createDisplayName( const QString & pkgName )
     {
 	QString name = pkgName;
 
-	if ( ! sameVersion )
+	if ( !sameVersion )
 	{
 	    name += "-" + pkg->version();
 	    pkg->setMultiVersion( true );
 	}
 
-	if ( ! sameArch )
+	if ( !sameArch )
 	{
 	    name += ":" + pkg->arch();
 	    pkg->setMultiArch( true );
@@ -188,7 +187,7 @@ void PkgReader::createCachePkgReadJobs()
     // The shared pointer will take care of deleting the cache when the last
     // job that uses it is destroyed.
 
-    if ( ! fileListCache )
+    if ( !fileListCache )
     {
 	logError() << "Creating the file list cache failed" << Qt::endl;
 	return;
@@ -196,7 +195,7 @@ void PkgReader::createCachePkgReadJobs()
 
     for ( PkgInfo * pkg : _pkgList )
     {
-	CachePkgReadJob * job = new CachePkgReadJob( _tree, pkg, fileListCache );
+	CachePkgReadJob * job = new CachePkgReadJob( this, _tree, pkg, fileListCache );
 	CHECK_NEW( job );
 	_tree->addJob( job );
     }
@@ -218,7 +217,7 @@ void PkgReader::createAsyncPkgReadJobs()
 
 	if ( process )
 	{
-	    AsyncPkgReadJob * job = new AsyncPkgReadJob( _tree, pkg, process );
+	    AsyncPkgReadJob * job = new AsyncPkgReadJob( this, _tree, pkg, process );
 	    CHECK_NEW( job );
 	    _tree->addBlockedJob( job );
 	    processStarter->add( process );
@@ -296,10 +295,12 @@ int PkgReadJob::_cacheHits  = 0;
 int PkgReadJob::_lstatCalls = 0;
 
 
-PkgReadJob::PkgReadJob( DirTree * tree,
-			PkgInfo * pkg  ):
+PkgReadJob::PkgReadJob( PkgReader * reader,
+		        DirTree   * tree,
+			PkgInfo   * pkg  ):
     QObject (),
     DirReadJob ( tree, pkg ),
+    _reader { reader },
     _pkg { pkg }
 {
     ++_activeJobs;
@@ -372,20 +373,20 @@ void PkgReadJob::addFile( const QString & fileListPath )
     QStringList currentPath;
     DirInfo *	parent = _pkg;
 
-    while ( ! remaining.isEmpty() )
+    while ( !remaining.isEmpty() )
     {
 	const QString currentName = remaining.takeFirst();
 	currentPath << currentName;
 
 	FileInfo * newParent = _pkg->locate( parent, QStringList() << currentName );
 
-	if ( ! newParent )
+	if ( !newParent )
 	{
 	    newParent = createItem( currentPath, _tree, parent );
-	    if ( ! newParent )
+	    if ( !newParent )
 	    {
 		//parent->setReadState( DirError );
-		if ( PkgReader::verboseMissingPkgFiles() )
+		if ( _reader->verboseMissingPkgFiles() )
 		    logWarning() << _pkg << ": missing: " << fileListPath << Qt::endl;
 
 		return;
@@ -395,11 +396,11 @@ void PkgReadJob::addFile( const QString & fileListPath )
 	    // logDebug() << "Created " << newParent << Qt::endl;
 	}
 
-	if ( ! remaining.isEmpty() )
+	if ( !remaining.isEmpty() )
 	{
 	    parent = newParent->toDirInfo();
 
-	    if ( ! parent )
+	    if ( !parent )
 	    {
 		logWarning() << newParent << " should be a directory, but is not" << Qt::endl;
 		return;
@@ -421,7 +422,7 @@ void PkgReadJob::finalizeAll( DirInfo * subtree )
 	child = child->next();
     }
 
-    if ( ! subtree->readError() )
+    if ( !subtree->readError() )
 	subtree->setReadState( DirFinished );
 
     subtree->finalizeLocal();
@@ -439,7 +440,7 @@ FileInfo * PkgReadJob::createItem( const QStringList & pathComponents,
 
     statInfo = this->lstat( path );
 
-    if ( ! statInfo ) // lstat() failed
+    if ( !statInfo ) // lstat() failed
 	return nullptr;
 
     const QString name = pathComponents.last();
@@ -509,16 +510,17 @@ struct stat * PkgReadJob::lstat( const QString & path )
 
 
 
-AsyncPkgReadJob::AsyncPkgReadJob( DirTree  * tree,
-				  PkgInfo  * pkg,
-				  QProcess * readFileListProcess ):
-    PkgReadJob( tree, pkg ),
-    _readFileListProcess( readFileListProcess )
+AsyncPkgReadJob::AsyncPkgReadJob( PkgReader * reader,
+				  DirTree   * tree,
+				  PkgInfo   * pkg,
+				  QProcess  * readFileListProcess ):
+    PkgReadJob ( reader, tree, pkg ),
+    _readFileListProcess { readFileListProcess }
 {
     if ( _readFileListProcess )
     {
-	connect( _readFileListProcess, SIGNAL( finished		   ( int, QProcess::ExitStatus ) ),
-		 this,		       SLOT  ( readFileListFinished( int, QProcess::ExitStatus ) ) );
+	connect( _readFileListProcess, qOverload<int, QProcess::ExitStatus>( &QProcess::finished ),
+		 this,		       &AsyncPkgReadJob::readFileListFinished );
     }
 }
 
@@ -530,36 +532,33 @@ void AsyncPkgReadJob::readFileListFinished( int			 exitCode,
     CHECK_PTR( _pkg );
     CHECK_PTR( _pkg->pkgManager() );
 
-    bool ok = true;
-
     if ( exitStatus != QProcess::NormalExit )
     {
-	ok = false;
 	logError() << "Get file list command crashed for " << _pkg << Qt::endl;
     }
-
-    if ( ok && exitCode != 0 )
+    else if ( exitCode != 0 )
     {
-	ok = false;
 	logError() << "Get file list command exit status " << exitStatus << " for " << _pkg << Qt::endl;
     }
-
-    if ( ok )
+    else // ok
     {
 	const QString output = QString::fromUtf8( _readFileListProcess->readAll() );
 	_fileList      = _pkg->pkgManager()->parseFileList( output );
 	_tree->unblock( this ); // schedule this job
 	_readFileListProcess->deleteLater();
+
+	return;
     }
-    else
-    {
-	_pkg->setReadState( DirError );
-	_tree->sendReadJobFinished( _pkg );
-	delete _readFileListProcess;
-	_readFileListProcess = 0;
-	finished();
-	// Don't add anything after finished() since this deletes this job!
-    }
+
+    // There was an error of some sort, logged above
+    _pkg->setReadState( DirError );
+    _tree->sendReadJobFinished( _pkg );
+
+    delete _readFileListProcess;
+    _readFileListProcess = nullptr;
+
+    finished();
+    // Don't add anything after finished() since this deletes this job!
 }
 
 QStringList AsyncPkgReadJob::fileList()

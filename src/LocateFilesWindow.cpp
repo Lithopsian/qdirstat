@@ -10,17 +10,16 @@
 #include <QMenu>
 
 #include "LocateFilesWindow.h"
-#include "QDirStatApp.h"        // SelectionModel, CleanupCollection
-#include "TreeWalker.h"
-#include "FileInfoIterator.h"
-#include "SelectionModel.h"
 #include "ActionManager.h"
-#include "CleanupCollection.h"
-#include "SettingsHelpers.h"
-#include "HeaderTweaker.h"
-#include "QDirStatApp.h"        // dirTreeModel()
+#include "Cleanup.h"
 #include "DirTreeModel.h"       // itemTypeIcon()
+#include "FileInfoIterator.h"
 #include "FormatUtil.h"
+#include "HeaderTweaker.h"
+#include "QDirStatApp.h"        // SelectionModel, DirTreeModel, findMainWindow()
+#include "SelectionModel.h"
+#include "SettingsHelpers.h"
+#include "TreeWalker.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -32,10 +31,10 @@ LocateFilesWindow::LocateFilesWindow( TreeWalker * treeWalker,
     QDialog ( parent ),
     _ui { new Ui::LocateFilesWindow },
     _treeWalker { treeWalker }
-//    _sortCol { LocateListPathCol },
-//    _sortOrder { Qt::AscendingOrder }
 {
-    // logDebug() << "init" << Qt::endl;;
+    // logDebug() << "init" << Qt::endl;
+
+    setAttribute( Qt::WA_DeleteOnClose );
 
     CHECK_PTR( _treeWalker );
     CHECK_NEW( _ui );
@@ -43,25 +42,42 @@ LocateFilesWindow::LocateFilesWindow( TreeWalker * treeWalker,
     initWidgets();
     readWindowSettings( this, "LocateFilesWindow" );
 
-    connect( _ui->refreshButton, SIGNAL( clicked() ),
-	     this,		 SLOT  ( refresh() ) );
+    connect( _ui->refreshButton, &QPushButton::clicked,
+	     this,		 &LocateFilesWindow::refresh );
 
-    connect( _ui->treeWidget,	 SIGNAL( currentItemChanged( QTreeWidgetItem *,
-							     QTreeWidgetItem * ) ),
-	     this,		 SLOT  ( locateInMainWindow( QTreeWidgetItem * ) ) );
+    connect( _ui->treeWidget,	 &QTreeWidget::currentItemChanged,
+	     this,		 &LocateFilesWindow::locateInMainWindow );
 
-    connect( _ui->treeWidget,    SIGNAL( customContextMenuRequested( const QPoint & ) ),
-             this,               SLOT  ( itemContextMenu           ( const QPoint & ) ) );
+    connect( _ui->treeWidget,    &QTreeWidget::customContextMenuRequested,
+             this,               &LocateFilesWindow::itemContextMenu );
 }
 
 
 LocateFilesWindow::~LocateFilesWindow()
 {
-    // logDebug() << "destroying" << Qt::endl;;
+    //logDebug() << "destroying" << Qt::endl;
 
     writeWindowSettings( this, "LocateFilesWindow" );
     delete _treeWalker;
     delete _ui;
+}
+
+
+LocateFilesWindow * LocateFilesWindow::sharedInstance( TreeWalker * treeWalker )
+{
+    static QPointer<LocateFilesWindow> _sharedInstance = nullptr;
+
+    if ( _sharedInstance )
+    {
+	_sharedInstance->setTreeWalker( treeWalker );
+    }
+    else
+    {
+	_sharedInstance = new LocateFilesWindow( treeWalker, app()->findMainWindow() );
+	CHECK_NEW( _sharedInstance );
+    }
+
+    return _sharedInstance;
 }
 
 
@@ -91,8 +107,8 @@ void LocateFilesWindow::initWidgets()
 {
     _ui->treeWidget->setColumnCount( LocateListColumnCount );
     _ui->treeWidget->setHeaderLabels( { tr( "Size" ), tr( "Last Modified" ), tr( "Path" ) } );
-    _ui->treeWidget->headerItem()->setTextAlignment( LocateListSizeCol, Qt::AlignHCenter );
-    _ui->treeWidget->headerItem()->setTextAlignment( LocateListMTimeCol, Qt::AlignHCenter );
+    _ui->treeWidget->header()->setDefaultAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+    _ui->treeWidget->headerItem()->setTextAlignment( LocateListPathCol, Qt::AlignLeft | Qt::AlignVCenter);
 
     _ui->treeWidget->setIconSize( app()->dirTreeModel()->dirIcon().actualSize( QSize( 22, 22 ) ) );
     _ui->resultsLabel->setText( "" );
@@ -102,16 +118,28 @@ void LocateFilesWindow::initWidgets()
     addCleanupHotkeys();
 }
 
-/*
-void LocateFilesWindow::reject()
+
+void LocateFilesWindow::populateSharedInstance( TreeWalker    * treeWalker,
+						FileInfo      * subtree,
+						const QString & headingText,
+						int             sortCol,
+						Qt::SortOrder   sortOrder )
 {
-    deleteLater();
+    if ( !treeWalker || !subtree )
+        return;
+
+    // Get the shared instance, creating it if necessary
+    LocateFilesWindow * instance = sharedInstance( treeWalker );
+    instance->_ui->heading->setText( headingText );
+    instance->populate( subtree );
+    instance->sortByColumn( sortCol, sortOrder );
+    instance->show();
 }
-*/
+
 
 void LocateFilesWindow::populate( FileInfo * newSubtree )
 {
-    // logDebug() << "populating with " << newSubtree << Qt::endl;;
+    // logDebug() << "populating with " << newSubtree << Qt::endl;
 
     clear();
 
@@ -125,19 +153,17 @@ void LocateFilesWindow::populate( FileInfo * newSubtree )
     showResultsCount();
 
     _ui->treeWidget->setSortingEnabled( true );
-    _ui->treeWidget->sortByColumn( LocateListPathCol, Qt::AscendingOrder );
 }
 
 
 void LocateFilesWindow::populateRecursive( FileInfo * dir )
 {
-    if ( ! dir )
+    if ( !dir )
 	return;
 
     for ( FileInfoIterator it( dir ); *it; ++it )
     {
 	FileInfo * item = *it;
-
         if ( _treeWalker->check( item ) )
         {
             LocateListItem * locateListItem = new LocateListItem( item );
@@ -167,7 +193,6 @@ void LocateFilesWindow::showResultsCount()
 void LocateFilesWindow::selectFirstItem()
 {
     QTreeWidgetItem * firstItem = _ui->treeWidget->topLevelItem( 0 );
-
     if ( firstItem )
         _ui->treeWidget->setCurrentItem( firstItem );
 }
@@ -175,26 +200,30 @@ void LocateFilesWindow::selectFirstItem()
 
 void LocateFilesWindow::locateInMainWindow( QTreeWidgetItem * item )
 {
-    if ( ! item )
+    if ( !item )
 	return;
 
     LocateListItem * searchResult = dynamic_cast<LocateListItem *>( item );
     CHECK_DYNAMIC_CAST( searchResult, "LocateListItem" );
+
     CHECK_PTR( _subtree.tree() );
 
-    // logDebug() << "Locating " << searchResult->path() << " in tree" << Qt::endl;;
+    // logDebug() << "Locating " << searchResult->path() << " in tree" << Qt::endl;
     app()->selectionModel()->setCurrentItem( searchResult->path() );
 }
 
 
 void LocateFilesWindow::itemContextMenu( const QPoint & pos )
 {
+    // See if the right click was actually on an item
+    if ( !_ui->treeWidget->itemAt( pos ) )
+	return;
+
     QMenu menu;
     const QStringList actions = { "actionCopyPath", "actionMoveToTrash", "---" };
-    ActionManager::instance()->addEnabledActions( &menu, actions );
+    ActionManager::addEnabledActions( &menu, actions );
 
-    if ( app()->cleanupCollection() )
-        app()->cleanupCollection()->addEnabledToMenu( &menu );
+    ActionManager::addEnabledCleanups( &menu );
 
     menu.exec( _ui->treeWidget->mapToGlobal( pos ) );
 }
@@ -202,30 +231,14 @@ void LocateFilesWindow::itemContextMenu( const QPoint & pos )
 
 void LocateFilesWindow::addCleanupHotkeys()
 {
-    if ( !app()->cleanupCollection() )
-        return;
+    ActionManager::addActions( this, { "actionMoveToTrash", "actionFindFiles" } );
 
-    ActionManager::instance()->addActions( this, { "actionMoveToTrash", "actionFindFiles" } );
-
-    for ( Cleanup * cleanup : app()->cleanupCollection()->cleanupList() )
-    {
-        if ( cleanup->worksForFile() && ! cleanup->shortcut().isEmpty() )
-            addAction( cleanup );
-    }
-}
-
-
-void LocateFilesWindow::setHeading( const QString & text )
-{
-    _ui->heading->setText( text );
+    ActionManager::addActiveCleanups( this );
 }
 
 
 void LocateFilesWindow::sortByColumn( int col, Qt::SortOrder order )
 {
-//    _sortCol   = col;
-//    _sortOrder = order;
-
     _ui->treeWidget->sortByColumn( col, order );
     selectFirstItem();
 }
@@ -246,7 +259,7 @@ LocateListItem::LocateListItem( FileInfo * item ):
     set( LocateListMTimeCol, formatTime( _mtime ) + " ", Qt::AlignLeft  );
     set( LocateListPathCol,  _path                + " ", Qt::AlignLeft  );
 
-    setIcon( LocateListPathCol,  app()->dirTreeModel()->itemTypeIcon( item ) );
+    setIcon( LocateListPathCol, app()->dirTreeModel()->itemTypeIcon( item ) );
 }
 
 
@@ -265,7 +278,6 @@ bool LocateListItem::operator<( const QTreeWidgetItem & rawOther ) const
     const LocateListItem & other = dynamic_cast<const LocateListItem &>( rawOther );
 
     const int col = treeWidget() ? treeWidget()->sortColumn() : LocateListPathCol;
-
     switch ( col )
     {
 	case LocateListPathCol:  return _path  < other._path;

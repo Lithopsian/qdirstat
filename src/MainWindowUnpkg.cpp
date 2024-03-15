@@ -95,7 +95,7 @@ void MainWindow::setUnpkgExcludeRules( const UnpkgSettings & unpkgSettings )
                                                     false ); // checkAnyFileChild
     CHECK_NEW( excludeRules );
 
-    app()->dirTree()->setExcludeRules( excludeRules );
+    app()->dirTree()->setTmpExcludeRules( excludeRules );
 }
 
 

@@ -109,13 +109,9 @@ void Logger::createNullStream()
     // output.
 
     if ( _nullDevice.open( QIODevice::WriteOnly | QIODevice::Text ) )
-    {
 	_nullStream.setDevice( &_nullDevice );
-    }
     else
-    {
 	fprintf( stderr, "ERROR: Can't open /dev/null to suppress log output\n" );
-    }
 }
 
 
@@ -292,7 +288,6 @@ static void qt_logger( QtMsgType msgType,
 		       const QString & msg )
 {
     const QStringList lines = msg.split("\n");
-
     for ( QString line : lines )
     {
         // Remove utterly misleading message that will just dump a ton of bug
@@ -405,15 +400,12 @@ QString Logger::createLogDir( const QString & rawLogDir )
     }
 
     const QFileInfo dirInfo( logDir );
-
     if ( (uid_t) dirInfo.ownerId() != getuid() )
     {
-	logError() << "ERROR: Directory " << logDir
-		   << " is not owned by " << userName() << Qt::endl;
+	logError() << "ERROR: Directory " << logDir << " is not owned by " << userName() << Qt::endl;
 
 	QByteArray nameTemplate( QString( logDir + "-XXXXXX" ).toUtf8() );
 	const char * result = mkdtemp( nameTemplate.data() );
-
 	if ( result )
 	{
 	    created = true;
@@ -433,9 +425,7 @@ QString Logger::createLogDir( const QString & rawLogDir )
     if ( created )
     {
 	QFile dir( logDir );
-	dir.setPermissions( QFile::ReadOwner  |
-			    QFile::WriteOwner |
-			    QFile::ExeOwner    );
+	dir.setPermissions( QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner );
     }
 
     return logDir;
@@ -534,7 +524,7 @@ QString Logger::expandVariables( const QString & unexpanded )
 QTextStream & operator<<( QTextStream & str, const QRectF & rect )
 {
     str << "QRectF( x: " << rect.x() << " y: " << rect.y()
-           << " width: " << rect.width() << " height: " << rect.height() << " )";
+        << " width: " << rect.width() << " height: " << rect.height() << " )";
 
     return str;
 }

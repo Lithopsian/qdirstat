@@ -15,30 +15,8 @@
 using namespace QDirStat;
 
 
-CleanupList StdCleanup::stdCleanups( QObject * parent )
-{
-    return { openFileManagerHere( parent ),
-	     openTerminalHere   ( parent ),
-	     checkFileType      ( parent ),
-	     compressSubtree	( parent ),
-	     makeClean		( parent ),
-	     gitClean		( parent ),
-	     deleteJunk		( parent ),
-	     hardDelete		( parent ),
-	     clearDirContents	( parent ),
-#if USE_DEBUG_ACTIONS
-	     echoargs		( parent ),
-	     echoargsMixed	( parent ),
-	     segfaulter		( parent ),
-	     commandNotFound	( parent ),
-	     sleepy		( parent ),
-#endif
-	   };
-}
 
-
-
-Cleanup * StdCleanup::openFileManagerHere( QObject * parent )
+static Cleanup * openFileManagerHere( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -59,7 +37,7 @@ Cleanup * StdCleanup::openFileManagerHere( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::openTerminalHere( QObject * parent )
+static Cleanup * openTerminalHere( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -80,7 +58,7 @@ Cleanup * StdCleanup::openTerminalHere( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::checkFileType( QObject * parent )
+static Cleanup * checkFileType( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -100,7 +78,7 @@ Cleanup * StdCleanup::checkFileType( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::compressSubtree( QObject * parent )
+static Cleanup * compressSubtree( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -118,7 +96,7 @@ Cleanup * StdCleanup::compressSubtree( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::makeClean( QObject * parent )
+static Cleanup * makeClean( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -136,7 +114,7 @@ Cleanup * StdCleanup::makeClean( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::gitClean( QObject * parent )
+static Cleanup * gitClean( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -155,7 +133,7 @@ Cleanup * StdCleanup::gitClean( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::deleteJunk( QObject * parent )
+static Cleanup * deleteJunk( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -174,7 +152,7 @@ Cleanup * StdCleanup::deleteJunk( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::hardDelete( QObject * parent )
+static Cleanup * hardDelete( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -194,7 +172,7 @@ Cleanup * StdCleanup::hardDelete( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::clearDirContents( QObject * parent )
+static Cleanup * clearDirContents( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -214,7 +192,7 @@ Cleanup * StdCleanup::clearDirContents( QObject * parent )
 
 #if USE_DEBUG_ACTIONS
 
-Cleanup * StdCleanup::echoargs( QObject * parent )
+static Cleanup * echoargs( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -232,7 +210,7 @@ Cleanup * StdCleanup::echoargs( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::echoargsMixed( QObject * parent )
+static Cleanup * echoargsMixed( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -250,7 +228,7 @@ Cleanup * StdCleanup::echoargsMixed( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::segfaulter( QObject * parent )
+static Cleanup * segfaulter( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -268,7 +246,7 @@ Cleanup * StdCleanup::segfaulter( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::commandNotFound( QObject * parent )
+static Cleanup * commandNotFound( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -286,7 +264,7 @@ Cleanup * StdCleanup::commandNotFound( QObject * parent )
 }
 
 
-Cleanup * StdCleanup::sleepy( QObject * parent )
+static Cleanup * sleepy( QObject * parent )
 {
     Cleanup *cleanup = new Cleanup( parent,
 				    true,
@@ -303,5 +281,27 @@ Cleanup * StdCleanup::sleepy( QObject * parent )
     return cleanup;
 }
 
-
 #endif
+
+
+
+CleanupList StdCleanup::stdCleanups( QObject * parent )
+{
+    return { openFileManagerHere( parent ),
+	     openTerminalHere   ( parent ),
+	     checkFileType      ( parent ),
+	     compressSubtree	( parent ),
+	     makeClean		( parent ),
+	     gitClean		( parent ),
+	     deleteJunk		( parent ),
+	     hardDelete		( parent ),
+	     clearDirContents	( parent ),
+#if USE_DEBUG_ACTIONS
+	     echoargs		( parent ),
+	     echoargsMixed	( parent ),
+	     segfaulter		( parent ),
+	     commandNotFound	( parent ),
+	     sleepy		( parent ),
+#endif
+	   };
+}

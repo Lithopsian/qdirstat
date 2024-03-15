@@ -25,8 +25,8 @@ SelectionModel::SelectionModel( DirTreeModel * dirTreeModel, QObject * parent ):
     _dirTreeModel { dirTreeModel },
     _currentItem { nullptr },
     _currentBranch { nullptr },
-    _selectedItemsDirty {false },
-    _verbose {false }
+    _selectedItemsDirty { false },
+    _verbose { false }
 {
     connect( this, &SelectionModel::currentChanged,
 	     this, &SelectionModel::propagateCurrentChanged );
@@ -92,7 +92,7 @@ void SelectionModel::propagateCurrentChanged( const QModelIndex & newCurrentInde
 	CHECK_MAGIC( _currentItem );
     }
 
-    FileInfo * oldCurrentItem = nullptr;
+    const FileInfo * oldCurrentItem = nullptr;
 
     if ( oldCurrentIndex.isValid() )
     {
@@ -124,7 +124,7 @@ void SelectionModel::extendSelection( FileInfo * item, bool clear )
 {
     if ( item )
     {
-	QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
+	const QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
 
 	if ( index.isValid() )
 	{
@@ -153,7 +153,7 @@ void SelectionModel::setSelectedItems( const FileInfoSet & selectedItems )
 
     for ( FileInfo * item : selectedItems )
     {
-	QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
+	const QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
 
 	if ( index.isValid() )
 	     sel.merge( QItemSelection( index, index ), Select );

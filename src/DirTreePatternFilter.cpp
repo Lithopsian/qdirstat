@@ -42,13 +42,6 @@ DirTreeFilter * DirTreePatternFilter::create( const QString & pattern )
 }
 
 
-DirTreePatternFilter::DirTreePatternFilter( const QString & pattern ):
-    _wildcard { CaseSensitiveWildcard( pattern.contains( "/" ) ? pattern : QString( "*/" ) + pattern ) }
-{
-    logDebug() << "Creating pattern filter matching against " << _wildcard.pattern() << Qt::endl;
-}
-
-
 bool DirTreePatternFilter::ignore( const QString & path ) const
 {
     bool match = _wildcard.exactMatch( path );
@@ -63,13 +56,6 @@ bool DirTreePatternFilter::ignore( const QString & path ) const
 
 
 
-
-
-DirTreeSuffixFilter::DirTreeSuffixFilter( const QString & suffix ):
-    _suffix( suffix )
-{
-    logDebug() << "Creating suffix filter matching *" << suffix << Qt::endl;
-}
 
 
 bool DirTreeSuffixFilter::ignore( const QString & path ) const

@@ -27,24 +27,9 @@ PanelMessage::PanelMessage( QWidget * parent ):
 //    connect( _ui->detailsLinkLabel,	&QLabel::linkActivated,
 //	     this,			&PanelMessage::openDetailsUrl );
 }
-/*
-PanelMessage::PanelMessage( QWidget	  * parent,
-			    const QString & headingText,
-			    const QString & msgText ):
-    QWidget ( parent ),
-    _ui { new Ui::PanelMessage }
-{
-    CHECK_NEW( _ui );
 
-    _ui->setupUi( this );
 
-    _ui->headingLabel->setText( headingText );
-    _ui->msgLabel->setText( msgText );
 
-    _ui->detailsLinkLabel->hide();
-}
-
-*/
 PanelMessage::~PanelMessage()
 {
     delete _ui;

@@ -29,8 +29,8 @@ void ProcessStarter::add( QProcess * process )
 {
     _waiting.append( process );
 
-    connect( process, SIGNAL( finished	     ( int, QProcess::ExitStatus ) ),
-	     this,    SLOT  ( processFinished( int, QProcess::ExitStatus ) ) );
+    connect( process, qOverload<int, QProcess::ExitStatus>( &QProcess::finished ),
+	     this,    &ProcessStarter::processFinished );
 
     if ( _started )
         startProcesses();

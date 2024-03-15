@@ -28,7 +28,81 @@
 using namespace QDirStat;
 
 
-QPointer<FileSizeStatsWindow> FileSizeStatsWindow::_sharedInstance = 0;
+/**
+ * Set the font to bold for all items in a table row.
+ **/
+static void setRowBold( QTableWidget * table, int row )
+{
+    for ( int col=0; col < table->columnCount(); ++col )
+    {
+	QTableWidgetItem * item = table->item( row, col );
+	if ( item )
+	{
+	    QFont font = item->font();
+	    font.setBold( true );
+	    item->setFont( font );
+	}
+    }
+}
+
+#if 0
+/**
+ * Set the foreground (the text color) for all items in a table row.
+ **/
+static void setRowForeground( QTableWidget * table, int row, const QBrush & brush )
+{
+    for ( int col=0; col < table->columnCount(); ++col )
+    {
+	QTableWidgetItem * item = table->item( row, col );
+	if ( item )
+	    item->setForeground( brush );
+    }
+}
+#endif
+
+/**
+ * Set the background for all items in a table row.
+ **/
+static void setRowBackground( QTableWidget * table, int row, const QBrush & brush )
+{
+    for ( int col=0; col < table->columnCount(); ++col )
+    {
+	QTableWidgetItem * item = table->item( row, col );
+	if ( item )
+	    item->setBackground( brush );
+    }
+}
+
+
+/**
+ * Set the text alignment for all items in a table column.
+ **/
+static void setColAlignment( QTableWidget * table, int col, Qt::Alignment alignment )
+{
+    for ( int row=0; row < table->rowCount(); ++row )
+    {
+	QTableWidgetItem * item = table->item( row, col );
+	if ( item )
+	    item->setTextAlignment( alignment | Qt::AlignVCenter );
+    }
+}
+
+
+/**
+ * Add an item to a table.
+ **/
+static QTableWidgetItem * addItem( QTableWidget	 * table,
+				   int		   row,
+				   int		   col,
+				   const QString & text )
+{
+    QTableWidgetItem * item = new QTableWidgetItem( text );
+    CHECK_NEW( item );
+    table->setItem( row, col, item );
+
+    return item;
+}
+
 
 
 FileSizeStatsWindow::FileSizeStatsWindow( QWidget * parent ):
@@ -38,6 +112,8 @@ FileSizeStatsWindow::FileSizeStatsWindow( QWidget * parent ):
     _stats { new FileSizeStats() }
 {
     //logDebug() << "init" << Qt::endl;
+
+    setAttribute( Qt::WA_DeleteOnClose );
 
     CHECK_NEW( _stats );
     CHECK_NEW( _ui );
@@ -61,6 +137,8 @@ FileSizeStatsWindow::~FileSizeStatsWindow()
 FileSizeStatsWindow * FileSizeStatsWindow::sharedInstance( QWidget * mainWindow )
 {
     //logDebug() << _sharedInstance << Qt::endl;
+
+    static QPointer<FileSizeStatsWindow> _sharedInstance = nullptr;
 
     if ( ! _sharedInstance )
     {
@@ -307,67 +385,6 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
 }
 
 
-QTableWidgetItem * FileSizeStatsWindow::addItem( QTableWidget *	 table,
-						 int		 row,
-						 int		 col,
-						 const QString & text )
-{
-    QTableWidgetItem * item = new QTableWidgetItem( text );
-    CHECK_NEW( item );
-    table->setItem( row, col, item );
-
-    return item;
-}
-
-
-void FileSizeStatsWindow::setRowBold( QTableWidget * table, int row )
-{
-    for ( int col=0; col < table->columnCount(); ++col )
-    {
-	QTableWidgetItem * item = table->item( row, col );
-	if ( item )
-	{
-	    QFont font = item->font();
-	    font.setBold( true );
-	    item->setFont( font );
-	}
-    }
-}
-
-/*
-void FileSizeStatsWindow::setRowForeground( QTableWidget * table, int row, const QBrush & brush )
-{
-    for ( int col=0; col < table->columnCount(); ++col )
-    {
-	QTableWidgetItem * item = table->item( row, col );
-	if ( item )
-	    item->setForeground( brush );
-    }
-}
-*/
-
-void FileSizeStatsWindow::setRowBackground( QTableWidget * table, int row, const QBrush & brush )
-{
-    for ( int col=0; col < table->columnCount(); ++col )
-    {
-	QTableWidgetItem * item = table->item( row, col );
-	if ( item )
-	    item->setBackground( brush );
-    }
-}
-
-
-void FileSizeStatsWindow::setColAlignment( QTableWidget * table, int col, Qt::Alignment alignment )
-{
-    for ( int row=0; row < table->rowCount(); ++row )
-    {
-	QTableWidgetItem * item = table->item( row, col );
-	if ( item )
-	    item->setTextAlignment( alignment | Qt::AlignVCenter );
-    }
-}
-
-
 void FileSizeStatsWindow::fillHistogram()
 {
     HistogramView * histogram = _ui->histogramView;
@@ -404,12 +421,12 @@ void FileSizeStatsWindow::fillBucketsTable()
     HeaderTweaker::resizeToContents( _ui->bucketsTable->horizontalHeader() );
 }
 
-
+/*
 void FileSizeStatsWindow::reject()
 {
     deleteLater();
 }
-
+*/
 
 void FileSizeStatsWindow::openOptions()
 {
@@ -428,6 +445,7 @@ void FileSizeStatsWindow::closeOptions()
 
 void FileSizeStatsWindow::applyOptions()
 {
+    logDebug() << Qt::endl;
     HistogramView * histogram = _ui->histogramView;
 
     const int newStart = _ui->startPercentileSlider->value();
@@ -435,7 +453,7 @@ void FileSizeStatsWindow::applyOptions()
 
     if ( newStart != histogram->startPercentile() || newEnd != histogram->endPercentile() )
     {
-	//logDebug() << "New start: " << newStart << " new end: " << newEnd << Qt::endl;
+	logDebug() << "New start: " << newStart << " new end: " << newEnd << Qt::endl;
 
 	histogram->setStartPercentile( newStart );
 	histogram->setEndPercentile  ( newEnd	);

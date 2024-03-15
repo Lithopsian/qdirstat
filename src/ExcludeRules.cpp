@@ -105,11 +105,21 @@ SettingsEnumMapping ExcludeRule::patternSyntaxMapping()
 //---------------------------------------------------------------------------
 //
 
+inline static void dumpExcludeRules( const ExcludeRules * excludeRules )
+{
+    if ( excludeRules->isEmpty() )
+	logDebug() << "No exclude rules defined" << Qt::endl;
+
+    for ( ExcludeRuleListIterator it = excludeRules->cbegin(); it != excludeRules->cend(); ++it )
+	logDebug() << *it << Qt::endl;
+}
+
+
 ExcludeRules::ExcludeRules()
 {
     readSettings();
 #if VERBOSE_EXCLUDE_MATCHES
-    Debug::dumpExcludeRules();
+    dumpExcludeRules();
 #endif
 }
 
@@ -131,28 +141,12 @@ ExcludeRules::~ExcludeRules()
 }
 
 
-ExcludeRules * ExcludeRules::instance()
-{
-    static ExcludeRules _instance;
-
-    return &_instance;
-}
-
-
 void ExcludeRules::clear()
 {
     qDeleteAll( _rules );
     _rules.clear();
 }
 
-/*
-void ExcludeRules::add( ExcludeRule * rule )
-{
-    CHECK_NEW( rule );
-    _rules << rule;
-    logInfo() << "Added " << rule << Qt::endl;
-}
-*/
 
 void ExcludeRules::add( ExcludeRule::PatternSyntax   patternSyntax,
 			const QString              & pattern,
@@ -168,15 +162,6 @@ void ExcludeRules::add( ExcludeRule::PatternSyntax   patternSyntax,
     logInfo() << "Added " << rule << Qt::endl;
 }
 
-/*
-void ExcludeRules::remove( ExcludeRule * rule )
-{
-    CHECK_PTR( rule );
-
-    _rules.removeAll( rule );
-    delete rule;
-}
-*/
 
 bool ExcludeRules::match( const QString & fullPath, const QString & fileName ) const
 {
@@ -217,46 +202,6 @@ bool ExcludeRules::matchDirectChildren( DirInfo * dir ) const
     return false;
 }
 
-/*
-const ExcludeRule * ExcludeRules::matchingRule( const QString & fullPath,
-						const QString & fileName )
-{
-    if ( fullPath.isEmpty() || fileName.isEmpty() )
-	return nullptr;
-
-    for ( ExcludeRule * rule : _rules )
-    {
-	if ( rule->match( fullPath, fileName ) )
-	    return rule;
-    }
-
-    return nullptr;
-}
-*/
-/*
-void ExcludeRules::moveUp( ExcludeRule * rule )
-{
-    _listMover.moveUp( rule );
-}
-
-
-void ExcludeRules::moveDown( ExcludeRule * rule )
-{
-    _listMover.moveDown( rule );
-}
-
-
-void ExcludeRules::moveToTop( ExcludeRule * rule )
-{
-    _listMover.moveToTop( rule );
-}
-
-
-void ExcludeRules::moveToBottom( ExcludeRule * rule )
-{
-    _listMover.moveToBottom( rule );
-}
-*/
 
 void ExcludeRules::addDefaultRules()
 {
@@ -304,7 +249,7 @@ void ExcludeRules::readSettings()
 						  checkAnyFileChild );
 	    CHECK_NEW( rule );
 
-	    if ( ! pattern.isEmpty() && rule->isValid() )
+	    if ( !pattern.isEmpty() && rule->isValid() )
 		_rules << rule;
 	    else
 	    {
@@ -353,7 +298,4 @@ void ExcludeRules::writeSettings( const ExcludeRuleList & newRules )
 	    settings.endGroup(); // [ExcludeRule_01], [ExcludeRule_02], ...
 	}
     }
-
-    // Now replace the previous settings with the new ones
-    readSettings();
 }

@@ -19,11 +19,14 @@ using namespace QDirStat;
 
 void Refresher::refresh()
 {
-    if ( ! _items.isEmpty() && _tree )
+    if ( !_items.isEmpty() )
     {
-	logDebug() << "Refreshing " << _items.size() << " items" << Qt::endl;
+	DirTree * tree = _items.first()->tree();
 
-	_tree->refresh( _items );
+	//logDebug() << "Refreshing " << _items.size() << " items" << Qt::endl;
+
+	if ( tree )
+	    tree->refresh( _items );
     }
     else
     {
@@ -32,26 +35,3 @@ void Refresher::refresh()
 
     this->deleteLater();
 }
-
-
-FileInfoSet Refresher::parents( const FileInfoSet children )
-{
-    FileInfoSet parents;
-
-    for ( FileInfo * child : children )
-    {
-	if ( child && child->parent() )
-        {
-            FileInfo * parent = child->parent();
-
-            if ( parent->isPseudoDir() )
-                parent = parent->parent();
-
-            if ( parent )
-                parents << parent;
-        }
-    }
-
-    return parents.normalized();
-}
-

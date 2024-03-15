@@ -14,8 +14,8 @@
 #include <QTimer>
 
 #include "OpenDirDialog.h"
-#include "MountPoints.h"
 #include "ExistingDir.h"
+#include "MountPoints.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
 #include "SignalBlocker.h"
@@ -59,7 +59,8 @@ OpenDirDialog::OpenDirDialog( QWidget * parent, bool crossFilesystems ):
 
     _ui->crossFilesystemsCheckBox->setChecked( crossFilesystems );
     _ui->pathComboBox->setFocus();
-    QTimer::singleShot( 200, this, SLOT( initialSelection() ) );
+
+    QTimer::singleShot( 200, this, &OpenDirDialog::initialSelection );
 }
 
 
@@ -108,28 +109,29 @@ void OpenDirDialog::initDirTree()
 
 void OpenDirDialog::initConnections()
 {
-    connect( _validator,	SIGNAL( isOk	  ( bool ) ),
-	     _okButton,		SLOT  ( setEnabled( bool ) ) );
+    const QItemSelectionModel * selectionModel = _ui->dirTreeView->selectionModel();
 
-    connect( _validator,	SIGNAL( isOk	  ( bool ) ),
-	     this,		SLOT  ( pathEdited( bool ) ) );
+    connect( selectionModel,    &QItemSelectionModel::currentChanged,
+             this,              &OpenDirDialog::treeSelection );
 
-    connect( this,		SIGNAL( accepted()	),
-	     this,		SLOT  ( writeSettings() ) );
+    connect( _ui->upButton,     &QPushButton::clicked,
+             this,              &OpenDirDialog::goUp );
 
-    connect( _ui->pathSelector, SIGNAL( pathSelected     ( QString ) ),
-             this,              SLOT  ( setPathAndExpand ( QString ) ) );
+    connect( _validator,	&ExistingDirValidator::isOk,
+	     _okButton,		&QPushButton::setEnabled );
 
-    connect( _ui->pathSelector, SIGNAL( pathDoubleClicked( QString ) ),
-             this,              SLOT  ( setPathAndAccept ( QString ) ) );
+    connect( _validator,	&ExistingDirValidator::isOk,
+	     this,		&OpenDirDialog::pathEdited );
 
-    QItemSelectionModel * selModel = _ui->dirTreeView->selectionModel();
+    connect( this,		&OpenDirDialog::accepted,
+	     this,		&OpenDirDialog::writeSettings );
 
-    connect( selModel,  SIGNAL( currentChanged( QModelIndex, QModelIndex ) ),
-             this,      SLOT  ( treeSelection ( QModelIndex, QModelIndex ) ) );
+    connect( _ui->pathSelector, &PathSelector::pathSelected,
+             this,              &OpenDirDialog::setPathAndExpand );
 
-    connect( _ui->upButton, SIGNAL( clicked() ),
-             this,          SLOT  ( goUp()    ) );
+    connect( _ui->pathSelector, &PathSelector::pathDoubleClicked,
+             this,              &OpenDirDialog::setPathAndAccept );
+
 }
 
 
