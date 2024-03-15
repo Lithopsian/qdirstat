@@ -57,7 +57,7 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	BreadcrumbNavigator( QWidget * parent = 0 );
+	BreadcrumbNavigator( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -67,7 +67,7 @@ namespace QDirStat
 	/**
 	 * Explicitly clear the path.
 	 **/
-	void clear() { setPath( 0 ); }
+	void clear() { setPath( nullptr ); }
 
 
     public slots:
@@ -115,12 +115,6 @@ namespace QDirStat
         int breadcrumbsLen() const;
 
         /**
-         * Elide a text that would be longer than maxLen in the middle and
-         * return the shortened text.
-         **/
-        QString ellideMiddle( const QString & text, int maxLen ) const;
-
-        /**
          * Fill the internal _breadcrumbs with content by traversing up the
          * tree from 'item' to the toplevel.
          **/
@@ -138,10 +132,10 @@ namespace QDirStat
         void shortenBreadcrumbs();
 
         /**
-         * Return the index of the longest breadcrumb that has not been
-         * shortened yet or -1 if there is no more.
+         * Return the longest breadcrumb that has not been
+         * shortened yet or 0 if there are no more.
          **/
-        int pickLongBreadcrumb();
+        Breadcrumb * pickLongBreadcrumb();
 
         /**
          * Write the internal _breadcrumbs to the log.

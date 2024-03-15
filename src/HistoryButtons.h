@@ -116,7 +116,6 @@ namespace QDirStat
 	History * _history;
         QAction * _actionGoBack;
         QAction * _actionGoForward;
-	QMenu	* _historyMenu;
 
     };
 }	// namespace QDirStat

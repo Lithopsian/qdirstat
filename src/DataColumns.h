@@ -1,4 +1,4 @@
-/*
+    /*
  *   File name: DataColumns.h
  *   Summary:	Data column mapping
  *   License:	GPL V2 - See file LICENSE for details.
@@ -13,7 +13,6 @@
 #include <QList>
 #include <QString>
 #include <QStringList>
-#include <QObject>
 #include <QTextStream>
 
 
@@ -59,16 +58,22 @@ namespace QDirStat
      * the columns may be rearranged, and any column may be omitted (not
      * displayed at all). This class handles that mapping.
      **/
-    class DataColumns: public QObject
+    class DataColumns
     {
-	Q_OBJECT
 
-    public:
+	/**
+	 * Constructor. This is not meant for general use; use
+	 * the static methods instead.
+	 **/
+	DataColumns();
+
 	/**
 	 * Return the singleton instance for this class. This will create the
-	 * singleton upon the first call.
+	 * singleton upon the first call.  Provate, use the static methods.
 	 **/
 	static DataColumns * instance();
+
+    public:
 
 	/**
 	 * Map a view column to the corresponding model column.
@@ -85,15 +90,10 @@ namespace QDirStat
 	    { return instance()->reverseMappedCol( static_cast<DataColumn>( modelCol ) ); }
 
 	/**
-	 * Map a view column to the corresponding model column.
+	 * Return the number of columns that are currently displayed.
 	 **/
-	DataColumn mappedCol( DataColumn viewCol ) const;
-
-	/**
-	 * Map a model column to the corresponding view column.
-	 **/
-	DataColumn reverseMappedCol( DataColumn modelCol ) const;
-
+	static int colCount()
+	    { return instance()->_columns.size(); }
 
 	/**
 	 * Set the column order and what columns to display.
@@ -105,7 +105,7 @@ namespace QDirStat
 	 *	 << QDirStat::PercentBarCol,
 	 *	 << QDirStat::PercentNumCol,
 	 *	 << QDirStat::SizeCol;
-	 *   DataColumns->instance()->setColumns( col );
+	 *   DataColumns::setColumns( col );
 	 *
 	 * NOTICE: If a data view is active, use DirTreeModel::setColumns()
 	 * instead (which will call this function in turn) so the view is
@@ -113,12 +113,13 @@ namespace QDirStat
 	 *
 	 * This will emit a columnsChanged() signal.
 	 */
-	void setColumns( const DataColumnList & columns );
+	static void setColumns( const DataColumnList & columns )
+	    { instance()->instanceSetColumns( columns ); }
 
 	/**
 	 * Return the model columns that are currently being displayed.
 	 **/
-	const DataColumnList & columns() const { return _columns; }
+//	const DataColumnList & columns() const { return _columns; }
 
 	/**
 	 * Return the default model columns.
@@ -128,12 +129,7 @@ namespace QDirStat
         /**
          * Return all model columns in default order.
          **/
-	const DataColumnList allColumns() const { return defaultColumns(); }
-
-	/**
-	 * Return the number of columns that are currently displayed.
-	 **/
-	int colCount() const { return _columns.size(); }
+	static const DataColumnList allColumns() { return defaultColumns(); }
 
 	/**
 	 * Convert a column to string.
@@ -174,24 +170,28 @@ namespace QDirStat
 	void writeSettings();
 
 
-    signals:
-	/**
-	 * Emitted when the columns changed (after setColumns() ).
-	 **/
-	void columnsChanged();
-
-
     protected:
+
 	/**
-	 * Constructor. This is not meant for general use; use
-	 * DataColumns::instance() and the static methods instead.
+	 * Set the columns.  This is protected, use the static function
+	 * setColumns() instead.
 	 **/
-	DataColumns();
+	void instanceSetColumns( const DataColumnList & columns );
+
+	/**
+	 * Map a view column to the corresponding model column.
+	 **/
+	DataColumn mappedCol( DataColumn viewCol ) const;
+
+	/**
+	 * Map a model column to the corresponding view column.
+	 **/
+	DataColumn reverseMappedCol( DataColumn modelCol ) const;
 
 
 	// Data members
 
-	DataColumnList	     _columns;
+	DataColumnList _columns;
 
     };	// class DataColumns
 

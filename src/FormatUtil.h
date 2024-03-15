@@ -23,6 +23,12 @@
 namespace QDirStat
 {
     /**
+     * Elide a long string, remnoving characters from the middle to fit
+     * with maxLen characters.
+     **/
+    QString elideMiddle( const QString & text, int maxLen );
+
+    /**
      * Can't use a default argument when using this as a function pointer,
      * so we really need the above overloaded version.
      **/
@@ -132,6 +138,7 @@ namespace QDirStat
 
     /**
      * Human-readable output of a file size in a debug stream.
+     *
      * Removed because the overload of is ambiguous between FileSize
      * and qsizetype (and potentially other long long ints).  Use
      * formatSize() explicitly if you need this.

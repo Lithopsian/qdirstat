@@ -38,15 +38,14 @@ namespace QDirStat
          * Constructor.
          **/
         BucketsTableModel( QObject * parent, HistogramView * histogram ):
-	    QAbstractTableModel { parent },
+	    QAbstractTableModel ( parent ),
 	    _histogram { histogram }
 	{}
 
         /**
          * Destructor.
          **/
-        virtual ~BucketsTableModel()
-	{}
+        virtual ~BucketsTableModel() {}
 
         /**
          * Return the associated histogram view.

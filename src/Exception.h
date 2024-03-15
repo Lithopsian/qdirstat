@@ -27,15 +27,14 @@ public:
      * Constructor.
      */
     Exception( const QString &msg = QString() ):
-	_what( msg ),
-	_srcLine(0)
-	{}
+	_what { msg },
+	_srcLine { 0 }
+    {}
 
     /**
      * Destructor.
      */
-    virtual ~Exception() throw()
-	{}
+    virtual ~Exception() throw() {}
 
     /**
      * Return a text description of what was wrong.
@@ -95,11 +94,10 @@ class NullPointerException: public Exception
 {
 public:
     NullPointerException():
-	Exception( "Null pointer" )
-	{}
+	Exception ( "Null pointer" )
+    {}
 
-    virtual ~NullPointerException() throw()
-	{}
+    virtual ~NullPointerException() throw() {}
 };
 
 
@@ -111,11 +109,10 @@ class OutOfMemoryException: public Exception
 {
 public:
     OutOfMemoryException():
-	Exception( "Null pointer" )
-	{}
+	Exception ( "Null pointer" )
+    {}
 
-    virtual ~OutOfMemoryException() throw()
-	{}
+    virtual ~OutOfMemoryException() throw() {}
 };
 
 
@@ -123,12 +120,11 @@ class FileException: public Exception
 {
 public:
     FileException( const QString &filename, const QString &msg ):
-	Exception( msg ),
-	_filename( filename )
-	{}
+	Exception ( msg ),
+	_filename { filename }
+    {}
 
-    virtual ~FileException() throw()
-	{}
+    virtual ~FileException() throw() {}
 
     QString filename() const { return _filename; }
 
@@ -142,13 +138,12 @@ class SysCallFailedException: public Exception
 public:
     SysCallFailedException( const QString & sysCall,
 			    const QString & resourceName ):
-	Exception( errMsg( sysCall, resourceName ) ),
-	_sysCall( sysCall ),
-	_resourceName( resourceName )
-	{}
+	Exception ( errMsg( sysCall, resourceName ) ),
+	_sysCall { sysCall },
+	_resourceName { resourceName }
+    {}
 
-    virtual ~SysCallFailedException() throw()
-	{}
+    virtual ~SysCallFailedException() throw() {}
 
     /**
      * Return the resource for which this syscall failed. This is typically a
@@ -173,11 +168,10 @@ class DynamicCastException: public Exception
 {
 public:
     DynamicCastException( const QString &expectedType ):
-	Exception( "dynamic_cast failed; expected: " + expectedType )
-	{}
+	Exception ( "dynamic_cast failed; expected: " + expectedType )
+    {}
 
-    virtual ~DynamicCastException() throw()
-	{}
+    virtual ~DynamicCastException() throw() {}
 };
 
 
@@ -185,12 +179,10 @@ class BadMagicNumberException: public Exception
 {
 public:
     BadMagicNumberException( const void * badPointer ):
-	Exception( QString( "Magic number check failed for address 0x%1" )
-		   .arg( (qulonglong) badPointer, 0, 16 ) )
-	{}
+	Exception ( QString( "Magic number check failed for address 0x%1" ).arg( (qulonglong) badPointer, 0, 16 ) )
+    {}
 
-    virtual ~BadMagicNumberException() throw()
-	{}
+    virtual ~BadMagicNumberException() throw() {}
 };
 
 
@@ -212,14 +204,13 @@ public:
 			      int validMin,
 			      int validMax,
 			      const QString & msg = "" )
-	: Exception( errMsg( invalidIndex, validMin, validMax, msg ) )
-	, _invalidIndex( invalidIndex )
-	, _validMin( validMin )
-	, _validMax( validMax )
+	: Exception ( errMsg( invalidIndex, validMin, validMax, msg ) )
+	, _invalidIndex { invalidIndex }
+	, _validMin { validMin }
+	, _validMax { validMax }
 	{}
 
-    virtual ~IndexOutOfRangeException() throw()
-	{}
+    virtual ~IndexOutOfRangeException() throw() {}
 
     /**
      * Return the offending index value.
@@ -399,10 +390,7 @@ void _throw_helper( const EX_t	  &exception,
     exception.setSrcLocation( srcFile, srcLine, srcFunction );
 
     Logger::log( logger, srcFile, srcLine, srcFunction, LogSeverityWarning )
-	<< "THROW "
-	<< exception.className() << ": "
-	<< exception.what()
-	<< Qt::endl;
+	<< "THROW " << exception.className() << ": " << exception.what() << Qt::endl;
 
     throw( exception );
 }
@@ -416,10 +404,7 @@ void _caught_helper( const EX_t	   &exception,
 		     const QString &srcFunction )
 {
     Logger::log( logger, srcFile, srcLine, srcFunction, LogSeverityWarning )
-	<< "CAUGHT "
-	<< exception.className() << ": "
-	<< exception.what()
-	<< Qt::endl;
+	<< "CAUGHT " << exception.className() << ": " << exception.what() << Qt::endl;
 }
 
 
@@ -433,10 +418,7 @@ void _rethrow_helper( const EX_t    &exception,
     exception.setSrcLocation( srcFile, srcLine, srcFunction );
 
     Logger::log( logger, srcFile, srcLine, srcFunction, LogSeverityWarning )
-	<< "RETHROW "
-	<< exception.className() << ": "
-	<< exception.what()
-	<< Qt::endl;
+	<< "RETHROW " << exception.className() << ": " << exception.what() << Qt::endl;
 
     throw;
 }

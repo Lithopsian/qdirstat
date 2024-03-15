@@ -35,6 +35,7 @@ namespace QDirStat
     class MountPoint
     {
     public:
+
 	/**
 	 * Constructor.
 	 **/
@@ -207,28 +208,31 @@ namespace QDirStat
      **/
     class MountPoints
     {
-    public:
+    private:
+
+	/**
+	 * Constructor. Not for public use. Use the static methods instead.
+	 **/
+	MountPoints():
+	    _isPopulated { false },
+	    _hasBtrfs { false },
+	    _checkedForBtrfs { false }
+	{}
+
+	/**
+	 * Destructor.
+	 **/
+	~MountPoints();
+
 	/**
 	 * Return the singleton object for this class. The first use will
-	 * create the singleton. Notice that most of the static methods access
-	 * the singleton, too, so the first call to most of those static
-	 * methods will already create the singleton.
+	 * create the singleton. Most of the static methods access
+	 * the singleton, so the first call to those static
+	 * methods will create the singleton.
 	 **/
 	static MountPoints * instance();
 
-	/**
-	 * Clear the content of the singleton. This is useful whenever the
-	 * mount points in the system might have changed, i.e. when a
-	 * filesystem might have been mounted or unmounted.
-	 *
-	 * This does not create the singleton if it doesn't exist yet.
-	 **/
-//	static void clear();
-
-	/**
-	 * Return 'true' if there are no mount points at all.
-	 **/
-	static bool isEmpty();
+    public:
 
 	/**
 	 * Return the mount point for 'path' if there is one or 0 if there is
@@ -298,26 +302,6 @@ namespace QDirStat
     protected:
 
 	/**
-	 * Constructor. Not for public use. Use instance() or the static
-	 * methods instead.
-	 **/
-	MountPoints():
-	    _isPopulated { false },
-	    _hasBtrfs { false },
-	    _checkedForBtrfs { false }
-	{}
-
-	/**
-	 * Destructor.
-	 **/
-	~MountPoints();
-
-	/**
-	 * Clear the content of this class.
-	 **/
-//	void init();
-
-	/**
 	 * Ensure the mount points are populated with the content of
 	 * /proc/mounts, falling back to /etc/mtab if /proc/mounts cannot be
 	 * read.
@@ -372,12 +356,6 @@ namespace QDirStat
 	 * ensurePopulated() first.
 	 **/
 	static void dump();
-
-	/**
-	 * Dump all normal mount points to the log, i.e. those that are not
-	 * system, bind or duplicate mount points.
-	 **/
-	static void dumpNormalMountPoints();
 
 	//
 	// Data members

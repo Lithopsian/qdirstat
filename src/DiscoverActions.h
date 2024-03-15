@@ -11,22 +11,15 @@
 #define DiscoverActions_h
 
 #include <QObject>
-#include <QPointer>
 #include <QString>
 
 
 namespace QDirStat
 {
-    class TreeWalker;
-    class LocateFilesWindow;
     class FileSearchFilter;
 
     /**
-     * Class to keep QDirStat's "discover" actions self-contained.
-     *
-     * They access the DirTree that was created via the DirTreeModel in the
-     * QDirStatApp. They all start with the SelectionModel's currently selected
-     * directory or, if none is selected, with the tree's root.
+     * Namespace for "discover" actions.
      *
      * They all use a TreeWalker to filter out FileInfo tree nodes and present
      * them as a list in a non-modal LocateFilesWindow. When the user clicks on
@@ -35,32 +28,14 @@ namespace QDirStat
      * open branches until it is visible, and at the same time it will become
      * the current item in the TreemapView.
      *
-     * All actions in this class share the same LocateFilesWindow, so any
-     * subsequent call will replace any previous content of that window.
+     * All actions share the same LocateFilesWindow, so any subsequent call will
+     * replace any previous content of that window.
      **/
-    class DiscoverActions: public QObject
+    namespace DiscoverActions
     {
-        Q_OBJECT
-
-    public:
-
-        // Constructor
-        DiscoverActions( QObject * parent = 0 ):
-            QObject { parent }
-        {}
-
-        // Notice that _locateFilesWindow gets the main window as its widget
-        // parent, so it will automatically be destroyed when the main window and
-        // its child widgets are destroyed.
-        ~DiscoverActions()
-        {}
-
-    public slots:
-
-        //
-        // Actions that can be connected directly to a QAction in one of the
-        // menus in the main window
-        //
+        /**
+         * Actions that can be connected directly to a QAction in the main window.
+         **/
         void discoverLargestFiles();
         void discoverNewestFiles();
         void discoverOldestFiles();
@@ -68,45 +43,19 @@ namespace QDirStat
         void discoverBrokenSymLinks();
         void discoverSparseFiles();
 
-        //
-        // Actions that are meant to be connected to the FileAgeWindow's
-        // 'locate...()' signals (but they can be used stand-alone as well).
-        //
+        /**
+         * Actions that are meant to be connected to the FileAgeWindow's
+         * 'locate...()' signals (but they can be used stand-alone as well).
+         **/
         void discoverFilesFromYear ( const QString & path, short year );
         void discoverFilesFromMonth( const QString & path, short year, short month );
 
-        //
-        // Other actions
-        //
+        /**
+         * Action from the FindFiles dialog.
+         **/
         void findFiles( const FileSearchFilter & filter );
 
-    public:
-
-        /**
-         * Common part of all "discover" actions: Create or reuse a
-         * LocateFilesWindow with the specified TreeWalker.
-         *
-         * 'headingText' should include a "%1" placeholder for the path of the
-         * starting directory.
-         *
-         * 'path' can optionally (if non-empty) override the current selection of
-         * the tree as the starting directory.
-         **/
-        void discoverFiles( TreeWalker    * treeWalker,
-                            const QString & headingText,
-                            const QString & path = "" );
-
-        /**
-         * Create the LocateFilesWindow if needed or reuse the existing one.
-         * In either case, set its TreeWalker.
-         **/
-        void ensureLocateFilesWindow( TreeWalker * treeWalker );
-
-    protected:
-
-        QPointer<LocateFilesWindow> _locateFilesWindow;
-
-    };  // class DiscoverActions
+    };  // namespace DiscoverActions
 
 }       // namespace QDirStat
 

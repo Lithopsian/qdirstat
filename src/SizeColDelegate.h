@@ -56,20 +56,6 @@ namespace QDirStat
 	QSize sizeHint( const QStyleOptionViewItem & option,
 			const QModelIndex	   & index) const Q_DECL_OVERRIDE;
 
-
-    protected:
-
-        /**
-         * Determine the color to use for the highlighted (allocated) porition
-	 * of the delegate text size string.  This is based on the actual background
-	 * colour of the cell, to account for both dark themes and whether the item
-	 * is selected.
-         **/
-	inline static QColor highlightedText( const QStyleOptionViewItem & option,
-	                                      bool sparseFile,
-					      bool disabled );
-
-
     };  // class SizeColDelegate
 
 }       // namespace QDirStat

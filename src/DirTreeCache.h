@@ -57,45 +57,10 @@ namespace QDirStat
     protected:
 
 	/**
-	 * Format a file size as string - with trailing "G", "M", "K" for
-	 * "Gigabytes", "Megabytes, "Kilobytes", respectively (provided there
-	 * is no fractional part - 27M is OK, 27.2M is not).
-	 **/
-	static QString formatSize( FileSize size );
-
-	/**
 	 * Write cache file in gzip format.
 	 * Returns 'true' if OK, 'false' upon error.
 	 **/
 	static bool writeCache( const QString & fileName, const DirTree *tree );
-
-	/**
-	 * Write 'item' recursively to cache file 'cache'.
-	 * Uses zlib to write gzip-compressed files.
-	 **/
-	static void writeTree( gzFile cache, const FileInfo * item );
-
-	/**
-	 * Write 'item' to cache file 'cache' without recursion.
-	 * Uses zlib to write gzip-compressed files.
-	 **/
-	static void writeItem( gzFile cache, const FileInfo * item );
-
-	/**
-	 * Return a strong representing the type of file.
-	 **/
-//	static void addUnreadEntry( gzFile cache, const char * reason );
-
-	/**
-	 * Return a string representing the type of file.
-	 **/
-	static const char * fileType( const FileInfo * item );
-
-	/**
-	 * Return the 'path' in an URL-encoded form, i.e. with some special
-	 * characters escaped in percent notation (" " -> "%20").
-	 **/
-	static QByteArray urlEncoded( const QString & path );
 
 	//
 	// Data members
@@ -170,19 +135,6 @@ namespace QDirStat
 //	DirTree * tree() const { return _tree; }
 
 
-    signals:
-
-	/**
-	 * Emitted when reading this cache is finished.
-	 **/
-//	void finished();
-
-	/**
-	 * Emitted if there is a read error.
-	 **/
-//	void error();
-
-
     protected:
 
 	/**
@@ -202,28 +154,6 @@ namespace QDirStat
 	FileSize readSize( const char * size_str );
 
 	/**
-	 * Skip leading whitespace from a string.
-	 * Returns a pointer to the first character that is non-whitespace.
-	 **/
-	static char * skipWhiteSpace( char * cptr );
-
-	/**
-	 * Find the next whitespace in a string.
-	 *
-	 * Returns a pointer to the next whitespace character
-	 * or a null pointer if there is no more whitespace in the string.
-	 **/
-	static char * findNextWhiteSpace( char * cptr );
-
-	/**
-	 * Remove all trailing whitespace from a string - overwrite it with 0
-	 * bytes.
-	 *
-	 * Returns the new string length.
-	 **/
-	static void killTrailingWhiteSpace( char * cptr );
-
-	/**
 	 * Check this cache's header (see if it is a QDirStat cache at all)
 	 **/
 	void checkHeader();
@@ -236,12 +166,12 @@ namespace QDirStat
 	/**
 	 * Map a character string to a mode.
 	 **/
-	static mode_t modeFromType( const char * type );
+//	static mode_t modeFromType( const char * type );
 
 	/**
 	 * Return the multiplier for a given suffix.
 	 **/
-	static FileSize multiplier( const char * suffix );
+//	static FileSize multiplier( const char * suffix );
 
 	/**
 	 * Read the next line that is not empty or a comment and store it in
@@ -263,23 +193,6 @@ namespace QDirStat
 	const char * field( int no ) const;
 
 	/**
-	 * Split up a file name with path into its path and its name component
-	 * and return them in path_ret and name_ret, respectively.
-	 *
-	 * Example:
-	 *     "/some/dir/somewhere/myfile.obj"
-	 * ->  "/some/dir/somewhere", "myfile.obj"
-	 **/
-	void splitPath( const QString & fileNameWithPath,
-			QString	      & path_ret,
-			QString	      & name_ret ) const;
-
-	/**
-	 * Build a full path from path + file name (without path).
-	 **/
-	QString buildPath( const QString & path, const QString & name ) const;
-
-	/**
 	 * Return an unescaped version of 'rawPath'.
 	 **/
 	QString unescapedPath( const QString & rawPath ) const;
@@ -289,17 +202,6 @@ namespace QDirStat
 	 * just one. QUrl doesn't seem to handle those well.
 	 **/
 	QString cleanPath( const QString & rawPath ) const;
-
-	/**
-	 * Returns the number of fields in the current input line after
-	 * splitLine().
-	 **/
-//	int fieldsCount() const { return _fieldsCount; }
-
-	/**
-	 * Called after the entire file has been read.
-	 **/
-//	void finalize();
 
 	/**
 	 * Recursively set the read status of all dirs from 'dir' on, send tree

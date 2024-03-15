@@ -20,7 +20,7 @@
 #include <QtConcurrent/QtConcurrent>
 
 
-#define DefaultAmbientLight	   40
+#define DefaultAmbientLight	  40
 #define DefaultHeightScaleFactor   0.8
 #define DefaultCushionHeight	   0.5
 #define DefaultMinTileSize	   3
@@ -71,7 +71,7 @@ namespace QDirStat
 	 * and the selection model with setSelectionModel() after creating this
 	 * widget.
 	 **/
-	TreemapView( QWidget * parent = 0 );
+	TreemapView( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -123,15 +123,15 @@ namespace QDirStat
 	SelectionModel * selectionModel() const { return _selectionModel; }
 
 	/**
-	 * Set the cleanup collection. If set, all cleanup actions from that
-	 * collection will be added to the item context menu of treemap tiles.
+	 * Set the cleanup collection.  This connects signals, but does not
+	 * take ownership or even remember the CleanupCollection object.
 	 **/
 	void setCleanupCollection( const CleanupCollection * collection );
 
 	/**
 	 * Return the cleanup collection or 0 if it is not set.
 	 **/
-	const CleanupCollection * cleanupCollection() const { return _cleanupCollection; }
+//	const CleanupCollection * cleanupCollection() const { return _cleanupCollection; }
 
 	/**
 	 * Use a fixed color for all tiles. To undo this, set an invalid QColor
@@ -379,9 +379,9 @@ namespace QDirStat
 	 * smaller tiles to the bottom and right are still illuminated and the
 	 * highlight is reasonably centered.
 	 **/
-	double lightX() const { return _lightX; }
-	double lightY() const { return _lightY; }
-	double lightZ() const { return _lightZ; }
+//	double lightX() const { return _lightX; }
+//	double lightY() const { return _lightY; }
+//	double lightZ() const { return _lightZ; }
 
 	/**
 	 * Returns cushion ridge height degradation factor (0 .. 1.0) for each
@@ -460,7 +460,7 @@ namespace QDirStat
 	 * Completely rebuild the entire treemap from the internal tree's root
 	 * on.
 	 **/
-	void rebuildTreemap();
+	void rebuildTreemapSlot();
 
 	/**
 	 * Notification that a dir tree node is about to be deleted, with no
@@ -628,7 +628,6 @@ namespace QDirStat
 	const DirTree		* _tree;
 	SelectionModel		* _selectionModel;
 	SelectionModelProxy	* _selectionModelProxy;
-	const CleanupCollection	* _cleanupCollection;
 
 	TreemapTile	* _rootTile;
 //	TreemapTile	* _currentTile;
@@ -659,10 +658,6 @@ namespace QDirStat
         QColor _dirGradientStart;
         QColor _dirGradientEnd;
 	QLinearGradient _dirGradient;
-
-	constexpr static double _lightX = 0.09759;
-	constexpr static double _lightY = 0.19518;
-	constexpr static double _lightZ = 0.97590;
 
 	int    _ambientLight;
 	double _heightScaleFactor;
@@ -768,7 +763,7 @@ namespace QDirStat
     public:
 	CurrentTileHighlighter( TreemapView * treemapView ):
 	    HighlightRect ( treemapView->scene(), treemapView->currentItemColor(), 2, CurrentHighlightLayer )
-	    {}
+	{}
 
 	virtual void highlight( const TreemapTile * tile ) Q_DECL_OVERRIDE;
     };
@@ -787,7 +782,7 @@ namespace QDirStat
     public:
 	SelectedTileHighlighter( TreemapView * treemapView, const TreemapTile * tile ):
 	    HighlightRect ( tile, treemapView->selectedItemsColor(), 2, TileHighlightLayer )
-	    {}
+	{}
     };
 
 
@@ -803,9 +798,9 @@ namespace QDirStat
     public:
 	ParentTileHighlighter( TreemapView * treemapView, const TreemapTile * tile, const QString & tooltip ):
 	    HighlightRect ( tile, treemapView->highlightColor(), outlineWidth( treemapView ), SceneHighlightLayer )
-	    {
-		setToolTip( tooltip );
-	    }
+	{
+	    setToolTip( tooltip );
+	}
 
     private:
 	static int outlineWidth( TreemapView * treemapView )

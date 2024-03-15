@@ -40,7 +40,7 @@ namespace QDirStat
 	 * Create a SelectionModel that uses the DirTree in 'dirTreeModel'.
 	 * This object does not take ownership of 'dirTreeModel'.
 	 **/
-	SelectionModel( DirTreeModel * dirTreeModel, QObject * parent = 0 );
+	SelectionModel( DirTreeModel * dirTreeModel, QObject * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -168,7 +168,7 @@ namespace QDirStat
 	 * Emitted when the current item changes. 'newCurrent' is the new
 	 * current item, 'oldCurrent' the previous one. Any of them might be 0.
 	 **/
-	void currentItemChanged( FileInfo * newCurrent, FileInfo * oldCurrent );
+	void currentItemChanged( FileInfo * newCurrent, const FileInfo * oldCurrent );
 
 	/**
 	 * Emitted when the selection changes.
@@ -265,7 +265,7 @@ namespace QDirStat
 	 * 'parent' is the QObject tree parent for automatic deletion
 	 * of this object when the parent is deleted.
 	 **/
-	SelectionModelProxy( SelectionModel * master, QObject * parent = 0 );
+	SelectionModelProxy( SelectionModel * master, QObject * parent = nullptr );
 
     signals:
 
@@ -280,7 +280,7 @@ namespace QDirStat
 
 	void selectionChanged();
 	void selectionChanged( const FileInfoSet & selectedItems );
-	void currentItemChanged( FileInfo * newCurrent, FileInfo * oldCurrent );
+	void currentItemChanged( FileInfo * newCurrent, const FileInfo * oldCurrent );
 
     };	// class SelectionModelProxy
 

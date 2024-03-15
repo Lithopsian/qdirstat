@@ -34,7 +34,7 @@ namespace QDirStat
 	 * Constructor.
 	 * Don't forget to populate the widget after creating it!
 	 **/
-	PathSelector( QWidget * parent = 0 );
+	PathSelector( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -136,14 +136,14 @@ namespace QDirStat
 	 * Use QListWidgetItem::setIcon() to set an icon.
 	 **/
 	PathSelectorItem( const QString & path,
-			  PathSelector *  parent = 0 );
+			  PathSelector *  parent = nullptr );
 
 	/**
 	 * Constructor for a mount point.
 	 * Use QListWidgetItem::setIcon() to set an icon.
 	 **/
 	PathSelectorItem( MountPoint *	 mountPoint,
-			  PathSelector * parent = 0 );
+			  PathSelector * parent = nullptr );
 
 	/**
 	 * Destructor.

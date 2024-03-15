@@ -56,12 +56,6 @@ namespace QDirStat
                    FilterMode      filterMode = Auto );
 
         /**
-         * Check if a URL is a package URL, i.e. if it starts with "Pkg:" or
-         * "pkg:".
-         **/
-        static bool isPkgUrl( const QString & url ) { return url.startsWith( "Pkg:", Qt::CaseInsensitive ); }
-
-        /**
          * Return the pattern without the leading "Pkg:/".
          **/
         const QString & pattern() const { return _pattern; }

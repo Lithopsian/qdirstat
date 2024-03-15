@@ -38,7 +38,7 @@ namespace QDirStat
 	/**
 	 * Constructor
 	 **/
-	FileDetailsView( QWidget * parent = 0 );
+	FileDetailsView( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor
@@ -165,11 +165,6 @@ namespace QDirStat
 	 * Set a label with a text of limited size.
 	 **/
 	void setLabelLimited( QLabel * label, const QString & text );
-
-	/**
-	 * Return 'longText' limited to a predefined maximum size.
-	 **/
-	QString limitText( const QString & longText ) const;
 
 	/**
 	 * Return a stylesheet string to set a label text to the configured

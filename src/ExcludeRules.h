@@ -206,7 +206,8 @@ namespace QDirStat
     class ExcludeRules
     {
 
-    private:
+    public:
+
 	/**
 	 * Constructor that initialises the rule list from the settings.
 	 *
@@ -217,7 +218,6 @@ namespace QDirStat
 	 **/
 	ExcludeRules();
 
-    public:
 	/**
 	 * Constructor that initialises the rules from a given list, with the
 	 * given syntax and options.  Thos is used by MainWindowUnpkg to
@@ -233,12 +233,6 @@ namespace QDirStat
 	 * Destructor.
 	 **/
 	~ExcludeRules();
-
-	/**
-	 * Return the singleton object of this class.
-	 * This will create one if there is none yet.
-	 **/
-	static ExcludeRules * instance();
 
 	/**
 	 * Check a file name against the exclude rules. Each exclude rule
@@ -259,21 +253,6 @@ namespace QDirStat
 	 * This will return 'true' if the text matches any rule.
          **/
         bool matchDirectChildren( DirInfo * dir ) const;
-
-	/**
-	 * Find the exclude rule that matches 'text'.
-	 * Return 0 if there is no match.
-	 *
-	 * This is intended to explain to the user which rule matched.
-	 **/
-//	const ExcludeRule * matchingRule( const QString & fullPath,
-//					  const QString & fileName );
-
-	/**
-	 * Return the last matching rule or 0 if there was none.
-	 * Each call to match() will reset this.
-	 **/
-//	ExcludeRule * lastMatchingRule() const { return _lastMatchingRule; }
 
 	/**
 	 * Clear (delete) all exclude rules.
@@ -299,46 +278,19 @@ namespace QDirStat
 	/**
 	 * Write all exclude rules to the settings file.
 	 **/
-	void writeSettings( const ExcludeRuleList & rules );
+	static void writeSettings( const ExcludeRuleList & rules );
 
-//    public slots:
-
-	/**
-	 * Move an exclude rule one position up in the list.
-	 **/
-//	void moveUp( ExcludeRule * rule );
-
-	/**
-	 * Move an exclude rule one position down in the list.
-	 **/
-//	void moveDown( ExcludeRule * rule );
-
-	/**
-	 * Move an exclude rule to the top of the list.
-	 **/
-//	void moveToTop( ExcludeRule * rule );
-
-	/**
-	 * Move an exclude rule to the bottom of the list.
-	 **/
-//	void moveToBottom( ExcludeRule * rule );
 
     protected:
 
 	/**
 	 * Create an exclude rule and add it to this rule set.
 	 **/
-//	void add( ExcludeRule * rule );
 	void add( ExcludeRule::PatternSyntax   patternSyntax,
 		  const QString              & pattern,
 		  bool                         caseSensitive,
                   bool                         useFullPath,
                   bool                         checkAnyFileChild );
-
-	/**
-	 * Remove an exclude rule from this rule set and delete it.
-	 **/
-//	void remove( ExcludeRule * rule );
 
 	/**
 	 * Clear all existing exclude rules and read exclude rules from the

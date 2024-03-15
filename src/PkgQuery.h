@@ -23,6 +23,7 @@ namespace QDirStat
 
     /**
      * Singleton class for simple queries to the system's package manager.
+     * Only normally accessed by the public static functions.
      **/
     class PkgQuery
     {
@@ -35,11 +36,6 @@ namespace QDirStat
 	static QString owningPkg( const QString & path )
 	    { return instance()->getOwningPackage( path ); }
 
-	/**
-	 * Return the singleton instance of this class.
-	 **/
-	static PkgQuery * instance();
-
         /**
          * Return 'true' if any of the supported package managers was found.
          **/
@@ -51,7 +47,7 @@ namespace QDirStat
          * not.
          **/
         static const PkgManager * primaryPkgManager()
-	    { return instance()->_pkgManagers.isEmpty() ? 0 : instance()->_pkgManagers.first(); }
+	    { return instance()->_pkgManagers.isEmpty() ? nullptr : instance()->_pkgManagers.first(); }
 
         /**
          * Return 'true' if any of the package managers has support for getting
@@ -82,6 +78,21 @@ namespace QDirStat
 	    { return instance()->getFileList( pkg ); }
 
     protected:
+
+	/**
+	 * Constructor. For internal use only; use the static methods instead.
+	 **/
+	PkgQuery();
+
+	/**
+	 * Destructor.
+	 **/
+	~PkgQuery();
+
+	/**
+	 * Return the singleton instance of this class.
+	 **/
+	static PkgQuery * instance();
 
 	/**
 	 * Return the owning package of a file or directory with full path
@@ -115,16 +126,6 @@ namespace QDirStat
          **/
         bool checkFileListSupport() const;
 
-	/**
-	 * Constructor. For internal use only; use the static methods instead.
-	 **/
-	PkgQuery();
-
-	/**
-	 * Destructor.
-	 **/
-	~PkgQuery();
-
         /**
          * Check which supported package managers are available and add them to
          * the internal list.
@@ -140,10 +141,9 @@ namespace QDirStat
 
 	// Data members
 
-	QList <const PkgManager *>	 _pkgManagers;
-	QList <const PkgManager *>	 _secondaryPkgManagers;
+	QList <const PkgManager *> _pkgManagers;
 
-	QCache<QString, QString> _cache;
+	QCache<QString, QString>   _cache; // mapping of paths and package names
 
     }; // class PkgQuery
 

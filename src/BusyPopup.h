@@ -45,13 +45,13 @@ namespace QDirStat
 	 * process events for some milliseconds to makes sure it is rendered.
 	 **/
 	BusyPopup( const QString & text,
-		   QWidget *	   parent   = 0,
+		   QWidget *	   parent   = nullptr,
 		   bool		   autoPost = true );
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~BusyPopup();
+	virtual ~BusyPopup() {}
 
 	/**
 	 * Show the BusyPopup and process events for some milliseconds to make

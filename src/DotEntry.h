@@ -33,7 +33,7 @@ namespace QDirStat
 	 * Constructor.
 	 **/
 	DotEntry( DirTree * tree,
-		  DirInfo * parent = 0 );
+		  DirInfo * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -45,8 +45,7 @@ namespace QDirStat
 	 * Since this is a dot entry, this always returns 0: A dot entry does
 	 * not have a dot entry itself.
 	 **/
-	virtual DotEntry * dotEntry() const Q_DECL_OVERRIDE
-	    { return nullptr; }
+	virtual DotEntry * dotEntry() const Q_DECL_OVERRIDE { return nullptr; }
 
 	/**
 	 * Check if this is a dot entry.

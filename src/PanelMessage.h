@@ -23,9 +23,6 @@ namespace QDirStat
      * a message text, an optional "Details..." hyperlink
      * and a small [x] window close button.
      *
-     * Those panels are intended to be put into a MessagePanel
-     * (but any Qt container widget can be used as well).
-     *
      * The close button calls deleteLater on the panel, so it is completely
      * self-sufficient once set up.
      **/
@@ -35,7 +32,7 @@ namespace QDirStat
 
     protected:
 	/**
-	 * Constructor.
+	 * Constructor.  Private, use the static methods for access.
 	 **/
 	PanelMessage( QWidget * parent );
 

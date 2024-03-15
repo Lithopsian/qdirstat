@@ -11,9 +11,7 @@
 #define FileTypeStatsWindow_h
 
 #include <QDialog>
-#include <QMap>
 #include <QTreeWidgetItem>
-#include <QPointer>
 
 #include "ui_file-type-stats-window.h"
 #include "FileSize.h"
@@ -27,7 +25,7 @@ namespace QDirStat
     class MimeCategory;
     class LocateFileTypeWindow;
     class FileTypeItem;
-    class CategoryFileTypeItem;
+//    class CategoryFileTypeItem;
     class SuffixFileTypeItem;
 
     /**
@@ -38,19 +36,14 @@ namespace QDirStat
     {
 	Q_OBJECT
 
-    public:
-
 	/**
-	 * Constructor.
+	 * Constructor.  Private, use the populateSharedInstance() function
+	 * for access to this window.
          *
          * This creates a file type statistics window, but it does not populate
          * it with content yet.
 	 *
-	 * Notice that this widget will destroy itself upon window close.
-	 *
-	 * It is advised to use a QPointer for storing a pointer to an instance
-	 * of this class. The QPointer will keep track of this window
-	 * auto-deleting itself when closed.
+	 * Note that this widget will destroy itself upon window close.
 	 **/
 	FileTypeStatsWindow( QWidget * parent );
 
@@ -60,32 +53,25 @@ namespace QDirStat
 	virtual ~FileTypeStatsWindow();
 
         /**
+         * Static method for using one shared instance of this class between
+         * multiple parts of the application. This will create a new instance
+         * if there is none yet (or anymore).
+         **/
+        static FileTypeStatsWindow * sharedInstance( QWidget * parent );
+
+
+    public:
+
+        /**
          * Obtain the subtree from the last used URL.
          **/
-        const Subtree & subtree() const { return _subtree; }
-
-	/**
-	 * Populate the widgets for a subtree.
-	 **/
-	void populate( FileInfo * subtree );
+//        const Subtree & subtree() const { return _subtree; }
 
         /**
          * Convenience function for creating, populating and showing the shared
          * instance.
          **/
         static void populateSharedInstance( QWidget * mainWindow, FileInfo * subtree );
-
-        /**
-         * Static method for using one shared instance of this class between
-         * multiple parts of the application. This will create a new instance
-         * if there is none yet (or anymore).
-         *
-         * Do not hold on to this pointer; the instance destroys itself when
-         * the user closes the window, and then the pointer becomes invalid.
-         *
-         * After getting this shared instance, call populate() and show().
-         **/
-        static FileTypeStatsWindow * sharedInstance( QWidget * mainWindow );
 
 
     public slots:
@@ -113,7 +99,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QDialog.
 	 **/
-	virtual void reject() Q_DECL_OVERRIDE;
+//	virtual void reject() Q_DECL_OVERRIDE;
 
 
     protected slots:
@@ -136,12 +122,17 @@ namespace QDirStat
 	 **/
 	void initWidgets();
 
+	/**
+	 * Populate the widgets for a subtree.
+	 **/
+	void populate( FileInfo * subtree );
+
         /**
          * Create a tree item for a category and add it to the tree.
          **/
-        CategoryFileTypeItem * addCategoryItem( const QString & name,
-                                                int             count,
-                                                FileSize        sum    );
+        FileTypeItem * addCategoryItem( const QString & name,
+                                        int             count,
+                                        FileSize        sum    );
 
         /**
          * Create a file type item for files matching a non-suffix rule of a
@@ -165,7 +156,7 @@ namespace QDirStat
          * Add the top X of 'otherItems' to 'otherCategory' and delete the
          * rest.
          **/
-        void addTopXOtherItems( CategoryFileTypeItem  * otherCategoryItem,
+        void addTopXOtherItems( FileTypeItem          * otherCategoryItem,
                                 QList<FileTypeItem *> & otherItems        );
 
 	/**
@@ -194,8 +185,6 @@ namespace QDirStat
         Subtree                     _subtree;
 	FileTypeStats *		    _stats;
 
-	static QPointer<LocateFileTypeWindow> _locateFileTypeWindow;
-        static QPointer<FileTypeStatsWindow>  _sharedInstance;
     };
 
 
@@ -256,7 +245,7 @@ namespace QDirStat
 	float		_percentage;
     };
 
-
+#if 0
     /**
      * Specialized item class for MIME categories.
      **/
@@ -275,19 +264,14 @@ namespace QDirStat
 			  count,
 			  totalSize,
 			  percentage )
-//	    _category( category )
 	{}
 
-	/**
-	 * Return the MIME category of this item.
-	 **/
-//	const MimeCategory * category() const { return _category; }
 
     protected:
 
 //	const MimeCategory * _category;
     };
-
+#endif
 
     /**
      * Specialized item class for suffix file types.

@@ -46,30 +46,8 @@ namespace QDirStat
 	 **/
 	virtual ~ConfigDialog();
 
-	/**
-	 * Return the cleanup config page.
-	 **/
-	CleanupConfigPage * cleanupConfigPage() const
-	    { return _cleanupConfigPage; }
 
-	/**
-	 * Return the general config page.
-	 **/
-	GeneralConfigPage * generalConfigPage() const
-	    { return _generalConfigPage; }
-
-    public slots:
-
-	/**
-	 * Notification to reinitialize and populate the widgets of config
-	 * pages.
-	 **/
-	void setup();
-
-	/**
-	 * Apply the changes in dialog contents, but leave the dialog open.
-	 **/
-	void apply();
+    protected slots:
 
 	/**
 	 * Accept the dialog contents, i.e. the user clicked the "OK" button.
@@ -86,15 +64,8 @@ namespace QDirStat
 	 **/
 	virtual void reject() Q_DECL_OVERRIDE;
 
-    signals:
 
-	/**
-	 * Emitted in setup().
-	 *
-	 * This is the signal to reinitialize and populate the widgets of
-	 * config pages.
-	 **/
-	void reinit();
+    signals:
 
 	/**
 	 * Emitted when the "OK" or the "Apply" button was clicked:
@@ -107,10 +78,11 @@ namespace QDirStat
 	/**
 	 * Emitted when the "Cancel" button was clicked:
 	 *
-	 * This is the signal to discard all changes and re-apply the old
-	 * settings.
+	 * This is the signal to discard all changes.  Currently, none of the
+	 * config pages require this signal.
 	 **/
-	void discardChanges();
+//	void discardChanges();
+
 
     protected:
 
@@ -119,10 +91,10 @@ namespace QDirStat
 	//
 
 	Ui::ConfigDialog	* _ui;
-	CleanupConfigPage	* _cleanupConfigPage;
-	MimeCategoryConfigPage	* _mimeCategoryConfigPage;
-	ExcludeRulesConfigPage  * _excludeRulesConfigPage;
 	GeneralConfigPage	* _generalConfigPage;
+	MimeCategoryConfigPage	* _mimeCategoryConfigPage;
+	CleanupConfigPage	* _cleanupConfigPage;
+	ExcludeRulesConfigPage  * _excludeRulesConfigPage;
 
     };	// class ConfigDialog
 

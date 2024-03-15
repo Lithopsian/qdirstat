@@ -11,7 +11,6 @@
 #define FileSizeStatsWindow_h
 
 #include <QDialog>
-#include <QPointer>
 
 #include "ui_file-size-stats-window.h"
 
@@ -35,16 +34,11 @@ namespace QDirStat
     {
 	Q_OBJECT
 
-    public:
-
 	/**
-	 * Constructor.
+	 * Constructor.  Private, use the populateSharedInstance() function
+	 * to access this window.
 	 *
-	 * Notice that this widget will destroy itself upon window close.
-	 *
-	 * It is advised to use a QPointer for storing a pointer to an instance
-	 * of this class. The QPointer will keep track of this window
-	 * auto-deleting itself when closed.
+	 * Note that this widget will destroy itself upon window close.
 	 **/
 	FileSizeStatsWindow( QWidget  * parent );
 
@@ -54,31 +48,24 @@ namespace QDirStat
 	virtual ~FileSizeStatsWindow();
 
 	/**
-	 * Populate with new content.
+	 * Static method for using one shared instance of this class between
+	 * multiple parts of the application. This will create a new instance
+	 * if there is none yet (or any more).
 	 **/
-	void populate( FileInfo * subtree, const QString & suffix = "" );
+	static FileSizeStatsWindow * sharedInstance( QWidget * mainWindow );
+
+
+    public:
 
 	/**
 	 * Return the corresponding subtree.
 	 **/
-	FileInfo * subtree() const { return _subtree; }
+//	FileInfo * subtree() const { return _subtree; }
 
 	/**
 	 * Return the filename suffix to filter the collected information.
 	 **/
-	QString suffix() const { return _suffix; }
-
-	/**
-	 * Static method for using one shared instance of this class between
-	 * multiple parts of the application. This will create a new instance
-	 * if there is none yet (or any more).
-	 *
-	 * Do not hold on to this pointer; the instance destroys itself when
-	 * the user closes the window, and then the pointer becomes invalid.
-	 *
-	 * After getting this shared instance, call populate() and show().
-	 **/
-	static FileSizeStatsWindow * sharedInstance( QWidget * mainWindow );
+//	QString suffix() const { return _suffix; }
 
 	/**
 	 * Convenience function for creating, populating and showing the shared
@@ -87,17 +74,6 @@ namespace QDirStat
 	static void populateSharedInstance( QWidget	  * mainWindow,
 					    FileInfo	  * subtree,
 					    const QString & suffix = "" );
-
-
-    public slots:
-
-	/**
-	 * Reject the dialog contents, i.e. the user clicked the "Cancel"
-	 * or WM_CLOSE button.
-	 *
-	 * Reimplemented from QDialog.
-	 **/
-	virtual void reject() Q_DECL_OVERRIDE;
 
 
     protected slots:
@@ -150,6 +126,11 @@ namespace QDirStat
 	void initWidgets();
 
 	/**
+	 * Populate with new content.
+	 **/
+	void populate( FileInfo * subtree, const QString & suffix = "" );
+
+	/**
 	 * Update the values for the option widgets from the current ones from
 	 * the histogram.
 	 **/
@@ -177,34 +158,6 @@ namespace QDirStat
 				int		       extremesMargin );
 
 	/**
-	 * Add an item to a table.
-	 **/
-	static QTableWidgetItem * addItem( QTableWidget *  table,
-					   int		    row,
-					   int		    col,
-					   const QString & text );
-
-	/**
-	 * Set the font to bold for all items in a table row.
-	 **/
-	static void setRowBold( QTableWidget * table, int row );
-
-	/**
-	 * Set the foreground (the text color) for all items in a table row.
-	 **/
-	static void setRowForeground( QTableWidget * table, int row, const QBrush & brush );
-
-	/**
-	 * Set the background for all items in a table row.
-	 **/
-	static void setRowBackground( QTableWidget * table, int row, const QBrush & brush );
-
-	/**
-	 * Set the text alignment for all items in a table column.
-	 **/
-	static void setColAlignment( QTableWidget * table, int col, Qt::Alignment alignment );
-
-	/**
 	 * Fill the histogram with content.
 	 **/
 	void fillHistogram();
@@ -224,13 +177,12 @@ namespace QDirStat
 	// Data members
 	//
 
-	Ui::FileSizeStatsWindow *   _ui;
-	FileInfo *		    _subtree;
-	QString			    _suffix;
-	FileSizeStats *		    _stats;
-	BucketsTableModel *	    _bucketsTableModel;
+	Ui::FileSizeStatsWindow * _ui;
+	FileInfo		* _subtree;
+	QString			  _suffix;
+	FileSizeStats		* _stats;
+	BucketsTableModel	* _bucketsTableModel;
 
-	static QPointer<FileSizeStatsWindow> _sharedInstance;
     };
 
 } // namespace QDirStat

@@ -19,6 +19,7 @@
 
 namespace QDirStat
 {
+    class FileInfo;
     class MountPoint;
 
     /**
@@ -38,18 +39,13 @@ namespace QDirStat
     {
 	Q_OBJECT
 
-    public:
-
 	/**
 	 * Constructor.
 	 *
 	 * Notice that this widget will destroy itself upon window close.
 	 *
-	 * It is advised to use a QPointer for storing a pointer to an instance
-	 * of this class. The QPointer will keep track of this window
-	 * auto-deleting itself when closed.
 	 **/
-	FilesystemsWindow( QWidget * parent = 0 );
+	FilesystemsWindow( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -57,10 +53,20 @@ namespace QDirStat
 	virtual ~FilesystemsWindow();
 
 	/**
-	 * Read the path of the currently selected filesystem or an empty
-	 * string if there is none.
+	 * Static method for using one shared instance of this class between
+	 * multiple parts of the application. This will create a new instance
+	 * if there is none yet (or any more).
 	 **/
-	QString selectedPath() const;
+	static FilesystemsWindow * sharedInstance( QWidget * mainWindow );
+
+
+    public:
+
+	/**
+	 * Convenience function for creating, populating and showing the shared
+	 * instance.
+	 **/
+	static FilesystemsWindow * populateSharedInstance( QWidget * mainWindow );
 
 
     signals:
@@ -68,29 +74,12 @@ namespace QDirStat
 	void readFilesystem( const QString & path );
 
 
-    public slots:
-
-	/**
-	 * Populate the window with all normal filesystems. Bind mounts,
-	 * filesystems mounted several times and Btrfs subvolumes are excluded.
-	 **/
-	void populate();
-
     protected slots:
 
 	/**
 	 * Refresh (reload) all data.
 	 **/
 	void refresh();
-
-	/**
-	 * Reject the dialog contents, i.e. the user clicked the "Cancel" or
-	 * WM_CLOSE button. This not only closes the dialog, it also deletes
-	 * it.
-	 *
-	 * Reimplemented from QDialog.
-	 **/
-	virtual void reject() Q_DECL_OVERRIDE;
 
 	/**
 	 * Enable or disable widgets such as the "Read" button.
@@ -117,6 +106,12 @@ namespace QDirStat
     protected:
 
 	/**
+	 * Populate the window with all normal filesystems. Bind mounts,
+	 * filesystems mounted several times and Btrfs subvolumes are excluded.
+	 **/
+	void populate();
+
+	/**
 	 * Clear all data and widget contents.
 	 **/
 	void clear();
@@ -130,6 +125,12 @@ namespace QDirStat
 	 * Show panel message warning about Btrfs and how it reports free sizes
 	 **/
 	void showBtrfsFreeSizeWarning();
+
+	/**
+	 * Read the path of the currently selected filesystem or an empty
+	 * string if there is none.
+	 **/
+	QString selectedPath() const;
 
 	/**
 	 * Returns the icon filename for the give mount point.

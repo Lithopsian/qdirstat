@@ -18,7 +18,6 @@ namespace QDirStat
     class DirTreeModel;
     class DirTree;
     class SelectionModel;
-    class CleanupCollection;
     class QDirStatApp;
     class FileInfo;
 
@@ -46,20 +45,20 @@ namespace QDirStat
      **/
     class QDirStatApp
     {
+    private:
+
+        /**
+         * Constructor
+         **/
+        QDirStatApp();
+
+        /**
+         * Destructor.
+         **/
+        ~QDirStatApp();
+
+
     public:
-
-        /**
-         * Explicitly create the singleton instance of this class if it isn't
-         * created yet. Do nothing if it already exists.
-         **/
-//        static void createInstance();
-
-        /**
-         * Delete the singleton instance of this class and all the key objects
-         * that it manages. It is important that the widgets that need any of
-         * them are deleted BEFORE deleting this app instance.
-         **/
-//        static void deleteInstance();
 
         /**
          * Access the singleton instance of the QDirStatApp class. If no
@@ -69,7 +68,6 @@ namespace QDirStat
          * Typically, you will want to use the global app() function instead.
          **/
         static QDirStatApp * instance();
-
 
         //
         // Access to key objects
@@ -117,8 +115,7 @@ namespace QDirStat
          * actions are started as external commands, and they can be configured
          * to the user's liking with the configuration dialog.
          **/
-        CleanupCollection * cleanupCollection() const { return _cleanupCollection; }
-
+//        CleanupCollection * cleanupCollection() const { return _cleanupCollection; }
 
         //
         // Convenience methods
@@ -169,24 +166,13 @@ namespace QDirStat
 
     protected:
 
-        /**
-         * Constructor
-         **/
-        QDirStatApp();
-
-        /**
-         * Destructor.
-         **/
-        ~QDirStatApp();
-
-
         //
         // Data members
         //
 
         DirTreeModel            * _dirTreeModel;
         SelectionModel          * _selectionModel;
-        CleanupCollection       * _cleanupCollection;
+//        CleanupCollection       * _cleanupCollection;
     };  // class QDirStatApp
 
 }       // namespace QDirStat

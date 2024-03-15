@@ -51,7 +51,7 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	OpenUnpkgDialog( QWidget * parent = 0 );
+	OpenUnpkgDialog( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -122,7 +122,7 @@ namespace QDirStat
 	// Data members
 
 	Ui::OpenUnpkgDialog * _ui;
-	QPushButton *		   _okButton;
+	QPushButton         * _okButton;
 
     };	// class OpenUnpkgDialog
 

@@ -34,7 +34,7 @@ namespace QDirStat
         /**
          * Constructor.
          **/
-        ProcessStarter( QObject * parent = 0 ):
+        ProcessStarter( QObject * parent = nullptr ):
             QObject( parent ),
             _maxParallel( 8 ),
             _autoDelete( false ),

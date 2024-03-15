@@ -173,24 +173,24 @@ namespace QDirStat
 	 * Convert a suffix list into the commonly used human readable form,
 	 * i.e. prepend it with "*.": "tar.bz2" -> "*.tar.bz2".
 	 **/
-	static QStringList humanReadableSuffixList( const QStringList & suffixList );
+//	static QStringList humanReadableSuffixList( const QStringList & suffixList );
 
 	/**
 	 * Return 'true' if 'pattern' contains no wildcard characters.
 	 **/
-	bool isWildcard( const QString & pattern ) const;
+//	bool isWildcard( const QString & pattern ) const;
 
 	/**
 	 * Return 'true' if 'pattern' is a simple suffix pattern, i.e. it
 	 * starts with "*." and does not contain any more wildcard characters.
 	 **/
-	bool isSuffixPattern( const QString & pattern ) const;
+//	bool isSuffixPattern( const QString & pattern ) const;
 
 	/**
 	 * Return 'true' if 'pattern' includes a suffix plus other wildcards,
 	 * e.g. "lib*.a"
 	 **/
-	bool isWildcardWithSuffix( const QString & pattern ) const;
+//	bool isWildcardWithSuffix( const QString & pattern ) const;
 
 	/**
 	 * Add a pattern that contains no wildcard characters.

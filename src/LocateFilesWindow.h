@@ -38,80 +38,61 @@ namespace QDirStat
     {
 	Q_OBJECT
 
-    public:
-
 	/**
-	 * Constructor.
+	 * Constructor.  Private, use the static populateSharedInstance()
+	 * to access this window.
 	 *
-	 * Notice that this widget will destroy itself upon window close.
-	 *
-	 * It is advised to use a QPointer for storing a pointer to an instance
-	 * of this class. The QPointer will keep track of this window
-	 * auto-deleting itself when closed.
+	 * Note that this widget will destroy itself upon window close.
          *
          * This class takes over ownership of the TreeWalker and will delete it
          * when appropriate.
 	 **/
 	LocateFilesWindow( TreeWalker * treeWalker,
-                           QWidget    *	parent = 0 );
+                           QWidget    * parent = nullptr );
 
 	/**
 	 * Destructor.
 	 **/
 	virtual ~LocateFilesWindow();
 
+	/**
+	 * Returns the shared instance pointer for this window.  It is created if
+	 * it doesn't already exist.
+	 **/
+	static LocateFilesWindow * sharedInstance( TreeWalker * treeWalker );
+
+
+    public:
+
+        /**
+         * Populate the shared instance window with the given subtree.  The instance
+	 * and window is created if necessary.  The window is always created with
+	 * MainWindow as its parent, so it can remain open after a triggering dialog
+	 * is closed.
+         **/
+	static void populateSharedInstance( TreeWalker    * treeWalker,
+					    FileInfo      * subtree,
+					    const QString & headingText,
+					    int             sortCol,
+					    Qt::SortOrder   sortOrder );
+
         /**
          * Obtain the subtree from the last used URL or 0 if none was found.
          **/
-        const Subtree & subtree() const { return _subtree; }
+//        const Subtree & subtree() const { return _subtree; }
 
         /**
          * Return the TreeWalker of this window.
          **/
-        TreeWalker * treeWalker() const { return _treeWalker; }
-
-        /**
-         * Set a new TreeWalker for this window. This deletes the old one.
-         **/
-        void setTreeWalker( TreeWalker * newTreeWalker );
-
-        /**
-         * Set a text for the window heading (the bold label above the list).
-         **/
-        void setHeading( const QString & text );
-
-        /**
-         * Set the sort column and sort order (Qt::AscendingOrder or
-         * Qt::DescendingOrder), sort the list and select the first item.
-         **/
-        void sortByColumn( int col, Qt::SortOrder order );
+//        TreeWalker * treeWalker() const { return _treeWalker; }
 
 
     public slots:
 
 	/**
-	 * Populate the window: Use the TreeWalker to find matching tree items
-	 * in 'subtree'.
-	 *
-	 * This clears the old search results first, then searches the subtree
-	 * and populates the search result list with the items where
-	 * TreeWalker::check() returns 'true'.
-	 **/
-	void populate( FileInfo * subtree = 0 );
-
-	/**
 	 * Refresh (reload) all data.
 	 **/
 	void refresh();
-
-	/**
-	 * Reject the dialog contents, i.e. the user clicked the "Cancel" or
-	 * WM_CLOSE button. This not only closes the dialog, it also deletes
-	 * it.
-	 *
-	 * Reimplemented from QDialog.
-	 **/
-//	virtual void reject() Q_DECL_OVERRIDE;
 
 
     protected slots:
@@ -139,6 +120,27 @@ namespace QDirStat
 	 * One-time initialization of the widgets in this window.
 	 **/
 	void initWidgets();
+
+	/**
+	 * Populate the window: Use the TreeWalker to find matching tree items
+	 * in 'subtree'.
+	 *
+	 * This clears the old search results first, then searches the subtree
+	 * and populates the search result list with the items where
+	 * TreeWalker::check() returns 'true'.
+	 **/
+	void populate( FileInfo * subtree );
+
+        /**
+         * Set a new TreeWalker for this window. This deletes the old one.
+         **/
+        void setTreeWalker( TreeWalker * newTreeWalker );
+
+        /**
+         * Set the sort column and sort order (Qt::AscendingOrder or
+         * Qt::DescendingOrder), sort the list and select the first item.
+         **/
+        void sortByColumn( int col, Qt::SortOrder order );
 
         /**
          * Count the number of items in the list and display the number.
@@ -169,10 +171,8 @@ namespace QDirStat
 	//
 
 	Ui::LocateFilesWindow * _ui;
-        TreeWalker *            _treeWalker;
+        TreeWalker            * _treeWalker;
         Subtree                 _subtree;
-//        int                     _sortCol;
-//        Qt::SortOrder           _sortOrder;
     };
 
 
@@ -215,11 +215,9 @@ namespace QDirStat
 	 **/
 	LocateListItem( FileInfo * item );
 
-
-	//
-	// Getters
-	//
-
+	/**
+	 * Getters for the item properties.
+	 **/
 	QString	 path()         const { return _path;  }
 //	FileSize size()         const { return _size;  }
 //	time_t   mtime()        const { return _mtime; }
@@ -235,6 +233,7 @@ namespace QDirStat
 	 * Less-than operator for sorting.
 	 **/
 	virtual bool operator<( const QTreeWidgetItem & other ) const Q_DECL_OVERRIDE;
+
 
     protected:
 

@@ -52,8 +52,8 @@ namespace QDirStat
 	 * constructor with callNext hard-coded to true.
 	 **/
 	FileInfoIterator( const FileInfo * parent ) :
-	    FileInfoIterator( parent, true )
-	    {}
+	    FileInfoIterator ( parent, true )
+	{}
 
     protected:
 	/**
@@ -61,7 +61,7 @@ namespace QDirStat
 	 * choose not to call next() in the constructor.
 	 **/
 	FileInfoIterator( const FileInfo * parent,
-			  bool	     callNext );
+			  bool             callNext );
 
     public:
 

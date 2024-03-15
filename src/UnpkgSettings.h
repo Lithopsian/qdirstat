@@ -88,36 +88,13 @@ namespace QDirStat
          **/
         void dump() const;
 
+
     protected:
 
 	/**
 	 * Read settings from the config file
 	 **/
 	void read();
-
-        /**
-         * Return the default starting directory.
-         **/
-        static QString defaultStartingDir()
-	    { return "/"; }
-
-	/**
-	 * Return the default exclude directories.
-	 **/
-	static QStringList defaultExcludeDirs()
-	    { return { "/home", "/root", "/tmp", "/var", "/snap", "/usr/lib/sysimage/rpm", "/usr/local" }; }
-
-	/**
-	 * Return the default ignore patterns.
-	 **/
-	static QStringList defaultIgnorePatterns()
-	    { return { "*.pyc" }; }
-
-	/**
-	 * Return the default cross filesystems indicator.
-	 **/
-	static bool defaultCrossFilesystems()
-	    { return false; }
 
 
         //

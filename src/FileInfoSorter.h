@@ -44,9 +44,9 @@ namespace QDirStat
 	 * used in subsequent calls.
 	 **/
 	FileInfoSorter( DataColumn sortCol, Qt::SortOrder sortOrder ):
-	    _sortCol( sortCol ),
-	    _sortOrder( sortOrder )
-	    {}
+	    _sortCol { sortCol },
+	    _sortOrder { sortOrder }
+	{}
 
 	/**
 	 * Overloaded operator() that does the comparison.

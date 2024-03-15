@@ -144,12 +144,14 @@ namespace QDirStat
 	 *
          * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual QString url() const Q_DECL_OVERRIDE { return isPkgUrl( _name ) ? "Pkg:/" : "Pkg:/" + _name; }
+	virtual QString url() const Q_DECL_OVERRIDE
+            { return isPkgUrl( _name ) ? "Pkg:/" : "Pkg:/" + _name; }
 
         /**
          * Return 'true' if this is a package URL, i.e. it starts with "Pkg:".
          **/
-        static bool isPkgUrl( const QString & url ) { return url.startsWith( "Pkg:" ); }
+        static bool isPkgUrl( const QString & url )
+            { return url.startsWith( "Pkg:", Qt::CaseInsensitive ); }
 
         /**
          * Create a package URL from 'path'. If it already is a package URL,

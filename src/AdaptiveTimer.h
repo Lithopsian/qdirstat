@@ -82,27 +82,6 @@ namespace QDirStat
         ~AdaptiveTimer() {}
 
         /**
-         * Initialise the timers.
-         **/
-        void init();
-
-        /**
-         * Add another stage for increased event delivery delays.  If not
-         * set, there is only one stage with a zero delay. The value is a
-         * multiple of the time for the previous request to be reported as
-         * completed.
-         **/
-//        void addDelayStage( float delayFactor ) { _delays << delayFactor; }
-
-        /**
-         * Add another period for cooling down.  This is the interval
-         * between requests that will cause a step up to the next delay
-         * stage, and also the gap between requests that will allow the
-         * delay to drop back to the previous stage.
-         **/
-//        void addCooldown( int cooldownMillisec ) { _cooldowns << cooldownMillisec; }
-
-        /**
          * Return the current delay stage.
          **/
         int delayStage() const { return _delayStage; }
@@ -125,12 +104,6 @@ namespace QDirStat
          * a default value if the delays list is empty.
          **/
         int currentDelay() const;
-
-        /**
-         * Indicate that the delivery pockage task is now complete, so that it
-         * can be timed and the adaptive timer interval set.
-         **/
-//        void deliveryComplete();
 
         /**
          * Returns the cooldown period for the current stage.

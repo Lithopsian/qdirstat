@@ -28,8 +28,8 @@ namespace QDirStat
     {
     public:
 	FileInfoSet():
-	    QSet<FileInfo *>()
-	    {}
+	    QSet<FileInfo *> ()
+	{}
 
 	/**
 	 * Return the first item in this set or 0 if the set is empty.
@@ -127,6 +127,13 @@ namespace QDirStat
 	 * ancestors in the set.
 	 **/
 	FileInfoSet normalized() const;
+
+	/**
+	 * Return a FileInfoSet of all parents of all items in the set.
+	 * If a parent is a dot entry, use the true parent, i.e. the dot
+	 * entry's parent.
+	 **/
+	FileInfoSet parents() const;
 
     };	// class FileInfoSet
 

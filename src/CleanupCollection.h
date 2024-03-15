@@ -10,7 +10,6 @@
 #define CleanupCollection_h
 
 #include <QList>
-#include <QSet>
 #include <QPointer>
 #include <QStringList>
 
@@ -23,8 +22,9 @@ class QToolBar;
 
 namespace QDirStat
 {
-    class SelectionModel;
     class FileInfoSet;
+    class SelectionModel;
+    class Trash;
 
     /**
      * Set of Cleanup actions to be performed for DirTree items, consisting of
@@ -39,73 +39,45 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	CleanupCollection( SelectionModel * selectionModel,
-			   QObject	  * parent = 0 );
+	CleanupCollection( QObject	  * parent,
+			   SelectionModel * selectionModel,
+			   QToolBar	  * toolBar,
+			   QMenu	  * menu );
 
 	/**
 	 * Destructor
 	 **/
-	virtual ~CleanupCollection();
+	~CleanupCollection();
 
 	/**
-	 * Add the standard cleanups to this collection.
-	 **/
-	void addStdCleanups();
-
-	/**
-	 * Add all actions to the specified menu.
+	 * Add all currently active actions to the given widget.
 	 *
-	 * If 'keepUpdated' is false, the cleanup collection will keep the
-	 * pointer to the menu (as guarded pointer, so it may safely be
-	 * deleted) and update the menu whenever cleanups are added, removed,
-	 * or reordered. That means that for every such operation, all cleanups
-	 * in the menu will be removed and added to the end of the menu in the
-	 * current order of the cleanup collection.
+	 * This method is used to provide all the active cleanups to dialogs
+	 * that may require them (eg. for hotkeys), but is also used internally.
 	 **/
-	void addToMenu( QMenu * menu, bool keepUpdated = false );
+	void addActive( QWidget * widget ) const;
 
 	/**
-	 * Add all currently enabled actions to a menu.
+	 * Add all currently enabled actions to the given widget.
 	 *
-	 * Unlike addToMenu(), this does not do any bookkeeping to update and
-	 * rearrange menu items as they are changed in the cleanup
-	 * configuration. This method is intended for context menus that are
-	 * created for just one menu selection and then immediately discarded.
+	 * This method is intended for context menus that are created for just
+	 * one menu selection and then immediately discarded.  The menu is not
+	 * remembered or kept in sync with future changes,  It can also be used
+	 * to add Cleanups to other widget, for example to get action hotkeys in
+	 * a window.
 	 **/
-	void addEnabledToMenu( QMenu * menu ) const;
-
-	/**
-	 * Add all actions that have an icon to the specified tool bar.
-	 * The semantics of 'keepUpdated' are analog to addToMenu().
-	 **/
-	void addToToolBar( QToolBar * toolBar, bool keepUpdated = false );
-
-	/**
-	 * Return the index of a cleanup or -1 if it is not part of this
-	 * collection.
-	 **/
-	int indexOf( Cleanup * cleanup ) const;
+	void addEnabled( QWidget * widget ) const;
 
 	/**
 	 * Return the cleanup with the specified index or 0 if the index is out
 	 * of range.
 	 **/
-	Cleanup * at( int index ) const;
+	const Cleanup * at( int index ) const;
 
 	/**
 	 * Return the number of cleanup actions in this collection.
 	 **/
 	int size() const { return _cleanupList.size(); }
-
-	/**
-	 * Return 'true' if this collection is empty.
-	 **/
-	bool isEmpty() const { return _cleanupList.isEmpty(); }
-
-	/**
-	 * Remove all cleanups from this collection.
-	 **/
-	void clear();
 
 	/**
 	 * Return the internal cleanup list.
@@ -116,6 +88,11 @@ namespace QDirStat
 	 * Move the selected items to trash.
 	 **/
 	void moveToTrash();
+
+	/**
+	 * Write configuration for all cleanups.
+	 **/
+	void writeSettings( const CleanupList & newCleanups );
 
 
     signals:
@@ -144,46 +121,13 @@ namespace QDirStat
 	void assumedDeleted();
 
 
-    public slots:
+    protected slots:
 
 	/**
 	 * Update the enabled/disabled state of all cleanup actions depending
 	 * on the SelectionModel.
 	 **/
 	void updateActions();
-
-	/**
-	 * Move a cleanup one position up in the list.
-	 **/
-//	void moveUp( Cleanup * cleanup );
-
-	/**
-	 * Move a cleanup one position down in the list.
-	 **/
-//	void moveDown( Cleanup * cleanup );
-
-	/**
-	 * Move a cleanup to the top of the list.
-	 **/
-//	void moveToTop( Cleanup * cleanup );
-
-	/**
-	 * Move a cleanup to the bottom of the list.
-	 **/
-//	void moveToBottom( Cleanup * cleanup );
-
-	/**
-	 * Read configuration for all cleanups.
-	 **/
-	void readSettings();
-
-	/**
-	 * Write configuration for all cleanups.
-	 **/
-	void writeSettings( const CleanupList & newCleanups );
-
-
-    protected slots:
 
 	/**
 	 * Execute a cleanup. This uses sender() to find out which cleanup it
@@ -195,10 +139,48 @@ namespace QDirStat
     protected:
 
 	/**
+	 * Add all actions to the specified menu and keep it updated when the
+	 * collection changes.
+	 **/
+	void addToMenu( QMenu * menu );
+
+	/**
+	 * Add all actions that have an icon to the specified tool bar and keep
+	 * it updated when the collections changes.
+	 **/
+	void addToToolBar( QToolBar * toolBar );
+
+	/**
+	 * Return 'true' if this collection is empty.
+	 **/
+	bool isEmpty() const { return _cleanupList.isEmpty(); }
+
+	/**
+	 * Remove all cleanups from this collection.
+	 **/
+	void clear();
+
+	/**
+	 * Read configuration for all cleanups.
+	 **/
+	void readSettings();
+
+	/**
 	 * Add a cleanup to this collection. The collection assumes ownerwhip
 	 * of this cleanup.
 	 **/
 	void add( Cleanup * cleanup );
+
+	/**
+	 * Return the index of a cleanup or -1 if it is not part of this
+	 * collection.
+	 **/
+	int indexOf( Cleanup * cleanup ) const;
+
+	/**
+	 * Add the standard cleanups to this collection.
+	 **/
+	void addStdCleanups();
 
 	/**
 	 * Remove a cleanup from this collection and delete it.
@@ -247,10 +229,11 @@ namespace QDirStat
 	// Data members
 	//
 
-	SelectionModel *	   _selectionModel;
-	CleanupList		   _cleanupList;
-	QList<QPointer<QMenu> >	   _menus;
-	QList<QPointer<QToolBar> > _toolBars;
+	SelectionModel		  * _selectionModel;
+	CleanupList		    _cleanupList;
+	Trash			  * _trash;
+	QList<QPointer<QMenu>>	    _menus;
+	QList<QPointer<QToolBar>>   _toolBars;
     };
 }	// namespace QDirStat
 

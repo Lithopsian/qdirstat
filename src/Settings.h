@@ -30,6 +30,7 @@ namespace QDirStat
 	Q_OBJECT
 
     public:
+
 	/**
 	 * Create a settings object with the specified name. If 'name' is
 	 * empty, the application name is used, i.e. the settings are stored in
@@ -111,13 +112,13 @@ namespace QDirStat
 	 * Change the owner of the config file to the user in the $SUDO_UID /
 	 * $SUDO_GID environment variables (if set).
 	 **/
-	static void fixFileOwner( const QString & filename );
+//	static void fixFileOwner( const QString & filename );
 
 	/**
 	 * Move all settings groups starting with 'groupPrefix' from settings
 	 * object 'from' to settings object 'to'.
 	 **/
-	void moveGroups( const QString & groupPrefix, Settings * from, Settings * to );
+//	void moveGroups( const QString & groupPrefix, Settings * from, Settings * to );
 
 
 	// Data members

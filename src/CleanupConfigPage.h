@@ -17,7 +17,7 @@
 
 namespace QDirStat
 {
-    class CleanupCollection;
+    class ConfigDialog;
 
 
     /**
@@ -30,26 +30,11 @@ namespace QDirStat
 
     public:
 
-	CleanupConfigPage( QWidget * parent = 0 );
+	CleanupConfigPage( ConfigDialog * parent );
 	virtual ~CleanupConfigPage();
 
-	/**
-	 * Set the CleanupCollection to work on.
-	 **/
-	void setCleanupCollection( CleanupCollection * collection );
 
-	/**
-	 * Return the internal CleanupCollection.
-	 **/
-//	CleanupCollection * cleanupCollection() const
-//	    { return _cleanupCollection; }
-
-    public slots:
-
-	/**
-	 * Populate the widgets.
-	 **/
-	void setup();
+    protected slots:
 
 	/**
 	 * Write changes back to the settings.
@@ -57,17 +42,17 @@ namespace QDirStat
 	void applyChanges();
 
 	/**
-	 * Abandon changes and revert everything to the original settings.
-	 **/
-	void discardChanges();
-
-    protected slots:
-
-	/**
 	 * Notification that the user changed the "Title" field of the
 	 * current cleanup.
 	 **/
 	void titleChanged( const QString & newTitle );
+
+	/**
+	 * Enable or disable the outputwindow widgets based on the settings
+	 * of the refresh policy combo and default timeout checkbox.
+	 **/
+	void enableWidgets();
+
 
     protected:
 
@@ -118,15 +103,6 @@ namespace QDirStat
 	virtual QString valueText( void * value ) Q_DECL_OVERRIDE;
 
 	/**
-	 * Return the message for the 'really delete?' message for the current
-	 * item ('value'). If this returns an empty string, the item cannot be
-	 * deleted.
-	 *
-	 * Implemented from ListEditor.
-	 **/
-//	virtual QString deleteConfirmationMessage( void * value ) Q_DECL_OVERRIDE;
-
-	/**
 	 * Enable or disable all the edit widgets on the right side
 	 * of the splitter.
 	 **/
@@ -143,7 +119,6 @@ namespace QDirStat
 	//
 
 	Ui::CleanupConfigPage	* _ui;
-	CleanupCollection	* _cleanupCollection;
 
     };	// class CleanupConfigPage
 

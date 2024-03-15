@@ -36,7 +36,7 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	FileSizeLabel( QWidget * parent = 0 ):
+	FileSizeLabel( QWidget * parent = nullptr ):
 	    QLabel { parent }
 	{}
 

@@ -12,6 +12,10 @@
 #include <QString>
 #include <QStringList>
 
+
+#define HISTORY_MAX     16
+
+
 namespace QDirStat
 {
     /**
@@ -118,7 +122,8 @@ namespace QDirStat
          * Return the history item with the specified 'index' (from 0 on) or an
          * empty string if there is no item with that index.
          **/
-        QString item( int index ) const;
+        QString item( int index ) const
+	    { return index >= 0 && index < _items.size() ? _items.at( index ) : ""; }
 
         /**
          * The size of the history stack, i.e. the number of items that are
@@ -134,7 +139,7 @@ namespace QDirStat
          * that it will keep. Once the capacity is reached, each 'add()' first
          * discards the oldest item (i.e. item( 0 )).
          **/
-        int capacity() const;
+        inline int capacity() const { return HISTORY_MAX; }
 
         /**
          * Return all items of the history stack at once. This is very similar
@@ -150,6 +155,7 @@ namespace QDirStat
          * This is meant for debugging.
          **/
         void dump() const;
+
 
     protected:
 

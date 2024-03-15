@@ -76,7 +76,7 @@ namespace QDirStat
          * This can be set manually in the [Pkg] section of the config file at
          * ~/.config/QDirStat/QDirStat.config.
          **/
-        static bool verboseMissingPkgFiles() { return _verboseMissingPkgFiles; }
+        bool verboseMissingPkgFiles() const { return _verboseMissingPkgFiles; }
 
 
     protected:
@@ -131,9 +131,13 @@ namespace QDirStat
 	DirTree *                       _tree;
 	PkgInfoList			_pkgList;
 	QMultiMap<QString, PkgInfo *>	_multiPkg;
+
+	/** These can be set manually in the [Pkg] section of the config file at
+         * ~/.config/QDirStat/QDirStat.config.
+	 **/
         int                             _maxParallelProcesses;
         int                             _minCachePkgListSize;
-	static bool 			_verboseMissingPkgFiles;
+	bool 				_verboseMissingPkgFiles;
 
     };	// class PkgReader
 
@@ -162,8 +166,9 @@ namespace QDirStat
          * process.  Reading is then started from the outside with
          * startReading().
 	 **/
-	PkgReadJob( DirTree * tree,
-                    PkgInfo * pkg );
+	PkgReadJob( PkgReader * reader,
+		    DirTree   * tree,
+                    PkgInfo   * pkg );
 
 	/**
 	 * Destructor.
@@ -238,7 +243,8 @@ namespace QDirStat
 
         // Data members
 
-	PkgInfo * _pkg;
+	PkgReader	* _reader;
+	PkgInfo		* _pkg;
 
         static QMap<QString, struct stat> _statCache;
         static int                        _activeJobs;
@@ -280,9 +286,10 @@ namespace QDirStat
          * Reading is then started from the outside with startReading() when
          * the job is scheduled.
 	 **/
-	AsyncPkgReadJob( DirTree  * tree,
-                         PkgInfo  * pkg,
-                         QProcess * readFileListProcess );
+	AsyncPkgReadJob( PkgReader * reader,
+			 DirTree   * tree,
+                         PkgInfo   * pkg,
+                         QProcess  * readFileListProcess );
 
 
 	/**
@@ -338,10 +345,11 @@ namespace QDirStat
          * Reading is then started from the outside with startReading() when
          * the job queue picks this job.
 	 **/
-	CachePkgReadJob( DirTree * tree,
-                         PkgInfo * pkg,
+	CachePkgReadJob( PkgReader * reader,
+			 DirTree   * tree,
+                         PkgInfo   * pkg,
                          QSharedPointer<PkgFileListCache> fileListCache ):
-	    PkgReadJob( tree, pkg ),
+	    PkgReadJob( reader, tree, pkg ),
 	    _fileListCache( fileListCache )
 	{}
 

@@ -32,7 +32,7 @@ namespace QDirStat
 	 *
 	 * Consider using the static methods instead.
 	 **/
-	OpenPkgDialog( QWidget * parent = 0 );
+	OpenPkgDialog( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -47,7 +47,7 @@ namespace QDirStat
 	 * 'true' if the user canceled the dialog.
 	 **/
 	static PkgFilter askPkgFilter( bool    * canceled_ret,
-				       QWidget * parent = 0   );
+				       QWidget * parent = nullptr   );
 
 	/**
 	 * The package filter the user entered.

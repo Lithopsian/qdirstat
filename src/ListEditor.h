@@ -54,7 +54,7 @@ namespace QDirStat
 	 * Constructor.
 	 **/
 	ListEditor( QWidget * parent ):
-	    QWidget { parent },
+	    QWidget ( parent ),
 	    _listWidget { nullptr },
 	    _firstRow { 0 },
 	    _updatesLocked {false },
@@ -79,7 +79,6 @@ namespace QDirStat
 	// Pure virtual methods that are required to be implemented by a
 	// derived class
 	//
-
 
 	/**
 	 * Fill the list widget: Create a ListEditorItem for each value.
@@ -127,15 +126,6 @@ namespace QDirStat
 	 * Derived classes are required to implement this.
 	 **/
 	virtual QString valueText( void * value ) = 0;
-
-	/**
-	 * Return the message for the 'really delete?' message for the current
-	 * item ('value'). If this returns an empty string, the item is deleted
-	 * without confirmation.
-	 *
-	 * Derived classes are required to implement this.
-	 **/
-//	virtual QString deleteConfirmationMessage( void * value ) = 0;
 
 
 	//--------------------------------------------------------------------
@@ -226,14 +216,15 @@ namespace QDirStat
 	 **/
 	virtual void updateActions();
 
-
 	/**
 	 * Notification that the current item in the list widget changed.
 	 **/
 	virtual void currentItemChanged( QListWidgetItem * current,
 					 QListWidgetItem * previous);
 
+
     protected:
+
 	/**
 	 * Convert 'item' to a ListEditorItem<void *> and return its value.
 	 **/
@@ -275,9 +266,9 @@ namespace QDirStat
 	 * Create a new item with the specified text and store the value.
 	 **/
 	ListEditorItem( const QString & text, void * value ):
-	    QListWidgetItem( text ),
-	    _value( value )
-	    {}
+	    QListWidgetItem ( text ),
+	    _value { value }
+	{}
 
 	/**
 	 * Return the associated value.

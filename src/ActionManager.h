@@ -13,14 +13,17 @@
 
 #include <QAction>
 #include <QList>
+#include <QMenu>
 #include <QPointer>
+#include <QToolBar>
 
 
 namespace QDirStat
 {
+    class CleanupCollection;
     class FileInfo;
     class FileInfoSet;
-    class TreemapView;
+    class SelectionModel;
 
     /**
      * Container class for QActions that are defined in a Qt Designer .ui file, but
@@ -29,36 +32,51 @@ namespace QDirStat
      * This is a singleton class that is populated by the class that builds the
      * widget tree from the .ui file by simpling passing the toplevel widget of
      * that tree to this class; the ActionManager uses Qt's introspection to find
-     * the matching QActions.
+     * the matching QActions.  Use the static functions for all access.
      **/
     class ActionManager
     {
-    public:
 
 	/**
-	 * Return the singleton instance of this class.
+	 * Constructor. Protected because this is a singleton class.
+	 **/
+	ActionManager() {}
+
+	/**
+	 * Destructor. Protected because this is a singleton class.
+	 **/
+	~ActionManager();
+
+	/**
+	 * Return the singleton instance of this class.  Orivate, use
+	 * the static methods for access.
 	 **/
 	static ActionManager * instance();
 
+    public:
+
 	/**
-	 * Add a widget tree. This does not transfer ownership of that widget
-	 * tree. The ActionManager will keep the pointer of this tree (with a
-	 * guarded pointer so it doesn't matter if it is destroyed) to search
-	 * for QActions when requested.
+	 * Adds a widget tree and transfers the CleanupCollection to the
+	 * ActionManager.  This is most likelely the only actions that will
+	 * be needed here and should normally be the first call to this class,
+	 * so it will create the singleton instance.
 	 **/
-	void addWidgetTree( QObject * tree );
+	static void setActions( QWidget        * parent,
+				SelectionModel * selectionModel,
+				QToolBar       * toolBar,
+				QMenu          * menu );
 
 	/**
 	 * Add all the actions listed in 'actionNames' to a widget.
 	 **/
-	bool addActions( QWidget * widget, const QStringList & actionNames )
-		{ return addActions( widget, actionNames, false ); }
+	static bool addActions( QWidget * widget, const QStringList & actionNames )
+		{ return instance()->addActions( widget, actionNames, false ); }
 
 	/**
 	 * Add only the enabled actions in 'actionNames' to a widget.
 	 **/
-	bool addEnabledActions( QWidget * widget, const QStringList & actionNames )
-		{ return addActions( widget, actionNames, true ); }
+	static bool addEnabledActions( QWidget * widget, const QStringList & actionNames )
+		{ return instance()->addActions( widget, actionNames, true ); }
 
 	/**
 	 * Replace one action by another, for example in a toolbar.
@@ -67,14 +85,43 @@ namespace QDirStat
 				 QAction * actionToRemove,
 				 QAction * actionToAdd );
 
+	/**
+	 * Returns a pointer to the CleanupCollection.
+	 **/
+	static CleanupCollection * cleanupCollection()
+	    { return instance()->_cleanupCollection; }
+
+	/**
+	 * Add enabled Cleanups to the given widget.
+	 **/
+	static void addActiveCleanups( QWidget * widget );
+
+	/**
+	 * Add enabled Cleanups to the given widget.
+	 **/
+	static void addEnabledCleanups( QWidget * widget );
+
+	/**
+	 * Moves the selected items to trash.
+	 **/
+	static void moveToTrash();
+
 
     protected:
 
 	/**
-	 * Constructor. Protected because this is a singleton class.
-	 * Use instance() instead.
+	 * Add a widget tree. This does not transfer ownership of that widget
+	 * tree. The ActionManager will keep the pointer of this tree (with a
+	 * guarded pointer so it doesn't matter if it is destroyed) to search
+	 * for QActions when requested.
 	 **/
-	ActionManager() {}
+	void addTree( const QWidget * tree );
+
+	/**
+	 * Gives a pointer to the (likely only) CleanupCollection.
+	 **/
+	void setCleanupCollection( CleanupCollection * cleanupCollection )
+	    { _cleanupCollection = cleanupCollection; }
 
 	/**
 	 * Search the known widget trees for the first QAction with the Qt
@@ -95,7 +142,7 @@ namespace QDirStat
 	 * Notice that this class already logs an error for action names that
 	 * were not found.
 	 **/
-	bool addActions( QWidget * widget,
+	bool addActions( QWidget           * widget,
 			 const QStringList & actionNames,
 			 bool                enabledOnly);
 
@@ -104,7 +151,8 @@ namespace QDirStat
 	// Data members
 	//
 
-	QList<QPointer<QObject> >  _widgetTrees;
+	QList<QPointer<const QWidget>>   _widgetTrees;
+	CleanupCollection              * _cleanupCollection;
 
     };	// class ActionManager
 

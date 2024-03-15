@@ -30,11 +30,6 @@ class QMenu;
 
 namespace QDirStat
 {
-    class ConfigDialog;
-    class DiscoverActions;
-    class FileAgeStatsWindow;
-    class FileInfo;
-    class FilesystemsWindow;
     class HistoryButtons;
     class PanelMessage;
     class PkgFilter;
@@ -43,12 +38,13 @@ namespace QDirStat
     class UnpkgSettings;
 }
 
-using QDirStat::FileAgeStatsWindow;
+using QDirStat::DirTreeView;
 using QDirStat::FileInfo;
-using QDirStat::FilesystemsWindow;
+using QDirStat::HistoryButtons;
 using QDirStat::PanelMessage;
 using QDirStat::PkgFilter;
 using QDirStat::PkgManager;
+using QDirStat::Subtree;
 using QDirStat::TreemapView;
 using QDirStat::UnpkgSettings;
 
@@ -96,7 +92,7 @@ protected:
      * Replace the current tree with the list of installed
      * packages from the system's package manager that match 'pkgUrl'.
      **/
-    void readPkg( const QDirStat::PkgFilter & pkgFilter );
+    void readPkg( const PkgFilter & pkgFilter );
 
     /**
      * Show unpackaged files with the specified 'unpkgSettings' parameters
@@ -104,7 +100,7 @@ protected:
      *
      * The URL may start with "unpkg:".
      **/
-    void showUnpkgFiles( const QDirStat::UnpkgSettings & unpkgSettings );
+    void showUnpkgFiles( const UnpkgSettings & unpkgSettings );
 
     /**
      * Show unpackaged files with the UnpkgSettings parameters from the config
@@ -143,7 +139,12 @@ protected:
 public: // for the config dialog
 
     /**
-     * Return the treemapView for this window
+     * Return the DirTreeView for this window
+     **/
+    DirTreeView * dirTreeView() const { return _ui->dirTreeView; }
+
+    /**
+     * Return the TreemapView for this window
      **/
     TreemapView * treemapView() const { return _ui->treemapView; }
 
@@ -441,7 +442,7 @@ protected slots:
      * Update the status bar and file details panel when the current item has
      * been changed.
      **/
-    void currentItemChanged( FileInfo * newCurrent, FileInfo * oldCurrent );
+    void currentItemChanged( FileInfo * newCurrent, const FileInfo * oldCurrent );
 
 
 protected:
@@ -471,12 +472,10 @@ protected:
      * Connect menu QActions from the .ui file to actions of this class
      **/
     void connectMenuActions();
-    void connectTriggerActions();
-    void connectToggleActions();
-    void connectTreemapActions();
-    void connectHistoryButtons();
-    void connectDiscoverActions();
-    void connectSelectionModelActions();
+    void connectAction( QAction * action, void( MainWindow::*actee )( void ) );
+    void connectToggleAction( QAction * action, void( MainWindow::*actee )( bool ) );
+    void connectTreemapAction( QAction * action, void( TreemapView::*actee )( void ) );
+    void connectHistoryButton( QAction * action, void( HistoryButtons::*actee )( void ) );
 
     /**
      * Set up the _treeLevelMapper to map an "expand tree to level x" action to
@@ -615,30 +614,22 @@ protected:
 
 
 private:
-    Ui::MainWindow		 * _ui;
-//    QDirStat::ConfigDialog	 * _configDialog;
-    QDirStat::HistoryButtons     * _historyButtons;
-    QDirStat::DiscoverActions    * _discoverActions;
-    QActionGroup		 * _layoutActionGroup;
-    QPointer<FileAgeStatsWindow>   _fileAgeStatsWindow;
-    QPointer<FilesystemsWindow>    _filesystemsWindow;
-    QPointer<PanelMessage>	   _dirPermissionsWarning;
-    QElapsedTimer		   _stopWatch;
-    bool			   _enableDirPermissionsWarning;
-    bool			   _verboseSelection;
-    bool			   _urlInWindowTitle;
-//    bool			   _useTreemapHover; // now in treemapView
-//    QString			   _layoutName;
-    int				   _statusBarTimeout; // millisec
-    int				   _longStatusBarTimeout; // millisec
-    QSignalMapper		 * _treeLevelMapper;
-//    TreeLayout			 * _currentLayout;
-//    QMap<QString, TreeLayout *>	   _layouts;
-    QTimer			   _updateTimer;
-//    QTimer                         _treeExpandTimer;
-    QDirStat::Subtree              _futureSelection;
-    int				   _sortCol;
-    Qt::SortOrder		   _sortOrder;
+
+    Ui::MainWindow	 * _ui;
+    HistoryButtons	 * _historyButtons;
+    QActionGroup	 * _layoutActionGroup;
+    QPointer<PanelMessage> _dirPermissionsWarning;
+    QElapsedTimer	   _stopWatch;
+    bool		   _enableDirPermissionsWarning;
+    bool		   _verboseSelection;
+    bool		   _urlInWindowTitle;
+    int			   _statusBarTimeout; // millisec
+    int			   _longStatusBarTimeout; // millisec
+    QSignalMapper	 * _treeLevelMapper;
+    QTimer		   _updateTimer;
+    Subtree		   _futureSelection;
+    int			   _sortCol;
+    Qt::SortOrder	   _sortOrder;
 
 }; // class MainWindow
 

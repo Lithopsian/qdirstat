@@ -50,7 +50,7 @@ namespace QDirStat
 	 * the corresponding view. As a matter of fact, there might be any
 	 * number of views connected.
 	 **/
-	DirTreeModel( QObject * parent = 0 );
+	DirTreeModel( QObject * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -183,11 +183,6 @@ namespace QDirStat
 	void clear();
 
 	/**
-	 * Debugging: Dump list of persistent model indexes to the log.
-	 **/
-	void dumpPersistentIndexList() const;
-
-	/**
 	 * Return the setting for CrossFilesystems.  This is the value
 	 * from the configuration file, potentially updated from the
 	 * general config page.  It will be written to the settings when
@@ -312,13 +307,13 @@ namespace QDirStat
 	 * " / 3 links", which will be empty if there are not at least 2
 	 * hard links.
 	 **/
-	static QStringList sparseSizeText( FileInfo * item );
+//	static QStringList sparseSizeText( FileInfo * item );
 
 	/**
 	 * Return text formatted as "42.0kB / 4 links".  This would normally only
 	 * ve called if the number of hard links is more than one.
 	 **/
-	static QString linksSizeText( FileInfo * item );
+//	static QString linksSizeText( FileInfo * item );
 
 	/**
 	 * Return data to be displayed for the specified model index and role.
@@ -580,7 +575,7 @@ namespace QDirStat
 	 * Return the number of columns for 'parent'.
 	 **/
 	virtual int columnCount( const QModelIndex & ) const Q_DECL_OVERRIDE
-	    { return DataColumns::instance()->colCount(); }
+	    { return DataColumns::colCount(); }
 
 
 	//
@@ -652,7 +647,6 @@ namespace QDirStat
 
 	return stream;
     }
-
 
 }	// namespace QDirStat
 

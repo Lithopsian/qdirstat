@@ -20,8 +20,6 @@ namespace QDirStat
     class PercentBarDelegate;
     class SizeColDelegate;
     class HeaderTweaker;
-    class SelectionModelProxy;
-    class CleanupCollection;
     class FileInfo;
 
     /**
@@ -45,7 +43,7 @@ namespace QDirStat
 	/**
 	 * Constructor
 	 **/
-	DirTreeView( QWidget * parent = 0 );
+	DirTreeView( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor
@@ -53,16 +51,9 @@ namespace QDirStat
 	virtual ~DirTreeView();
 
 	/**
-	 * Set the cleanup collection. If set, all cleanup actions from that
-	 * collection will be added to the item context menu.
+	 * Return this view's header tweaker.
 	 **/
-	void setCleanupCollection( CleanupCollection * collection )
-	    { _cleanupCollection = collection; }
-
-	/**
-	 * Return the cleanup collection or 0 if it is not set.
-	 **/
-	CleanupCollection * cleanupCollection() const { return _cleanupCollection; }
+	void setStyles( const QString & treeIconDir );
 
 	/**
 	 * Return the list of items that are currently expanded.
@@ -140,7 +131,6 @@ namespace QDirStat
 	PercentBarDelegate * _percentBarDelegate;
         SizeColDelegate    * _sizeColDelegate;
 	HeaderTweaker      * _headerTweaker;
-	CleanupCollection  * _cleanupCollection;
 
     };	// class DirTreeView
 

@@ -15,6 +15,14 @@
 
 namespace QDirStat
 {
+    enum DirTreeIconSize
+    {
+	DTIS_Medium,
+	DTIS_Small,
+    };
+
+    class ConfigDialog;
+
     class GeneralConfigPage: public QWidget
     {
         Q_OBJECT
@@ -24,7 +32,7 @@ namespace QDirStat
         /**
          * Constructor.
          **/
-        GeneralConfigPage( QWidget * parent = 0 );
+        GeneralConfigPage( ConfigDialog * parent );
 
         /**
          * Destructor.
@@ -32,12 +40,7 @@ namespace QDirStat
         ~GeneralConfigPage();
 
 
-    public slots:
-
-	/**
-	 * Populate the widgets from the values held in MainWindow and DirTreeModel.
-	 **/
-	void setup();
+    protected slots:
 
 	/**
 	 * Apply changes to the settings.  The values are sent directly to MainWindow
@@ -45,13 +48,14 @@ namespace QDirStat
 	 **/
 	void applyChanges();
 
-	/**
-	 * Abandon changes.  Currently a no-op since all changes are local until applied.
-	 **/
-	void discardChanges();
-
 
     protected:
+
+	/**
+	 * Populate the widgets from the values held in MainWindow and DirTreeModel.
+	 **/
+	void setup();
+
 
 	//
 	// Data members

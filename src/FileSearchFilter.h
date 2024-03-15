@@ -29,7 +29,9 @@ namespace QDirStat
         /** Default constructor, constructs a filter with no tree and an
          * empty search pattern.
          **/
-        FileSearchFilter();
+        FileSearchFilter():
+	    FileSearchFilter { 0, "", Auto, true }
+	{}
 
         /**
          * Constructor: Create a search filter with the specified pattern and
@@ -49,7 +51,17 @@ namespace QDirStat
         FileSearchFilter( DirInfo *       subtree,
                           const QString & pattern,
                           FilterMode      filterMode,
-                          bool            caseSensitive );
+                          bool            caseSensitive ):
+	    SearchFilter( pattern,
+			  filterMode,
+			  Contains, // defaultFilterMode
+			  caseSensitive ),  // case-insensitive
+	    _subtree { subtree },
+	    _findFiles { true },
+	    _findDirs { true },
+	    _findSymLinks { true },
+	    _findPkg { true }
+	{}
 
         /**
          * Flags which node types to find

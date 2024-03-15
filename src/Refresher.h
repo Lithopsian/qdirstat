@@ -19,7 +19,6 @@ namespace QDirStat
 {
     class DirTree;
 
-
     /**
      * Helper class to refresh a number of subtrees:
      *
@@ -46,17 +45,10 @@ namespace QDirStat
 	 * All items are assumed to belong to the same DirTree.
 	 **/
 	Refresher( QObject * parent, const FileInfoSet items ):
-	    QObject { parent },
-	    _items { items },
-	    _tree { _items.isEmpty() ? 0 : _items.first()->tree() }
+	    QObject ( parent ),
+	    _items { items }
 	{}
 
-	/**
-	 * Return a FileInfoSet of all parents of all items of 'children'.
-	 * If a parent is a dot entry, use the true parent, i.e. the dot
-	 * entry's parent.
-	 **/
-	static FileInfoSet parents( const FileInfoSet children );
 
     public slots:
 
@@ -66,15 +58,18 @@ namespace QDirStat
 	 **/
 	void refresh();
 
+
     protected:
+
 	/**
 	 * Convert the items to string for logging.
 	 **/
-	QString itemsToString() const;
+//	QString itemsToString() const;
+
 
 	FileInfoSet _items;
-        DirTree *   _tree;
     };
+
 }	// namespace QDirStat
 
 #endif	// Refresher_h

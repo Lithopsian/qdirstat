@@ -96,15 +96,16 @@ public:
     void showAfterTimeout( int timeoutMillisec = 0 );
 
     /**
-     * Return the default show timeout in milliseconds.
+     * Return the default window show timeout in milliseconds.
      **/
-    int defaultShowTimeout() const { return _defaultShowTimeout; }
+    static int defaultShowTimeout();
 
     /**
-     * set the default show timeout (in milliseconds).
+     * Set the default show timeout (in milliseconds).  Not currently used, no
+     * user interface to this.
      **/
-    void setDefaultShowTimeout( int newTimeoutMillisec )
-	{ _defaultShowTimeout = newTimeoutMillisec; }
+//    void setDefaultShowTimeout( int newTimeoutMillisec )
+//	{ _defaultShowTimeout = newTimeoutMillisec; }
 
     /**
      * Return the text color for commands in the terminal area.
@@ -230,7 +231,7 @@ protected slots:
     /**
      * One of the watched processes finished.
      **/
-    void processFinished( int exitCode, QProcess::ExitStatus exitStatus );
+    void processFinishedSlot( int exitCode, QProcess::ExitStatus exitStatus );
 
     /**
      * One of the watched processes terminated with an error.
@@ -290,6 +291,11 @@ protected:
     void closeEvent( QCloseEvent * event ) Q_DECL_OVERRIDE;
 
     /**
+     * Remove a finished process and signal it is done.
+     **/
+    void processFinished( QProcess * process );
+
+    /**
      * Close if there are no more processes and there is no error to show.
      **/
     void closeIfDone();
@@ -346,7 +352,6 @@ protected:
     QColor		_stdoutColor;
     QColor		_stderrColor;
     QFont		_terminalDefaultFont;
-    int			_defaultShowTimeout;
 
 };	// class OutputWindow
 

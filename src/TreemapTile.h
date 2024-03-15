@@ -296,7 +296,7 @@ namespace QDirStat
 	/**
 	 * Just a helper for an unwieldy common term
 	 **/
-	inline static FileSize itemTotalSize( FileInfo *it );
+//	inline static FileSize itemTotalSize( FileInfo *it );
 
 	/**
 	 * Create children using the "squarified treemaps" algorithm as
@@ -331,9 +331,9 @@ namespace QDirStat
 	 * referred to by 'it' into 'rect' until the aspect ratio doesn't get
 	 * better any more. Returns the total size of the items for the row.
 	 **/
-	static FileSize squarify( const QRectF & rect,
-				  FileInfoSortedBySizeIterator & it,
-				  FileSize remainingTotal );
+//	static FileSize squarify( const QRectF & rect,
+//				  FileInfoSortedBySizeIterator & it,
+//				  FileSize remainingTotal );
 
 	/**
 	 * Lay out all members of 'row' within 'rect' along its longer side.
@@ -453,13 +453,13 @@ namespace QDirStat
 	 * visually distinguish an outline at the right and bottom borders
 	 * and add a grey line there, if necessary.
 	 **/
-	static void enforceContrast( QImage & image );
+//	static void enforceContrast( QImage & image );
 
 	/**
 	 * Returns a color that gives a reasonable contrast to 'col': Lighter
 	 * if 'col' is dark, darker if 'col' is light.
 	 **/
-	static QRgb contrastingColor( QRgb col );
+//	static QRgb contrastingColor( QRgb col );
 
 	/**
 	 * Initialization common to all constructors.

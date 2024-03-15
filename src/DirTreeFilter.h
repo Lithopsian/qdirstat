@@ -26,14 +26,12 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	DirTreeFilter()
-	    {}
+	DirTreeFilter() {}
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirTreeFilter()
-	    {}
+	virtual ~DirTreeFilter() {}
 
 	/**
 	 * Return 'true' if the filesystem object specified by 'path' should

@@ -23,8 +23,6 @@ namespace QDirStat
 {
     typedef QList<qreal> QRealList;
 
-//    class AdaptiveTimer;
-
     /**
      * Histogram widget.
      *
@@ -79,12 +77,12 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	HistogramView( QWidget * parent = 0 );
+	HistogramView( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~HistogramView() {}
+	virtual ~HistogramView();
 
 	/**
 	 * Clear all data and all displayed graphics.

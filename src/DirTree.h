@@ -53,7 +53,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirTree();
+	~DirTree();
 
 	/**
 	 * Actually start reading.
@@ -82,7 +82,7 @@ namespace QDirStat
 	 * When 0 is passed, the entire tree will be refreshed, i.e. from the
 	 * first toplevel element on.
 	 **/
-	void refresh( DirInfo * subtree = 0 );
+	void refresh( DirInfo * subtree = nullptr );
 
 	/**
 	 * Refresh a number of subtrees.
@@ -201,7 +201,7 @@ namespace QDirStat
 	 * Directory read jobs are required to call this for each child added
 	 * so the tree can emit the corresponding childAdded() signal.
 	 **/
-	virtual void childAddedNotify( FileInfo *newChild );
+	void childAddedNotify( FileInfo *newChild );
 
 	/**
 	 * Notification that a child is about to be deleted.
@@ -209,7 +209,7 @@ namespace QDirStat
 	 * Directory read jobs are required to call this for each deleted child
 	 * so the tree can emit the corresponding deletingChild() signal.
 	 **/
-	virtual void deletingChildNotify( FileInfo *deletedChild );
+	void deletingChildNotify( FileInfo *deletedChild );
 
 	/**
 	 * Notification that one or more children have been deleted.
@@ -219,7 +219,7 @@ namespace QDirStat
 	 * deletingChild() signal. For multiple deletions (e.g. entire
 	 * subtrees) this should only happen once at the end.
 	 **/
-//	virtual void childDeletedNotify();
+//	void childDeletedNotify();
 
 	/**
 	 * Send a startingReading() signal.
@@ -276,6 +276,19 @@ namespace QDirStat
 	ExcludeRules * excludeRules() const { return _excludeRules; }
 
 	/**
+	 * Return exclude rules specific to this tree (as opposed to the global
+	 * ones stored in the ExcludeRules singleton) or 0 if there are none.
+	 **/
+	ExcludeRules * tmpExcludeRules() const { return _tmpExcludeRules; }
+
+	/**
+	 * Set exclude rules from the settings file.  The tree will create its
+	 * own ExcludeRules object.  These rules will be applied to all regular
+	 * directory reads and unpackaged views, but not to packaged file views.
+	 **/
+	void setExcludeRules();
+
+	/**
 	 * Set exclude rules specific to this tree. They are additional rules
 	 * to the ones in the ExcludeRules singleton. This can be used for
 	 * temporary exclude rules that are not to be written to the config
@@ -286,12 +299,7 @@ namespace QDirStat
 	 * are set with this function). Call this with 0 to remove the existing
 	 * exclude rules.
 	 **/
-	void setExcludeRules( ExcludeRules * newRules );
-
-	/**
-	 * Clear all temporary exclude rules.
-	 **/
-	void clearExcludeRules() { setExcludeRules( 0 ); }
+	void setTmpExcludeRules( ExcludeRules * newTmpRules );
 
 	/**
 	 * Add a filter to ignore files during directory reading.
@@ -464,8 +472,13 @@ namespace QDirStat
 	 **/
 	static FileInfo * stat( const QString & url,
 				DirTree	      * tree,
-				DirInfo	      * parent	= 0,
+				DirInfo	      * parent	= nullptr,
 				bool		doThrow = true );
+
+	/**
+	 * Clear all temporary exclude rules.
+	 **/
+	void clearTmpExcludeRules() { setTmpExcludeRules( nullptr ); }
 
 
 	// Data members
@@ -477,6 +490,7 @@ namespace QDirStat
 	QString			_device;
 	QString			_url;
 	ExcludeRules *		_excludeRules;
+	ExcludeRules *		_tmpExcludeRules;
 	QList<DirTreeFilter *>	_filters;
 	bool			_beingDestroyed;
         bool                    _haveClusterSize;

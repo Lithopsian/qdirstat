@@ -38,7 +38,7 @@ namespace QDirStat
 	 * Constructor.
 	 **/
 	Attic( DirTree * tree,
-	       DirInfo * parent = 0 );
+	       DirInfo * parent = nullptr );
 
 	/**
 	 * Destructor.

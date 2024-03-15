@@ -140,20 +140,20 @@ namespace QDirStat
 	 * Check if going from 'parent' to 'child' would cross a filesystem
 	 * boundary. This take Btrfs subvolumes into account.
 	 **/
-	static bool crossingFilesystems( DirTree * tree, DirInfo * parent, DirInfo * child );
+//	static bool crossingFilesystems( DirTree * tree, DirInfo * parent, DirInfo * child );
 
 	/**
 	 * Return the device name where 'dir' is on if it's a mount point.
 	 * This uses MountPoints which reads /proc/mounts.
 	 **/
-	static QString device( const DirInfo * dir );
+//	static QString device( const DirInfo * dir );
 
 	/**
 	 * Check if we really should cross into a mounted filesystem; don't do
 	 * it if this is a system mount, a bind mount, a filesystem mounted
 	 * multiple times, or a network mount (NFS / Samba).
 	 **/
-	bool shouldCrossIntoFilesystem( const DirInfo * dir ) const;
+//	static bool shouldCrossIntoFilesystem( const DirInfo * dir ) const;
 
 
 	DirTree *	   _tree;
@@ -174,7 +174,7 @@ namespace QDirStat
 
     public:
 
-	ObjDirReadJob( DirTree *tree, DirInfo *dir = 0 )
+	ObjDirReadJob( DirTree *tree, DirInfo *dir = nullptr )
 	    : QObject(), DirReadJob( tree, dir ) {};
 	virtual ~ObjDirReadJob() {}
 
@@ -223,16 +223,9 @@ namespace QDirStat
 	 *
 	 * The default is 'false'.
 	 **/
-	bool applyFileChildExcludeRules() const
-	    { return _applyFileChildExcludeRules; }
+	bool applyFileChildExcludeRules() const { return _applyFileChildExcludeRules; }
 
     protected:
-
-	/**
-	 * Set the applyFileChildExcludeRules flag.
-	 **/
-//	void setApplyFileChildExcludeRules( bool val )
-//	    { _applyFileChildExcludeRules = val; }
 
 	/**
 	 * Read the directory. Prior to this nothing happens.
@@ -458,7 +451,7 @@ namespace QDirStat
 	/**
 	 * Delete all jobs for a subtree, except 'exceptJob'.
 	 **/
-	void killSubtree( DirInfo * subtree, const DirReadJob * exceptJob = 0 );
+	void killSubtree( DirInfo * subtree, const DirReadJob * exceptJob = nullptr );
 
 	/**
 	 * Notification that a job is finished.

@@ -16,7 +16,8 @@
 
 namespace QDirStat
 {
-	class ExcludeRule;
+    class ConfigDialog;
+    class ExcludeRule;
 
     /**
      * Configuration page (tab) for exclude rules:
@@ -28,8 +29,9 @@ namespace QDirStat
 
     public:
 
-	ExcludeRulesConfigPage( QWidget * parent = 0 );
+	ExcludeRulesConfigPage( ConfigDialog * parent );
 	virtual ~ExcludeRulesConfigPage();
+
 
     protected slots:
 	/**
@@ -40,25 +42,16 @@ namespace QDirStat
 	virtual void add() Q_DECL_OVERRIDE;
 
 	/**
-	 * Populate the widgets.
-	 **/
-	void setup();
-
-	/**
 	 * Write changes back to the settings.
 	 **/
 	void applyChanges();
-
-	/**
-	 * Abandon changes and revert everything to the original settings.
-	 **/
-	void discardChanges();
 
 	/**
 	 * Notification that the user changed the "Pattern" field of the
 	 * current exclude rule.
 	 **/
 	void patternChanged( const QString & newPattern );
+
 
     protected:
 
@@ -113,20 +106,6 @@ namespace QDirStat
 	 **/
 
 	virtual QString valueText( void * value ) Q_DECL_OVERRIDE;
-
-	/**
-	 * Return the message for the 'really delete?' message for the current
-	 * item ('value'). If this returns an empty string, the item cannot be
-	 * deleted.
-	 *
-	 * Implemented from ListEditor.
-	 **/
-//	virtual QString deleteConfirmationMessage( void * value ) Q_DECL_OVERRIDE;
-
-	/**
-	 * Clean up the working list of rules when the dialog is being closed.
-	 **/
-//	void finished( int result );
 
 	/**
 	 * Comparison operator for two exclude rules.

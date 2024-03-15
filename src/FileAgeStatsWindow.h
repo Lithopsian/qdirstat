@@ -21,6 +21,7 @@
 namespace QDirStat
 {
     class PercentBarDelegate;
+    class SelectionModel;
     class YearListItem;
 
     /**
@@ -31,20 +32,37 @@ namespace QDirStat
     {
 	Q_OBJECT
 
-    public:
-
 	/**
-	 * Constructor.
+	 * Constructor.  Private.  Access the window through the static
+	 * populateSharedInstance().
 	 *
-	 * Notice that this widget will destroy itself upon window close.
+	 * Note that this widget will destroy itself upon window close.
 	 **/
-	FileAgeStatsWindow( QWidget * parent = 0 );
+	FileAgeStatsWindow( QWidget         * parent,
+			    SelectionModel  * selectionModel );
 
 	/**
 	 * Destructor.
 	 **/
 	virtual ~FileAgeStatsWindow();
 
+	/**
+	 * Returns the shared instance pointer for this windw.  It is created if
+	 * it doesn't already exist.
+	 **/
+	static FileAgeStatsWindow * sharedInstance( QWidget         * parent,
+						    SelectionModel  * selectionModel );
+
+
+    public:
+
+        /**
+         * Convenience function for creating, populating and showing the shared
+         * instance.
+         **/
+	static void populateSharedInstance( QWidget         * parent,
+                                            FileInfo        * subtree,
+					    SelectionModel  * selectionModel );
 
 	/**
 	 * Obtain the subtree from the last used URL or 0 if none was found.
@@ -53,11 +71,6 @@ namespace QDirStat
 
 
     public slots:
-
-	/**
-	 * Populate the window.
-	 **/
-	void populate( FileInfo * subtree = 0 );
 
         /**
          * Populate the window if the "sync" check box is checked.
@@ -76,7 +89,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QDialog.
 	 **/
-	virtual void reject() Q_DECL_OVERRIDE;
+//	virtual void reject() Q_DECL_OVERRIDE;
 
 	/**
 	 * Read settings from the config file
@@ -93,7 +106,7 @@ namespace QDirStat
 
         /**
          * Emitted when the user clicks the "Locate" button (which is only
-         * enabled when there are 1..1000 files for that year).
+         * enabled when there are 1..10000 files for that year).
          *
          * 'path' is also sent because otherwise the main window will use the
          * tree's root if a file and not a directory is currently
@@ -119,12 +132,17 @@ namespace QDirStat
         /**
          * Enable or disable actions and buttons depending on the internal
          * state, e.g. if any item is selected and the number of files for the
-         * selected year are in the specified range (1..1000).
+         * selected year are in the specified range (1..10000).
          **/
         void enableActions();
 
 
     protected:
+
+	/**
+	 * Populate the window.
+	 **/
+	void populate( FileInfo * subtree );
 
 	/**
 	 * Clear all data and widget contents.
@@ -156,6 +174,12 @@ namespace QDirStat
          * if there is none or if it is the wrong type.
          **/
         const YearListItem * selectedItem() const;
+
+        /**
+         * Returns whether a locate should be performed for the current selection.
+         **/
+        bool canLocate( const YearListItem * item ) const;
+
 
 
 	//

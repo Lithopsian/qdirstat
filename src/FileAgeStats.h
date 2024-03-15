@@ -40,13 +40,13 @@ namespace QDirStat
 	float		sizePercent;	// 0.0 .. 100.0
 
 	YearStats( short yr = 0, short mn = 0 ):
-            year( yr ),
-            month( mn ),
-            filesCount( 0 ),
-            filesPercent( 0.0 ),
-            size( 0 ),
-            sizePercent( 0.0 )
-            {}
+            year { yr },
+            month { mn },
+            filesCount { 0 },
+            filesPercent { 0.0 },
+            size { 0 },
+            sizePercent { 0.0 }
+        {}
 
     };  // class YearStats
 

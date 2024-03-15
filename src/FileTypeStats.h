@@ -55,7 +55,7 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	FileTypeStats( QObject * parent = 0 );
+	FileTypeStats( QObject * parent = nullptr );
 
 	/**
 	 * Destructor.

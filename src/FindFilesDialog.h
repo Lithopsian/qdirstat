@@ -33,7 +33,7 @@ namespace QDirStat
 	 *
 	 * Use the static method askFindFiles for access.
 	 **/
-	FindFilesDialog( QWidget * parent = 0 );
+	FindFilesDialog( QWidget * parent = nullptr );
 
 	/**
 	 * Destructor.
@@ -49,7 +49,7 @@ namespace QDirStat
 	 * 'true' if the user canceled the dialog.
 	 **/
 	static FileSearchFilter askFindFiles( bool    * canceled_ret,
-                                              QWidget * parent = 0   );
+                                              QWidget * parent = nullptr   );
 
     public slots:
 

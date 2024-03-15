@@ -44,31 +44,39 @@ namespace QDirStat
     {
 	Q_OBJECT
 
-    public:
-
 	/**
-	 * Constructor.
+	 * Constructor.  Private, use the populateSharedInstance() function to
+	 * access this window.
 	 *
-	 * Notice that this widget will destroy itself upon window close.
-	 *
-	 * It is advised to use a QPointer for storing a pointer to an instance
-	 * of this class. The QPointer will keep track of this window
-	 * auto-deleting itself when closed.
+	 * Note that this widget will destroy itself upon window close.
 	 **/
-	LocateFileTypeWindow( QWidget *	parent = 0 );
+	LocateFileTypeWindow( QWidget *	parent = nullptr );
 
 	/**
 	 * Destructor.
 	 **/
 	virtual ~LocateFileTypeWindow();
 
+        /**
+         * Static method for using one shared instance of this class between
+         * multiple parts of the application. This will create a new instance
+         * if there is none yet (or any more).
+         **/
+        static LocateFileTypeWindow * sharedInstance();
+
 
     public:
 
         /**
+         * Convenience function for creating, populating and showing the shared
+         * instance.
+         **/
+        static void populateSharedInstance( const QString & suffix, FileInfo * subtree );
+
+        /**
          * Obtain the subtree from the last used URL or 0 if none was found.
          **/
-        const Subtree & subtree() const { return _subtree; }
+//        const Subtree & subtree() const { return _subtree; }
 
 	/**
 	 * Return the current search suffix (with leading '*.')
@@ -79,27 +87,9 @@ namespace QDirStat
     public slots:
 
 	/**
-	 * Populate the window: Locate files with 'suffix' in 'subtree'.
-	 *
-	 * This clears the old search results first, then searches the subtree
-	 * and populates the search result list with the directories where
-	 * matching files were found.
-	 **/
-	void populate( const QString & suffix, FileInfo * subtree = 0 );
-
-	/**
 	 * Refresh (reload) all data.
 	 **/
 	void refresh();
-
-	/**
-	 * Reject the dialog contents, i.e. the user clicked the "Cancel" or
-	 * WM_CLOSE button. This not only closes the dialog, it also deletes
-	 * it.
-	 *
-	 * Reimplemented from QDialog.
-	 **/
-//	virtual void reject() Q_DECL_OVERRIDE;
 
 
     protected slots:
@@ -122,6 +112,15 @@ namespace QDirStat
 	 * One-time initialization of the widgets in this window.
 	 **/
 	void initWidgets();
+
+	/**
+	 * Populate the window: Locate files with 'suffix' in 'subtree'.
+	 *
+	 * This clears the old search results first, then searches the subtree
+	 * and populates the search result list with the directories where
+	 * matching files were found.
+	 **/
+	void populate( const QString & suffix, FileInfo * subtree = nullptr );
 
 	/**
 	 * Recursively locate directories that contain files matching the
@@ -185,13 +184,14 @@ namespace QDirStat
 	SuffixSearchResultItem( const QString & path,
 				int		count,
 				FileSize	totalSize );
-	//
-	// Getters
-	//
 
+	/**
+	 * Getters for the item properties.
+	 **/
 	QString	 path()	      const { return _path; }
 	int	 count()      const { return _count; }
 	FileSize totalSize()  const { return _totalSize; }
+
 
     protected:
 
@@ -204,6 +204,7 @@ namespace QDirStat
 	 * Less-than operator for sorting.
 	 **/
 	virtual bool operator<( const QTreeWidgetItem & other ) const Q_DECL_OVERRIDE;
+
 
     protected:
 

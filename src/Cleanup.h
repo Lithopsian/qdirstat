@@ -69,14 +69,30 @@ namespace QDirStat
 		 int                  outputWindowTimeout = 500,
 		 bool                 outputWindowAutoClose = false,
 		 QString              shell = "",
-		 QString              iconName = "" );
+		 QString              iconName = "" ):
+	    QAction ( title, parent ),
+	    _active { active },
+	    _title { title },
+	    _command { command },
+	    _iconName { iconName },
+	    _recurse { recurse },
+	    _askForConfirmation { askForConfirmation },
+	    _refreshPolicy { refreshPolicy },
+	    _worksForDir { worksForDir },
+	    _worksForFile { worksForFile },
+	    _worksForDotEntry { worksForDotEntry },
+	    _outputWindowPolicy { outputWindowPolicy },
+	    _outputWindowTimeout { outputWindowTimeout },
+	    _outputWindowAutoClose { outputWindowAutoClose },
+	    _shell { shell }
+	{}
 
 	/**
 	 * Default constructor.  Used by the config dialog to create an empty cleanup
 	 * with the default settings and no parent.
 	 **/
 	Cleanup():
-	    Cleanup { 0, true, "", "", false, false, RefreshThis, true, true, false }
+	    Cleanup { nullptr, true, "", "", false, false, RefreshThis, true, true, false }
 	{}
 
 	/**
@@ -115,7 +131,7 @@ namespace QDirStat
 	/**
 	 * Return whether or not this cleanup action is generally active.
 	 **/
-	bool active() const { return _active; }
+	bool isActive() const { return _active; }
 
 	/**
 	 * Return whether or not this cleanup action works for this particular
@@ -470,7 +486,8 @@ namespace QDirStat
 	int		   _outputWindowTimeout;
 	bool		   _outputWindowAutoClose;
 	QString		   _shell;
-    };
+
+    }; // Cleanup
 
 
     typedef QList<Cleanup *>		CleanupList;

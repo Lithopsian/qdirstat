@@ -30,7 +30,9 @@ namespace QDirStat
 	 * against the complete path. Otherwise, it is matched only against the
 	 * filename.  Used the the create method to generate a filter.
 	 **/
-	DirTreePatternFilter( const QString & pattern );
+	DirTreePatternFilter( const QString & pattern ):
+	    _wildcard { CaseSensitiveWildcard( pattern.contains( "/" ) ? pattern : QString( "*/" ) + pattern ) }
+	{}
 
     public:
 
@@ -79,7 +81,9 @@ namespace QDirStat
 	/**
 	 * Constructor. 'suffix' should start with a dot (".").
 	 **/
-	DirTreeSuffixFilter( const QString & suffix );
+	DirTreeSuffixFilter( const QString & suffix ):
+	    _suffix { suffix }
+	{}
 
 	/**
 	 * Destructor.

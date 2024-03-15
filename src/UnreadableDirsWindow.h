@@ -52,29 +52,18 @@ namespace QDirStat
     {
 	Q_OBJECT
 
-    public:
-
 	/**
-	 * Constructor.
+	 * Constructor.  Private, use the static populateSharedInstance() to access
+	 * this window.
 	 *
-	 * Notice that this widget will destroy itself upon window close.
-	 *
-	 * It is advised to use a QPointer for storing a pointer to an instance
-	 * of this class. The QPointer will keep track of this window
-	 * auto-deleting itself when closed.
+	 * Note that this widget will destroy itself upon window close.
 	 **/
-	UnreadableDirsWindow( QWidget *	parent = 0 );
+	UnreadableDirsWindow( QWidget *	parent = nullptr );
 
 	/**
 	 * Destructor.
 	 **/
 	virtual ~UnreadableDirsWindow();
-
-	/**
-	 * Obtain the subtree from the last used URL or 0 if none was found.
-	 **/
-	const Subtree & subtree() const { return _subtree; }
-
 
         /**
          * Static method for using one shared instance of this class between
@@ -88,6 +77,9 @@ namespace QDirStat
          **/
         static UnreadableDirsWindow * sharedInstance();
 
+
+    public:
+
         /**
          * Convenience function for creating, populating and showing the shared
          * instance.
@@ -100,26 +92,10 @@ namespace QDirStat
          **/
         static void closeSharedInstance();
 
-
-    public slots:
-
 	/**
-	 * Populate the window: Locate unreadable directories in 'subtree'.
-	 *
-	 * This clears the old search results first, then searches the subtree
-	 * and populates the search result list with the directories could not
-	 * be read.
+	 * Obtain the subtree from the last used URL or 0 if none was found.
 	 **/
-	void populate( FileInfo * newSubtree );
-
-	/**
-	 * Reject the dialog contents, i.e. the user clicked the "Cancel" or
-	 * WM_CLOSE button. This not only closes the dialog, it also deletes
-	 * it.
-	 *
-	 * Reimplemented from QDialog.
-	 **/
-	virtual void reject() Q_DECL_OVERRIDE;
+//	const Subtree & subtree() const { return _subtree; }
 
 
     protected slots:
@@ -142,6 +118,15 @@ namespace QDirStat
 	 * One-time initialization of the widgets in this window.
 	 **/
 	void initWidgets();
+
+	/**
+	 * Populate the window: Locate unreadable directories in 'subtree'.
+	 *
+	 * This clears the old search results first, then searches the subtree
+	 * and populates the search result list with the directories could not
+	 * be read.
+	 **/
+	void populate( FileInfo * newSubtree );
 
 	/**
 	 * Recursively find unreadable directories in a subtree and add an
