@@ -191,7 +191,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~TreemapTile();
+	~TreemapTile() override;
 
 
     protected:
@@ -352,9 +352,9 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsRectItem.
 	 **/
-	virtual void paint( QPainter			   * painter,
-			    const QStyleOptionGraphicsItem * option,
-			    QWidget			   * widget = 0) Q_DECL_OVERRIDE;
+	void paint( QPainter			   * painter,
+		    const QStyleOptionGraphicsItem * option,
+		    QWidget			   * widget = nullptr ) override;
 
 	/**
 	 * Draws a thin outline.  Only draw on the top and left sides to keep the outline as
@@ -370,15 +370,15 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual QVariant itemChange( GraphicsItemChange	change,
-				     const QVariant	& value) Q_DECL_OVERRIDE;
+	QVariant itemChange( GraphicsItemChange	change,
+			     const QVariant	& value ) override;
 
 	/**
 	 * Mouse press event: Handle setting the current item.
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void mousePressEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
+	void mousePressEvent( QGraphicsSceneMouseEvent * event ) override;
 
 	/**
 	 * Mouse release event: Handle marking item selection.
@@ -390,7 +390,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void mouseReleaseEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
+	void mouseReleaseEvent( QGraphicsSceneMouseEvent * event ) override;
 
 	/**
 	 * Mouse double click event:
@@ -400,35 +400,35 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void mouseDoubleClickEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
+	void mouseDoubleClickEvent( QGraphicsSceneMouseEvent * event ) override;
 
 	/**
 	 * Mouse wheel event: Zoom in or out
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void wheelEvent( QGraphicsSceneWheelEvent * event) Q_DECL_OVERRIDE;
+	void wheelEvent( QGraphicsSceneWheelEvent * event) override;
 
 	/**
 	 * Context menu event.
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void contextMenuEvent( QGraphicsSceneContextMenuEvent * event ) Q_DECL_OVERRIDE;
+	void contextMenuEvent( QGraphicsSceneContextMenuEvent * event ) override;
 
 	/**
 	 * Hover enter event.
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void hoverEnterEvent( QGraphicsSceneHoverEvent * ) Q_DECL_OVERRIDE;
+	void hoverEnterEvent( QGraphicsSceneHoverEvent * ) override;
 
 	/**
 	 * Hover leave event.
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	virtual void hoverLeaveEvent( QGraphicsSceneHoverEvent * ) Q_DECL_OVERRIDE;
+	void hoverLeaveEvent( QGraphicsSceneHoverEvent * ) override;
 
 	/**
 	 * Render a cushion as described in "cushioned treemaps" by Jarke

@@ -72,7 +72,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~ExcludeRule() {}
+	~ExcludeRule() = default;
 
 	/**
 	 * Check a file name with or without its full path against this exclude

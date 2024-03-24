@@ -18,6 +18,7 @@
 #include <QTextStream>
 
 #include "FileSize.h"
+#include "BrokenLibc.h"     // ALLPERMS
 
 
 namespace QDirStat

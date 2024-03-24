@@ -85,7 +85,7 @@ namespace QDirStat
 	    /**
 	     * Destructor.
 	     **/
-	    ~MimeCategorizer();
+	    ~MimeCategorizer() override;
 
 
     public:

@@ -45,7 +45,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~SelectionModel() {}
+	~SelectionModel() override = default;
 
 	/**
 	 * Return all currently selected items as a set.
@@ -57,6 +57,11 @@ namespace QDirStat
 	 * This might return 0 if currently no item has the keyboard focus.
 	 **/
 	FileInfo * currentItem() const { return _currentItem; }
+
+	/**
+	 * Return the current branch or 0 if there is none.
+	 **/
+//	FileInfo * currentBranch() const { return _currentBranch; }
 
 	/**
 	 * Return the DirTreeModel of this object.
@@ -72,33 +77,6 @@ namespace QDirStat
 	 * Return 'true' if verbose mode is set.
 	 **/
 	bool verbose() const { return _verbose; }
-
-
-    public slots:
-
-	/**
-	 * Replace the current selection with one item.
-	 * If this item is 0, everything is deselected.
-	 * This does NOT change the current item.
-	 **/
-	void selectItem( FileInfo * item );
-
-	/**
-	 * Extend the current selection with one item: Add this item to the set
-	 * of selected items. If this item is 0, the selection remains
-	 * unchanged.
-	 *
-	 * This does NOT change the current item.
-	 *
-	 * If 'clear' is 'true', this will clear the old selection first, so
-	 * this has the same effect as selectItem().
-	 **/
-	void extendSelection( FileInfo * item, bool clear = false );
-
-	/**
-	 * Set the selected items, i.e., replace the complete selection.
-	 **/
-	void setSelectedItems( const FileInfoSet  & selectedItems );
 
 	/**
 	 * Make 'item' the current item. This is different from the selection:
@@ -119,6 +97,33 @@ namespace QDirStat
 	 **/
 	void setCurrentItem( FileInfo * item, bool select = false );
 
+
+    public slots:
+
+	/**
+	 * Replace the current selection with one item.
+	 * If this item is 0, everything is deselected.
+	 * This does NOT change the current item.
+	 **/
+//	void selectItem( FileInfo * item );
+
+	/**
+	 * Extend the current selection with one item: Add this item to the set
+	 * of selected items. If this item is 0, the selection remains
+	 * unchanged.
+	 *
+	 * This does NOT change the current item.
+	 *
+	 * If 'clear' is 'true', this will clear the old selection first, so
+	 * this has the same effect as selectItem().
+	 **/
+//	void extendSelection( FileInfo * item, bool clear = false );
+
+	/**
+	 * Set the selected items, i.e., replace the complete selection.
+	 **/
+	void setSelectedItems( const FileInfoSet  & selectedItems );
+
         /**
          * Search the dir tree for an item with the specified path and, if
          * successful, make it the current item.
@@ -132,18 +137,11 @@ namespace QDirStat
 	 * tree views to close all other branches. See also the
 	 * currentBranchChanged() signal.
 	 **/
-	void setCurrentBranch( FileInfo * item );
-
-	/**
-	 * Return the current branch or 0 if there is none.
-	 **/
-	FileInfo * currentBranch() const { return _currentBranch; }
+	void updateCurrentBranch( FileInfo * newItem );
 
 	/**
 	 * Prepare refreshing a set of items: Select a suitable item that will
-	 * still be in the tree after refreshing is finished. The idea is to
-	 * avoid having no selected item or branch which means having the tree
-	 * widget jumping wildly and thus disorienting the user.
+	 * still be in the tree after refreshing is finished.
 	 *
 	 * This is done in preparation of refreshing subtrees after cleanup
 	 * actions are finished. Refreshing subtrees means deleting the items
@@ -180,8 +178,7 @@ namespace QDirStat
 	 * Emitted when the current branch changes. Tree views can use this to
 	 * close all other branches.
 	 **/
-	void currentBranchChanged( const QModelIndex & newCurrentBranch );
-	void currentBranchChanged( FileInfo * newCurrentBranch );
+	void currentBranchChanged( const QModelIndex & branch );
 
     protected slots:
 
@@ -215,7 +212,7 @@ namespace QDirStat
 
 	DirTreeModel	* _dirTreeModel;
 	FileInfo	* _currentItem;
-	FileInfo	* _currentBranch;
+//	FileInfo	* _currentBranch;
 	FileInfoSet	  _selectedItems;
 	bool		  _selectedItemsDirty;
 	bool		  _verbose;
@@ -249,8 +246,8 @@ namespace QDirStat
      * widgets would not get notified at all. With this approach, only the
      * connections from one widget are disabled temporarily.
      *
-     * Of course, each view has to create and set up its own proxy. They cannot
-     * be shared among views.
+     * Each view has to create and set up its own proxy. They cannot
+     * be shared among views.  This is currently only used by TreemapView.
      **/
     class SelectionModelProxy: public QObject
     {
@@ -270,17 +267,16 @@ namespace QDirStat
     signals:
 
 	// From QItemSelectionModel
-
 	void selectionChanged	 ( const QItemSelection & selected, const QItemSelection & deselected );
 	void currentChanged	 ( const QModelIndex & current, const QModelIndex & previous );
 	void currentColumnChanged( const QModelIndex & current, const QModelIndex & previous );
 	void currentRowChanged	 ( const QModelIndex & current, const QModelIndex & previous );
 
 	// from SelectionModel
-
 	void selectionChanged();
 	void selectionChanged( const FileInfoSet & selectedItems );
 	void currentItemChanged( FileInfo * newCurrent, const FileInfo * oldCurrent );
+	void currentBranchChanged( FileInfo * newItem );
 
     };	// class SelectionModelProxy
 

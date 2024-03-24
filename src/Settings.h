@@ -41,7 +41,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~Settings();
+	~Settings() override;
 
 	/**
 	 * Name of this settings object. This returns an empty string for the
@@ -150,7 +150,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~CleanupSettings();
+	~CleanupSettings() override;
 
     protected:
 	/**
@@ -181,7 +181,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~MimeCategorySettings();
+	~MimeCategorySettings() override;
 
     protected:
 	/**
@@ -212,7 +212,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~ExcludeRuleSettings();
+	~ExcludeRuleSettings() override;
 
     protected:
 	/**

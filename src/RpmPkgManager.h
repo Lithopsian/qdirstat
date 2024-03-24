@@ -32,7 +32,7 @@ namespace QDirStat
     public:
 
 	RpmPkgManager();
-	virtual ~RpmPkgManager() {}
+//	virtual ~RpmPkgManager() {}
 
 	/**
 	 * Return the name of this package manager.
@@ -46,7 +46,7 @@ namespace QDirStat
 	 *
 	 * Implemented from PkgManager.
 	 **/
-	virtual bool isPrimaryPkgManager() const Q_DECL_OVERRIDE;
+	virtual bool isPrimaryPkgManager() const override;
 
 	/**
 	 * Check if the rpm command is available on the currently running
@@ -54,7 +54,7 @@ namespace QDirStat
 	 *
 	 * Implemented from PkgManager.
 	 **/
-	virtual bool isAvailable() const Q_DECL_OVERRIDE;
+	virtual bool isAvailable() const override;
 
 	/**
 	 * Return the owning package of a file or directory with full path
@@ -66,7 +66,7 @@ namespace QDirStat
 	 *
 	 *   /usr/bin/rpm -qf ${path}
 	 **/
-	virtual QString owningPkg( const QString & path ) const Q_DECL_OVERRIDE;
+	virtual QString owningPkg( const QString & path ) const override;
 
 
 	//-----------------------------------------------------------------
@@ -79,7 +79,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual bool supportsGetInstalledPkg() const Q_DECL_OVERRIDE
+	virtual bool supportsGetInstalledPkg() const override
 	    { return true; }
 
 	/**
@@ -89,7 +89,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual PkgInfoList installedPkg() const Q_DECL_OVERRIDE;
+	virtual PkgInfoList installedPkg() const override;
 
 	/**
 	 * Return 'true' if this package manager supports getting the file list
@@ -97,7 +97,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual bool supportsFileList() const Q_DECL_OVERRIDE
+	virtual bool supportsFileList() const override
 	    { return true; }
 
 	/**
@@ -106,14 +106,14 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual QString fileListCommand( const PkgInfo * pkg ) const Q_DECL_OVERRIDE;
+	virtual QString fileListCommand( const PkgInfo * pkg ) const override;
 
 	/**
 	 * Parse the output of the file list command.
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual QStringList parseFileList( const QString & output ) const Q_DECL_OVERRIDE;
+	virtual QStringList parseFileList( const QString & output ) const override;
 
 	/**
 	 * Return 'true' if this package manager supports building a file list
@@ -121,7 +121,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual bool supportsFileListCache() const Q_DECL_OVERRIDE
+	virtual bool supportsFileListCache() const override
 	    { return true; }
 
 	/**
@@ -137,7 +137,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual PkgFileListCache * createFileListCache( PkgFileListCache::LookupType lookupType = PkgFileListCache::LookupByPkg ) const Q_DECL_OVERRIDE;
+	virtual PkgFileListCache * createFileListCache( PkgFileListCache::LookupType lookupType = PkgFileListCache::LookupByPkg ) const override;
 
 	/**
 	 * Return a name suitable for a detailed queries for 'pkg'.
@@ -147,7 +147,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual QString queryName( const PkgInfo * pkg ) const Q_DECL_OVERRIDE;
+	virtual QString queryName( const PkgInfo * pkg ) const override;
 
 
     protected:

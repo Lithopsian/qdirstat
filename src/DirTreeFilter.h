@@ -31,7 +31,13 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirTreeFilter() {}
+	virtual ~DirTreeFilter() = default;
+
+	/**
+	 * Suppress copy and assignment constructors.
+	 **/
+	DirTreeFilter( const DirTreeFilter & ) = delete;
+	DirTreeFilter & operator=( const DirTreeFilter & ) = delete;
 
 	/**
 	 * Return 'true' if the filesystem object specified by 'path' should

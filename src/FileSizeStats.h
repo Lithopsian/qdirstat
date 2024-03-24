@@ -34,34 +34,16 @@ namespace QDirStat
     public:
 
 	/**
-	 * Constructor. If 'subtree' is non-null, immediately collect data from
-	 * that subtree.
-	 **/
-	FileSizeStats():
-	    PercentileStats()
-	{}
-
-	/**
-	 * Constructor. If 'subtree' is non-null, immediately collect data from
-	 * that subtree.
+	 * Constructor with just a subtree.
 	 **/
 	FileSizeStats( FileInfo * subtree );
 
 	/**
-	 * Recurse through all file elements in the subtree and append the own
-	 * size for each file to the data collection. Notice that the data are
-	 * unsorted after this.
-	 **/
-	void collect( FileInfo * subtree );
-
-	/**
-	 * Recurse through all file elements in the subtree and append the own
-	 * size for each file with the specified suffix to the data
-	 * collection. Notice that the data are unsorted after this.
+	 * Constructor with a subtree and suffix.
 	 *
 	 * 'suffix' should start with ".", e.g. ".jpg".
 	 **/
-	void collect( FileInfo * subtree, const QString & suffix );
+	FileSizeStats( FileInfo * subtree, const QString & suffix );
 
         /**
          * Fill buckets for a histogram from 'startPercentile' to
@@ -70,6 +52,24 @@ namespace QDirStat
         QRealList fillBuckets( int bucketCount,
                                int startPercentile,
                                int endPercentile );
+
+    protected:
+
+	/**
+	 * Recurse through all file elements in the subtree and append the own
+	 * size for each file to the data collection. Note that the data are
+	 * unsorted after this.
+	 **/
+	void collect( const FileInfo * subtree );
+
+	/**
+	 * Recurse through all file elements in the subtree and append the own
+	 * size for each file with the specified suffix to the data
+	 * collection. Note that the data are unsorted after this.
+	 *
+	 **/
+	void collect( const FileInfo * subtree, const QString & suffix );
+
     };
 
 }	// namespace QDirStat

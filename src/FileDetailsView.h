@@ -43,7 +43,7 @@ namespace QDirStat
 	/**
 	 * Destructor
 	 **/
-	~FileDetailsView();
+	~FileDetailsView() override;
 
 	/**
 	 * Show an empty page.

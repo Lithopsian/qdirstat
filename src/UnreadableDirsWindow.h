@@ -25,7 +25,6 @@ namespace QDirStat
     class FileTypeStats;
     class MimeCategory;
 
-
     /**
      * Modeless dialog to display directories that could not be read when
      * reading a directory tree.
@@ -63,7 +62,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~UnreadableDirsWindow();
+	~UnreadableDirsWindow() override;
 
         /**
          * Static method for using one shared instance of this class between
@@ -165,6 +164,16 @@ namespace QDirStat
      * DirInfo * anymore (if that directory branch was deleted), but for sure
      * it will not crash.
      **/
+
+    enum UnreadableDirectories
+    {
+	UD_Path,
+	UD_User,
+	UD_Group,
+	UD_Permissions,
+	UD_Octal
+    };
+
     class UnreadableDirListItem: public QTreeWidgetItem
     {
     public:
@@ -172,30 +181,26 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	UnreadableDirListItem( const QString & path,
-			       const QString & userName,
-			       const QString & groupName,
-			       const QString & symbolicPermissions,
-			       const QString & octalPermissions );
+	UnreadableDirListItem( DirInfo * dir );
 
 	/**
 	 * Return the path of this directory.
 	 **/
-	QString path() const { return _path; }
+	DirInfo * dir() const { return _dir; }
 
 	/**
 	 * Set the text and alignment for a column.
 	 **/
-	void set( int col, const QString & text, Qt::Alignment alignment );
+	void set( UnreadableDirectories col, const QString & text, Qt::Alignment alignment );
 
 	/**
 	 * Less-than operator for sorting.
 	 **/
-	virtual bool operator<( const QTreeWidgetItem & other ) const Q_DECL_OVERRIDE;
+	bool operator<( const QTreeWidgetItem & other ) const override;
 
     protected:
 
-	QString _path;
+	DirInfo * _dir;
     };
 
 } // namespace QDirStat

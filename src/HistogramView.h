@@ -82,7 +82,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~HistogramView();
+	~HistogramView() override;
 
 	/**
 	 * Clear all data and all displayed graphics.
@@ -411,7 +411,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QFrame.
 	 **/
-	virtual void resizeEvent( QResizeEvent * event ) Q_DECL_OVERRIDE;
+	void resizeEvent( QResizeEvent * event ) override;
 
         /**
          * Calculate the content geometry to fit into 'newSize'.

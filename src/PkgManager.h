@@ -17,14 +17,10 @@
 
 #include "PkgInfo.h"
 #include "PkgFileListCache.h"
-#include "SysUtil.h"
 
 
 namespace QDirStat
 {
-    using SysUtil::runCommand;
-    using SysUtil::tryRunCommand;
-    using SysUtil::haveCommand;
 
     /**
      * Abstract base class for all package managers.

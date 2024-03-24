@@ -44,7 +44,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~FileAgeStatsWindow();
+	~FileAgeStatsWindow() override;
 
 	/**
 	 * Returns the shared instance pointer for this windw.  It is created if
@@ -63,43 +63,6 @@ namespace QDirStat
 	static void populateSharedInstance( QWidget         * parent,
                                             FileInfo        * subtree,
 					    SelectionModel  * selectionModel );
-
-	/**
-	 * Obtain the subtree from the last used URL or 0 if none was found.
-	 **/
-	const Subtree & subtree() const { return _subtree; }
-
-
-    public slots:
-
-        /**
-         * Populate the window if the "sync" check box is checked.
-         **/
-        void syncedPopulate( FileInfo * subtree );
-
-	/**
-	 * Refresh (reload) all data.
-	 **/
-	void refresh();
-
-	/**
-	 * Reject the dialog contents, i.e. the user clicked the "Cancel" or
-	 * WM_CLOSE button. This not only closes the dialog, it also deletes
-	 * it.
-	 *
-	 * Reimplemented from QDialog.
-	 **/
-//	virtual void reject() Q_DECL_OVERRIDE;
-
-	/**
-	 * Read settings from the config file
-	 **/
-	void readSettings();
-
-	/**
-	 * Write settings to the config file
-	 **/
-	void writeSettings();
 
 
     signals:
@@ -122,6 +85,27 @@ namespace QDirStat
 
 
     protected slots:
+
+        /**
+         * Automatically update with the current main window selection, if the
+	 * checkbox is checked.
+         **/
+        void syncedPopulate( FileInfo * subtree );
+
+	/**
+	 * Refresh (reload) all data.
+	 **/
+	void refresh();
+
+	/**
+	 * Read settings from the config file
+	 **/
+	void readSettings();
+
+	/**
+	 * Write settings to the config file
+	 **/
+	void writeSettings();
 
         /**
          * Emit the locateFilesFromYear() signal for the currently selected
@@ -180,6 +164,12 @@ namespace QDirStat
          **/
         bool canLocate( const YearListItem * item ) const;
 
+	/**
+	 * Key press event for detecting evnter/return.
+	 *
+	 * Reimplemented from QWidget.
+	 **/
+	void keyPressEvent( QKeyEvent * event ) override;
 
 
 	//
@@ -214,7 +204,7 @@ namespace QDirStat
 
     /**
      * Item class for the years list (which is really a tree widget),
-     * representing one year with accumulated values.
+     * representing one year (or month) with accumulated values.
      **/
     class YearListItem: public QTreeWidgetItem
     {
@@ -226,16 +216,19 @@ namespace QDirStat
 	YearListItem( const YearStats & yearStats );
 
 	/**
-	 * Return the statistics values for comparison.
+	 * Return the statistics values.
 	 **/
 	const YearStats & stats() const { return _stats; }
+
+
+    protected:
 
 	/**
 	 * Less-than operator for sorting.
          *
          * Reimplemented from QTreeWidgetItem.
 	 **/
-	virtual bool operator<( const QTreeWidgetItem & other ) const Q_DECL_OVERRIDE;
+	bool operator<( const QTreeWidgetItem & other ) const override;
 
         /**
          * Generic data method for different roles. Here used for more exotic
@@ -243,12 +236,12 @@ namespace QDirStat
          *
          * Reimplemented from QTreeWidgetItem.
          **/
-        virtual QVariant data( int column, int role ) const Q_DECL_OVERRIDE;
+//        QVariant data( int column, int role ) const override;
+
+	void set( YearListColumns col, Qt::Alignment alignment, const QString & text );
 
 
-    protected:
-
-	YearStats _stats;
+	const YearStats _stats;
 
     };	// class YearListItem
 

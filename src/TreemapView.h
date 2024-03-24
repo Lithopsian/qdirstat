@@ -76,7 +76,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~TreemapView();
+	~TreemapView() override;
 
 	/**
 	 * Set the directory tree to work on. Without this, this widget will
@@ -88,7 +88,7 @@ namespace QDirStat
 	 * Returns the minimum recommended size for this widget.
 	 * Reimplemented from QWidget.
 	 **/
-	virtual QSize minimumSizeHint() const { return QSize( 0, 0 ); }
+	QSize minimumSizeHint() const override { return QSize( 0, 0 ); }
 
 	/**
 	 * Returns this view's current item.
@@ -524,7 +524,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QFrame.
 	 **/
-	virtual void resizeEvent( QResizeEvent * event ) Q_DECL_OVERRIDE;
+	void resizeEvent( QResizeEvent * event ) override;
 
 	/**
 	 * Search the treemap for a tile that corresponds to the specified
@@ -561,13 +561,15 @@ namespace QDirStat
 	/**
 	 * Emitted when the currently selected item changes.
 	 * Caution: 'item' may be 0 when the selection is cleared.
+	 *
+	 * Unused.
 	 **/
-	void selectionChanged( FileInfo * item );
+//	void selectionChanged( FileInfo * item );
 
 	/**
 	 * Emitted when the current item changes.
 	 **/
-	void currentItemChanged( FileInfo * newCurrent, bool=false );
+	void currentItemChanged( FileInfo * newCurrent );
 
 	/**
 	 * Emitted when the treemap changes, e.g. is rebuilt, zoomed in, or
@@ -745,7 +747,7 @@ namespace QDirStat
          *
          * Reimplemented from QGraphicsRectItem / QGraphicsItem.
          **/
-        virtual QPainterPath shape() const Q_DECL_OVERRIDE;
+        QPainterPath shape() const override;
 
 
 	// Data members
@@ -765,7 +767,7 @@ namespace QDirStat
 	    HighlightRect ( treemapView->scene(), treemapView->currentItemColor(), 2, CurrentHighlightLayer )
 	{}
 
-	virtual void highlight( const TreemapTile * tile ) Q_DECL_OVERRIDE;
+	void highlight( const TreemapTile * tile ) override;
     };
 
 

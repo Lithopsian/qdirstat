@@ -32,7 +32,7 @@ namespace QDirStat
     public:
 
 	MimeCategoryConfigPage( ConfigDialog * parent );
-	virtual ~MimeCategoryConfigPage();
+	~MimeCategoryConfigPage() override;
 
 
     protected slots:
@@ -57,7 +57,7 @@ namespace QDirStat
 	 * is configured to be unsorted and is then sorted explicitly whenever
 	 * a sort key changes, including inserting a new category.
 	 **/
-	virtual void add() Q_DECL_OVERRIDE;
+	void add() override;
 
 	/**
 	 * Notification that the user changed the "Name" field of the
@@ -101,12 +101,12 @@ namespace QDirStat
 	/**
 	 * The category list has been resized.  Adjust the colour shading.
 	 **/
-	virtual void resizeEvent( QResizeEvent * ) Q_DECL_OVERRIDE { adjustShadingWidth(); }
+	void resizeEvent( QResizeEvent * ) override { adjustShadingWidth(); }
 
 	/**
 	 * The category list has been shown.  Adjust the colour shading.
 	 **/
-	virtual void showEvent( QShowEvent * ) Q_DECL_OVERRIDE { adjustShadingWidth(); }
+	void showEvent( QShowEvent * ) override { adjustShadingWidth(); }
 
 	/**
 	 * The pane splitter has moved, meaning the list has resized without
@@ -142,7 +142,7 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void fillListWidget() Q_DECL_OVERRIDE;
+	void fillListWidget() override;
 
 	/**
 	 * The category list has been shown.  Adjust the colour shading.
@@ -158,12 +158,12 @@ namespace QDirStat
 	 * Save the patterns from the dialog to the specified category.
 	 * The name and colour are handled in real-time as they are edited.
 	 **/
-	virtual void save( void * value ) Q_DECL_OVERRIDE;
+	void save( void * value ) override;
 
 	/**
 	 * Load the fields from the specified category into the dialog.
 	 **/
-	virtual void load( void * value ) Q_DECL_OVERRIDE;
+	void load( void * value ) override;
 
 	/**
 	 * Create a new value with default values.
@@ -171,7 +171,7 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void * createValue() Q_DECL_OVERRIDE;
+	void * createValue() override;
 
 	/**
 	 * Remove a value from the internal list and delete it.
@@ -180,7 +180,7 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void removeValue( void * value );
+	void removeValue( void * value ) override;
 
 	/**
 	 * Return a text for the list item of 'value'.
@@ -188,21 +188,21 @@ namespace QDirStat
 	 * Implemented from ListEditor.
 	 **/
 
-	virtual QString valueText( void * value ) Q_DECL_OVERRIDE;
+	QString valueText( void * value ) override;
 
 	/**
 	 * Signal handler for a change in the list widget current item.
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void currentItemChanged( QListWidgetItem * current, QListWidgetItem * previous) Q_DECL_OVERRIDE;
+	void currentItemChanged( QListWidgetItem * current, QListWidgetItem * previous) override;
 
 	/**
 	 * Update actions to match the current item properties.
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void updateActions() Q_DECL_OVERRIDE;
+	void updateActions() override;
 
 	/**
 	 * Set the remove button, name, and patterns enabled or disabled,
@@ -226,7 +226,7 @@ namespace QDirStat
 	/**
 	 * Handle a right click.
 	 **/
-	virtual void contextMenuEvent( QContextMenuEvent * event ) Q_DECL_OVERRIDE;
+	void contextMenuEvent( QContextMenuEvent * event ) override;
 
 
 	// Data

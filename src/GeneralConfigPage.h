@@ -15,12 +15,6 @@
 
 namespace QDirStat
 {
-    enum DirTreeIconSize
-    {
-	DTIS_Medium,
-	DTIS_Small,
-    };
-
     class ConfigDialog;
 
     class GeneralConfigPage: public QWidget
@@ -37,7 +31,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        ~GeneralConfigPage();
+        ~GeneralConfigPage() override;
 
 
     protected slots:

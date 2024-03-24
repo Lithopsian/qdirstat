@@ -104,19 +104,6 @@ namespace QDirStat
          **/
         SelectionModel * selectionModel() const { return _selectionModel; }
 
-        /**
-         * Return the CleanupCollection, i.e. the collection of actions that
-         * the user can start to clean up after files or directories are found
-         * that should be deleted or compressed or in general cleaned up.
-         *
-         * That includes actions that are purely inspecting files or
-         * directories, such as starting an interactive shell in that directory
-         * or showing the directory in a file manager window. Most cleanup
-         * actions are started as external commands, and they can be configured
-         * to the user's liking with the configuration dialog.
-         **/
-//        CleanupCollection * cleanupCollection() const { return _cleanupCollection; }
-
         //
         // Convenience methods
         //
@@ -163,6 +150,12 @@ namespace QDirStat
          **/
         FileInfo * selectedDirInfoOrRoot() const;
 
+        /**
+         * Set the font size of a widget (expected to be a tree widget) based on
+	 * the configured DirTree item size.
+         **/
+	void setWidgetFontSize( QWidget * widget );
+
 
     protected:
 
@@ -172,7 +165,7 @@ namespace QDirStat
 
         DirTreeModel            * _dirTreeModel;
         SelectionModel          * _selectionModel;
-//        CleanupCollection       * _cleanupCollection;
+
     };  // class QDirStatApp
 
 }       // namespace QDirStat

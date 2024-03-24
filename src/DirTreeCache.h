@@ -46,7 +46,7 @@ namespace QDirStat
 	/**
 	 * Destructor
 	 **/
-	~CacheWriter() {}
+//	~CacheWriter() {}
 
 	/**
 	 * Returns true if writing the cache file went OK.
@@ -223,20 +223,20 @@ namespace QDirStat
 
 	gzFile	  _cache;
 	char	  _buffer[ MAX_CACHE_LINE_LEN + 1 ];
-	char	* _line;
-	int	  _lineNo;
+	char	* _line		{ _buffer };
+	int	  _lineNo	{ 0 };
 	char	* _fields[ MAX_FIELDS_PER_LINE ];
 	int	  _fieldsCount;
 	bool	  _markFromCache;
-	bool	  _ok;
-        int	  _errorCount;
+	bool	  _ok		{ true };
+        int	  _errorCount	{ 0 };
 
 	DirTree	* _tree;
 	DirInfo * _parent; // parent directory if there is one
-	DirInfo * _toplevel; // the parent if there is one, otherwise the top level of the cache file
-	DirInfo * _latestDir; // the latest drectory read from the cache file, parent to subsequent file children
+	DirInfo * _toplevel	{ nullptr }; // the parent if there is one, otherwise the top level of the cache file
+	DirInfo * _latestDir	{ nullptr }; // the latest drectory read from the cache file, parent to subsequent file children
 
-        QRegularExpression	_multiSlash;
+        QRegularExpression	_multiSlash { "//+" };
     };
 
 }	// namespace QDirStat

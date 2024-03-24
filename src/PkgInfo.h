@@ -70,7 +70,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~PkgInfo() {}
+//        virtual ~PkgInfo() {}
 
         /**
          * Return the package's base name, i.e. the short name without any
@@ -137,14 +137,14 @@ namespace QDirStat
          *
          * Reimplemented - inherited from FileInfo.
          **/
-        virtual bool isPkgInfo() const Q_DECL_OVERRIDE { return true; }
+        virtual bool isPkgInfo() const override { return true; }
 
 	/**
 	 * Returns the full URL of this object with full path.
 	 *
          * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual QString url() const Q_DECL_OVERRIDE
+	virtual QString url() const override
             { return isPkgUrl( _name ) ? "Pkg:/" : "Pkg:/" + _name; }
 
         /**

@@ -53,7 +53,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~DirTree();
+	~DirTree() override;
 
 	/**
 	 * Actually start reading.
@@ -350,6 +350,33 @@ namespace QDirStat
 	 **/
 	FileSize clusterSize() const { return _blocksPerCluster * STD_BLOCK_SIZE; }
 
+	/**
+	 * Set the policy for how hard links are handled: by default, for files
+	 * with multiple hard links, the size is distributed among each
+	 * individual hard link for that file. So a file with a size of 4 kB
+	 * and 4 hard links reports 1 kB to its parent directory.
+	 *
+	 * When this flag is set to 'true', it will report the full 4 kB each
+	 * time, so all 4 hard links together will now add up to 16 kB. While
+	 * this is probably a very bad idea if those links are all in the same
+	 * directory (or subtree), it might even be useful if there are several
+	 * separate subtrees that all share hard links between each other, but
+	 * not within the same subtree. Some backup systems use this strategy
+	 * to save disk space.
+	 *
+	 * Use this with caution.
+	 *
+	 * This flag will be read from the config file from the outside
+	 * (DirTreeModel) and set from there using this function.
+	 **/
+	void setIgnoreHardLinks( bool ignore );
+
+	/**
+	 * Return the current hard links accounting policy.
+	 * See setIgnoreHardLinks() for details.
+	 **/
+	bool ignoreHardLinks() const { return _ignoreHardLinks; }
+
 
     signals:
 
@@ -407,7 +434,7 @@ namespace QDirStat
 	/**
 	 * Emitted when reading the specified directory is started.
 	 **/
-	void startingReading( DirInfo * dir );
+	void dirStartingReading( DirInfo * dir );
 
 	/**
 	 * Emitted when reading the specified directory has been finished.
@@ -485,16 +512,20 @@ namespace QDirStat
 
 	DirInfo *		_root;
 	DirReadJobQueue		_jobQueue;
-	bool			_crossFilesystems;
-	bool			_isBusy;
+
 	QString			_device;
 	QString			_url;
-	ExcludeRules *		_excludeRules;
-	ExcludeRules *		_tmpExcludeRules;
+
+	ExcludeRules *		_excludeRules		{ nullptr };
+	ExcludeRules *		_tmpExcludeRules	{ nullptr };
 	QList<DirTreeFilter *>	_filters;
-	bool			_beingDestroyed;
-        bool                    _haveClusterSize;
-        int                     _blocksPerCluster;
+
+	bool			_crossFilesystems	{ false };
+	bool			_isBusy			{ false };
+	bool			_beingDestroyed		{ false };
+        bool                    _haveClusterSize	{ false };
+        int                     _blocksPerCluster	{ 0 };
+	bool			_ignoreHardLinks	{ false };
 
     };	// class DirTree
 

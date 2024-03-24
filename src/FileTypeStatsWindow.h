@@ -26,6 +26,7 @@ namespace QDirStat
     class LocateFileTypeWindow;
     class FileTypeItem;
 //    class CategoryFileTypeItem;
+    class SelectionModel;
     class SuffixFileTypeItem;
 
     /**
@@ -45,19 +46,21 @@ namespace QDirStat
 	 *
 	 * Note that this widget will destroy itself upon window close.
 	 **/
-	FileTypeStatsWindow( QWidget * parent );
+	FileTypeStatsWindow( QWidget * parent,
+			     SelectionModel * selectionModel );
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~FileTypeStatsWindow();
+	~FileTypeStatsWindow() override;
 
         /**
          * Static method for using one shared instance of this class between
          * multiple parts of the application. This will create a new instance
          * if there is none yet (or anymore).
          **/
-        static FileTypeStatsWindow * sharedInstance( QWidget * parent );
+        static FileTypeStatsWindow * sharedInstance( QWidget * parent,
+						     SelectionModel * selectionModel );
 
 
     public:
@@ -71,10 +74,18 @@ namespace QDirStat
          * Convenience function for creating, populating and showing the shared
          * instance.
          **/
-        static void populateSharedInstance( QWidget * mainWindow, FileInfo * subtree );
+        static void populateSharedInstance( QWidget * mainWindow,
+					    FileInfo * subtree,
+					    SelectionModel * selectionModel );
 
 
-    public slots:
+    protected slots:
+
+        /**
+         * Automatically update with the current main window selection, if the
+	 * checkbox is checked.
+         **/
+        void syncedPopulate( FileInfo * );
 
 	/**
 	 * Refresh (reload) all data.
@@ -99,10 +110,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QDialog.
 	 **/
-//	virtual void reject() Q_DECL_OVERRIDE;
-
-
-    protected slots:
+//	void reject() override;
 
 	/**
 	 * Enable or disable the actions depending on the current item.
@@ -168,14 +176,14 @@ namespace QDirStat
 	/**
 	 * Custom context menu signalled.
 	 **/
-	virtual void contextMenu( const QPoint & pos );
+	void contextMenu( const QPoint & pos );
 
 	/**
 	 * Key press event for detecting evnter/return.
 	 *
 	 * Reimplemented from QWidget.
 	 **/
-	virtual void keyPressEvent( QKeyEvent * event ) Q_DECL_OVERRIDE;
+	void keyPressEvent( QKeyEvent * event ) override;
 
 	//
 	// Data members
@@ -235,7 +243,7 @@ namespace QDirStat
 	/**
 	 * Less-than operator for sorting.
 	 **/
-	virtual bool operator<(const QTreeWidgetItem & other) const Q_DECL_OVERRIDE;
+	 bool operator<(const QTreeWidgetItem & other) const override;
 
     protected:
 

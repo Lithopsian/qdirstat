@@ -47,7 +47,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~PanelMessage();
+	~PanelMessage() override;
 
 	/**
 	 * Set the "Details..." link text.

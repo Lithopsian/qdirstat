@@ -51,7 +51,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~BusyPopup() {}
+//	virtual ~BusyPopup() {}
 
 	/**
 	 * Show the BusyPopup and process events for some milliseconds to make
@@ -70,7 +70,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QLabel / QWidget.
 	 **/
-	virtual void showEvent( QShowEvent * event ) Q_DECL_OVERRIDE;
+	void showEvent( QShowEvent * event ) override;
 
 
     protected:

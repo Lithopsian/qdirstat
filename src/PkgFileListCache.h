@@ -56,8 +56,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~PkgFileListCache()
-	{}
+	~PkgFileListCache() = default;
 
 	/**
 	 * Return the sorted file list for a package.

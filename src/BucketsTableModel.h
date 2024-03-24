@@ -45,7 +45,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~BucketsTableModel() {}
+//        virtual ~BucketsTableModel() {}
 
         /**
          * Return the associated histogram view.
@@ -58,6 +58,8 @@ namespace QDirStat
         void reset();
 
 
+    protected:
+
         //
         // Overloaded model methods
         //
@@ -65,35 +67,34 @@ namespace QDirStat
         /**
 	 * Return the number of rows (direct tree children) for 'parent'.
 	 **/
-	virtual int rowCount( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
+	int rowCount( const QModelIndex & parent ) const override;
 
 	/**
 	 * Return the number of columns for 'parent'.
 	 **/
-	virtual int columnCount( const QModelIndex & ) const Q_DECL_OVERRIDE
+	int columnCount( const QModelIndex & ) const override
 	    { return ColCount; }
 
 	/**
 	 * Return data to be displayed for the specified model index and role.
 	 **/
-	virtual QVariant data( const QModelIndex & index, int role ) const Q_DECL_OVERRIDE;
+	QVariant data( const QModelIndex & index, int role ) const override;
 
 	/**
 	 * Return header data for the specified section.
 	 **/
-	virtual QVariant headerData( int	     section,
-				     Qt::Orientation orientation,
-				     int	     role ) const Q_DECL_OVERRIDE;
+	QVariant headerData( int	     section,
+			     Qt::Orientation orientation,
+			     int	     role ) const override;
 
 	/**
 	 * Return item flags for the specified model index. This specifies if
 	 * the item can be selected, edited etc.
 	 **/
-	virtual Qt::ItemFlags flags( const QModelIndex &index ) const Q_DECL_OVERRIDE
+	Qt::ItemFlags flags( const QModelIndex &index ) const override
 	    { return QAbstractTableModel::flags( index ) | Qt::ItemIsSelectable; }
 
 
-    protected:
 
         HistogramView * _histogram;
     };

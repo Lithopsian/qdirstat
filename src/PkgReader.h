@@ -173,14 +173,14 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PkgReadJob();
+	~PkgReadJob() override;
 
 	/**
 	 * Start reading the file list of the package.
 	 *
 	 * Reimplemented from DirReadJob.
 	 **/
-	virtual void startReading() Q_DECL_OVERRIDE;
+	void startReading() override;
 
 	/**
 	 * Return the parent PkgInfo node.
@@ -295,7 +295,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~AsyncPkgReadJob() {}
+	~AsyncPkgReadJob() override = default;
 
 
     protected slots:
@@ -314,7 +314,7 @@ namespace QDirStat
          *
          * Reimplemented from PkgReadJob.
          **/
-        virtual QStringList fileList() Q_DECL_OVERRIDE;
+        QStringList fileList() override;
 
 
         // Data members
@@ -356,7 +356,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        virtual ~CachePkgReadJob() {}
+        ~CachePkgReadJob() override = default;
 
 
     protected:
@@ -366,7 +366,7 @@ namespace QDirStat
          *
          * Reimplemented from PkgReadJob.
          **/
-        virtual QStringList fileList() Q_DECL_OVERRIDE;
+        QStringList fileList() override;
 
 
         // Data members

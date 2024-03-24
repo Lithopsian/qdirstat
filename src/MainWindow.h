@@ -56,7 +56,7 @@ class MainWindow: public QMainWindow
 public:
 
     MainWindow( bool slowUpdate );
-    virtual ~MainWindow();
+    ~MainWindow() override;
 
     /**
      * Clear the current tree and replace it with the content of the specified
@@ -448,6 +448,12 @@ protected slots:
 protected:
 
     /**
+     * Set a subtree to either one of the selected items, or to the current item if
+     * there are no selected items.
+     **/
+    void setFutureSelection();
+
+    /**
      * Show a warning (as a panel message) about insufficient permissions when
      * reading directories.
      **/
@@ -473,15 +479,10 @@ protected:
      **/
     void connectMenuActions();
     void connectAction( QAction * action, void( MainWindow::*actee )( void ) );
+    void mapTreeExpandAction( QAction * action, int level );
     void connectToggleAction( QAction * action, void( MainWindow::*actee )( bool ) );
     void connectTreemapAction( QAction * action, void( TreemapView::*actee )( void ) );
     void connectHistoryButton( QAction * action, void( HistoryButtons::*actee )( void ) );
-
-    /**
-     * Set up the _treeLevelMapper to map an "expand tree to level x" action to
-     * the correct slot.
-     **/
-    void mapTreeExpandAction( QAction * action, int level );
 
     /**
      * Map actions to action names (eg. "L3").
@@ -597,37 +598,39 @@ protected:
      * Detect theme changes.  Currently only the file details panel needs to
      * react to this, so just call it directly.
      **/
-    virtual void changeEvent( QEvent * event ) Q_DECL_OVERRIDE;
+    void changeEvent( QEvent * event ) override;
 
     /**
      * Handle mouse buttons: Activate history actions actionGoBack and
      * actionGoForward with the "back" and "forward" mouse buttons as well.
      **/
-    virtual void mousePressEvent( QMouseEvent * event ) Q_DECL_OVERRIDE;
+    void mousePressEvent( QMouseEvent * event ) override;
 
 	/**
 	 * Context menu event.
 	 *
 	 * Reimplemented from QMainWindow.
 	 **/
-	virtual void contextMenuEvent( QContextMenuEvent * event ) Q_DECL_OVERRIDE;
+	void contextMenuEvent( QContextMenuEvent * event ) override;
 
 
 private:
 
     Ui::MainWindow	 * _ui;
-    HistoryButtons	 * _historyButtons;
-    QActionGroup	 * _layoutActionGroup;
-    QPointer<PanelMessage> _dirPermissionsWarning;
-    QElapsedTimer	   _stopWatch;
-    bool		   _enableDirPermissionsWarning;
-    bool		   _verboseSelection;
-    bool		   _urlInWindowTitle;
-    int			   _statusBarTimeout; // millisec
-    int			   _longStatusBarTimeout; // millisec
-    QSignalMapper	 * _treeLevelMapper;
-    QTimer		   _updateTimer;
+    HistoryButtons	 * _historyButtons	{ nullptr };
+    QActionGroup	 * _layoutActionGroup	{ nullptr };
     Subtree		   _futureSelection;
+
+    QPointer<PanelMessage> _dirPermissionsWarning;
+    bool		   _enableDirPermissionsWarning	{ false };
+    bool		   _verboseSelection		{ false };
+    bool		   _urlInWindowTitle		{ false };
+
+    QTimer		   _updateTimer;
+    int			   _statusBarTimeout		{ 3000 };
+    int			   _longStatusBarTimeout	{ 30000 };
+    QElapsedTimer	   _stopWatch;
+
     int			   _sortCol;
     Qt::SortOrder	   _sortOrder;
 

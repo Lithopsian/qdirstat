@@ -22,7 +22,6 @@ namespace QDirStat
 {
     class CleanupCollection;
     class FileInfo;
-    class FileInfoSet;
     class SelectionModel;
 
     /**

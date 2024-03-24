@@ -49,7 +49,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirTreePatternFilter() {}
+//	virtual ~DirTreePatternFilter() {}
 
 	/**
 	 * Return 'true' if the filesystem object specified by 'path' should
@@ -57,7 +57,7 @@ namespace QDirStat
 	 *
 	 * Implemented from DirTreeFilter.
 	 **/
-	virtual bool ignore( const QString & path ) const Q_DECL_OVERRIDE;
+	bool ignore( const QString & path ) const override;
 
 
     protected:
@@ -88,7 +88,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirTreeSuffixFilter() {}
+//	virtual ~DirTreeSuffixFilter() {}
 
 	/**
 	 * Return 'true' if the filesystem object specified by 'path' should
@@ -96,7 +96,7 @@ namespace QDirStat
 	 *
 	 * Implemented from DirTreeFilter.
 	 **/
-	virtual bool ignore( const QString & path ) const Q_DECL_OVERRIDE;
+	bool ignore( const QString & path ) const override;
 
 	/**
 	 * Return the suffix.

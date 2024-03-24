@@ -48,7 +48,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-//	virtual void mousePressEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
+//	void mousePressEvent( QGraphicsSceneMouseEvent * event ) override;
 
 	HistogramView * _parentView;
 	int		_number;
@@ -96,7 +96,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-//	virtual void mousePressEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE;
+//	void mousePressEvent( QGraphicsSceneMouseEvent * event ) override;
 
 	HistogramView * _parentView;
 	QString		_name;

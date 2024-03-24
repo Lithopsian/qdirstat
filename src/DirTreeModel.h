@@ -28,7 +28,13 @@ namespace QDirStat
 {
     class DirInfo;
     class PkgFilter;
-    class SelectionModel;
+//    class SelectionModel;
+
+    enum DirTreeItemSize
+    {
+	DTIS_Medium,
+	DTIS_Small,
+    };
 
     enum CustomRoles
     {
@@ -55,7 +61,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirTreeModel();
+	~DirTreeModel() override;
 
 	/**
 	 * Returns the internal DirTree this view works on.
@@ -141,14 +147,9 @@ namespace QDirStat
 	    { return usingDarkTheme() ? _subtreeReadErrDarkTheme : _subtreeReadErrLightTheme; }
 
 	/**
-	 * Return the font used for bold items.
+	 * Set the base font for the tree view,
 	 **/
-//	QFont boldItemFont() const { return _boldItemFont; }
-
-	/**
-	 * Set the font used for bold items.
-	 **/
-	void setBoldItemFont( const QFont & font ) { _boldItemFont = font; }
+	void setBaseFont( const QFont & font );
 
         /**
          * Return the icon indicate an item's type (file, directory etc.)
@@ -211,9 +212,32 @@ namespace QDirStat
 	int updateTimerMillisec() const { return _updateTimerMillisec; }
 
 	/**
-	 * Return the setting for TreeIconDir
+	 * Return the icon directory for the current tree item size setting.
 	 **/
-	const QString & treeIconDir() const { return _treeIconDir; }
+	QString treeIconDir() const { return treeIconDir( _treeItemSize ); }
+
+	/**
+	 * Returns the current tree item size setting.
+	 **/
+	DirTreeItemSize dirTreeItemSize() const { return _treeItemSize; }
+
+	/**
+	 * Returns the tree icon directory for the given enum value.
+	 **/
+	static QString treeIconDir( DirTreeItemSize treeItemSize )
+	    { return treeItemSize == DTIS_Medium ? ":/icons/tree-medium/" : ":/icons/tree-small/"; }
+
+	/**
+	 * Returns the tree item size setting for a given icon directory string.
+	 **/
+	static DirTreeItemSize dirTreeItemSize( const QString & treeIconDir )
+	    { return treeIconDir.contains( "medium" ) ? DTIS_Medium : DTIS_Small; }
+
+	/**
+	 * Returns the configured tree icon size.
+	 **/
+	QSize dirTreeIconSize() const
+	    { return _dirIcon.actualSize( QSize( 1024, 1024 ) ); }
 
 	/**
 	 * Update internal settings from the general configuration page.
@@ -221,7 +245,7 @@ namespace QDirStat
 	 **/
 	void updateSettings( bool crossFilesystems,
 			     bool useBoldForDominant,
-			     const QString & treeIconDir,
+			     DirTreeItemSize dirTreeItemSize,
 			     int updateTimerMillisec );
 
 	/**
@@ -252,8 +276,8 @@ namespace QDirStat
 	 * Set the selection model. This is required for all methods with
 	 * '..Selected()' in their name.
 	 **/
-	void setSelectionModel( SelectionModel * selModel )
-	    { _selectionModel = selModel; }
+//	void setSelectionModel( SelectionModel * selModel )
+//	    { _selectionModel = selModel; }
 
 	/**
 	 * Set the update speed to slow (default 3 sec instead of 250 millisec).
@@ -318,40 +342,40 @@ namespace QDirStat
 	/**
 	 * Return data to be displayed for the specified model index and role.
 	 **/
-	virtual QVariant data( const QModelIndex & index, int role ) const Q_DECL_OVERRIDE;
+	QVariant data( const QModelIndex & index, int role ) const override;
 
 	/**
 	 * Return header data (in this case: column header texts) for the
 	 * specified section (column number).
 	 **/
-	virtual QVariant headerData( int	     section,
-				     Qt::Orientation orientation,
-				     int	     role ) const Q_DECL_OVERRIDE;
+	QVariant headerData( int	     section,
+			     Qt::Orientation orientation,
+			     int	     role ) const override;
 
 	/**
 	 * Return item flags for the specified model index. This specifies if
 	 * the item can be selected, edited etc.
 	 **/
-	virtual Qt::ItemFlags flags( const QModelIndex & index ) const Q_DECL_OVERRIDE;
+	Qt::ItemFlags flags( const QModelIndex & index ) const override;
 
 	/**
 	 * Return the model index for the specified row (direct tree child
 	 * number) and column of item 'parent'.
 	 **/
-	virtual QModelIndex index( int row,
-				   int column,
-				   const QModelIndex & parent = QModelIndex() ) const Q_DECL_OVERRIDE;
+	QModelIndex index( int row,
+			   int column,
+			   const QModelIndex & parent = QModelIndex() ) const override;
 
 	/**
 	 * Return the parent model index of item 'index'.
 	 **/
-	virtual QModelIndex parent( const QModelIndex & index ) const Q_DECL_OVERRIDE;
+	QModelIndex parent( const QModelIndex & index ) const override;
 
 	/**
 	 * Sort the model.
 	 **/
-	virtual void sort( int column,
-			   Qt::SortOrder order = Qt::AscendingOrder ) Q_DECL_OVERRIDE;
+	void sort( int column,
+		   Qt::SortOrder order = Qt::AscendingOrder ) override;
 
 	/**
 	 * Return the resource path of the directory icon.
@@ -374,13 +398,15 @@ namespace QDirStat
 	const QIcon & networkIcon() const { return _networkIcon; }
 
 
-    protected slots:
+    public slots:
 
 	/**
 	 * Fix up sort order while reading: Sort by read jobs if the sort
 	 * column is the PercentBarCol.
 	 **/
 	void busyDisplay();
+
+    protected slots:
 
 	/**
 	 * Fix up sort order after reading is finished: No longer Sort by read
@@ -509,21 +535,7 @@ namespace QDirStat
 	 * Format a percentage value as string if it is non-negative.
 	 * Return QVariant() if it is negative.
 	 **/
-	QVariant formatPercent( float percent ) const;
-
-	/**
-	 * Return 'true' if this is considered a small file or symlink,
-	 * i.e. non-null, but 2 clusters allocated or less.
-	 **/
-	static bool useSmallFileSizeText( FileInfo * item );
-
-	/**
-	 * Return a list containing two strings for the delegate: the size formatted
-	 * with special for individual bytes, eg "137 B "; and the allocated size in
-	 * whole kilobytes, eg. "(8k)". This is only intended to be called if
-	 * useSmallFilSizeText() returns true.
-	 **/
-	static QStringList smallSizeText( FileInfo * item );
+	static QVariant formatPercent( float percent );
 
 	/**
 	 * Find the child number 'childNo' among the children of 'parent'.
@@ -569,32 +581,31 @@ namespace QDirStat
 	/**
 	 * Return the number of rows (direct tree children) for 'parent'.
 	 **/
-	virtual int rowCount( const QModelIndex & parent ) const Q_DECL_OVERRIDE;
+	int rowCount( const QModelIndex & parent ) const override;
 
 	/**
 	 * Return the number of columns for 'parent'.
 	 **/
-	virtual int columnCount( const QModelIndex & ) const Q_DECL_OVERRIDE
+	int columnCount( const QModelIndex & ) const override
 	    { return DataColumns::colCount(); }
 
 
 	//
 	// Data members
 	//
-
-	DirTree *	 _tree;
+	DirTree *	 _tree			{ nullptr };
 	bool		 _crossFilesystems;
-	SelectionModel * _selectionModel;
-	QString		 _treeIconDir;
-	int		 _readJobsCol;
+//	QString		 _treeIconDir;
+	DirTreeItemSize	 _treeItemSize;
+	int		 _readJobsCol		{ PercentBarCol };
 	QSet<DirInfo *>	 _pendingUpdates;
 	QTimer		 _updateTimer;
 	int		 _updateTimerMillisec;
 	int		 _slowUpdateMillisec;
-	bool		 _slowUpdate;
-	DataColumn	 _sortCol;
-	Qt::SortOrder	 _sortOrder;
-	bool		 _removingRows;
+	bool		 _slowUpdate		{ false };
+	DataColumn	 _sortCol		{ SizeCol };
+	Qt::SortOrder	 _sortOrder		{ Qt::DescendingOrder };
+	bool		 _removingRows		{ false };
 	bool		 _useBoldForDominantItems;
 
 	// Colors and fonts
@@ -603,7 +614,8 @@ namespace QDirStat
 	QColor _dirReadErrDarkTheme;
 	QColor _subtreeReadErrDarkTheme;
 
-	QFont  _boldItemFont;
+	QFont  _baseFont;
+	QFont  _themeFont;
 
 	// The various tree icons
 	QIcon _dirIcon;

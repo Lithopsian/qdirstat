@@ -12,9 +12,9 @@
 #include <QColor>
 #include <QList>
 #include <QStyledItemDelegate>
+#include <QTreeView>
 
 #include "DirTreeModel.h"      // RawDataRole
-#include "DirTreeView.h"
 
 
 typedef QList<QColor> ColorList;
@@ -74,7 +74,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~PercentBarDelegate();
+	~PercentBarDelegate() override = default;
 
 	/**
 	 * Paint one cell in the view.
@@ -82,14 +82,14 @@ namespace QDirStat
 	 **/
 	void paint( QPainter		       * painter,
 		    const QStyleOptionViewItem & option,
-		    const QModelIndex	       & index ) const Q_DECL_OVERRIDE;
+		    const QModelIndex	       & index ) const override;
 
 	/**
 	 * Return a size hint for one cell in the view.
 	 * Inherited from QStyledItemDelegate.
 	 **/
 	QSize sizeHint( const QStyleOptionViewItem & option,
-			const QModelIndex	   & index) const Q_DECL_OVERRIDE;
+			const QModelIndex	   & index) const override;
 
 	/**
 	 * Return the percent bar fill colors for each tree level. If there
@@ -178,8 +178,8 @@ namespace QDirStat
         int         _startColorIndex;
         int         _invisibleLevels;
 	ColorList   _fillColors;
-	QColor	    _barBackground;
-	int	    _sizeHintWidth;
+	QColor      _barBackground;
+	int         _sizeHintWidth;
 
     }; // class PercentBarDelegate
 

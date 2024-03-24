@@ -39,7 +39,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~PathSelector() {}
+	~PathSelector() override = default;
 
 	/**
 	 * Add a path with the specified icon.
@@ -148,7 +148,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~PathSelectorItem() {}
+	~PathSelectorItem() override = default;
 
 	/**
 	 * Return the path for this item.

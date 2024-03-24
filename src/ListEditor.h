@@ -69,8 +69,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~ListEditor()
-	{}
+	~ListEditor() override = default;
 
 
     protected:

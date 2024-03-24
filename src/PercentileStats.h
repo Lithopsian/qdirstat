@@ -45,8 +45,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~PercentileStats()
-	{}
+	~PercentileStats() = default;
 
 	/**
 	 * Clear the collected data and shrink the list.

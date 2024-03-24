@@ -48,7 +48,7 @@ public:
     /**
      * Destructor.
      **/
-    ~OutputWindow();
+    ~OutputWindow() override;
 
     /**
      * Add a process to watch. Ownership of the process is transferred to this
@@ -288,7 +288,7 @@ protected:
      *
      * Reimplemented from QDialog / QWidget.
      **/
-    void closeEvent( QCloseEvent * event ) Q_DECL_OVERRIDE;
+    void closeEvent( QCloseEvent * event ) override;
 
     /**
      * Remove a finished process and signal it is done.

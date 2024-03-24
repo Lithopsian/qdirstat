@@ -37,14 +37,13 @@ namespace QDirStat
 	 * Constructor.
 	 **/
 	FileSizeLabel( QWidget * parent = nullptr ):
-	    QLabel { parent }
+	    QLabel ( parent )
 	{}
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~FileSizeLabel()
-	{}
+//	virtual ~FileSizeLabel() {}
 
 	/**
 	 * Set the text of a file size label including special handling for
@@ -113,7 +112,7 @@ namespace QDirStat
 	 * Clear everything, including the visible text, the numeric value,
 	 * the context menu text and the bold font.
 	 **/
-	virtual void clear();
+	void clear();
 
     };
 

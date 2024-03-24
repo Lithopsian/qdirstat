@@ -60,8 +60,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~MimeCategory()
-	{}
+	~MimeCategory() = default;
 
 	/**
 	 * Return the color for this category.

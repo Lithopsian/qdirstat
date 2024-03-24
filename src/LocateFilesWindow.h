@@ -53,7 +53,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~LocateFilesWindow();
+	~LocateFilesWindow() override;
 
 	/**
 	 * Returns the shared instance pointer for this window.  It is created if
@@ -87,15 +87,12 @@ namespace QDirStat
 //        TreeWalker * treeWalker() const { return _treeWalker; }
 
 
-    public slots:
+    protected slots:
 
 	/**
 	 * Refresh (reload) all data.
 	 **/
 	void refresh();
-
-
-    protected slots:
 
 	/**
 	 * Locate one of the items in this list results in the main window's
@@ -140,7 +137,7 @@ namespace QDirStat
          * Set the sort column and sort order (Qt::AscendingOrder or
          * Qt::DescendingOrder), sort the list and select the first item.
          **/
-        void sortByColumn( int col, Qt::SortOrder order );
+//        void sortByColumn( int col, Qt::SortOrder order );
 
         /**
          * Count the number of items in the list and display the number.
@@ -152,7 +149,8 @@ namespace QDirStat
          * main window, open the branch where this item is in and scroll the
          * main window's tree so that item is visible tere.
          **/
-        void selectFirstItem();
+        void selectFirstItem()
+	    { _ui->treeWidget->setCurrentItem( _ui->treeWidget->topLevelItem( 0 ) ); }
 
         /**
          * Add the hotkeys (shortcuts) of the cleanup actions to this window.
@@ -232,7 +230,7 @@ namespace QDirStat
 	/**
 	 * Less-than operator for sorting.
 	 **/
-	virtual bool operator<( const QTreeWidgetItem & other ) const Q_DECL_OVERRIDE;
+	bool operator<( const QTreeWidgetItem & other ) const override;
 
 
     protected:

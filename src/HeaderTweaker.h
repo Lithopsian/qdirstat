@@ -43,7 +43,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~HeaderTweaker();
+	~HeaderTweaker() override;
 
 	/**
 	 * Resize a header view to contents.

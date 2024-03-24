@@ -44,7 +44,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~ConfigDialog();
+	~ConfigDialog() override;
 
 
     protected slots:
@@ -54,7 +54,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QDialog.
 	 **/
-	virtual void accept() Q_DECL_OVERRIDE;
+	void accept() override;
 
 	/**
 	 * Reject the dialog contents, i.e. the user clicked the "Cancel"
@@ -62,7 +62,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QDialog.
 	 **/
-	virtual void reject() Q_DECL_OVERRIDE;
+	void reject() override;
 
 
     signals:

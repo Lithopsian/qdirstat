@@ -64,6 +64,12 @@ namespace QDirStat
 	virtual ~DirReadJob();
 
 	/**
+	 * Suppress copy and assignment constructors.
+	 **/
+	DirReadJob( const DirReadJob & ) = delete;
+	DirReadJob & operator=( const DirReadJob & ) = delete;
+
+	/**
 	 * Read the next couple of items from the directory.
 	 * Call finished() when there is nothing more to read.
 	 *
@@ -176,7 +182,7 @@ namespace QDirStat
 
 	ObjDirReadJob( DirTree *tree, DirInfo *dir = nullptr )
 	    : QObject(), DirReadJob( tree, dir ) {};
-	virtual ~ObjDirReadJob() {}
+	~ObjDirReadJob() override = default;
 
     protected slots:
 
@@ -212,7 +218,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~LocalDirReadJob();
+	~LocalDirReadJob() override;
 
 	/**
 	 * Return 'true' if any exclude rules matching against any direct file
@@ -232,7 +238,7 @@ namespace QDirStat
 	 *
 	 * Inherited and reimplemented from DirReadJob.
 	 **/
-	virtual void startReading();
+	void startReading() override;
 
 	/**
 	 * Finish reading the directory: Set the specified read state, send
@@ -306,8 +312,8 @@ namespace QDirStat
 
 	QString _dirName;
 	bool	_applyFileChildExcludeRules;
-	bool	_checkedForNtfs;
-	bool	_isNtfs;
+	bool	_checkedForNtfs	{ false };
+	bool	_isNtfs		{ false };
 
 	static bool _warnedAboutNtfsHardLinks;
 
@@ -342,14 +348,14 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~CacheReadJob();
+	~CacheReadJob() override;
 
 	/**
 	 * Start reading the cache. Prior to this nothing happens.
 	 *
 	 * Inherited and reimplemented from DirReadJob.
 	 **/
-	virtual void read();
+	void read() override;
 
 	/**
 	 * Return the associated cache reader.
@@ -390,7 +396,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirReadJobQueue();
+	~DirReadJobQueue() override;
 
 	/**
 	 * Add a job to the end of the queue. Begin time-sliced reading if not

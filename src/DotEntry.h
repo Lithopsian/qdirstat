@@ -38,26 +38,26 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DotEntry() {}
+//	virtual ~DotEntry() {}
 
 	/**
 	 * Get the "Dot Entry" for this node if there is one (or 0 otherwise).
 	 * Since this is a dot entry, this always returns 0: A dot entry does
 	 * not have a dot entry itself.
 	 **/
-	virtual DotEntry * dotEntry() const Q_DECL_OVERRIDE { return nullptr; }
+	DotEntry * dotEntry() const override { return nullptr; }
 
 	/**
 	 * Check if this is a dot entry.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isDotEntry() const Q_DECL_OVERRIDE { return true; }
+	bool isDotEntry() const override { return true; }
 
 	/**
 	 * Sets a flag that this is the root directory of a cache file read.
 	 **/
-	virtual bool isFromCache() const Q_DECL_OVERRIDE { return _parent && _parent->isFromCache(); }
+	bool isFromCache() const override { return _parent && _parent->isFromCache(); }
 
 	/**
 	 * Insert a child into the children list.
@@ -67,7 +67,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual void insertChild( FileInfo *newChild ) Q_DECL_OVERRIDE;
+	void insertChild( FileInfo *newChild ) override;
 
 	/**
 	 * Recursively finalize all directories from here on -
@@ -75,7 +75,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual void finalizeAll() Q_DECL_OVERRIDE {}
+	void finalizeAll() override {}
 
 	/**
 	 * Get the current state of the directory reading process.
@@ -83,7 +83,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual DirReadState readState() const Q_DECL_OVERRIDE
+	DirReadState readState() const override
 		{ return _parent ? _parent->readState() : _readState; }
 
 	/**
@@ -92,7 +92,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual void reset() Q_DECL_OVERRIDE {}
+	void reset() override {}
 
 
     protected:
@@ -105,7 +105,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual void cleanupDotEntries() Q_DECL_OVERRIDE {}
+	void cleanupDotEntries() override {}
 
     };	// class DotEntry
 

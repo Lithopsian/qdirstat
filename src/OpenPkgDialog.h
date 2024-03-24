@@ -37,7 +37,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~OpenPkgDialog();
+	~OpenPkgDialog() override;
 
 	/**
 	 * Open an "open package" dialog and wait for the user to enter
@@ -55,12 +55,12 @@ namespace QDirStat
 	PkgFilter pkgFilter();
 
 
-    public slots:
+    protected slots:
 
 	/**
 	 * To select the filter radio button if the user enters a pattern.
 	 **/
-	virtual void textEdited();
+	void textEdited();
 
 
     protected:

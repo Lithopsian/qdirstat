@@ -39,7 +39,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        ~SizeColDelegate() {}
+        ~SizeColDelegate() override = default;
 
 	/**
 	 * Paint one cell in the view.
@@ -47,14 +47,14 @@ namespace QDirStat
 	 **/
 	void paint( QPainter		       * painter,
 		    const QStyleOptionViewItem & option,
-		    const QModelIndex	       & index ) const Q_DECL_OVERRIDE;
+		    const QModelIndex	       & index ) const override;
 
 	/**
 	 * Return a size hint for one cell in the view.
 	 * Inherited from QStyledItemDelegate.
 	 **/
 	QSize sizeHint( const QStyleOptionViewItem & option,
-			const QModelIndex	   & index) const Q_DECL_OVERRIDE;
+			const QModelIndex	   & index) const override;
 
     };  // class SizeColDelegate
 

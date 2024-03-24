@@ -38,13 +38,12 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	~ExistingDirValidator()
-	{}
+	~ExistingDirValidator() override = default;
 
 	/**
 	 * Validate the input string.
 	 **/
-	QValidator::State validate( QString & input, int &) const Q_DECL_OVERRIDE;
+	QValidator::State validate( QString & input, int &) const override;
 
 
     signals:
@@ -74,8 +73,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        ~ExistingDirCompleter()
-	{}
+        ~ExistingDirCompleter() override = default;
 
     };  // class ExistingDirCompleter
 

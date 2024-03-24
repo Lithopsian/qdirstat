@@ -12,13 +12,12 @@
 
 #include "ListEditor.h"
 #include "ui_cleanup-config-page.h"
-#include "Cleanup.h"
 
 
 namespace QDirStat
 {
+    class Cleanup;
     class ConfigDialog;
-
 
     /**
      * Configuration page (tab) for cleanups:
@@ -31,7 +30,9 @@ namespace QDirStat
     public:
 
 	CleanupConfigPage( ConfigDialog * parent );
-	virtual ~CleanupConfigPage();
+	~CleanupConfigPage() override;
+	CleanupConfigPage( CleanupConfigPage & ) = delete;
+	CleanupConfigPage & operator=( CleanupConfigPage & ) = delete;
 
 
     protected slots:
@@ -61,21 +62,21 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void fillListWidget() Q_DECL_OVERRIDE;
+	void fillListWidget() override;
 
 	/**
 	 * Save the contents of the widgets to the specified value.
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void save( void * value ) Q_DECL_OVERRIDE;
+	void save( void * value ) override;
 
 	/**
 	 * Load the content of the widgets from the specified value.
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void load( void * value ) Q_DECL_OVERRIDE;
+	void load( void * value ) override;
 
 	/**
 	 * Create a new value with default values.
@@ -83,7 +84,7 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void * createValue() Q_DECL_OVERRIDE;
+	void * createValue() override;
 
 	/**
 	 * Remove a value from the internal list and delete it.
@@ -92,7 +93,7 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void removeValue( void * );
+	void removeValue( void * ) override;
 
 	/**
 	 * Return a text for the list item of 'value'.
@@ -100,7 +101,7 @@ namespace QDirStat
 	 * Implemented from ListEditor.
 	 **/
 
-	virtual QString valueText( void * value ) Q_DECL_OVERRIDE;
+	QString valueText( void * value ) override;
 
 	/**
 	 * Enable or disable all the edit widgets on the right side

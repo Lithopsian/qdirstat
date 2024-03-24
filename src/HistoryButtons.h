@@ -37,7 +37,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-	~HistoryButtons();
+	~HistoryButtons() override;
 
         /**
          * Clear the complete history.

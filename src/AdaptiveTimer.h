@@ -79,7 +79,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        ~AdaptiveTimer() {}
+        ~AdaptiveTimer() override = default;
 
         /**
          * Return the current delay stage.

@@ -11,16 +11,18 @@
 
 
 #include <QTreeView>
+#include <QTreeWidget>
 
 class QAction;
 
 
 namespace QDirStat
 {
+    class DirTreeModel;
+    class FileInfo;
+    class HeaderTweaker;
     class PercentBarDelegate;
     class SizeColDelegate;
-    class HeaderTweaker;
-    class FileInfo;
 
     /**
      * Tree view widget for the QDirStat directory tree.
@@ -48,26 +50,7 @@ namespace QDirStat
 	/**
 	 * Destructor
 	 **/
-	virtual ~DirTreeView();
-
-	/**
-	 * Return this view's header tweaker.
-	 **/
-	void setStyles( const QString & treeIconDir );
-
-	/**
-	 * Return the list of items that are currently expanded.
-	 *
-	 * This is well-known in the base class, but due to poor design that
-	 * information is not accessible in derived classes. Well, I got
-	 * creative.
-	 *
-	 * This method being public is more to spite the "masterminds" who in
-	 * their infinite wisdom considered this information not worthy of
-	 * being exported to the public because "it doesn't kneed to
-	 * know". WTF?
-	 **/
-	QModelIndexList expandedIndexes() const;
+	~DirTreeView() override;
 
 	/**
 	 * Return this view's header tweaker.
@@ -78,6 +61,12 @@ namespace QDirStat
          * Expand or collapse an item based on a FileInfo pointer.
          **/
         void setExpanded( FileInfo * item, bool expanded = true );
+
+        /**
+         * Scroll to the current item (index).  This will open any necessary
+	 * branches and attempt to center the item in the viewport.
+         **/
+        void scrollToCurrent() { scrollTo ( currentIndex(), QAbstractItemView::PositionAtCenter ); }
 
 
     public slots:
@@ -100,19 +89,31 @@ namespace QDirStat
     protected:
 
 	/**
+	 * Obtain the DirTreeModel object for this tree view.
+	 **/
+	const DirTreeModel * dirTreeModel() const;
+
+	/**
+	 * Return the list of items that are currently expanded.
+	 **/
+	QModelIndexList expandedIndexes() const;
+
+	/**
 	 * Change the current item. Overwritten from QTreeView to make sure
 	 * the branch of the new current item is expanded and scrolled to
 	 * the visible area.
+	 *
+	 * Doesn't currently do anything different from the default implementation.
 	 **/
-	virtual void currentChanged( const QModelIndex & current,
-				     const QModelIndex & oldCurrent ) Q_DECL_OVERRIDE;
+//	void currentChanged( const QModelIndex & current,
+//			     const QModelIndex & oldCurrent ) override;
 
         /**
          * Keyboard event handler.
          *
          * Reimplemented from QTreeView.
          **/
-//        virtual void keyPressEvent( QKeyEvent * event ) Q_DECL_OVERRIDE;
+//        void keyPressEvent( QKeyEvent * event ) override;
 
         /**
          * Mouse button handler.
@@ -123,7 +124,7 @@ namespace QDirStat
          *
          * Reimplemented from QTreeView.
          **/
-        virtual void mousePressEvent( QMouseEvent * event ) Q_DECL_OVERRIDE;
+        void mousePressEvent( QMouseEvent * event ) override;
 
 
 	// Data members

@@ -45,7 +45,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~FileSizeStatsWindow();
+	~FileSizeStatsWindow() override;
 
 	/**
 	 * Static method for using one shared instance of this class between
@@ -58,18 +58,10 @@ namespace QDirStat
     public:
 
 	/**
-	 * Return the corresponding subtree.
-	 **/
-//	FileInfo * subtree() const { return _subtree; }
-
-	/**
-	 * Return the filename suffix to filter the collected information.
-	 **/
-//	QString suffix() const { return _suffix; }
-
-	/**
 	 * Convenience function for creating, populating and showing the shared
 	 * instance.
+	 *
+	 * Any suffix should start with '.', but not '*.".
 	 **/
 	static void populateSharedInstance( QWidget	  * mainWindow,
 					    FileInfo	  * subtree,
@@ -111,16 +103,6 @@ namespace QDirStat
     protected:
 
 	/**
-	 * Clear all data and widget contents.
-	 **/
-	void clear();
-
-	/**
-	 * Calculate the statistics from the tree.
-	 **/
-	void calc();
-
-	/**
 	 * One-time initialization of the widgets in this window.
 	 **/
 	void initWidgets();
@@ -128,7 +110,7 @@ namespace QDirStat
 	/**
 	 * Populate with new content.
 	 **/
-	void populate( FileInfo * subtree, const QString & suffix = "" );
+	void populate( FileInfo * subtree, const QString & suffix );
 
 	/**
 	 * Update the values for the option widgets from the current ones from
@@ -178,8 +160,6 @@ namespace QDirStat
 	//
 
 	Ui::FileSizeStatsWindow * _ui;
-	FileInfo		* _subtree;
-	QString			  _suffix;
 	FileSizeStats		* _stats;
 	BucketsTableModel	* _bucketsTableModel;
 

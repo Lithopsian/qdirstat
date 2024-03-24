@@ -26,7 +26,6 @@
 // Notice that this is different from st_blksize in the struct that the stat()
 // syscall returns, yet it is the reference unit for st_blocks in that same
 // struct.
-
 #define STD_BLOCK_SIZE 512L
 
 
@@ -68,25 +67,17 @@ namespace QDirStat
      * easily has 150,000+ filesystem objects, and at least one entry of this
      * sort is required for each of them.
      *
-     * This class provides stubs for children management, yet those stubs all
-     * are default implementations that don't really deal with children.
-     * Derived classes need to take care of that.
-     *
-     * @short Basic file information (like obtained by the lstat() sys call)
+     * This class provides stubs for children management; those stubs are all
+     * default implementations that don't really deal with children. Derived
+     * classes need to implement real methods for those cases.
      **/
     class FileInfo
     {
     public:
 
 	/**
-	 * Constructor from raw data values.  Used by the cache reader.
-	 *
-	 * Don't make any assumptions about the file's tail. We might use
-	 *
-	 * _allocatedSize = _blocks * STD_BLOCK_SIZE;
-	 *
-	 * but that might be wrong if the filesystem has intelligent fragment
-	 * handling. Simply use the byte size instead.
+	 * Constructor from raw data values.  Used by the cache reader and as
+	 * a delegate by some other constructors.
 	 **/
 	FileInfo( DirInfo	* parent,
 		  DirTree	* tree,
@@ -102,9 +93,7 @@ namespace QDirStat
 		  FileSize	  blocks,
 		  nlink_t	  links ):
 	    _parent { parent },
-	    _next { nullptr },
 	    _tree { tree },
-	    _magic { FileInfoMagic },
 	    _name { filename },
 	    _isLocalFile { true },
 	    _isSparseFile { isSparseFile },
@@ -165,7 +154,8 @@ namespace QDirStat
 	{}
 
 	/**
-	 * Constructor from just the parent, tree, and name.
+	 * Constructor from just the parent, tree, and name.  Only used to create
+	 * a FileInfo in certain error situations such as aborted reads.
 	 **/
 	FileInfo( DirInfo	* parent,
 		  DirTree	* tree,
@@ -174,12 +164,19 @@ namespace QDirStat
 	{}
 
 	/**
-	 * Constructor from a stat buffer (i.e. based on an lstat() call).
+	 * Constructor from a stat buffer (i.e. based on an lstat() call).  It is
+	 * expected that this will be used for all "real" files.
 	 **/
 	FileInfo( DirInfo	* parent,
 		  DirTree	* tree,
 		  const QString	& filename,
 		  struct stat	* statInfo );
+
+	/**
+	 * Suppress copy and assignment constructors.
+	 **/
+	FileInfo( const FileInfo & ) = delete;
+	FileInfo & operator=( const FileInfo & ) = delete;
 
 	/**
 	 * Destructor.
@@ -248,16 +245,14 @@ namespace QDirStat
 	 * Very much like FileInfo::url(), but with "/<Files>" appended if this
 	 * is a dot entry. Useful for debugging.
 	 *
-	 * Notice: You can simply use the QTextStream operator<< to output
-	 * exactly this:
-	 *
-	 * logDebug() << "Found fileInfo " << info << Qt::endl;
+	 * Note that the QTextStream operator<< outputs exactly this.
 	 **/
 	virtual QString debugUrl() const;
 
 	/**
 	 * Returns the major and minor device numbers of the device this file
-	 * resides on or 0 if this is a remote file.
+	 * resides on or 0 if this is a remote file (or a "simulated" FileInfo
+	 * object such as from a cache read).
 	 **/
 	dev_t device() const { return _device; }
 
@@ -279,56 +274,49 @@ namespace QDirStat
 	/**
 	 * User ID of the owner.
 	 *
-	 * Notice that this might be undefined if this tree branch was read
-	 * from a cache file. Check that with hasUid().
+	 * Notice that this might be undefined (zero will be stored, but it
+	 * it doesn't mean 'root') if this tree branch was read
+	 * from an old-format cache file. Check that with hasUid().
 	 **/
 	uid_t uid() const { return _uid; }
 
 	/**
 	 * Return the user name of the owner.
 	 *
-	 * If this tree branch was read from a cache file, this returns an
-	 * empty string.
+	 * If this tree branch was read from an old-format cache file, this
+	 * returns an empty string.
 	 **/
 	QString userName() const;
 
 	/**
 	 * Return 'true' if this FileInfo has a UID (user ID).
-	 *
-	 * It might not have that information e.g. if it was read from a cache
-	 * file.
 	 **/
 	bool hasUid() const { return _hasUidGidPerm; }
 
 	/**
 	 * Group ID of the owner.
 	 *
-	 * Notice that this might be undefined if this tree branch was read
-	 * from a cache file. Check that with hasGid().
+	 * Notice that this might be undefined (zero will be stored, but it
+	 * it doesn't mean 'root') if this tree branch was read
+	 * from an old-format cache file. Check that with hasGid().
 	 **/
 	gid_t gid() const { return _gid; }
 
 	/**
 	 * Return the group name of the owner.
 	 *
-	 * If this tree branch was read from a cache file, this returns an
-	 * empty string.
+	 * If this tree branch was read from an old-format cache file, this
+	 * returns an empty string.
 	 **/
 	QString groupName() const;
 
 	/**
 	 * Return 'true' if this FileInfo has a GID (group ID).
-	 *
-	 * It might not have that information e.g. if it was read from a cache
-	 * file.
 	 **/
 	bool hasGid() const { return _hasUidGidPerm; }
 
 	/**
 	 * Return 'true' if this FileInfo has valid permissions in the mode.
-	 *
-	 * It might not have that information e.g. if it was read from a cache
-	 * file.
 	 **/
 	bool hasPerm() const { return _hasUidGidPerm; }
 
@@ -353,10 +341,14 @@ namespace QDirStat
 	FileSize size() const;
 
 	/**
-	 * The number of blocks, calculated from the size of the file.
+	 * The number of blocks, calculated from the (usually allocated) size of
+	 * the file.  Some file systems may not report allocations in complete
+	 * blocks, so round up to the number of blocks required to hold the
+	 * allocation.
+	 *
 	 **/
-	static int blocksFromSize( FileSize size )
-	    { return qCeil( (float)size / STD_BLOCK_SIZE ); }
+	static int blocksFromSize( FileSize allocatedSize )
+	    { return qCeil( (float)allocatedSize / STD_BLOCK_SIZE ); }
 
 	/**
 	 * The file size in bytes without taking multiple hard links into
@@ -376,12 +368,11 @@ namespace QDirStat
 	 * "holes", i.e. large portions filled with zeros. This is typical for
 	 * large core dumps for example. The only way to create such a file is
 	 * to lseek() far ahead of the previous file size and then writing
-	 * data. Most filesystem utilities will however disregard the fact that
-	 * files are sparse files and simply allocate the holes as well, thus
-	 * greatly increasing the disk space consumption of such a file. Only
-	 * some few filesystem utilities like "cp", "rsync", "tar" have options
-	 * to handle this more graciously - but usually only when specifically
-	 * requested. See the respective man pages.
+	 * data. Most filesystem utilities disregard the fact that files are
+	 * sparse files and simply allocate the holes as well, thus greatly
+	 * increasing the disk space consumption of such a file. Only a few
+	 * filesystem utilities like "cp", "rsync", "tar" have options to handle
+	 * this more graciously - and usually only when specifically requested.
 	 **/
 	FileSize allocatedSize() const;
 
@@ -411,12 +402,13 @@ namespace QDirStat
 
 	/**
 	 * Returns the year and month derived from the file mtime.
-	 *
-	 * The first call to this will calculate the value from _mtime and
-	 * cache it (and the corresponding year); that's why this is not a
-	 * const method.
 	 **/
-	 QPair<short, short> yearAndMonth();
+	 QPair<short, short> yearAndMonth() const;
+
+	//
+	// Directory-related methods that should be implemented by
+	// derived classes.
+	//
 
 	/**
 	 * Returns the total size in bytes of this subtree.
@@ -541,14 +533,15 @@ namespace QDirStat
 	/**
 	 * Set the 'excluded' status.
 	 *
-	 * This default implementation silently ignores the value passed and
-	 * does nothing. Derived classes may want to overwrite this.
+	 * Only DirInfo objects are excluded, so the default implementation
+	 * silently ignores the value passed here and does nothing. Derived
+	 * classes may want to overwrite this.
 	 **/
 	virtual void setExcluded( bool ) { return; }
 
 	/**
-	 * Returns whether or not this is a mount point.
-	 * Derived classes may want to overwrite this.
+	 * Returns whether or not this is a mount point.  Always false for a
+	 * file.  Derived classes may want to overwrite this.
 	 **/
 	virtual bool isMountPoint() const  { return false; }
 
@@ -562,10 +555,10 @@ namespace QDirStat
 	virtual void setMountPoint( bool ) { return; }
 
 	/**
-	 * Returns true if this subtree is finished reading.
-	 *
-	 * This default implementation always returns 'true';
-	 * derived classes should overwrite this.
+	 * Returns true if this subtree is finished reading.  Files have no
+	 * children and are always finished as soon as they are constructed,
+	 * so the default implementation always returns 'true'; derived
+	 * classes should overwrite this.
 	 **/
 	virtual bool isFinished() { return true; }
 
@@ -623,10 +616,10 @@ namespace QDirStat
 	void setParent( DirInfo * newParent ) { _parent = newParent; }
 
 	/**
-	 * Returns a pointer to the next entry on the same level
-	 * or 0 if there is none.
+	 * Returns a pointer to the next entry on the same level, or 0 if
+	 * if there is none.
 	 **/
-	FileInfo * next() const { return _next;	  }
+	FileInfo * next() const { return _next; }
 
 	/**
 	 * Set the "next" pointer.
@@ -643,7 +636,6 @@ namespace QDirStat
 
 	/**
 	 * Set this entry's first child.
-	 * Use this method only if you know exactly what you are doing.
 	 *
 	 * This default implementation does nothing.
 	 * Derived classes might want to overwrite this.
@@ -723,7 +715,7 @@ namespace QDirStat
 	/**
 	 * (Translated) user-visible string for a "Dot Entry" ("<Files>").
 	 **/
-	inline static QString dotEntryName()
+	static QString dotEntryName()
 	    { return QObject::tr( "<Files>" ); }
 
 	/**
@@ -747,7 +739,7 @@ namespace QDirStat
 	/**
 	 * (Translated) user-visible string for the "Attic" ("<Ignored>").
 	 **/
-	inline static QString atticName()
+	static QString atticName()
 	    { return QObject::tr( "<Ignored>" ); }
 
 	/**
@@ -781,14 +773,18 @@ namespace QDirStat
 
 	/**
 	 * Notification that a child is about to be deleted somewhere in the
-	 * subtree.
+	 * subtree.  The default implementation has no children and so this
+	 * does nothing.
+	 *
+	 * Derived classes that can handle children should overwrite this.
 	 **/
 	virtual void deletingChild( FileInfo * ) {}
 
 	/**
-	 * Get the current state of the directory reading process:
+	 * Get the current state of the directory reading process.
 	 *
-	 * This default implementation always returns DirFinished.
+	 * Files are always finsihed as soon as they are constructed, so the
+	 * default implementation always returns DirFinished.
 	 * Derived classes should overwrite this.
 	 **/
 	virtual DirReadState readState() const { return DirFinished; }
@@ -797,7 +793,8 @@ namespace QDirStat
 	 * Check if readState() is anything that indicates an error reading the
 	 * directory, i.e. DirError or DirPermissionDenied.
 	 *
-	 * This default implementation always returns 'false'.
+	 * Files have been read successfully if they are constructed at all, so
+	 * the default implementation always returns 'false'.
 	 * Derived classes should overwrite this.
 	 **/
 	virtual bool readError() const { return false; }
@@ -866,14 +863,9 @@ namespace QDirStat
 	 * calculated in the constructor rather than doing repeated
 	 * calculations and comparisons.
 	 *
-	 * Please not that size() already takes this into account.
+	 * Please note that size() already takes this into account.
 	 **/
 	bool isSparseFile() const { return _isSparseFile; }
-
-	/**
-	 * Returns true if this FileInfo was read from a cache file.
-	 **/
-//	bool isCached() const;
 
 	/**
 	 * Returns true if this FileInfo was ignored by some rule (e.g. in the
@@ -954,12 +946,8 @@ namespace QDirStat
          * not exist. This does NOT check multiple symlink indirections,
          * i.e. it does not check if the target is also a symlink if the target
          * of that also exists.
-         *
-         * Intentionally not declaring this as 'const' since this might some
-         * day use cached information and do lazy initialization on its first
-         * call.
          **/
-        bool isBrokenSymLink()
+        bool isBrokenSymLink() const
 	    { return isSymLink() ? !QFileInfo( QFileInfo( path() ).symLinkTarget() ).exists() : false; }
 
         /**
@@ -967,39 +955,8 @@ namespace QDirStat
          * follow multiple symlink indirections, only the direct target.
          *
          * If this is not a symlink, an empty string is returned.
-         *
-         * Intentionally not declaring this as 'const' since this might some
-         * day use cached information and do lazy initialization on its first
-         * call.
          **/
-        QString symLinkTarget();
-
-	/**
-	 * Set the policy how hard links are handled: By default, for files
-	 * with multiple hard links, the size is distributed among each
-	 * individual hard link for that file. So a file with a size of 4 kB
-	 * and 4 hard links reports 1 kB to its parent directory.
-	 *
-	 * When this flag is set to 'true', it will report the full 4 kB each
-	 * time, so all 4 hard links together will now add up to 16 kB. While
-	 * this is probably a very bad idea if those links are all in the same
-	 * directory (or subtree), it might even be useful if there are several
-	 * separate subtrees that all share hard links between each other, but
-	 * not within the same subtree. Some backup systems use this strategy
-	 * to save disk space.
-	 *
-	 * Use this with caution.
-	 *
-	 * This flag will be read from the config file from the outside
-	 * (DirTree) and set from there using this function.
-	 **/
-	static void setIgnoreHardLinks( bool ignore );
-
-	/**
-	 * Return the current hard links accounting policy.
-	 * See setIgnoreHardLinks() for details.
-	 **/
-	static bool ignoreHardLinks() { return _ignoreHardLinks; }
+        QString symLinkTarget() const;
 
 
     protected:
@@ -1009,27 +966,25 @@ namespace QDirStat
 	// Keep this short in order to use as little memory as possible -
 	// there will be a _lot_ of entries of this kind!
 
-	DirInfo	 *	_parent;		// pointer to the parent entry
-	FileInfo *	_next;			// pointer to the next entry
-	DirTree	 *	_tree;			// pointer to the parent tree
+	DirInfo	 * _parent { nullptr };		// pointer to the parent entry
+	FileInfo * _next { nullptr };		// pointer to the next entry
+	DirTree	 * _tree { nullptr };		// pointer to the parent tree
 
-	short		_magic;			// magic number to detect if this object is valid
-	QString		_name;			// the file name (without path!)
-	bool		_isLocalFile   :1;	// flag: local or remote file?
-	bool		_isSparseFile  :1;	// (cache) flag: sparse file (file with "holes")?
-	bool		_isIgnored     :1;	// flag: ignored by rule?
-	bool		_hasUidGidPerm :1;	// flag: was this constructed with uid/guid/ and permissions
-	dev_t		_device;		// device this object resides on
-	mode_t		_mode;			// file permissions + object type
-	nlink_t		_links;			// number of links
-	uid_t		_uid;			// User ID of owner
-	gid_t		_gid;			// Group ID of owner
-	FileSize	_size;			// size in bytes
-	FileSize	_blocks;		// 512 bytes blocks
-	FileSize	_allocatedSize;		// allocated size in bytes
-	time_t		_mtime;			// modification time
-
-	static bool	_ignoreHardLinks;	// don't distribute size for multiple hard links
+	short	 _magic { FileInfoMagic };	// magic number to detect if this object is valid
+	QString	 _name;			// the file name (without path!)
+	bool	 _isLocalFile   :1;	// flag: local or remote file?
+	bool	 _isSparseFile  :1;	// (cache) flag: sparse file (file with "holes")?
+	bool	 _isIgnored     :1;	// flag: ignored by rule?
+	bool	 _hasUidGidPerm :1;	// flag: was this constructed with uid/guid/ and permissions
+	dev_t	 _device;		// device this object resides on
+	mode_t	 _mode;			// file permissions + object type
+	nlink_t	 _links;		// number of links
+	uid_t	 _uid;			// User ID of owner
+	gid_t	 _gid;			// Group ID of owner
+	FileSize _size;			// size in bytes
+	FileSize _blocks;		// 512 bytes blocks
+	FileSize _allocatedSize;	// allocated size in bytes
+	time_t	 _mtime;		// modification time
 
     };	// class FileInfo
 

@@ -34,7 +34,7 @@ public:
     /**
      * Destructor.
      */
-    virtual ~Exception() throw() {}
+    virtual ~Exception() noexcept {}
 
     /**
      * Return a text description of what was wrong.
@@ -97,7 +97,7 @@ public:
 	Exception ( "Null pointer" )
     {}
 
-    virtual ~NullPointerException() throw() {}
+    ~NullPointerException() noexcept override = default;
 };
 
 
@@ -112,7 +112,7 @@ public:
 	Exception ( "Null pointer" )
     {}
 
-    virtual ~OutOfMemoryException() throw() {}
+    ~OutOfMemoryException() noexcept override = default;
 };
 
 
@@ -124,7 +124,7 @@ public:
 	_filename { filename }
     {}
 
-    virtual ~FileException() throw() {}
+    ~FileException() noexcept override = default;
 
     QString filename() const { return _filename; }
 
@@ -143,7 +143,7 @@ public:
 	_resourceName { resourceName }
     {}
 
-    virtual ~SysCallFailedException() throw() {}
+    ~SysCallFailedException() noexcept override = default;
 
     /**
      * Return the resource for which this syscall failed. This is typically a
@@ -171,7 +171,7 @@ public:
 	Exception ( "dynamic_cast failed; expected: " + expectedType )
     {}
 
-    virtual ~DynamicCastException() throw() {}
+    ~DynamicCastException() noexcept override = default;
 };
 
 
@@ -182,7 +182,7 @@ public:
 	Exception ( QString( "Magic number check failed for address 0x%1" ).arg( (qulonglong) badPointer, 0, 16 ) )
     {}
 
-    virtual ~BadMagicNumberException() throw() {}
+    ~BadMagicNumberException() noexcept override = default;
 };
 
 
@@ -203,14 +203,14 @@ public:
     IndexOutOfRangeException( int invalidIndex,
 			      int validMin,
 			      int validMax,
-			      const QString & msg = "" )
-	: Exception ( errMsg( invalidIndex, validMin, validMax, msg ) )
-	, _invalidIndex { invalidIndex }
-	, _validMin { validMin }
-	, _validMax { validMax }
-	{}
+			      const QString & msg = "" ):
+	Exception ( errMsg( invalidIndex, validMin, validMax, msg ) ),
+	_invalidIndex { invalidIndex },
+	_validMin { validMin },
+	_validMax { validMax }
+    {}
 
-    virtual ~IndexOutOfRangeException() throw() {}
+    ~IndexOutOfRangeException() noexcept override = default;
 
     /**
      * Return the offending index value.

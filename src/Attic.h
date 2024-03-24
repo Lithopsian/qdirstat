@@ -43,7 +43,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~Attic();
+//	virtual ~Attic() {}
 
 	/**
 	 * Check if this is an attic entry where ignored files and directories
@@ -51,7 +51,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isAttic() const Q_DECL_OVERRIDE { return true; }
+	bool isAttic() const override { return true; }
 
 	/**
 	 * Return the attic of this tree node. Since this already is an attic,
@@ -59,7 +59,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from DirInfo.
 	 **/
-	virtual Attic * attic() const Q_DECL_OVERRIDE { return nullptr; }
+	Attic * attic() const override { return nullptr; }
 
 	/**
 	 * Get the current state of the directory reading process.
@@ -67,15 +67,15 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-	virtual DirReadState readState() const Q_DECL_OVERRIDE
-	    { return  _parent ? _parent->readState() : _readState; }
+	DirReadState readState() const override
+	    { return _parent ? _parent->readState() : _readState; }
 
 	/**
 	 * Returns true if this entry has any children.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool hasChildren() const Q_DECL_OVERRIDE { return firstChild(); }
+	bool hasChildren() const override { return firstChild(); }
 
 	/**
 	 * Check the 'ignored' state of this item and set the '_isIgnored' flag
@@ -83,7 +83,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from DirInfo.
 	 **/
-//	virtual void checkIgnored() Q_DECL_OVERRIDE {}
+	void checkIgnored() override {}
 
 	/**
 	 * Locate a child somewhere in this subtree whose URL (i.e. complete
@@ -91,8 +91,8 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual FileInfo * locate( QString url,
-				   bool	   findPseudoDirs = false ) Q_DECL_OVERRIDE;
+	FileInfo * locate( QString url,
+			   bool    findPseudoDirs = false ) override;
 
     };	// class Attic
 

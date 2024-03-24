@@ -89,28 +89,28 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~DirInfo();
+	~DirInfo() override;
 
 	/**
 	 * Returns the number of hard links, always zero for DirInfo objects.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual nlink_t links() const Q_DECL_OVERRIDE { return 0; }
+	nlink_t links() const override { return 0; }
 
 	/**
 	 * Returns the total size in bytes of this subtree.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual FileSize totalSize() Q_DECL_OVERRIDE;
+	FileSize totalSize() override;
 
 	/**
 	 * Returns the total allocated size in bytes of this subtree.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual FileSize totalAllocatedSize() Q_DECL_OVERRIDE;
+	FileSize totalAllocatedSize() override;
 
 	/**
 	 * The ratio of totalSize() / totalAllocatedSize() in percent.
@@ -122,7 +122,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual FileSize totalBlocks() Q_DECL_OVERRIDE;
+	FileSize totalBlocks() override;
 
 	/**
 	 * Returns the total number of children in this subtree, excluding this
@@ -130,7 +130,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual int totalItems() Q_DECL_OVERRIDE;
+	int totalItems() override;
 
 	/**
 	 * Returns the total number of subdirectories in this subtree,
@@ -138,7 +138,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual int totalSubDirs() Q_DECL_OVERRIDE;
+	int totalSubDirs() override;
 
 	/**
 	 * Returns the total number of plain file children in this subtree,
@@ -146,7 +146,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual int totalFiles() Q_DECL_OVERRIDE;
+	int totalFiles() override;
 
 	/**
 	 * Returns the total number of non-directory items in this subtree,
@@ -154,7 +154,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-//	virtual int totalNonDirItems() Q_DECL_OVERRIDE { return totalItems() - totalSubDirs(); }
+//	int totalNonDirItems() override { return totalItems() - totalSubDirs(); }
 
 	/**
 	 * Returns the total number of ignored (non-directory!) items in this
@@ -162,7 +162,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual int totalIgnoredItems() Q_DECL_OVERRIDE;
+	int totalIgnoredItems() override;
 
 	/**
 	 * Returns the total number of not ignored (non-directory!) items in
@@ -170,7 +170,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual int totalUnignoredItems() Q_DECL_OVERRIDE;
+	int totalUnignoredItems() override;
 
 	/**
 	 * Returns the total number of direct children of this directory.
@@ -184,7 +184,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual int directChildrenCount() Q_DECL_OVERRIDE;
+	int directChildrenCount() override;
 
 	/**
 	 * Returns the number of subdirectories below this item that could not
@@ -195,31 +195,31 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual int errSubDirCount() Q_DECL_OVERRIDE;
+	int errSubDirCount() override;
 
 	/**
 	 * Returns the latest modification time of this subtree.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual time_t latestMtime() Q_DECL_OVERRIDE;
+	time_t latestMtime() override;
 
 	/**
 	 * Returns the oldest modification time of any file in this subtree.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual time_t oldestFileMtime() Q_DECL_OVERRIDE;
+	time_t oldestFileMtime() override;
 
 	/**
 	 * Returns 'true' if this had been excluded while reading.
 	 **/
-	virtual bool isExcluded() const Q_DECL_OVERRIDE { return _isExcluded; }
+	bool isExcluded() const override { return _isExcluded; }
 
 	/**
 	 * Set the 'excluded' status.
 	 **/
-	virtual void setExcluded( bool excl = true ) Q_DECL_OVERRIDE { _isExcluded = excl; }
+	void setExcluded( bool excl = true ) override { _isExcluded = excl; }
 
 	/**
 	 * Returns whether or not this is a mount point.
@@ -229,7 +229,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isMountPoint() const  Q_DECL_OVERRIDE { return _isMountPoint; }
+	bool isMountPoint() const  override { return _isMountPoint; }
 
 	/**
 	 * Sets the mount point state, i.e. whether or not this is a mount
@@ -237,7 +237,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual void setMountPoint( bool isMountPoint = true ) Q_DECL_OVERRIDE;
+	void setMountPoint( bool isMountPoint = true ) override;
 
 	/**
 	 * Find the nearest parent that is a mount point or 0 if there is
@@ -250,7 +250,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isFinished() Q_DECL_OVERRIDE;
+	bool isFinished() override;
 
 	/**
 	 * Returns true if this subtree is busy, i.e. it is not finished
@@ -258,7 +258,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isBusy() const Q_DECL_OVERRIDE;
+	bool isBusy() const override;
 
 	/**
 	 * Returns the number of pending read jobs in this subtree. When this
@@ -266,26 +266,25 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual int pendingReadJobs() Q_DECL_OVERRIDE
-	    { return _pendingReadJobs;	}
+	int pendingReadJobs() override { return _pendingReadJobs; }
 
 	/**
 	 * Delete the dot entry if it is empty, i.e. it does not have any
 	 * children or its attic (if it has one) is also empty. The dot entry's
 	 * attic is implicitly deleted along with it.
 	 **/
-	virtual void deleteEmptyDotEntry();
+	void deleteEmptyDotEntry();
 
 	/**
 	 * Delete the attic if it is empty.
 	 **/
-	virtual void deleteEmptyAttic();
+	void deleteEmptyAttic();
 
 	/**
 	 * Returns the first child of this item or 0 if there is none.
 	 * Use the child's next() method to get the next child.
 	 **/
-	virtual FileInfo * firstChild() const Q_DECL_OVERRIDE { return _firstChild; }
+	FileInfo * firstChild() const override { return _firstChild; }
 
 	/**
 	 * Insert a child into the children list.
@@ -293,7 +292,7 @@ namespace QDirStat
 	 * The order of children in this list is absolutely undefined;
 	 * don't rely on any implementation-specific order.
 	 **/
-	virtual void insertChild( FileInfo * newChild ) Q_DECL_OVERRIDE;
+	void insertChild( FileInfo * newChild ) override;
 
 	/**
 	 * Add a child to the attic. This is very much like insertChild(), but
@@ -302,13 +301,13 @@ namespace QDirStat
 	 * and the new child is not a directory, and the directory's attic
 	 * otherwise.
 	 **/
-	virtual void addToAttic( FileInfo * newChild );
+	void addToAttic( FileInfo * newChild );
 
 	/**
 	 * Move a child to the attic, i.e. remove it from the normal children
 	 * and move it to the attic instead.
 	 **/
-	virtual void moveToAttic( FileInfo * newChild );
+	void moveToAttic( FileInfo * newChild );
 
 	/**
 	 * Get the "Dot Entry" for this node if there is one (or 0 otherwise):
@@ -317,7 +316,7 @@ namespace QDirStat
 	 * user can easily tell which summary fields belong to the directory
 	 * itself and which are the accumulated values of the entire subtree.
 	 **/
-	virtual DotEntry * dotEntry() const Q_DECL_OVERRIDE { return _dotEntry; }
+	DotEntry * dotEntry() const override { return _dotEntry; }
 
 	/**
 	 * Return the "Attic" entry for this node if there is one (or 0
@@ -327,14 +326,14 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual Attic * attic() const Q_DECL_OVERRIDE { return _attic; }
+	Attic * attic() const override { return _attic; }
 
 	/**
 	 * Notification that a child has been added somewhere in the subtree.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual void childAdded( FileInfo * newChild ) Q_DECL_OVERRIDE;
+	void childAdded( FileInfo * newChild ) override;
 
 	/**
 	 * Notification that a child is about to be deleted somewhere in the
@@ -342,7 +341,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual void deletingChild( FileInfo * deletedChild ) Q_DECL_OVERRIDE;
+	void deletingChild( FileInfo * deletedChild ) override;
 
 	/**
 	 * Notification of a new directory read job somewhere in the subtree.
@@ -367,7 +366,7 @@ namespace QDirStat
 	 *
 	 * Clean up unneeded dot entries.
 	 **/
-	virtual void finalizeLocal();
+	void finalizeLocal();
 
 	/**
 	 * Recursively finalize all directories from here on -
@@ -387,7 +386,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual DirReadState readState() const Q_DECL_OVERRIDE { return _readState; }
+	DirReadState readState() const override { return _readState; }
 
 	/**
 	 * Check if readState() is anything that indicates an error reading the
@@ -396,7 +395,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool readError() const Q_DECL_OVERRIDE;
+	bool readError() const override;
 
 	/**
 	 * Return a prefix for the total size (and similar accumulated fields)
@@ -411,7 +410,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from FileInfo.
 	 **/
-	virtual QString sizePrefix() const Q_DECL_OVERRIDE;
+	QString sizePrefix() const override;
 
 	/**
 	 * Set the state of the directory reading process.
@@ -506,12 +505,12 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual bool isDirInfo() const Q_DECL_OVERRIDE { return true; }
+	bool isDirInfo() const override { return true; }
 
 	/**
 	 * Take all children from 'oldParent' and move them to this DirInfo.
 	 **/
-	virtual void takeAllChildren( DirInfo * oldParent );
+	void takeAllChildren( DirInfo * oldParent );
 
 	/**
 	 * Recursively recalculate the summary fields when they are dirty.
@@ -534,25 +533,30 @@ namespace QDirStat
     protected:
 
 	/**
+	 * Set all the counters to values ready to start counting (generally zero).
+	 **/
+	void initCounts();
+
+	/**
 	 * Set this entry's first child.
 	 * Use this method only if you know exactly what you are doing.
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual void setFirstChild( FileInfo * newfirstChild ) Q_DECL_OVERRIDE
+	void setFirstChild( FileInfo * newfirstChild ) override
 	    { _firstChild = newfirstChild; }
 
 	/**
 	 * Return the dot entry for this node. If it doesn't have one yet,
 	 * create it first.
 	 **/
-	virtual DotEntry * ensureDotEntry();
+	DotEntry * ensureDotEntry();
 
 	/**
 	 * Return the attic for this node. If it doesn't have one yet, create
 	 * it first.
 	 **/
-	virtual Attic * ensureAttic();
+	Attic * ensureAttic();
 
 	/**
 	 * Return 'true' if there is an attic and it has any children.
@@ -569,12 +573,24 @@ namespace QDirStat
 	 *
 	 * Reimplemented - inherited from FileInfo.
 	 **/
-	virtual void unlinkChild( FileInfo * deletedChild ) Q_DECL_OVERRIDE;
+	void unlinkChild( FileInfo * deletedChild ) override;
+
+	/**
+	 * Mark this object and all its ancestors as dirty and drop their sort
+	 * caches.
+	 **/
+	void markAsDirty();
+
+	/**
+	 * Drop all cached information about children sorting for this object and
+	 * all its descendants.
+	 **/
+	void dropSortCaches();
 
 	/**
 	 * Drop all cached information about children sorting.
 	 **/
-	void dropSortCache( bool recursive = false );
+	void dropSortCache();
 
 	/**
 	 * Count the direct children unconditionally and update
@@ -592,7 +608,7 @@ namespace QDirStat
 	 * Set any empty subdir children to ignored. This affects only direct
 	 * children.
 	 **/
-	virtual void ignoreEmptySubDirs();
+	void ignoreEmptySubDirs();
 
 	/**
 	 * Clean up unneeded / undesired dot entries:
@@ -606,7 +622,7 @@ namespace QDirStat
 	 * Clean up unneeded attics: Delete attic entries that don't have any
 	 * children.
 	 **/
-	virtual void cleanupAttics();
+	void cleanupAttics();
 
 	/**
 	 * Populate the _dominantChildren list.
@@ -618,26 +634,26 @@ namespace QDirStat
 	// Data members
 	//
 
-	FileInfoList *	_sortedChildren;
-	FileInfoList *	_dominantChildren;
-	DataColumn	_lastSortCol;
-	Qt::SortOrder	_lastSortOrder;
+	FileInfoList *	_sortedChildren		{ nullptr };
+	FileInfoList *	_dominantChildren	{ nullptr };
+	DataColumn	_lastSortCol		{ UndefinedCol };
+	Qt::SortOrder	_lastSortOrder		{ Qt::AscendingOrder };
+	int		_pendingReadJobs	{ 0 };
 	bool		_lastIncludeAttic:1;
 
 	bool		_isMountPoint:1;	// flag: is this a mount point?
 	bool		_isExcluded:1;		// flag: was this directory excluded?
 	bool		_summaryDirty:1;	// dirty flag for the cached values
-	bool		_deletingAll:1;		// deleting complete children tree?
+//	bool		_deletingAll:1;		// deleting complete children tree?
 	bool		_locked:1;		// app lock
 	bool		_touched:1;		// app 'touch' flag
 	bool		_fromCache:1;		// is this the root of a cache file read
-	int		_pendingReadJobs;	// number of open directories in this subtree
 
 	// Children management
 
-	FileInfo *	_firstChild;		// pointer to the first child
-	DotEntry *	_dotEntry;		// pseudo entry to hold non-dir children
-	Attic	 *	_attic;			// pseudo entry to hold ignored children
+	FileInfo *	_firstChild	{ nullptr };	// pointer to the first child
+	DotEntry *	_dotEntry	{ nullptr };	// pseudo entry to hold non-dir children
+	Attic	 *	_attic		{ nullptr };	// pseudo entry to hold ignored children
 
 	// Some cached values
 
@@ -656,10 +672,6 @@ namespace QDirStat
 
 	DirReadState	_readState;
 
-
-    private:
-
-	void init();
 
     };	// class DirInfo
 

@@ -116,21 +116,21 @@ namespace QDirStat
     public:
 
 	DpkgPkgManager() {}
-	virtual ~DpkgPkgManager() {}
+//	virtual ~DpkgPkgManager() {}
 
 	/**
 	 * Return the name of this package manager.
 	 *
 	 * Implemented from PkgManager.
 	 **/
-	virtual QString name() const { return "dpkg"; }
+	QString name() const override { return "dpkg"; }
 
 	/**
 	 * Check if dpkg is active on the currently running system.
 	 *
 	 * Implemented from PkgManager.
 	 **/
-	virtual bool isPrimaryPkgManager() const Q_DECL_OVERRIDE;
+	bool isPrimaryPkgManager() const override;
 
 	/**
 	 * Check if the dpkg command is available on the currently running
@@ -138,7 +138,7 @@ namespace QDirStat
 	 *
 	 * Implemented from PkgManager.
 	 **/
-	virtual bool isAvailable() const Q_DECL_OVERRIDE;
+	bool isAvailable() const override;
 
 	/**
 	 * Return the owning package of a file or directory with full path
@@ -154,7 +154,7 @@ namespace QDirStat
 	 * If that fails, it is run against only the filename in case there
 	 * are symlinks in the direct path.
 	 **/
-	virtual QString owningPkg( const QString & path ) const Q_DECL_OVERRIDE;
+	QString owningPkg( const QString & path ) const override;
 
 
 	//-----------------------------------------------------------------
@@ -167,8 +167,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual bool supportsGetInstalledPkg() const Q_DECL_OVERRIDE
-	    { return true; }
+	bool supportsGetInstalledPkg() const override { return true; }
 
 	/**
 	 * Return the list of installed packages.
@@ -177,7 +176,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual PkgInfoList installedPkg() const Q_DECL_OVERRIDE;
+	PkgInfoList installedPkg() const override;
 
 	/**
 	 * Return 'true' if this package manager supports getting the file list
@@ -185,8 +184,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual bool supportsFileList() const Q_DECL_OVERRIDE
-	    { return true; }
+	bool supportsFileList() const override { return true; }
 
 	/**
 	 * Return the command for getting the list of files and directories
@@ -196,7 +194,7 @@ namespace QDirStat
 	 * Re
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual QString fileListCommand( const PkgInfo * pkg ) const Q_DECL_OVERRIDE
+	QString fileListCommand( const PkgInfo * pkg ) const override
 	    { return QString( "/usr/bin/dpkg-query --listfiles %1" ).arg( queryName( pkg ) ); }
 
 	/**
@@ -204,7 +202,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual QStringList parseFileList( const QString & output ) const Q_DECL_OVERRIDE;
+	QStringList parseFileList( const QString & output ) const override;
 
 	/**
 	 * Return 'true' if this package manager supports building a file list
@@ -212,8 +210,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual bool supportsFileListCache() const Q_DECL_OVERRIDE
-	    { return true; }
+	bool supportsFileListCache() const override { return true; }
 
 	/**
 	 * Create a file list cache with the specified lookup type for all
@@ -228,7 +225,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual PkgFileListCache * createFileListCache( PkgFileListCache::LookupType lookupType = PkgFileListCache::LookupByPkg ) const Q_DECL_OVERRIDE;
+	PkgFileListCache * createFileListCache( PkgFileListCache::LookupType lookupType = PkgFileListCache::LookupByPkg ) const override;
 
 	/**
 	 * Return a name suitable for a detailed queries for 'pkg'.
@@ -238,7 +235,7 @@ namespace QDirStat
 	 *
 	 * Reimplemented from PkgManager.
 	 **/
-	virtual QString queryName( const PkgInfo * pkg ) const Q_DECL_OVERRIDE;
+	QString queryName( const PkgInfo * pkg ) const override;
 
 
     protected:

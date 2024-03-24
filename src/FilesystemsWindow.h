@@ -50,7 +50,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~FilesystemsWindow();
+	~FilesystemsWindow() override;
 
 	/**
 	 * Static method for using one shared instance of this class between
@@ -140,14 +140,14 @@ namespace QDirStat
 	/**
 	 * Custom context menu signalled.
 	 **/
-	virtual void contextMenu( const QPoint & pos );
+	void contextMenu( const QPoint & pos );
 
 	/**
 	 * Key press event for detecting evnter/return.
 	 *
 	 * Reimplemented from QWidget.
 	 **/
-	virtual void keyPressEvent( QKeyEvent * event ) Q_DECL_OVERRIDE;
+	void keyPressEvent( QKeyEvent * event ) override;
 
 
 	//
@@ -202,9 +202,9 @@ namespace QDirStat
     protected:
 
 	/**
-	 * Set the text and text alignment for a size-based column.
+	 * Set the text and text alignment for a column.
 	 **/
-	void set( int col, FileSize size );
+	void set( int col, Qt::Alignment alignment, const QString & text );
 
 	/**
 	 * Less-than operator for sorting.

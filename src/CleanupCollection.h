@@ -47,7 +47,7 @@ namespace QDirStat
 	/**
 	 * Destructor
 	 **/
-	~CleanupCollection();
+	~CleanupCollection() override;
 
 	/**
 	 * Add all currently active actions to the given widget.

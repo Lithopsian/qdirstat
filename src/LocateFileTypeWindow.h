@@ -55,7 +55,7 @@ namespace QDirStat
 	/**
 	 * Destructor.
 	 **/
-	virtual ~LocateFileTypeWindow();
+	~LocateFileTypeWindow() override;
 
         /**
          * Static method for using one shared instance of this class between
@@ -69,7 +69,7 @@ namespace QDirStat
 
         /**
          * Convenience function for creating, populating and showing the shared
-         * instance.
+         * instance.  The suffix should start with '.', but not '*.".
          **/
         static void populateSharedInstance( const QString & suffix, FileInfo * subtree );
 
@@ -79,9 +79,9 @@ namespace QDirStat
 //        const Subtree & subtree() const { return _subtree; }
 
 	/**
-	 * Return the current search suffix (with leading '*.')
+	 * Return the current search suffix with leading '*.'.
 	 **/
-	QString searchSuffix() const;
+	QString displaySuffix() const { return "*." + _suffix; }
 
 
     public slots:
@@ -133,6 +133,13 @@ namespace QDirStat
 	 **/
 	FileInfoSet matchingFiles( FileInfo * dir );
 
+        /**
+         * Select the first item in the list. This will also select it in the
+         * main window, open the branch where this item is in and scroll the
+         * main window's tree so that item is visible tere.
+         **/
+        void selectFirstItem()
+	    { _ui->treeWidget->setCurrentItem( _ui->treeWidget->topLevelItem( 0 ) ); }
 
 	//
 	// Data members
@@ -140,7 +147,7 @@ namespace QDirStat
 
 	Ui::LocateFileTypeWindow * _ui;
         Subtree                    _subtree;
-	QString			   _searchSuffix;
+	QString			   _suffix;
     };
 
 
@@ -203,7 +210,7 @@ namespace QDirStat
 	/**
 	 * Less-than operator for sorting.
 	 **/
-	virtual bool operator<( const QTreeWidgetItem & other ) const Q_DECL_OVERRIDE;
+	bool operator<( const QTreeWidgetItem & other ) const override;
 
 
     protected:

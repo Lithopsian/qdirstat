@@ -107,9 +107,9 @@ namespace QDirStat
         /**
          * Find the threshold for what is considered a "large file".
          **/
-        virtual void prepare( FileInfo * subtree );
+        void prepare( FileInfo * subtree ) override;
 
-        virtual bool check( FileInfo * item )
+        bool check( FileInfo * item ) override
             { return item && item->isFile() && item->size() >= _threshold; }
 
     protected:
@@ -128,9 +128,9 @@ namespace QDirStat
         /**
          * Find the threshold for what is considered a "new file".
          **/
-        virtual void prepare( FileInfo * subtree );
+        void prepare( FileInfo * subtree ) override;
 
-        virtual bool check( FileInfo * item )
+        bool check( FileInfo * item ) override
             { return item && item->isFile() && item->mtime() >= _threshold; }
 
     protected:
@@ -149,9 +149,9 @@ namespace QDirStat
         /**
          * Find the threshold for what is considered an "old file".
          **/
-        virtual void prepare( FileInfo * subtree );
+        void prepare( FileInfo * subtree ) override;
 
-        virtual bool check( FileInfo * item )
+        bool check( FileInfo * item ) override
             { return item && item->isFile() && item->mtime() <= _threshold; }
 
     protected:
@@ -167,7 +167,7 @@ namespace QDirStat
     {
     public:
 
-        virtual bool check( FileInfo * item )
+        bool check( FileInfo * item ) override
             { return item && item->isFile() && item->links() > 1; }
     };
 
@@ -179,7 +179,7 @@ namespace QDirStat
     {
     public:
 
-        virtual bool check( FileInfo * item )
+        bool check( FileInfo * item ) override
             { return item && item->isSymLink() && item->isBrokenSymLink(); }
     };
 
@@ -191,7 +191,7 @@ namespace QDirStat
     {
     public:
 
-        virtual bool check( FileInfo * item )
+        bool check( FileInfo * item ) override
             { return item && item->isFile() && item->isSparseFile(); }
     };
 
@@ -208,7 +208,7 @@ namespace QDirStat
             _year { year }
             {}
 
-        virtual bool check( FileInfo * item )
+        bool check( FileInfo * item ) override
             { return item && item->isFile() && item->yearAndMonth().first == _year; }
 
     protected:
@@ -230,7 +230,7 @@ namespace QDirStat
             _month { month }
             {}
 
-        virtual bool check( FileInfo * item );
+        bool check( FileInfo * item ) override;
 
     protected:
 
@@ -251,9 +251,9 @@ namespace QDirStat
             _count { 0 }
             {}
 
-	virtual void prepare( FileInfo * subtree );
+	void prepare( FileInfo * subtree ) override;
 
-        virtual bool check( FileInfo * item );
+        bool check( FileInfo * item ) override;
 
     protected:
 

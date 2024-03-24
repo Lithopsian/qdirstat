@@ -30,7 +30,7 @@ namespace QDirStat
     public:
 
 	ExcludeRulesConfigPage( ConfigDialog * parent );
-	virtual ~ExcludeRulesConfigPage();
+	~ExcludeRulesConfigPage() override;
 
 
     protected slots:
@@ -39,7 +39,7 @@ namespace QDirStat
 	 * detection of new insertions so that focus can be put in the only
 	 * sensible place.
 	 **/
-	virtual void add() Q_DECL_OVERRIDE;
+	void add() override;
 
 	/**
 	 * Write changes back to the settings.
@@ -65,21 +65,21 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void fillListWidget() Q_DECL_OVERRIDE;
+	void fillListWidget() override;
 
 	/**
 	 * Save the contents of the widgets to the specified value.
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void save( void * value ) Q_DECL_OVERRIDE;
+	void save( void * value ) override;
 
 	/**
 	 * Load the content of the widgets from the specified value.
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void load( void * value ) Q_DECL_OVERRIDE;
+	void load( void * value ) override;
 
 	/**
 	 * Create a new value with default values.
@@ -87,7 +87,7 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void * createValue() Q_DECL_OVERRIDE;
+	void * createValue() override;
 
 	/**
 	 * Remove a value from the internal list and delete it.
@@ -97,7 +97,7 @@ namespace QDirStat
 	 *
 	 * Implemented from ListEditor.
 	 **/
-	virtual void removeValue( void * value );
+	void removeValue( void * value );
 
 	/**
 	 * Return a text for the list item of 'value'.
@@ -105,7 +105,7 @@ namespace QDirStat
 	 * Implemented from ListEditor.
 	 **/
 
-	virtual QString valueText( void * value ) Q_DECL_OVERRIDE;
+	QString valueText( void * value ) override;
 
 	/**
 	 * Comparison operator for two exclude rules.

@@ -39,7 +39,7 @@ namespace QDirStat
         /**
          * Destructor.
          **/
-        ~History() {}
+        ~History() = default;
 
         /**
          * Add an item to the history stack. If the stack's capacity is

@@ -60,32 +60,20 @@ namespace QDirStat
     public:
 
 	/**
-	 * Constructor. If 'subtree' is non-null, immediately collect data from
-	 * that subtree.
+	 * Constructor.  Collects data for the given subtree.
 	 **/
-        FileAgeStats( FileInfo * subtree = 0 );
+        FileAgeStats( const FileInfo * subtree );
 
         /**
          * Destructor.
          **/
-        ~FileAgeStats() {}
-
-        /**
-         * Recurse through all file elements in the subtree and calculate the
-         * data for that subtree.
-         **/
-    	void collect( FileInfo * subtree );
-
-        /**
-         * Clear all internal data.
-         **/
-        void clear();
+        ~FileAgeStats() = default;
 
         /**
          * Return a sorted list of the years where files with that modification
          * year were found after collecting data.
          **/
-        const YearsList & years() { return _yearsList; }
+        const YearsList & years() const { return _yearsList; }
 
         /**
          * Return year statistics for the specified year or 0 if there are
@@ -107,7 +95,7 @@ namespace QDirStat
          *
          * Month statistics are only available for this year and the last year.
          **/
-        bool monthStatsAvailableFor( short year ) const { return year == _thisYear || year == _lastYear; }
+        bool monthStatsAvailableFor( short year ) const { return year == thisYear() || year == lastYear(); }
 
         /**
          * Return the current year.
@@ -128,15 +116,21 @@ namespace QDirStat
     protected:
 
         /**
-         * Clear all month stats for this or the last year.
+         * Recurse through all file elements in the subtree and calculate the
+         * data for that subtree.
          **/
-        void clearMonthStats( short year );
+        void collect( const FileInfo * subtree );
+
+        /**
+         * Initialise all month stats for this or the last year.
+         **/
+        void initMonthStats( short year );
 
         /**
          * Recurse through all file elements in the subtree and calculate the
          * data for that subtree.
          **/
-    	void collectRecursive( FileInfo * subtree );
+    	void collectRecursive( const FileInfo * subtree );
 
         /**
          * Sum up the totals over all years and calculate the percentages for
@@ -165,13 +159,6 @@ namespace QDirStat
 
         YearStats       _thisYearMonthStats[ 12 ];
         YearStats       _lastYearMonthStats[ 12 ];
-
-        int             _totalFilesCount;
-        FileSize        _totalFilesSize;
-
-        static short    _thisYear;
-        static short    _thisMonth;
-        static short    _lastYear;
 
     };  // class FileAgesStats
 
