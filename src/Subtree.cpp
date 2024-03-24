@@ -33,7 +33,6 @@ FileInfo * Subtree::subtree()
 DirInfo * Subtree::dir()
 {
     FileInfo * item = subtree();
-
     if ( !item )
         return nullptr;
 

@@ -51,12 +51,10 @@ void GeneralConfigPage::setup()
     const DirTreeModel *dirTreeModel = app()->dirTreeModel();
     if ( dirTreeModel )
     {
-        _ui->crossFilesystemsCheckBox->setChecked   ( dirTreeModel->crossFilesystems() );
-        _ui->useBoldForDominantCheckBox->setChecked ( dirTreeModel->useBoldForDominantItems() );
-        _ui->treeUpdateIntervalSpinBox->setValue    ( dirTreeModel->updateTimerMillisec() );
-        const QString treeIconDir = dirTreeModel->treeIconDir();
-        _ui->treeIconThemeComboBox->setCurrentIndex( treeIconDir.contains( "/tree-medium" ) ?
-                                                     DTIS_Medium : DTIS_Small );
+        _ui->crossFilesystemsCheckBox->setChecked  ( dirTreeModel->crossFilesystems() );
+        _ui->useBoldForDominantCheckBox->setChecked( dirTreeModel->useBoldForDominantItems() );
+        _ui->treeUpdateIntervalSpinBox->setValue   ( dirTreeModel->updateTimerMillisec() );
+        _ui->treeIconThemeComboBox->setCurrentIndex( dirTreeModel->dirTreeItemSize() );
     }
 
     _ui->urlInWindowTitleCheckBox->setChecked( mainWindow->urlInWindowTitle() );
@@ -77,15 +75,12 @@ void GeneralConfigPage::applyChanges()
     DirTreeModel *dirTreeModel = app()->dirTreeModel();
     if ( dirTreeModel )
     {
-        const QString treeIconDir = _ui->treeIconThemeComboBox->currentIndex() == DTIS_Small ?
-                                    ":/icons/tree-small/" :
-                                    ":/icons/tree-medium/";
         dirTreeModel->updateSettings( _ui->crossFilesystemsCheckBox->isChecked(),
                                       _ui->useBoldForDominantCheckBox->isChecked(),
-                                      treeIconDir,
+                                      ( DirTreeItemSize )_ui->treeIconThemeComboBox->currentIndex(),
                                       _ui->treeUpdateIntervalSpinBox->value() );
 
-        mainWindow->dirTreeView()->setStyles( treeIconDir );
+//        mainWindow->dirTreeView()->setStyles( _ui->treeIconThemeComboBox->currentIndex() );
     }
 
     mainWindow->updateSettings( _ui->urlInWindowTitleCheckBox->isChecked(),

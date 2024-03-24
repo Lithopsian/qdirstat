@@ -194,7 +194,7 @@ void MainWindow::updateActions()
     _ui->actionGoToToplevel->setEnabled( firstToplevel );
 
     const FileInfoSet selectedItems  = app()->selectionModel()->selectedItems();
-    const bool        selSizeOne     = selectedItems.size() == 1;
+    const bool        selSizeOne     = !reading && selectedItems.size() == 1;
     const FileInfo  * sel            = selectedItems.first();
     const bool        oneDirSelected = selSizeOne && sel && sel->isDir() && !pkgView;
     _ui->actionRefreshSelected->setEnabled( selSizeOne && !pkgView && !sel->isMountPoint() && !sel->isExcluded() );
@@ -203,13 +203,11 @@ void MainWindow::updateActions()
 
     const bool pseudoDirSelected = selectedItems.containsPseudoDir();
     const bool pkgSelected       = selectedItems.containsPkg();
-    _ui->actionMoveToTrash->setEnabled( sel && !pseudoDirSelected && !pkgSelected && !reading );
+    _ui->actionMoveToTrash->setEnabled( !reading && sel && !pseudoDirSelected && !pkgSelected );
 
-    const bool nothingOrOneDirInfo = ( isTree && selectedItems.isEmpty() ) || ( selSizeOne && sel->isDirInfo() );
-    // Notice that DotEntry, PkgInfo, Attic also inherit DirInfo
-    _ui->actionFileSizeStats->setEnabled( nothingOrOneDirInfo );
-    _ui->actionFileTypeStats->setEnabled( nothingOrOneDirInfo );
-    _ui->actionFileAgeStats->setEnabled ( nothingOrOneDirInfo );
+    _ui->actionFileSizeStats->setEnabled( firstToplevel );
+    _ui->actionFileTypeStats->setEnabled( firstToplevel );
+    _ui->actionFileAgeStats->setEnabled ( firstToplevel );
 
     _ui->actionCloseAllTreeLevels->setEnabled( firstToplevel );
     _ui->menuExpandTreeToLevel->setEnabled   ( firstToplevel );
@@ -222,8 +220,7 @@ void MainWindow::updateActions()
     _ui->actionResetTreemapZoom->setEnabled  ( showingTreemap && _ui->treemapView->canZoomOut() );
     _ui->actionTreemapRebuild->setEnabled    ( showingTreemap );
 
-    const auto actions = _ui->menuDiscover->actions();
-    for ( QAction * action : actions )
+    for ( QAction * action : _ui->menuDiscover->actions() )
 	action->setEnabled( firstToplevel );
 
     _historyButtons->updateActions();

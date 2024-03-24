@@ -174,9 +174,7 @@ LocalDirReadJob::LocalDirReadJob( DirTree * tree,
 				  DirInfo * dir,
 				  bool applyFileChildExcludeRules ):
     DirReadJob { tree, dir },
-    _applyFileChildExcludeRules { applyFileChildExcludeRules },
-    _checkedForNtfs { false },
-    _isNtfs { false }
+    _applyFileChildExcludeRules { applyFileChildExcludeRules }
 {
     if ( _dir )
 	_dirName = _dir->url();
@@ -344,6 +342,7 @@ void LocalDirReadJob::startReading()
 
 	finishReading( _dir, excludeLate ? DirOnRequestOnly : DirFinished );
     }
+
 
     finished();
     // Don't add anything after finished() since this deletes this job!
@@ -753,10 +752,9 @@ void DirReadJobQueue::jobFinishedNotify( DirReadJob *job )
     }
 
     // The timer will start a new job when it fires.
-
     if ( _queue.isEmpty() && _blocked.isEmpty() )	// No new job available - we're done.
     {
-	// logDebug() << "No more jobs - finishing" << Qt::endl;
+	logDebug() << "No more jobs - finishing" << Qt::endl;
 	emit finished();
     }
 }

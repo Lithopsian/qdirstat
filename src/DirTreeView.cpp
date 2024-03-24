@@ -17,7 +17,6 @@
 #include "FormatUtil.h"
 #include "HeaderTweaker.h"
 #include "PercentBar.h"
-#include "SelectionModel.h"
 #include "SizeColDelegate.h"
 #include "Exception.h"
 #include "Logger.h"
@@ -38,11 +37,8 @@ DirTreeView::DirTreeView( QWidget * parent ):
     setItemDelegateForColumn( PercentBarCol, _percentBarDelegate );
     setItemDelegateForColumn( SizeCol,       _sizeColDelegate );
 
-    connect( (SelectionModel *)selectionModel(), qOverload<const QModelIndex &>( &SelectionModel::currentBranchChanged ),
-	     this,             &DirTreeView::closeAllExcept );
-
-    connect( this,             &DirTreeView::customContextMenuRequested,
-	     this,             &DirTreeView::contextMenu );
+    connect( this, &DirTreeView::customContextMenuRequested,
+	     this, &DirTreeView::contextMenu );
 }
 
 
@@ -53,37 +49,20 @@ DirTreeView::~DirTreeView()
     delete _sizeColDelegate;
 }
 
-
-void DirTreeView::setStyles( const QString & treeIconDir )
-{
-    QString treeCss;
-    QString headerCss;
-
-    if ( treeIconDir.contains( "medium" ) )
-    {
-        const QString css = QString( "{ font-size: %1pt }" ).arg( font().pointSizeF() * 1.1 );
-        treeCss = "QTreeView " + css;
-        headerCss = "QHeaderView::section " + css;
-    }
-
-    setStyleSheet( treeCss );
-    header()->setStyleSheet( headerCss );
-}
-
-
+/*
 void DirTreeView::currentChanged( const QModelIndex & current,
 				  const QModelIndex & oldCurrent )
 {
     //logDebug() << "New current " << current << ", old current" << oldCurrent << Qt::endl;
     QTreeView::currentChanged( current, oldCurrent );
-    scrollTo( current );
+    scrollTo( current ); // don't move if the item is visible, we might be halfway through a mouse click
 }
-
+*/
 
 void DirTreeView::contextMenu( const QPoint & pos )
 {
     QModelIndex index = indexAt( pos );
-    if ( ! index.isValid() )
+    if ( !index.isValid() )
     {
 	//logDebug() << "No item at this position" << Qt::endl;
 	return;
@@ -126,7 +105,7 @@ void DirTreeView::contextMenu( const QPoint & pos )
     // also discouraged, but here discoverability of these features is more
     // important.
 
-    FileInfo * item = static_cast<FileInfo *>( index.internalPointer() );
+    const FileInfo * item = static_cast< const FileInfo *>( index.internalPointer() );
     CHECK_MAGIC( item );
     if ( item->isDirInfo() )    // Not for files, symlinks etc.
     {
@@ -143,20 +122,28 @@ void DirTreeView::contextMenu( const QPoint & pos )
 }
 
 
-QModelIndexList DirTreeView::expandedIndexes() const
+const DirTreeModel * DirTreeView::dirTreeModel() const
 {
     if ( !model() )
-	return QModelIndexList();
+	return nullptr;
 
-    DirTreeModel * dirTreeModel = dynamic_cast<DirTreeModel *>( model() );
-    if ( !dirTreeModel )
-    {
-	logError() << "Wrong model type to get this information" << Qt::endl;
+    const DirTreeModel * dirTreeModel = dynamic_cast<const DirTreeModel *>( model() );
+    if ( dirTreeModel )
+	return dirTreeModel;
+
+    logError() << "Wrong model type to get this information" << Qt::endl;
+    return nullptr;
+}
+
+
+QModelIndexList DirTreeView::expandedIndexes() const
+{
+    const DirTreeModel * model = dirTreeModel();
+    if ( !model )
 	return QModelIndexList();
-    }
 
     QModelIndexList expandedList;
-    const auto indexList = dirTreeModel->persistentIndexList();
+    const auto indexList = model->persistentIndexList();
     for ( const QModelIndex & index : indexList )
     {
 	if ( isExpanded( index ) )
@@ -167,42 +154,58 @@ QModelIndexList DirTreeView::expandedIndexes() const
 }
 
 
-void DirTreeView::closeAllExcept( const QModelIndex & )
+void DirTreeView::closeAllExcept( const QModelIndex & branch )
 {
-//    QModelIndexList branchesToClose = expandedIndexes();
+    QModelIndexList branchesToClose = expandedIndexes();
 
     // Remove all ancestors of 'branch' from branchesToClose
-
-//    for ( QModelIndex index = branch; index.isValid(); index = index.parent() )
+    for ( QModelIndex index = branch; index.isValid(); index = index.parent() )
     {
-	// logDebug() << "Not closing " << index << Qt::endl;
-//	branchesToClose.removeAll( index );
+	//logDebug() << "Not closing " << index << Qt::endl;
+	branchesToClose.removeAll( index );
     }
 
-    // Close all items in branchesToClose
-
-//    foreach ( index, branchesToClose ) // too slow!!!!
+    // 100 is far too many, but they might all be within a small number of branches
+    if ( branchesToClose.size() < 100 )
     {
-	// logDebug() << "Closing " << index << Qt::endl;
+	for ( QModelIndex branch : branchesToClose )
+	{
+	    // Remove any branches that have ancestors that will be closed
+	    for ( QModelIndex ancestor = branch; ancestor.isValid(); ancestor = ancestor.parent() )
+	    {
+		if ( branchesToClose.contains( ancestor.parent() ) )
+		    branchesToClose.removeAll( ancestor );
+	    }
+	}
+    }
+
+    // Close all items left in branchesToClose
+    if ( branchesToClose.size() < 10 )
+    {
+	// Smoothest transition, but very slow for multiple branches
+	for ( const QModelIndex & index : branchesToClose )
+	    collapse( index );
+    }
+    else
+    {
+	// Collapses too much, then has to open one branch again, not so smooth
+	// So only do this for cases that would be too slow one by one
 	collapseAll();
-//	collapse( index );
     }
 
-    // This re-opens the relevant branch
-    scrollTo( currentIndex(), QAbstractItemView::PositionAtCenter );
+    // This positions the item as close as possible to the center of the viewport
+    // It re-opens the relevant branch if it has been closed
+    scrollToCurrent();
 }
 
 
 void DirTreeView::setExpanded( FileInfo * item, bool expanded )
 {
-    const DirTreeModel * dirTreeModel = dynamic_cast<DirTreeModel *>( model() );
-    if ( !dirTreeModel )
-    {
-	logError() << "Wrong model type" << Qt::endl;
+    const DirTreeModel * model = dirTreeModel();
+    if ( !model )
         return;
-    }
 
-    const QModelIndex index = dirTreeModel->modelIndex( item );
+    const QModelIndex index = model->modelIndex( item );
     if ( index.isValid() )
         QTreeView::setExpanded( index, expanded );
 }

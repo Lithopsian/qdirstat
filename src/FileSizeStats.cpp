@@ -14,62 +14,48 @@
 #include "Logger.h"
 
 
-#define VERBOSE_SORT_THRESHOLD  50000
-
 using namespace QDirStat;
 
 
 FileSizeStats::FileSizeStats( FileInfo * subtree ):
-    PercentileStats()
+    PercentileStats ()
 {
-    CHECK_PTR ( subtree );
+    CHECK_PTR( subtree );
 
+    // Avoid reallocations for potentially millions of list appends
+    _data.reserve( subtree->totalFiles() );
     collect( subtree );
     sort();
 }
 
 
-void FileSizeStats::collect( FileInfo * subtree )
+FileSizeStats::FileSizeStats( FileInfo * subtree, const QString & suffix ):
+    PercentileStats ()
 {
-    Q_CHECK_PTR( subtree );
+    CHECK_PTR( subtree );
 
-    if ( _data.isEmpty() )
-        _data.reserve( subtree->totalFiles() );
+    collect( subtree, suffix );
+    sort();
+}
 
+
+void FileSizeStats::collect( const FileInfo * subtree )
+{
     if ( subtree->isFile() )
         _data << subtree->size();
 
     for ( FileInfoIterator it( subtree ); *it; ++it )
-    {
-	// Disregard symlinks, block devices and other special files
-	FileInfo * item = *it;
-	if ( item->hasChildren() )
-	    collect( item );
-	else if ( item->isFile() )
-            _data << item->size();
-    }
+	collect( *it );
 }
 
 
-void FileSizeStats::collect( FileInfo * subtree, const QString & suffix )
+void FileSizeStats::collect( const FileInfo * subtree, const QString & suffix )
 {
-    Q_CHECK_PTR( subtree );
-
-    if ( _data.isEmpty() )
-        _data.reserve( subtree->totalFiles() );
-
     if ( subtree->isFile() && subtree->name().toLower().endsWith( suffix ) )
         _data << subtree->size();
 
     for ( FileInfoIterator it( subtree ); *it; ++it )
-    {
-	// Disregard symlinks, block devices and other special files
-	FileInfo * item = *it;
-	if ( item->hasChildren() )
-	    collect( item, suffix );
-	else if ( item->isFile() && item->name().toLower().endsWith( suffix ) )
-            _data << item->size();
-    }
+	collect( *it, suffix );
 }
 
 

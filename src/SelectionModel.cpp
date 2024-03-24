@@ -24,7 +24,7 @@ SelectionModel::SelectionModel( DirTreeModel * dirTreeModel, QObject * parent ):
     QItemSelectionModel ( dirTreeModel, parent ),
     _dirTreeModel { dirTreeModel },
     _currentItem { nullptr },
-    _currentBranch { nullptr },
+//    _currentBranch { nullptr },
     _selectedItemsDirty { false },
     _verbose { false }
 {
@@ -47,7 +47,7 @@ void SelectionModel::clear()
     _selectedItems.clear();
     _selectedItemsDirty = true;
     _currentItem = nullptr;
-    _currentBranch = nullptr;
+//    _currentBranch = nullptr;
 
     clearSelection();
 }
@@ -112,7 +112,7 @@ void SelectionModel::propagateSelectionChanged( const QItemSelection &,
     emit selectionChanged( selectedItems() );
 }
 
-
+/*
 void SelectionModel::selectItem( FileInfo * item )
 {
     extendSelection( item,
@@ -124,8 +124,7 @@ void SelectionModel::extendSelection( FileInfo * item, bool clear )
 {
     if ( item )
     {
-	const QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
-
+	const QModelIndex index = _dirTreeModel->modelIndex( item );
 	if ( index.isValid() )
 	{
 	    logDebug() << "Selecting " << item << Qt::endl;
@@ -142,7 +141,7 @@ void SelectionModel::extendSelection( FileInfo * item, bool clear )
 	clearSelection(); // emits selectionChanged()
     }
 }
-
+*/
 
 void SelectionModel::setSelectedItems( const FileInfoSet & selectedItems )
 {
@@ -153,8 +152,7 @@ void SelectionModel::setSelectedItems( const FileInfoSet & selectedItems )
 
     for ( FileInfo * item : selectedItems )
     {
-	const QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
-
+	const QModelIndex index = _dirTreeModel->modelIndex( item );
 	if ( index.isValid() )
 	     sel.merge( QItemSelection( index, index ), Select );
     }
@@ -175,8 +173,7 @@ void SelectionModel::setCurrentItem( FileInfo * item, bool select )
 
     if ( item )
     {
-	const QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
-
+	const QModelIndex index = _dirTreeModel->modelIndex( item );
 	if ( index.isValid() )
 	{
 	    if ( _verbose )
@@ -201,19 +198,29 @@ void SelectionModel::setCurrentItem( const QString & path )
     FileInfo * item = _dirTreeModel->tree()->locate( path,
 						     true ); // findPseudoDirs
     if ( item )
+	// Set the current item and select it
 	setCurrentItem( item, true );
     else
 	logError() << "No item with path " << path << Qt::endl;
 }
 
 
-void SelectionModel::setCurrentBranch( FileInfo * item )
+void SelectionModel::updateCurrentBranch( FileInfo * newItem )
 {
-    _currentBranch = item;
-    const QModelIndex index = _dirTreeModel->modelIndex( item, 0 );
+    // Grab this before it is overwritten
+    const FileInfo * oldItem = _currentItem;
 
-    emit currentBranchChanged( item  );
-    emit currentBranchChanged( index );
+    // This used be be triggered separately from the same signal
+    // Order matters, so call it explicitly here
+    setCurrentItem ( newItem, true );
+
+    // See if we have actually changed to a new branch
+    // Not perfect, but avoids an expensive signal for the common cases
+    FileInfo * newBranch = newItem->isDirInfo() ? newItem->toDirInfo() : newItem->parent();
+    if ( !oldItem || !oldItem->isInSubtree( newBranch ) )
+	emit currentBranchChanged( _dirTreeModel->modelIndex( newItem ) );
+
+//    _currentBranch = newItem;
 }
 
 
@@ -231,7 +238,6 @@ void SelectionModel::prepareRefresh( const FileInfoSet & refreshSet )
 
 	// Go one directory up from the current item as long as there is an
 	// ancestor (but not that item itself) in the refreshSet.
-
 	while ( dir && refreshSet.containsAncestorOf( dir ) )
 	    dir = dir->parent();
     }
@@ -239,8 +245,8 @@ void SelectionModel::prepareRefresh( const FileInfoSet & refreshSet )
     if ( _verbose )
 	logDebug() << "Selecting " << dir << Qt::endl;
 
-    setCurrentItem( dir, true );
-    setCurrentBranch( dir );
+//    setCurrentItem( dir, true ); // called in updateCurrentBranch()
+    updateCurrentBranch( dir );
 }
 
 
@@ -272,27 +278,31 @@ void SelectionModel::dumpSelectedItems()
 
 
 SelectionModelProxy::SelectionModelProxy( SelectionModel * master, QObject * parent ):
-    QObject( parent )
+    QObject ( parent )
 {
-    connect( master, qOverload<const QItemSelection &, const QItemSelection &>( &QItemSelectionModel::selectionChanged ),
-	     this,   qOverload<const QItemSelection &, const QItemSelection &>( &SelectionModelProxy::selectionChanged ) );
+    // Most of these aren't used at the moment
+//    connect( master, qOverload<const QItemSelection &, const QItemSelection &>( &QItemSelectionModel::selectionChanged ),
+//	     this,   qOverload<const QItemSelection &, const QItemSelection &>( &SelectionModelProxy::selectionChanged ) );
 
-    connect( master, &SelectionModel::currentChanged,
-	     this,   &SelectionModelProxy::currentChanged );
+//    connect( master, &SelectionModel::currentChanged,
+//	     this,   &SelectionModelProxy::currentChanged );
 
-    connect( master, &SelectionModel::currentColumnChanged,
-	     this,   &SelectionModelProxy::currentColumnChanged );
+//    connect( master, &SelectionModel::currentColumnChanged,
+//	     this,   &SelectionModelProxy::currentColumnChanged );
 
-    connect( master, &SelectionModel::currentRowChanged,
-	     this,   &SelectionModelProxy::currentRowChanged );
+//    connect( master, &SelectionModel::currentRowChanged,
+//	     this,   &SelectionModelProxy::currentRowChanged );
 
-    connect( master, qOverload<>( &SelectionModel::selectionChanged ),
-	     this,   qOverload<>( &SelectionModelProxy::selectionChanged ) );
+//    connect( master, qOverload<>( &SelectionModel::selectionChanged ),
+//	     this,   qOverload<>( &SelectionModelProxy::selectionChanged ) );
 
     connect( master, qOverload<const FileInfoSet &>( &SelectionModel::selectionChanged ),
 	     this,   qOverload<const FileInfoSet &>( &SelectionModelProxy::selectionChanged ) );
 
     connect( master, &SelectionModel::currentItemChanged,
 	     this,   &SelectionModelProxy::currentItemChanged );
+
+//    connect( master, &SelectionModel::currentBranchChanged,
+//	     this,   &SelectionModelProxy::currentBranchChanged );
 }
 

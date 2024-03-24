@@ -18,6 +18,7 @@
 #include "PkgFileListCache.h"
 #include "QDirStatApp.h"
 #include "Settings.h"
+#include "SysUtil.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -26,9 +27,13 @@
 
 using namespace QDirStat;
 
+using SysUtil::runCommand;
+using SysUtil::tryRunCommand;
+using SysUtil::haveCommand;
+
 
 RpmPkgManager::RpmPkgManager():
-    _getPkgListWarningSec( 7 )
+    _getPkgListWarningSec { 7 }
 {
     readSettings();
 

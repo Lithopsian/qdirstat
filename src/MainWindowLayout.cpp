@@ -134,7 +134,7 @@ void MainWindow::readLayoutSetting( const QString & layoutName )
     const bool showDetailsPanel = settings.value( "ShowDetailsPanel", true ).toBool();
     settings.endGroup();
 
-    const auto layoutDetails = QList( { QVariant( showBreadcrumbs ), QVariant( showDetailsPanel ) } );
+    const auto layoutDetails = QList<QVariant>( { showBreadcrumbs, showDetailsPanel } );
     layoutAction( layoutName )->setData( layoutDetails );
 }
 

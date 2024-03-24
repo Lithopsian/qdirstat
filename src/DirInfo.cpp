@@ -47,26 +47,40 @@ inline static void dumpChildrenList( const FileInfo     * dir,
 
 DirInfo::DirInfo( DirInfo	* parent,
 		  DirTree	* tree,
-		  const QString	& name )
-    : FileInfo ( parent, tree, name )
+		  const QString	& name ):
+    FileInfo ( parent, tree, name ),
+    _isMountPoint {false },
+    _isExcluded { false },
+    _summaryDirty { false },
+//    _deletingAll { false },
+    _locked { false },
+    _touched { false },
+    _fromCache { false },
+    _readState { DirFinished }
 {
-    init();
-    _readState = DirFinished;
+    initCounts();
 }
 
 
 DirInfo::DirInfo( DirInfo	* parent,
 		  DirTree	* tree,
 		  const QString	& name,
-		  struct stat	* statInfo )
-    : FileInfo ( parent,
+		  struct stat	* statInfo ):
+    FileInfo ( parent,
 		 tree,
 		 name,
-		 statInfo )
+		 statInfo ),
+    _isMountPoint {false },
+    _isExcluded { false },
+    _summaryDirty { false },
+//    _deletingAll { false },
+    _locked { false },
+    _touched { false },
+    _fromCache { false },
+    _readState { DirQueued }
 {
-    init();
+    initCounts();
     ensureDotEntry();
-
     _directChildrenCount++;	// One for the newly created dot entry
 }
 
@@ -80,8 +94,8 @@ DirInfo::DirInfo( DirInfo *	  parent,
 		  bool		  withUidGidPerm,
 		  uid_t		  uid,
 		  gid_t		  gid,
-		  time_t	  mtime )
-    : FileInfo ( parent,
+		  time_t	  mtime ):
+    FileInfo ( parent,
 		 tree,
 		 name,
 		 mode,
@@ -90,29 +104,32 @@ DirInfo::DirInfo( DirInfo *	  parent,
 		 withUidGidPerm,
 		 uid,
 		 gid,
-		 mtime )
+		 mtime ),
+    _isMountPoint {false },
+    _isExcluded { false },
+    _summaryDirty { false },
+//    _deletingAll { false },
+    _locked { false },
+    _touched { false },
+    _fromCache { false },
+    _readState { DirQueued }
 {
-    init();
+    initCounts();
     ensureDotEntry();
-
     _directChildrenCount++;	// One for the newly created dot entry
 }
 
 
-void DirInfo::init()
+DirInfo::~DirInfo()
 {
-    // Can't delegate all the constructors to one, so initialise everything in one place here
-    _dotEntry		 = nullptr;
-    _attic		 = nullptr;
-    _isMountPoint	 = false;
-    _isExcluded		 = false;
-    _summaryDirty	 = false;
-    _deletingAll	 = false;
-    _locked		 = false;
-    _touched		 = false;
-    _fromCache		 = false;
-    _pendingReadJobs	 = 0;
-    _firstChild		 = nullptr;
+    clear();
+}
+
+
+void DirInfo::initCounts()
+{
+    // logDebug() << this << Qt::endl;
+
     _totalSize		 = _size;
     _totalAllocatedSize	 = _allocatedSize;
     _totalBlocks	 = _blocks;
@@ -125,48 +142,37 @@ void DirInfo::init()
     _errSubDirCount	 = 0;
     _latestMtime	 = _mtime;
     _oldestFileMtime	 = 0;
-    _readState		 = DirQueued;
-    _sortedChildren	 = nullptr;
-    _dominantChildren	 = nullptr;
-    _lastSortCol	 = UndefinedCol;
-    _lastSortOrder	 = Qt::AscendingOrder;
-}
-
-
-DirInfo::~DirInfo()
-{
-    clear();
 }
 
 
 void DirInfo::clear()
 {
-    _deletingAll = true;
+//    _deletingAll = true;
 
-    // Recursively delete all children.
+    // Recursively (through the destructors)  delete all children.
     while ( _firstChild )
     {
-	FileInfo * nextChild = _firstChild->next();
+	FileInfo * childToDelete = _firstChild;
+	_firstChild = _firstChild->next();
 
-	if ( _parent )
-	    _parent->deletingChild( _firstChild );
+//	if ( _parent )
+//	    _parent->deletingChild( childToDelete );
 
-	delete _firstChild;
-	_firstChild = nextChild; // unlink the old first child
+	delete childToDelete;
     }
 
+    markAsDirty();
 
-    // Delete the dot entry
     delete _dotEntry;
     _dotEntry = nullptr;
 
-    // Delete the attic
     delete _attic;
     _attic = nullptr;
 
-    _summaryDirty = true;
-    _deletingAll  = false;
-    dropSortCache();
+//    _summaryDirty = true;
+//    _deletingAll  = false;
+
+//    dropSortCache();
 }
 
 
@@ -249,18 +255,7 @@ void DirInfo::recalc()
 {
     // logDebug() << this << Qt::endl;
 
-    _totalSize		 = _size;
-    _totalAllocatedSize	 = _allocatedSize;
-    _totalBlocks	 = _blocks;
-    _totalItems		 = 0;
-    _totalSubDirs	 = 0;
-    _totalFiles		 = 0;
-    _totalIgnoredItems	 = 0;
-    _totalUnignoredItems = 0;
-    _directChildrenCount = 0;
-    _errSubDirCount	 = 0;
-    _latestMtime	 = _mtime;
-    _oldestFileMtime	 = 0;
+    initCounts();
 
     FileInfoIterator it( this );
 
@@ -447,13 +442,8 @@ int DirInfo::countDirectChildren()
 
     _directChildrenCount = 0;
 
-    FileInfo * child = _firstChild;
-
-    while ( child )
-    {
+    for ( FileInfo * child = _firstChild; child; child = child->next() )
 	++_directChildrenCount;
-	child = child->next();
-    }
 
     if ( _dotEntry )
 	++_directChildrenCount;
@@ -641,6 +631,17 @@ void DirInfo::childAdded( FileInfo * newChild )
 }
 
 
+void DirInfo::markAsDirty()
+{
+    _summaryDirty = true;
+
+    if ( _parent )
+	_parent->markAsDirty();
+
+    dropSortCache();
+}
+
+#if 0
 void DirInfo::deletingChild( FileInfo * child )
 {
     /**
@@ -652,14 +653,10 @@ void DirInfo::deletingChild( FileInfo * child )
      * recalculated: The child now being deleted might just be the one with the
      * latest mtime, and figuring out the second-latest cannot easily be
      * done. So we merely mark the summary as dirty and wait until a recalc()
-     * will be triggered from outside - which might as well never happen if
+     * will be triggered from outside - which might well never happen if
      * nobody wants to know some summary field anyway.
      **/
 
-    _summaryDirty = true;
-
-    if ( _parent )
-	_parent->deletingChild( child );
 
     if ( child->parent() == this )
     {
@@ -679,17 +676,28 @@ void DirInfo::deletingChild( FileInfo * child )
 	}
     }
 }
+#endif
+
+void DirInfo::deletingChild( FileInfo * child )
+{
+    if ( child->parent() == this )
+	unlinkChild( child );
+
+    if ( _parent )
+	_parent->deletingChild( child );
+}
 
 
 void DirInfo::unlinkChild( FileInfo * deletedChild )
 {
+/*
     if ( deletedChild->parent() != this )
     {
 	logError() << deletedChild << " is not a child of " << this
 		   << " - cannot unlink from children list!" << Qt::endl;
 	return;
     }
-
+*/
     dropSortCache();
     _summaryDirty = true;
 
@@ -706,7 +714,6 @@ void DirInfo::unlinkChild( FileInfo * deletedChild )
 	{
 	    // logDebug() << "Unlinking " << deletedChild << Qt::endl;
 	    child->setNext( deletedChild->next() );
-
 	    return;
 	}
     }
@@ -815,7 +822,7 @@ void DirInfo::finalizeAll()
 	    child->toDirInfo()->finalizeAll();
     }
 
-    // Optimization: As long as this directory is not finalized yet, it does
+    // Optimization: as long as this directory is not finalized yet, it does
     // (very likely) have a dot entry and thus all direct children are
     // subdirectories, not plain files, so we don't need to bother checking
     // plain file children as well - so do finalizeLocal() only after all
@@ -965,7 +972,7 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
     }
 
     // Clean old sorted children list and create a new one
-    dropSortCache( true ); // recursive
+    dropSortCaches(); // recursive
     _sortedChildren = new FileInfoList();
     CHECK_NEW( _sortedChildren );
 
@@ -1017,50 +1024,41 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
 }
 
 
-void DirInfo::dropSortCache( bool recursive )
+void DirInfo::dropSortCache()
 {
+    delete _sortedChildren;
+    _sortedChildren = nullptr;
+
+    delete _dominantChildren;
+    _dominantChildren = nullptr;
+}
+
+
+void DirInfo::dropSortCaches()
+{
+    // If this dir didn't have any sort cache, there won't be any in the subtree
     if ( _sortedChildren )
     {
 	// logDebug() << "Dropping sort cache for " << this << Qt::endl;
 
-	// Intentionally deleting the list and creating a new one since
-	// QList never shrinks, it always just grows (this is documented):
-	// QList.clear() would not free the allocated space.
-	//
-	// If we get lucky, we won't even need the _sortedChildren list any
-	// more if nobody asks for it. This prevents pathological cases where
-	// the user opened all tree branches at once (there are menu entries to
-	// open to a certain tree level), then closed them again and now opens
-	// select branches manually.
-
-	delete _sortedChildren;
-	_sortedChildren = nullptr;
-
-	// Optimization: If this dir didn't have any sort cache, there won't be
-	// any in the subtree, either. And dot entries don't have dir children
-	// that could have a sort cache.
-
-	if ( recursive )
+	//  Dot entries don't have dir children that could have a sort cache
+	if ( !isDotEntry() )
 	{
-	    if ( !isDotEntry() )
+	    for ( FileInfo * child = _firstChild; child; child = child->next() )
 	    {
-		for ( FileInfo * child = _firstChild; child; child = child->next() )
-		{
-		    if ( child->isDirInfo() )
-			child->toDirInfo()->dropSortCache( recursive );
-		}
-
-		if ( _dotEntry )
-		    _dotEntry->dropSortCache( recursive );
+		if ( child->isDirInfo() )
+		    child->toDirInfo()->dropSortCaches();
 	    }
 
-	    if ( _attic )
-		_attic->dropSortCache( recursive );
+	    if ( _dotEntry )
+		_dotEntry->dropSortCaches();
 	}
+
+	if ( _attic )
+	    _attic->dropSortCaches();
     }
 
-    delete _dominantChildren;
-    _dominantChildren = nullptr;
+    dropSortCache();
 }
 
 
@@ -1134,7 +1132,6 @@ void DirInfo::findDominantChildren()
 	return;
 
     delete _dominantChildren;
-
     _dominantChildren = new FileInfoList();
     CHECK_NEW( _dominantChildren );
 

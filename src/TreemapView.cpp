@@ -126,14 +126,16 @@ void TreemapView::setSelectionModel( SelectionModel * selectionModel )
 
     _selectionModel = selectionModel;
 
-    connect( this,            &TreemapView::selectionChanged,
-             _selectionModel, &SelectionModel::selectItem );
+    // ancient, but apparently never used
+//    connect( this,            &TreemapView::selectionChanged,
+//             _selectionModel, &SelectionModel::selectItem );
 
+    // These two slots must be called in this order, or they overwrite eachother
     connect( this,            &TreemapView::currentItemChanged,
-             _selectionModel, qOverload<FileInfo *, bool>( &SelectionModel::setCurrentItem ) );
+             _selectionModel, &SelectionModel::updateCurrentBranch );
 
-    connect( this,            &TreemapView::currentItemChanged,
-             _selectionModel, &SelectionModel::setCurrentBranch );
+//    connect( this,            &TreemapView::currentItemChanged,
+//             _selectionModel, qOverload<FileInfo *, bool>( &SelectionModel::setCurrentItem ) );
 
     // Use the proxy for all receiving signals
     delete _selectionModelProxy;
@@ -317,7 +319,7 @@ bool TreemapView::canZoomOut() const
 
 void TreemapView::rebuildTreemapSlot()
 {
-    //logDebug() << _savedRootUrl << Qt::endl;
+    logDebug() << _savedRootUrl << Qt::endl;
     FileInfo * root = nullptr;
 
     if ( !_savedRootUrl.isEmpty() )
@@ -333,8 +335,9 @@ void TreemapView::rebuildTreemapSlot()
     clear();
 
     rebuildTreemap( root );
-//    rebuildTreemap( root, sceneRect().size() );
+
     _savedRootUrl = "";
+    logDebug() << _savedRootUrl << Qt::endl;
 }
 
 
@@ -355,7 +358,7 @@ void TreemapView::rebuildTreemap( FileInfo * newRoot )
         return;
     }
 
-    //logDebug() << rect << Qt::endl;
+    logDebug() << rect << Qt::endl;
     _treemapCancel = TreemapCancelNone;
     _treemapRunning = true;
 
@@ -644,7 +647,7 @@ void TreemapView::setCurrentTile( const TreemapTile * tile )
         //logDebug() << "Sending currentItemChanged " << tile << Qt::endl;
 
         SignalBlocker sigBlocker( _selectionModelProxy ); // Prevent signal ping-pong
-        emit currentItemChanged( tile ? tile->orig() : 0 );
+        emit currentItemChanged( tile->orig() );
     }
 }
 
@@ -703,13 +706,13 @@ void TreemapView::updateSelection( const FileInfoSet & newSelection )
 
     for ( auto it = newSelection.constBegin(); it != newSelection.constEnd(); ++it )
     {
-        TreemapTile *tile = map.isEmpty() ? findTile( _rootTile, *it ) : map.value( *it, 0 );
+        TreemapTile *tile = map.isEmpty() ? findTile( _rootTile, *it ) : map.value( *it, nullptr );
         if ( tile )
             tile->setSelected( true );
     }
 
     const FileInfo *currentItem = _selectionModel->currentItem();
-    const TreemapTile *tile = map.isEmpty() ? findTile( _rootTile, currentItem ) : map.value( currentItem, 0 );
+    const TreemapTile *tile = map.isEmpty() ? findTile( _rootTile, currentItem ) : map.value( currentItem, nullptr );
     if ( tile )
         setCurrentTile( tile );
 
@@ -727,9 +730,7 @@ void TreemapView::sendSelection( const TreemapTile *tile)
 
     if ( selectedTiles.size() == 1 && selectedTiles.first() == tile )
     {
-        // This is the most common case: One tile is selected.
-        // Reduce number of signals in that case.
-
+        // For just one selected tile, only send one signal
         _selectionModel->setCurrentItem( tile->orig(),
                                          true ); // select
     }
@@ -740,13 +741,12 @@ void TreemapView::sendSelection( const TreemapTile *tile)
         for ( const QGraphicsItem * selectedItem : selectedTiles )
         {
             const TreemapTile * selectedTile = dynamic_cast<const TreemapTile *>( selectedItem );
-
             if ( selectedTile )
                 selectedItems << selectedTile->orig();
         }
 
         _selectionModel->setSelectedItems( selectedItems );
-        _selectionModel->setCurrentItem( tile ? tile->orig() : 0 );
+        _selectionModel->setCurrentItem( tile ? tile->orig() : nullptr );
     }
 }
 
@@ -864,7 +864,7 @@ void TreemapView::clearSceneMask()
 
 const TreemapTile * TreemapView::highlightedParent() const
 {
-    return _parentHighlightList.empty() ? 0 : _parentHighlightList.first()->tile();
+    return _parentHighlightList.empty() ? nullptr : _parentHighlightList.first()->tile();
 }
 
 
@@ -910,7 +910,7 @@ HighlightRect::HighlightRect( QGraphicsScene * scene,
                               const QColor & color,
                               int lineWidth,
                               float zValue ):
-    HighlightRect( scene, 0, color, lineWidth, zValue )
+    HighlightRect( scene, nullptr, color, lineWidth, zValue )
     {}
 
 

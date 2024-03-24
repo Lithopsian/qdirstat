@@ -292,16 +292,9 @@ CacheReader::CacheReader( const QString & fileName,
 			  DirInfo	* parent,
 			  bool		  markFromCache ):
     _cache { gzopen( fileName.toUtf8(), "r" ) },
-    _line { _buffer },
-    _lineNo { 0 },
     _markFromCache { markFromCache },
-    _ok { true },
-    _errorCount { 0 },
     _tree { tree },
-    _parent { parent },
-    _toplevel { nullptr },
-    _latestDir { nullptr },
-    _multiSlash { "//+" } // cache regexp for multiple use
+    _parent { parent }
 {
     if ( _cache == 0 )
     {

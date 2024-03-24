@@ -11,7 +11,7 @@
 #include <QTextStream>
 
 #include "FormatUtil.h"
-#include "BrokenLibc.h"     // ALLPERMS
+
 
 using namespace QDirStat;
 

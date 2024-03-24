@@ -37,7 +37,7 @@ static void discoverFiles( TreeWalker    * treeWalker,
     if ( subtree )
     {
 	// Should always be a subtree, but if not then do nothing
-        LocateFilesWindow::populateSharedInstance( treeWalker,
+	LocateFilesWindow::populateSharedInstance( treeWalker,
 						   subtree,
 						   headingText.arg( subtree->url() ),
 						   sortCol,
@@ -126,6 +126,6 @@ void DiscoverActions::findFiles( const FileSearchFilter & filter )
     discoverFiles( new FindFilesTreeWalker( filter ),
 		   LocateListPathCol,
 		   Qt::AscendingOrder,
-		   QObject::tr( "Search results for '%1'" ).arg( filter.pattern() ),
+		   QObject::tr( "Search results for '%1' in %2" ).arg( filter.pattern() ),
 		   filter.subtree() );
 }

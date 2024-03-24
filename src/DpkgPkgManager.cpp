@@ -11,13 +11,12 @@
 
 #include "DpkgPkgManager.h"
 #include "PkgFileListCache.h"
+#include "SysUtil.h"
 #include "Logger.h"
 #include "Exception.h"
 
 #define LOG_COMMANDS	true
 #define LOG_OUTPUT	false
-
-#include "SysUtil.h"
 
 
 using namespace QDirStat;

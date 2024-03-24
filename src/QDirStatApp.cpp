@@ -7,34 +7,38 @@
  */
 
 
-#include <QWidget>
-#include <QList>
-
 #include "QDirStatApp.h"
-#include "DirTreeModel.h"
 #include "DirTree.h"
-#include "FileInfoSet.h"
-#include "SelectionModel.h"
-//#include "CleanupCollection.h"
+#include "DirTreeModel.h"
 #include "MainWindow.h"
-#include "Logger.h"
+#include "SelectionModel.h"
 #include "Exception.h"
 
 
 using namespace QDirStat;
 
 
-QDirStatApp::QDirStatApp()
+QDirStatApp::QDirStatApp():
+    _dirTreeModel { new DirTreeModel() },
+    _selectionModel { new SelectionModel( _dirTreeModel ) }
 {
-    // logDebug() << "Creating app" << Qt::endl;
-
-    _dirTreeModel = new DirTreeModel();
     CHECK_NEW( _dirTreeModel );
-
-    _selectionModel = new SelectionModel( _dirTreeModel );
     CHECK_NEW( _selectionModel );
 
-    _dirTreeModel->setSelectionModel( _selectionModel );
+    // logDebug() << "Creating app" << Qt::endl;
+
+    if ( qApp->styleSheet().isEmpty() )
+    {
+        const QString cssFile = QString( "%1/%2/%2.css" )
+                                .arg( QStandardPaths::writableLocation( QStandardPaths::ConfigLocation ) )
+                                .arg( qApp->applicationName() );
+        QFile file ( cssFile );
+        if ( !file.open( QFile::ReadOnly | QFile::Text) )
+            return;
+
+        QTextStream in( &file );
+        qApp->setStyleSheet( in.readAll() );
+    }
 }
 
 
@@ -52,6 +56,7 @@ QDirStatApp::~QDirStatApp()
 QDirStatApp * QDirStatApp::instance()
 {
     static QDirStatApp _instance;
+
     return &_instance;
 }
 
@@ -94,7 +99,7 @@ FileInfo * QDirStatApp::selectedDirInfo() const
     const FileInfoSet selectedItems = _selectionModel->selectedItems();
     FileInfo * sel = selectedItems.first();
 
-    return sel && sel->isDirInfo() ? sel : nullptr;
+    return sel && sel->isDirInfo() ? sel : ( FileInfo * )sel->parent();
 }
 
 
@@ -105,6 +110,17 @@ FileInfo * QDirStatApp::selectedDirInfoOrRoot() const
     return sel ? sel : root();
 }
 
+
+void QDirStatApp::setWidgetFontSize( QWidget * widget )
+{
+    if ( _dirTreeModel->dirTreeItemSize() == DTIS_Medium )
+    {
+        QFont biggerFont = widget->font();
+        biggerFont.setPointSizeF( biggerFont.pointSizeF() * 1.1 );
+        widget->setFont( biggerFont );
+	//setStyleSheet( QString( "QTreeView { font-size: %1pt; }" ).arg( pointSize ) );
+    }
+}
 
 
 

@@ -892,9 +892,6 @@ void TreemapTile::contextMenuEvent( QGraphicsSceneContextMenuEvent * event )
         selectedItems = _parentView->selectionModel()->selectedItems();
     }
 
-//    if ( _parentView->selectionModel()->verbose() )
-//        _parentView->selectionModel()->dumpSelectedItems();
-
     //logDebug() << "Context menu for " << this << Qt::endl;
 
     QMenu menu;

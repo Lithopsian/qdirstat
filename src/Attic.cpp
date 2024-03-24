@@ -8,7 +8,6 @@
 
 
 #include "Attic.h"
-#include "DotEntry.h"
 #include "Exception.h"
 #include "Logger.h"
 
@@ -18,7 +17,7 @@ using namespace QDirStat;
 
 Attic::Attic( DirTree * tree,
 	      DirInfo * parent )
-    : DirInfo( parent, tree, atticName() )
+    : DirInfo ( parent, tree, atticName() )
 {
     _isIgnored = true;
 
@@ -33,29 +32,17 @@ Attic::Attic( DirTree * tree,
 }
 
 
-Attic::~Attic()
-{
-    // NOP
-}
-
-
 FileInfo * Attic::locate( QString url, bool findPseudoDirs )
 {
-    if ( ! _tree || ! _parent )
+    if ( !_tree || !_parent )
 	return nullptr;
 
     // Search all children
-
-    FileInfo * child = firstChild();
-
-    while ( child )
+    for ( FileInfo * child = firstChild(); child; child = child->next() )
     {
 	FileInfo * foundChild = child->locate( url, findPseudoDirs );
-
 	if ( foundChild )
 	    return foundChild;
-	else
-	    child = child->next();
     }
 
     // An attic can have neither an attic nor a dot entry, so there is no need

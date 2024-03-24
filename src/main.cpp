@@ -145,8 +145,9 @@ int main( int argc, char *argv[] )
     logVersion();
 
     // Set org/app name for QSettings
-    QCoreApplication::setOrganizationName( "QDirStat" );
-    QCoreApplication::setApplicationName ( "QDirStat" );
+    QCoreApplication::setOrganizationName  ( "QDirStat" );
+    QCoreApplication::setApplicationName   ( "QDirStat" );
+//    QCoreApplication::setApplicationVersion( QDIRSTAT_VERSION );
 
     MainWindow * mainWin = new MainWindow( slowUpdate );
     CHECK_PTR( mainWin );

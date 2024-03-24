@@ -35,9 +35,6 @@
 using namespace QDirStat;
 
 
-bool FileInfo::_ignoreHardLinks = false;
-
-
 FileInfo::FileInfo( DirInfo	  * parent,
 		    DirTree	  * tree,
 		    const QString & filename,
@@ -47,14 +44,11 @@ FileInfo::FileInfo( DirInfo	  * parent,
      * This is the standard case.
      **/
     : _parent { parent }
-    , _next { nullptr }
     , _tree { tree }
-    , _magic { FileInfoMagic }
     , _name { filename }
     , _isLocalFile { true }
     , _isIgnored { false }
     , _hasUidGidPerm { true }
-    , _allocatedSize { 0 }
 {
     CHECK_PTR( statInfo );
 
@@ -68,6 +62,7 @@ FileInfo::FileInfo( DirInfo	  * parent,
     if ( isSpecial() )
     {
 	_size		= 0;
+	_allocatedSize	= 0;
 	_blocks		= 0;
 	_isSparseFile	= false;
     }
@@ -78,25 +73,20 @@ FileInfo::FileInfo( DirInfo	  * parent,
 
 	if ( _blocks == 0 && _size > 0 )
 	{
-	    if ( !filesystemCanReportBlocks() )
-	    {
-		_allocatedSize = _size;
-
-		// Do not make any assumptions about fragment handling: The
-		// last block of the file might be partially unused, or the
-		// filesystem might do clever fragment handling, or it's an
-		// exported kernel table like /dev, /proc, /sys. So let's
-		// simply use the size reported by stat() for _allocatedSize.
-	    }
+	    // Do not make any assumptions about fragment handling: The
+	    // last block of the file might be partially unused, or the
+	    // filesystem might do clever fragment handling, or it's an
+	    // exported kernel table like /dev, /proc, /sys. So let's
+	    // simply use the size reported by stat() for _allocatedSize.
+	    _allocatedSize = filesystemCanReportBlocks() ? 0 : _size;
 	}
 	else
 	{
 	    _allocatedSize = _blocks * STD_BLOCK_SIZE;
 	}
 
-	_isSparseFile	= isFile()
-	    && _blocks >= 0
-	    && _allocatedSize + FRAGMENT_SIZE < _size; // allow for intelligent fragment handling
+	// allow for intelligent fragment handling
+	_isSparseFile = isFile() && _blocks >= 0 && _allocatedSize + FRAGMENT_SIZE < _size;
 
 #if 0
 	if ( _isSparseFile )
@@ -134,10 +124,10 @@ FileInfo::~FileInfo()
 
 FileSize FileInfo::size() const
 {
-    FileSize sz = _isSparseFile ? _allocatedSize : _size;
+    const FileSize sz = _isSparseFile ? _allocatedSize : _size;
 
-    if ( _links > 1 && !_ignoreHardLinks && isFile() )
-	sz /= _links;
+    if ( _links > 1 && !_tree->ignoreHardLinks() && isFile() )
+	return sz / _links;
 
     return sz;
 }
@@ -145,10 +135,10 @@ FileSize FileInfo::size() const
 
 FileSize FileInfo::allocatedSize() const
 {
-    FileSize sz = _allocatedSize;
+    const FileSize sz = _allocatedSize;
 
-    if ( _links > 1 && !_ignoreHardLinks && isFile() )
-	sz /= _links;
+    if ( _links > 1 && !_tree->ignoreHardLinks() && isFile() )
+	return sz / _links;
 
     return sz;
 }
@@ -227,7 +217,7 @@ int FileInfo::treeLevel() const
 {
     int level = 0;
 
-    for ( FileInfo * parent = _parent; parent; parent = parent->parent() )
+    for ( const FileInfo * parent = _parent; parent; parent = parent->parent() )
 	level++;
 
     return level;
@@ -411,15 +401,6 @@ QString FileInfo::baseName() const
 }
 
 
-void FileInfo::setIgnoreHardLinks( bool ignore )
-{
-    if ( ignore )
-	logInfo() << "Ignoring hard links" << Qt::endl;
-
-    _ignoreHardLinks = ignore;
-}
-
-
 DirInfo * FileInfo::toDirInfo()
 {
     DirInfo * dirInfo = dynamic_cast<DirInfo *>( this );
@@ -487,13 +468,13 @@ bool FileInfo::filesystemCanReportBlocks() const
 }
 
 
-QString FileInfo::symLinkTarget()
+QString FileInfo::symLinkTarget() const
 {
     return isSymLink() ? SysUtil::symLinkTarget( path() ) : QString();
 }
 
 
-QPair<short, short> FileInfo::yearAndMonth()
+QPair<short, short> FileInfo::yearAndMonth() const
 {
     if ( isPseudoDir() || isPkgInfo() )
         return { 0, 0 };

@@ -15,13 +15,14 @@
 
 #include "FileTypeStatsWindow.h"
 #include "FileTypeStats.h"
-#include "DirTreeModel.h"
+#include "FileInfo.h"
 #include "FileSizeStatsWindow.h"
 #include "FormatUtil.h"
 #include "HeaderTweaker.h"
 #include "LocateFileTypeWindow.h"
 #include "MimeCategory.h"
 #include "QDirStatApp.h"
+#include "SelectionModel.h"
 #include "SettingsHelpers.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -33,9 +34,12 @@
 using namespace QDirStat;
 
 
-FileTypeStatsWindow::FileTypeStatsWindow( QWidget * parent ):
+FileTypeStatsWindow::FileTypeStatsWindow( QWidget * parent,
+					  SelectionModel * selectionModel ):
     QDialog ( parent ),
-    _ui { new Ui::FileTypeStatsWindow }
+    _ui { new Ui::FileTypeStatsWindow },
+    _subtree { nullptr },
+    _stats { nullptr }
 {
     // logDebug() << "init" << Qt::endl;
 
@@ -43,13 +47,11 @@ FileTypeStatsWindow::FileTypeStatsWindow( QWidget * parent ):
 
     CHECK_NEW( _ui );
     _ui->setupUi( this );
+
     initWidgets();
     readWindowSettings( this, "FileTypeStatsWindow" );
 
-    _stats = new FileTypeStats( this );
-    CHECK_NEW( _stats );
-
-    // Add to window to get the hotkeys
+    // Add actions to this window to get the hotkeys
     addAction( _ui->actionLocate );
     addAction( _ui->actionSizeStats );
 
@@ -77,15 +79,8 @@ FileTypeStatsWindow::FileTypeStatsWindow( QWidget * parent ):
     connect( _ui->actionSizeStats, &QAction::triggered,
 	     this,		   &FileTypeStatsWindow::sizeStatsForCurrentFileType );
 
-    const QSize size = app()->dirTreeModel()->mountPointIcon().actualSize( QSize( 22, 22 ) );
-    logDebug() << font().pointSizeF() << Qt::endl;
-    qreal pointSize = font().pointSizeF();
-    if ( size.height() > 16 )
-	pointSize *= 1.2;
-    // Set the row height based on the configured DirTree icon height
-    const QString fontSize =  QString( "QTreeView { font-size: %1pt; }" ).arg( pointSize );
-//    setStyleSheet( QString( "%1 QTreeView::item { min-height: %2px; }" ).arg( fontSize ).arg( size.height() ) );
-    setStyleSheet( fontSize );
+    connect( selectionModel, qOverload<FileInfo *, const FileInfo *>( &SelectionModel::currentItemChanged ),
+	     this,           &FileTypeStatsWindow::syncedPopulate );
 }
 
 
@@ -94,17 +89,20 @@ FileTypeStatsWindow::~FileTypeStatsWindow()
     //logDebug() << "destroying" << Qt::endl;
 
     writeWindowSettings( this, "FileTypeStatsWindow" );
+
+    delete _stats;
     delete _ui;
 }
 
 
-FileTypeStatsWindow * FileTypeStatsWindow::sharedInstance( QWidget * parent )
+FileTypeStatsWindow * FileTypeStatsWindow::sharedInstance( QWidget * parent,
+							   SelectionModel * selectionModel)
 {
     static QPointer<FileTypeStatsWindow> _sharedInstance = nullptr;
 
     if ( !_sharedInstance )
     {
-	_sharedInstance = new FileTypeStatsWindow( parent );
+	_sharedInstance = new FileTypeStatsWindow( parent, selectionModel );
 	CHECK_NEW( _sharedInstance );
     }
 
@@ -114,14 +112,15 @@ FileTypeStatsWindow * FileTypeStatsWindow::sharedInstance( QWidget * parent )
 
 void FileTypeStatsWindow::clear()
 {
-    _stats->clear();
     _ui->treeWidget->clear();
-    enableActions(0);
+    enableActions( nullptr );
 }
 
 
 void FileTypeStatsWindow::initWidgets()
 {
+    app()->setWidgetFontSize( _ui->treeWidget );
+
     _ui->treeWidget->setColumnCount( FT_ColumnCount );
     _ui->treeWidget->setHeaderLabels( { tr( "Name" ), tr( "Number" ), tr( "Total Size" ), tr( "Percentage" ) } );
 
@@ -137,24 +136,41 @@ void FileTypeStatsWindow::refresh()
 }
 
 
-void FileTypeStatsWindow::populateSharedInstance( QWidget * mainWindow, FileInfo * subtree )
+void FileTypeStatsWindow::populateSharedInstance( QWidget * mainWindow,
+						  FileInfo * subtree,
+						  SelectionModel * selectionModel )
 {
-    if ( !subtree )
+    if ( !subtree || !selectionModel )
         return;
 
-    FileTypeStatsWindow * instance = sharedInstance( mainWindow );
+    FileTypeStatsWindow * instance = sharedInstance( mainWindow, selectionModel );
     instance->populate( subtree );
+    instance->_ui->treeWidget->sortByColumn( FT_TotalSizeCol, Qt::DescendingOrder );
     instance->show();
 }
+
+
+void FileTypeStatsWindow::syncedPopulate( FileInfo * )
+{
+    FileInfo * newSelection = app()->selectedDirInfoOrRoot();
+    if ( newSelection != _subtree() )
+    {
+	_subtree = newSelection;
+        populate( _subtree() );
+    }
+}
+
 
 
 void FileTypeStatsWindow::populate( FileInfo * newSubtree )
 {
     clear();
     _subtree = newSubtree;
-    _stats->calc( newSubtree ? newSubtree : _subtree() );
 
-    _ui->heading->setText( tr( "File type statistics for %1" ).arg( _subtree.url() ) );
+    delete _stats;
+    _stats = new FileTypeStats( _subtree() );
+
+    _ui->headingUrl->setText( _subtree.url() );
 
     // Don't sort until all items are added
     _ui->treeWidget->setSortingEnabled( false );
@@ -246,7 +262,7 @@ void FileTypeStatsWindow::populate( FileInfo * newSubtree )
     }
 
     _ui->treeWidget->setSortingEnabled( true );
-    _ui->treeWidget->sortByColumn( FT_TotalSizeCol, Qt::DescendingOrder );
+//    _ui->treeWidget->setCurrentItem( _ui->treeWidget->topLevelItem( 0 ) );
 }
 
 
@@ -258,7 +274,7 @@ FileTypeItem * FileTypeStatsWindow::addCategoryItem( const QString & name, int c
     CHECK_NEW( item );
 
     _ui->treeWidget->addTopLevelItem( item );
-    item->setBold();
+//    item->setBold();
 
     return item;
 }
@@ -345,7 +361,6 @@ void FileTypeStatsWindow::sizeStatsForCurrentFileType()
 {
     const QString suffix = currentSuffix().toLower();
     FileInfo * dir = _subtree();
-
     if ( suffix.isEmpty() || !dir )
         return;
 
@@ -358,10 +373,10 @@ void FileTypeStatsWindow::sizeStatsForCurrentFileType()
 QString FileTypeStatsWindow::currentSuffix() const
 {
     const SuffixFileTypeItem * current = dynamic_cast<SuffixFileTypeItem *>( _ui->treeWidget->currentItem() );
-    if ( current && current->suffix() != NO_SUFFIX && current->suffix() != NON_SUFFIX_RULE )
-	return current->suffix();
+    if ( !current || current->suffix() == NO_SUFFIX || current->suffix() == NON_SUFFIX_RULE )
+	return QString();
 
-    return QString();
+    return current->suffix();
 }
 
 
@@ -393,8 +408,8 @@ void FileTypeStatsWindow::contextMenu( const QPoint & pos )
 	return;
 
     suffix.remove( 0, 1 );
-    _ui->actionLocate->setText( tr( "&Locate files with suffix " ) + suffix );
-    _ui->actionSizeStats->setText( tr( "&Size statistics for suffix " ) + suffix );
+    _ui->actionLocate->setText( tr( "&Locate files with suffix *" ) + suffix );
+    _ui->actionSizeStats->setText( tr( "&Size statistics for suffix *" ) + suffix );
 
     QMenu menu;
     menu.addAction( _ui->actionLocate );
@@ -435,8 +450,6 @@ SuffixFileTypeItem::SuffixFileTypeItem( const QString & suffix,
 	setText( FT_NameCol,  QObject::tr( "<No Extension>" ) );
     else if ( suffix == NON_SUFFIX_RULE )
 	setText( FT_NameCol,  QObject::tr( "<Other>" ) );
-    else
-	_suffix = "*." + suffix;
 }
 
 
@@ -469,18 +482,20 @@ bool FileTypeItem::operator<(const QTreeWidgetItem & rawOther) const
     // error which should not be silently ignored.
     const FileTypeItem & other = dynamic_cast<const FileTypeItem &>( rawOther );
 
-    const int col = treeWidget() ? treeWidget()->sortColumn() : FT_TotalSizeCol;
+    const FileTypeColumns col = treeWidget() ? (FileTypeColumns)treeWidget()->sortColumn() : FT_TotalSizeCol;
     switch ( col )
     {
-	case FT_NameCol:	return name()	    < other.name();
-	case FT_CountCol:	return count()	    < other.count();
-	case FT_TotalSizeCol:	return totalSize()  < other.totalSize();
-	case FT_PercentageCol:	return percentage() < other.percentage();
-	default:		return QTreeWidgetItem::operator<( rawOther );
+	case FT_CountCol:      return count()      < other.count();
+	case FT_TotalSizeCol:  return totalSize()  < other.totalSize();
+	case FT_PercentageCol: return percentage() < other.percentage();
+	case FT_NameCol:
+	case FT_ColumnCount: break;
     }
+
+    return QTreeWidgetItem::operator<( rawOther );
 }
 
-
+/*
 void FileTypeItem::setBold()
 {
     QFont boldFont = font( 0 );
@@ -489,3 +504,4 @@ void FileTypeItem::setBold()
     for ( int col=0; col < FT_ColumnCount; ++col )
 	setFont( col, boldFont );
 }
+*/

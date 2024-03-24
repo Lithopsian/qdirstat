@@ -18,38 +18,13 @@
 using namespace QDirStat;
 
 
-FileTypeStats::FileTypeStats( QObject  * parent ):
-    QObject( parent ),
-    _totalSize( 0LL )
+FileTypeStats::FileTypeStats( FileInfo * subtree ):
+    _otherCategory { new MimeCategory( QObject::tr( "Other" ) ) },
+    _mimeCategorizer { MimeCategorizer::instance() },
+    _totalSize { 0LL }
 {
-    _mimeCategorizer = MimeCategorizer::instance();
-    CHECK_PTR( _mimeCategorizer );
-
-    _otherCategory = new MimeCategory( tr( "Other" ) );
     CHECK_NEW( _otherCategory );
-}
-
-
-FileTypeStats::~FileTypeStats()
-{
-    clear();
-    delete _otherCategory;
-}
-
-
-void FileTypeStats::clear()
-{
-    _suffixSum.clear();
-    _suffixCount.clear();
-    _categorySum.clear();
-    _categoryCount.clear();
-    _totalSize = 0LL;
-}
-
-
-void FileTypeStats::calc( FileInfo * subtree )
-{
-    clear();
+    CHECK_PTR( _mimeCategorizer );
 
     if ( subtree && subtree->checkMagicNumber() )
     {
@@ -59,21 +34,23 @@ void FileTypeStats::calc( FileInfo * subtree )
         removeEmpty();
         sanityCheck();
     }
-
-    emit calcFinished();
 }
 
 
-void FileTypeStats::collect( FileInfo * dir )
+FileTypeStats::~FileTypeStats()
 {
-    if ( ! dir )
+    delete _otherCategory;
+}
+
+
+void FileTypeStats::collect( const FileInfo * dir )
+{
+    if ( !dir )
 	return;
 
-    FileInfoIterator it( dir );
-
-    while ( *it )
+    for ( FileInfoIterator it( dir ); *it; ++it )
     {
-	FileInfo * item = *it;
+	const FileInfo * item = *it;
 
 	if ( item->hasChildren() )
 	{
@@ -98,7 +75,6 @@ void FileTypeStats::collect( FileInfo * dir )
 	    // best choice.
 
 	    const MimeCategory * category = _mimeCategorizer->category( item, &suffix );
-
 	    if ( category )
             {
                 addCategorySum( category, item );
@@ -108,13 +84,13 @@ void FileTypeStats::collect( FileInfo * dir )
                 else
                     addSuffixSum( suffix, category, item );
 	    }
-            else // ! category
+            else // !category
             {
                 addCategorySum( _otherCategory, item );
 
                 if ( suffix.isEmpty() )
                 {
-                    if ( item->name().contains( '.' ) && ! item->name().startsWith( '.' ) )
+                    if ( item->name().contains( '.' ) && !item->name().startsWith( '.' ) )
                     {
                         // Fall back to the last (i.e. the shortest) suffix if the
                         // MIME categorizer didn't know it: Use section -1 (the
@@ -139,8 +115,6 @@ void FileTypeStats::collect( FileInfo * dir )
 
 	    // Disregard symlinks, block devices and other special files
 	}
-
-	++it;
     }
 }
 
@@ -180,8 +154,8 @@ void FileTypeStats::removeCruft()
     int	     totalMergedCount = 0;
 
     QStringList cruft;
-    StringIntMap::iterator it = _suffixCount.begin();
 
+    StringIntMap::iterator it = _suffixCount.begin();
     while ( it != _suffixCount.end() )
     {
 	const QString suffix = it.key().first;
@@ -221,18 +195,15 @@ void FileTypeStats::removeCruft()
 void FileTypeStats::removeEmpty()
 {
     StringIntMap::iterator it = _suffixCount.begin();
-
     while ( it != _suffixCount.end() )
     {
-	const int	count  = it.value();
-	const bool	remove = count == 0;
-
-	const QString suffix = it.key().first;
-	const MimeCategory * category = it.key().second;
-
-	if ( remove )
+	if ( it.value() == 0 )
 	{
+	    const QString suffix = it.key().first;
+	    const MimeCategory * category = it.key().second;
+
 	    logDebug() << "Removing empty suffix *." << suffix << Qt::endl;
+
 	    it = _suffixCount.erase( it );
 	    _suffixSum.remove( { suffix, category } );
 	}

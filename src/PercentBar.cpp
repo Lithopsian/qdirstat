@@ -37,12 +37,6 @@ PercentBarDelegate::PercentBarDelegate( QTreeView * treeView,
 }
 
 
-PercentBarDelegate::~PercentBarDelegate()
-{
-//    writeSettings(); // nothing can change
-}
-
-
 ColorList PercentBarDelegate::defaultFillColors() const
 {
     return ColorList( { QColor(   0,   0, 255 ),
@@ -64,13 +58,11 @@ ColorList PercentBarDelegate::defaultFillColors() const
 void PercentBarDelegate::readSettings()
 {
     Settings settings;
-    settings.beginGroup( "PercentBar" );
 
+    settings.beginGroup( "PercentBar" );
     _fillColors	   = readColorListEntry( settings, "Colors"    , defaultFillColors() );
     _barBackground = readColorEntry    ( settings, "Background", QColor( 160, 160, 160 ) );
-
     _sizeHintWidth = settings.value( "PercentBarColumnWidth", 180 ).toInt();
-
     settings.endGroup();
 }
 
@@ -128,7 +120,7 @@ int PercentBarDelegate::treeLevel( const QModelIndex & index ) const
 
 
 QSize PercentBarDelegate::sizeHint( const QStyleOptionViewItem & option,
-                                    const QModelIndex	       & index) const
+                                    const QModelIndex          & index) const
 {
     QSize size = QStyledItemDelegate::sizeHint( option, index );
 
@@ -147,24 +139,21 @@ void PercentBarDelegate::paintPercentBar( QPainter		     * painter,
 					  const QModelIndex	     & index,
 					  float			       percent ) const
 {
-    const int depth = treeLevel( index ) - _invisibleLevels;
+    const int depth        = treeLevel( index ) - _invisibleLevels;
     const int indentPixel  = ( depth * _treeView->indentation() ) / 2;
 
-    const QRect cellRect = option.rect;
-    const int penWidth = 2;
-    const int extraMargin = cellRect.height() / 6;
-    const int itemMargin = 4;
+    const int xMargin = 4;
+    const int yMargin = option.rect.height() / 6;
 
-    const int x = cellRect.x() + itemMargin + indentPixel;
-    const int y = cellRect.y() + extraMargin;
-    const int w = cellRect.width() - 2 * itemMargin - indentPixel;
-    const int h = cellRect.height() - 2 * extraMargin;
+    const int x = option.rect.x() + xMargin + indentPixel;
+    const int y = option.rect.y() + yMargin;
+    const int w = option.rect.width() - 2 * xMargin - indentPixel;
+    const int h = option.rect.height() - 2 * yMargin;
 
     if ( w > 0 )
     {
-	QPen pen( painter->pen() );
-	pen.setWidth( 0 );
-	painter->setPen( pen );
+	const int penWidth = 2;
+
 	painter->setBrush( Qt::NoBrush );
 
 	// Fill bar background
@@ -184,31 +173,26 @@ void PercentBarDelegate::paintPercentBar( QPainter		     * painter,
 	// Fill the percentage
 	const int fillWidth = ( w - 2 * penWidth ) * percent / 100;
 	const int colorIndex = depth + _startColorIndex;
-	const QColor fillColor = _fillColors.at( colorIndex % _fillColors.size() );
 	painter->fillRect( x + penWidth, y + penWidth,
 			   fillWidth + 1, h - 2 * penWidth + 1,
-			   fillColor );
+			   _fillColors.at( colorIndex % _fillColors.size() ) );
 
 	// Draw 3D shadows.
 	const QColor background = painter->background().color();
 
-	pen.setColor( contrastingColor ( Qt::black, background ) );
-	painter->setPen( pen );
+	painter->setPen( contrastingColor( Qt::black, background ) );
 	painter->drawLine( x, y, x+w, y );
 	painter->drawLine( x, y, x, y+h );
 
-	pen.setColor( contrastingColor( _barBackground.darker(), background ) );
-	painter->setPen( pen );
+	painter->setPen( contrastingColor( _barBackground.darker(), background ) );
 	painter->drawLine( x+1, y+1, x+w-1, y+1 );
 	painter->drawLine( x+1, y+1, x+1, y+h-1 );
 
-	pen.setColor( contrastingColor( _barBackground.lighter(), background ) );
-	painter->setPen( pen );
+	painter->setPen( contrastingColor( _barBackground.lighter(), background ) );
 	painter->drawLine( x+1, y+h, x+w, y+h );
 	painter->drawLine( x+w, y, x+w, y+h );
 
-	pen.setColor( contrastingColor( Qt::white, background ) );
-	painter->setPen( pen );
+	painter->setPen( contrastingColor( Qt::white, background ) );
 	painter->drawLine( x+2, y+h-1, x+w-1, y+h-1 );
 	painter->drawLine( x+w-1, y+1, x+w-1, y+h-1 );
     }

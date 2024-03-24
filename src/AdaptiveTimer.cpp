@@ -55,7 +55,9 @@ void AdaptiveTimer::deliveryTimeout()
 
     _payloadStopwatch.start();
     _payload();
-    _payloadTime = _payloadStopwatch.elapsed();
+
+    // Average the payload time to smooth out any stray spikes
+    ( _payloadTime += _payloadStopwatch.elapsed() ) /= 2;
 
     //logDebug() << "deliveryTime=" << _deliveryTime << Qt::endl;
 

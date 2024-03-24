@@ -34,14 +34,7 @@ using namespace QDirStat;
 
 DirTree::DirTree():
     QObject (),
-    _root { new DirInfo( this ) },
-    _crossFilesystems { false },
-    _isBusy { false },
-    _excludeRules { nullptr },
-    _tmpExcludeRules { nullptr },
-    _beingDestroyed { false },
-    _haveClusterSize { false },
-    _blocksPerCluster { 0 }
+    _root { new DirInfo( this ) }
 {
     CHECK_NEW( _root );
 
@@ -114,7 +107,7 @@ void DirTree::clear()
 	_root->clear();
     }
 
-    _isBusy	      = false;
+    _isBusy           = false;
     _haveClusterSize  = false;
     _blocksPerCluster = 0;
     _device.clear();
@@ -183,7 +176,6 @@ void DirTree::refresh( const FileInfoSet & refreshSet )
     {
 	// Need to check the magic number here again because a previous
 	// iteration step might have made the item invalid already
-
 	if ( item && item->checkMagicNumber() )
 	{
 	    if ( item->isDirInfo() )
@@ -197,10 +189,10 @@ void DirTree::refresh( const FileInfoSet & refreshSet )
 
 void DirTree::refresh( DirInfo * subtree )
 {
-    if ( ! _root )
+    if ( !_root )
 	return;
 
-    if ( ! subtree->checkMagicNumber() )
+    if ( !subtree->checkMagicNumber() )
     {
 	// Not using CHECK_MAGIC() here which would throw an exception since
 	// this might easily happen after cleanup actions with multi selection
@@ -214,7 +206,7 @@ void DirTree::refresh( DirInfo * subtree )
     if ( subtree->isDotEntry() )
 	subtree = subtree->parent();
 
-    if ( ! subtree || ! subtree->parent() )	// Refresh all (from first toplevel)
+    if ( !subtree || !subtree->parent() )	// Refresh all (from first toplevel)
     {
 	try
 	{
@@ -235,7 +227,8 @@ void DirTree::refresh( DirInfo * subtree )
 	subtree->setExcluded( false );
 	subtree->setReadState( DirReading );
 
-	sendStartingReading();
+	// A full startingReading signal would reset all the tree branches to level 1
+	_isBusy = true;
 
 	LocalDirReadJob * job = new LocalDirReadJob( this, subtree, false );
 	CHECK_NEW( job);
@@ -279,7 +272,7 @@ void DirTree::slotFinished()
 void DirTree::childAddedNotify( FileInfo * newChild )
 {
     //logDebug() << Qt::endl;
-    if ( ! _haveClusterSize )
+    if ( !_haveClusterSize )
         detectClusterSize( newChild );
 
     emit childAdded( newChild );
@@ -313,37 +306,33 @@ void DirTree::deleteSubtree( FileInfo *subtree )
     // Send notification to anybody interested (e.g., to attached views)
     deletingChildNotify( subtree );
 
-    if ( parent )
+    // If this was the last child of a dot entry
+    if ( parent && parent->isDotEntry() && !parent->hasChildren() )
     {
-	if ( parent->isDotEntry() && ! parent->hasChildren() )
-	    // This was the last child of a dot entry
+	// Get rid of that now empty and useless dot entry
+	if ( parent->parent() )
 	{
-	    // Get rid of that now empty and useless dot entry
-
-	    if ( parent->parent() )
+	    if ( parent->parent()->isFinished() )
 	    {
-		if ( parent->parent()->isFinished() )
-		{
-		    // logDebug() << "Removing empty dot entry " << parent << Qt::endl;
+		// logDebug() << "Removing empty dot entry " << parent << Qt::endl;
 
-		    deletingChildNotify( parent );
-		    parent->parent()->deleteEmptyDotEntry();
+		deletingChildNotify( parent );
+		parent->parent()->deleteEmptyDotEntry();
 
-		    delete parent;
-		    parent = nullptr;
-		}
+		delete parent;
+		parent = nullptr;
 	    }
-	    else	// no parent - this should never happen (?)
-	    {
-		logError() << "Internal error: Killing dot entry without parent " << parent << Qt::endl;
+	}
+	else	// no parent - this should never happen (?)
+	{
+	    logError() << "Internal error: NOT killing dot entry without parent: " << parent << Qt::endl;
 
-		// Better leave that dot entry alone - we shouldn't have come
-		// here in the first place. Who knows what will happen if this
-		// thing is deleted now?!
-		//
-		// Intentionally NOT calling:
-		//     delete parent;
-	    }
+	    // Better leave that dot entry alone - we shouldn't have come
+	    // here in the first place. Who knows what will happen if this
+	    // thing is deleted now?!
+	    //
+	    // Intentionally NOT calling:
+	    //     delete parent;
 	}
     }
 
@@ -358,9 +347,7 @@ void DirTree::deleteSubtree( FileInfo *subtree )
     delete subtree;
 
     if ( subtree == _root )
-    {
 	_root = nullptr;
-    }
 
     emit childDeleted();
 }
@@ -419,7 +406,7 @@ void DirTree::sendAborted()
 
 void DirTree::sendStartingReading( DirInfo * dir )
 {
-    emit startingReading( dir );
+    emit dirStartingReading( dir );
 }
 */
 
@@ -432,7 +419,7 @@ void DirTree::sendReadJobFinished( DirInfo * dir )
 
 FileInfo * DirTree::locate( const QString & url, bool findPseudoDirs ) const
 {
-    if ( ! _root )
+    if ( !_root )
 	return nullptr;
 
     FileInfo * topItem = _root->firstChild();
@@ -579,7 +566,7 @@ void DirTree::moveIgnoredToAttic( DirInfo * dir )
 	    unatticAll( child->toDirInfo() );
     }
 
-    if ( ! ignoredChildren.isEmpty() )
+    if ( !ignoredChildren.isEmpty() )
     {
 	dir->recalc();
 
@@ -624,7 +611,7 @@ void DirTree::unatticAll( DirInfo * dir )
 
     if ( dir->attic() )
     {
-	// logDebug() << "Moving all attic children to the normal children list for " << dir << Qt::endl;
+	logDebug() << "Moving all attic children to the normal children list for " << dir << Qt::endl;
 	dir->takeAllChildren( dir->attic() );
 	dir->deleteEmptyAttic();
 	dir->recalc();
@@ -736,4 +723,13 @@ FileInfo * DirTree::stat( const QString & url,
 
 	return nullptr;
     }
+}
+
+
+void DirTree::setIgnoreHardLinks( bool ignore )
+{
+    if ( ignore )
+	logInfo() << "Ignoring hard links" << Qt::endl;
+
+    _ignoreHardLinks = ignore;
 }

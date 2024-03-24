@@ -7,10 +7,10 @@
  */
 
 
+#include <QCommandLinkButton>
+#include <QDesktopServices>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QCommandLinkButton>
-#include <QProcess>
 
 #include "FileSizeStatsWindow.h"
 #include "FileSizeStats.h"
@@ -108,14 +108,12 @@ static QTableWidgetItem * addItem( QTableWidget	 * table,
 FileSizeStatsWindow::FileSizeStatsWindow( QWidget * parent ):
     QDialog ( parent ),
     _ui { new Ui::FileSizeStatsWindow },
-    _subtree { nullptr },
-    _stats { new FileSizeStats() }
+    _stats { nullptr }
 {
     //logDebug() << "init" << Qt::endl;
 
     setAttribute( Qt::WA_DeleteOnClose );
 
-    CHECK_NEW( _stats );
     CHECK_NEW( _ui );
 
     _ui->setupUi( this );
@@ -140,7 +138,7 @@ FileSizeStatsWindow * FileSizeStatsWindow::sharedInstance( QWidget * mainWindow 
 
     static QPointer<FileSizeStatsWindow> _sharedInstance = nullptr;
 
-    if ( ! _sharedInstance )
+    if ( !_sharedInstance )
     {
 	_sharedInstance = new FileSizeStatsWindow( mainWindow );
 	CHECK_NEW( _sharedInstance );
@@ -149,11 +147,6 @@ FileSizeStatsWindow * FileSizeStatsWindow::sharedInstance( QWidget * mainWindow 
     return _sharedInstance;
 }
 
-
-void FileSizeStatsWindow::clear()
-{
-    _stats->clear();
-}
 
 
 void FileSizeStatsWindow::initWidgets()
@@ -201,24 +194,11 @@ void FileSizeStatsWindow::initWidgets()
 }
 
 
-void FileSizeStatsWindow::calc()
-{
-    _stats->clear();
-
-    if ( _suffix.isEmpty() )
-	_stats->collect( _subtree );
-    else
-	_stats->collect( _subtree, _suffix );
-
-    _stats->sort();
-}
-
-
 void FileSizeStatsWindow::populateSharedInstance( QWidget	* mainWindow,
 						  FileInfo	* subtree,
 						  const QString & suffix  )
 {
-    if ( ! subtree )
+    if ( !subtree )
 	return;
 
     sharedInstance( mainWindow )->populate( subtree, suffix );
@@ -228,27 +208,18 @@ void FileSizeStatsWindow::populateSharedInstance( QWidget	* mainWindow,
 
 void FileSizeStatsWindow::populate( FileInfo * subtree, const QString & suffix )
 {
-    _subtree = subtree;
-    _suffix  = suffix;
-
-    if ( _suffix.startsWith( "*." ) )
-	_suffix.remove( 0, 1 );
-
-    if ( ! _subtree )
-    {
-	logWarning() << "No tree" << Qt::endl;
-	return;
-    }
-
     QString url = subtree->debugUrl();
     if ( url == "<root>" )
 	url = subtree->tree()->url();
 
-    if ( _suffix.isEmpty() )
-	_ui->heading->setText( tr( "File size statistics for %1" ).arg( url ) );
+    _ui->headingUrl->setText( suffix.isEmpty() ? url : tr( "%1 in %2" ).arg( suffix ).arg( url ) );
+
+    delete _stats;
+    if ( suffix.isEmpty() )
+	_stats = new FileSizeStats( subtree );
     else
-	_ui->heading->setText( tr( "File size statistics for %1 in %2" ).arg( suffix ).arg( url ) );
-    calc();
+	_stats = new FileSizeStats( subtree, suffix );
+    CHECK_NEW( _stats );
 
     fillHistogram();
     fillPercentileTable();
@@ -271,7 +242,8 @@ QStringList FileSizeStatsWindow::quantile( int order, const QString & name )
 
     for ( int i=1; i < order; ++i )
     {
-	text << QString( "%1. %2: %3" ).arg( i )
+	text << QString( "%1. %2: %3" )
+	    .arg( i )
 	    .arg( name )
 	    .arg( formatSize( _stats->quantile( order, i ) ) );
     }
@@ -305,18 +277,18 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
 
     switch ( order )
     {
-	case 100:	headers << tr( " Percentile " ); break;
-	case  10:	headers << tr( " Decile "     ); break;
-	case   4:	headers << tr( " Quartile "   ); break;
-	default:	headers << tr( " %1-Quantile " ).arg( order ); break;
+	case 100:	headers << tr( "Percentile"  ); break;
+	case  10:	headers << tr( "Decile"      ); break;
+	case   4:	headers << tr( "Quartile"    ); break;
+	default:	headers << tr( "%1-Quantile" ).arg( order ); break;
     }
 
-    headers << tr( " Value " ) << tr( " Name " );
+    headers << tr( "Size cutoff" ) << tr( "Name" );
 
-    if ( ! sums.isEmpty() )
+    if ( !sums.isEmpty() )
     {
-	headers << tr( " Sum %1(n-1)..%2(n) " ).arg( namePrefix ).arg( namePrefix );
-	headers << tr( " Cumulative sum " );
+	headers << tr( "Sum %1(n-1)..%2(n)" ).arg( namePrefix ).arg( namePrefix );
+	headers << tr( "Cumulative sum" );
     }
 
     table->setColumnCount( headers.size() );
@@ -489,22 +461,15 @@ void FileSizeStatsWindow::updateOptions()
 
 void FileSizeStatsWindow::showHelp()
 {
-//    QString topic = "Statistics.md";
-    const QWidget * button = (QWidget *)sender();
-    const QString topic = button->statusTip();
-/*
-    if	    ( button == _ui->medianPercentilesHelpButton   )  topic = "Median-Percentiles.md";
-    else if ( button == _ui->histogramsInGeneralHelpButton )  topic = "Histograms-in-General.md";
-    else if ( button == _ui->fileSizeHistogramHelpButton   )  topic = "File-Size-Histogram.md";
-    else if ( button == _ui->overflowAreaHelpButton	   )  topic = "Overflow-Area.md";
-    else if ( button == _ui->histogramOptionsHelpButton	   )  topic = "Histogram-Options.md";
-    else if ( button == _ui->percentilesTableHelpButton	   )  topic = "Percentiles-Table.md";
-    else if ( button == _ui->bucketsTableHelpButton	   )  topic = "Buckets-Table.md";
-*/
-    // logInfo() << "Help topic: " << topic << Qt::endl;
-    const QString helpUrl = "https://github.com/shundhammer/qdirstat/blob/master/doc/stats/" + topic;
-    QString program = "/usr/bin/xdg-open";
+//    const QString topic = "Statistics.md";
+    const QWidget * button = qobject_cast<QWidget *>( sender() );
+    if ( !button )
+	return;
+
+    const QString helpUrl = "https://github.com/shundhammer/qdirstat/blob/master/doc/stats/" + button->statusTip();
+    QDesktopServices::openUrl( helpUrl );
+//    QString program = "/usr/bin/xdg-open";
 
     // logInfo() << "Starting  " << program << " " << helpUrl << Qt::endl;
-    QProcess::startDetached( program, QStringList() << helpUrl );
+//    QProcess::startDetached( program, QStringList() << helpUrl );
 }

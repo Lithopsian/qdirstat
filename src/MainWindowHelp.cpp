@@ -28,9 +28,9 @@ void MainWindow::showAboutDialog()
         "</p><p>" +
         "(c) 2015-2024 Stefan Hundhammer" +
         "</p><p>" +
-        tr( "Contact: " ) + QString( "<a href=\"mailto:%1\">%2</a>" ).arg( mailTo ).arg( mailTo ) +
+        tr( "Contact: " ) + QString( "<a href=\"mailto:%1\">%1</a>" ).arg( mailTo ) +
         "</p><p>" +
-        QString( "<p><a href=\"%1\">%2</a></p>" ).arg( homePage ).arg( homePage ) +
+        QString( "<p><a href=\"%1\">%1</a></p>" ).arg( homePage ) +
         tr( "License: GPL V2 (GNU General Public License Version 2)" ) +
         "</p><p>" +
         tr( "This is free Open Source software, provided to you hoping that it might be "

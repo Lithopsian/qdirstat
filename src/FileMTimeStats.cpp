@@ -15,7 +15,6 @@
 #include "DirTree.h"
 #include "Exception.h"
 
-#define VERBOSE_SORT_THRESHOLD  50000
 
 using namespace QDirStat;
 

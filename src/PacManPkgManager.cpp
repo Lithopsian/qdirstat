@@ -8,11 +8,16 @@
 
 
 #include "PacManPkgManager.h"
+#include "SysUtil.h"
 #include "Logger.h"
 #include "Exception.h"
 
 
 using namespace QDirStat;
+
+using SysUtil::runCommand;
+using SysUtil::tryRunCommand;
+using SysUtil::haveCommand;
 
 
 bool PacManPkgManager::isPrimaryPkgManager() const

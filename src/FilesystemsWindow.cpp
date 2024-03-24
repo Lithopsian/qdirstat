@@ -92,7 +92,6 @@ void FilesystemsWindow::refresh()
 void FilesystemsWindow::clear()
 {
     _ui->fsTree->clear();
-//    _ui->messagePanel->clear();
 }
 
 
@@ -104,7 +103,8 @@ void FilesystemsWindow::initWidgets()
 	headers += { tr( "Size" ), tr( "Used" ), tr( "Reserved" ), tr( "Free" ), tr( "Free %" ) };
 
     _ui->fsTree->setHeaderLabels( headers );
-    _ui->fsTree->setIconSize( app()->dirTreeModel()->mountPointIcon().actualSize( QSize( 22, 22 ) ) );
+    _ui->fsTree->setIconSize( app()->dirTreeModel()->dirTreeIconSize() );
+    app()->setWidgetFontSize( _ui->fsTree );
 
     // Center the column headers except the furst two
     _ui->fsTree->header()->setDefaultAlignment( Qt::AlignVCenter | Qt::AlignHCenter );
@@ -273,38 +273,35 @@ FilesystemItem::FilesystemItem( MountPoint  * mountPoint,
         const int limit = sizeof( "/dev/mapper/luks-010203" ) - 1;
         if ( dev.size() > limit )
         {
-            dev = dev.left( limit ) + "...";
+            dev = dev.left( limit ) + "…";
             setToolTip( FS_DeviceCol, _device );
         }
     }
 
-    setText( FS_DeviceCol,    dev + QString( 4, ' ' ) );
-    setText( FS_MountPathCol, _mountPath );
-    setText( FS_TypeCol,      _fsType );
+    set( FS_DeviceCol,    Qt::AlignLeft,    dev );
+    set( FS_MountPathCol, Qt::AlignLeft,    _mountPath );
+    set( FS_TypeCol,      Qt::AlignHCenter, _fsType );
 
-    setTextAlignment( FS_TypeCol, Qt::AlignCenter );
-
-    if ( parent->columnCount() >= FS_TotalSizeCol && _totalSize >= 0 )
+    if ( parent->columnCount() >= FS_TotalSizeCol && _totalSize > 0 )
     {
-	const QString blanks = QString( 3, ' ' ); // Enforce left margin
-
-	set( FS_TotalSizeCol, _totalSize );
-	set( FS_UsedSizeCol,  _usedSize  );
+	set( FS_TotalSizeCol, Qt::AlignRight, formatSize( _totalSize ) );
+	set( FS_UsedSizeCol,  Qt::AlignRight, formatSize( _usedSize  ) );
 
 	if ( _reservedSize > 0 )
-	    set( FS_ReservedSizeCol, _reservedSize );
+	    set( FS_ReservedSizeCol, Qt::AlignRight, formatSize( _reservedSize ) );
 
 	if ( _isReadOnly )
-	    setText( FS_FreeSizeCol, QObject::tr( "read-only" ) );
+	{
+	    set( FS_FreeSizeCol, Qt::AlignHCenter, QObject::tr( "read-only" ) );
+	}
 	else
 	{
-	    set( FS_FreeSizeCol, _freeSize );
+	    set( FS_FreeSizeCol, Qt::AlignRight, formatSize( _freeSize ) );
 
 	    if ( _totalSize > 0 )
 	    {
 		const float freePercent = 100.0 * _freeSize / _totalSize;
-		setText( FS_FreePercentCol, formatPercent( freePercent ) );
-		setTextAlignment( FS_FreePercentCol, Qt::AlignRight | Qt::AlignVCenter );
+		set( FS_FreePercentCol, Qt::AlignRight, formatPercent( freePercent ) );
 
 		if ( freePercent < WARN_PERCENT )
 		{
@@ -317,10 +314,10 @@ FilesystemItem::FilesystemItem( MountPoint  * mountPoint,
 }
 
 
-void FilesystemItem::set( int col, FileSize size )
+void FilesystemItem::set( int col, Qt::Alignment alignment, const QString & text )
 {
-    setText( col, QString( 3, ' ' ) + formatSize( size ) );
-    setTextAlignment( col, Qt::AlignRight | Qt::AlignVCenter );
+    setText( col, text );
+    setTextAlignment( col, alignment | Qt::AlignVCenter );
 }
 
 
@@ -328,14 +325,13 @@ bool FilesystemItem::operator<( const QTreeWidgetItem & rawOther ) const
 {
     const FilesystemItem & other = dynamic_cast<const FilesystemItem &>( rawOther );
 
-    const int col = treeWidget() ? treeWidget()->sortColumn() : FS_DeviceCol;
-
+    const FilesystemColumns col = treeWidget() ? (FilesystemColumns)treeWidget()->sortColumn() : FS_DeviceCol;
     switch ( col )
     {
 	case FS_DeviceCol:
-	    if ( !isNetworkMount() &&  other.isNetworkMount() ) return true;
-	    if (  isNetworkMount() && !other.isNetworkMount() ) return false;
-	    return device() < other.device();
+	    if ( isNetworkMount() == other.isNetworkMount() )
+		return device() < other.device();
+	    return isNetworkMount() < other.isNetworkMount();
 
 	case FS_MountPathCol:		return mountPath()    < other.mountPath();
 	case FS_TypeCol:		return fsType()	      < other.fsType();
@@ -344,6 +340,7 @@ bool FilesystemItem::operator<( const QTreeWidgetItem & rawOther ) const
 	case FS_ReservedSizeCol:	return reservedSize() < other.reservedSize();
 	case FS_FreePercentCol:		return freePercent()  < other.freePercent();
 	case FS_FreeSizeCol:		return freeSize()     < other.freeSize();
-	default:			return QTreeWidgetItem::operator<( rawOther );
     }
+
+    return QTreeWidgetItem::operator<( rawOther );
 }

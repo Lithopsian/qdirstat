@@ -45,8 +45,8 @@ Logger * Logger::_defaultLogger = nullptr;
 
 
 Logger::Logger( const QString &filename ):
-    _logStream( stderr, QIODevice::WriteOnly ),
-    _nullStream( stderr, QIODevice::WriteOnly )
+    _logStream { stderr, QIODevice::WriteOnly },
+    _nullStream { stderr, QIODevice::WriteOnly }
 {
     init();
     createNullStream();
@@ -58,15 +58,14 @@ Logger::Logger( const QString & rawLogDir,
 		const QString & rawFilename,
 		bool		doRotate,
 		int		logRotateCount ):
-    _logStream( stderr, QIODevice::WriteOnly ),
-    _nullStream( stderr, QIODevice::WriteOnly )
+    _logStream { stderr, QIODevice::WriteOnly },
+    _nullStream { stderr, QIODevice::WriteOnly }
 {
     init();
     createNullStream();
 
     const QString filename = expandVariables( rawFilename );
-    QString logDir   = expandVariables( rawLogDir   );
-
+    QString logDir         = expandVariables( rawLogDir   );
     logDir = createLogDir( logDir );
 
     if ( doRotate )
@@ -186,9 +185,7 @@ QTextStream & Logger::log( const QString &srcFile,
 	    // complain about unhandled enum values
     }
 
-    _logStream << Logger::timeStamp() << " "
-	       << "[" << (int) getpid() << "] "
-	       << sev << " ";
+    _logStream << Logger::timeStamp() << " " << "[" << (int) getpid() << "] " << sev << " ";
 
     if ( !srcFile.isEmpty() )
     {
@@ -435,10 +432,7 @@ QString Logger::createLogDir( const QString & rawLogDir )
 QString Logger::oldName( const QString & filename, int no )
 {
     QString oldName = filename;
-
-    if ( oldName.endsWith( ".log" ) )
-	oldName.remove( QRegularExpression( "\\.log$" ) );
-
+    oldName.remove( QRegularExpression( "\\.log$" ) );
     oldName += QString( "-%1.old" ).arg( no, 2, 10, QChar( '0' ) );
 
     return oldName;
@@ -448,10 +442,7 @@ QString Logger::oldName( const QString & filename, int no )
 QString Logger::oldNamePattern( const QString & filename )
 {
     QString pattern = filename;
-
-    if ( pattern.endsWith( ".log" ) )
-	pattern.remove( QRegularExpression( "\\.log$" ) );
-
+    pattern.remove( QRegularExpression( "\\.log$" ) );
     pattern += "-??.old";
 
     return pattern;

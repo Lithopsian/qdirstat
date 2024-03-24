@@ -59,12 +59,6 @@ using namespace QDirStat;
 MainWindow::MainWindow( bool slowUpdate ):
     QMainWindow(),
     _ui { new Ui::MainWindow },
-    _enableDirPermissionsWarning { false },
-    _verboseSelection { false },
-    _urlInWindowTitle { false },
-    _statusBarTimeout { 3000 }, // millisec
-    _longStatusBarTimeout { 30000 }, // millisec
-    _treeLevelMapper { nullptr },
     _sortCol { QDirStat::DataColumns::toViewCol( QDirStat::SizeCol ) },
     _sortOrder { Qt::DescendingOrder }
 {
@@ -101,20 +95,8 @@ MainWindow::MainWindow( bool slowUpdate ):
     connectMenuActions();               // see MainWindowMenus.cpp
     readSettings();
 
-    // Set the boldItemFont for the DirTreeModel.
-    //
-    // It can't fetch that by itself from the DirTreeView;
-    // we'd get an initialization sequence problem.
-    // So this has to be done from the outside when both are created.
-    QFont boldItemFont = _ui->dirTreeView->font();
-    boldItemFont.setWeight( QFont::Bold );
-    app()->dirTreeModel()->setBoldItemFont( boldItemFont );
+    app()->dirTreeModel()->setBaseFont( _ui->dirTreeView->font() );
 
-    // Inform the tree view about the configured sizing
-    _ui->dirTreeView->setStyles( app()->dirTreeModel()->treeIconDir() );
-
-    // Initialize cleanups
-//    _ui->treemapView->setCleanupCollection( cleanupCollection );
     _ui->treemapView->hideTreemap();
 
 #ifdef Q_OS_MACX
@@ -177,7 +159,7 @@ void MainWindow::connectSignals()
     const SelectionModel    * selectionModel    = app()->selectionModel();
     const CleanupCollection * cleanupCollection = ActionManager::cleanupCollection();
 
-    connect( dirTree,		       qOverload<>( &DirTree::startingReading ),
+    connect( dirTree,		       &DirTree::startingReading,
 	     this,		       &MainWindow::startingReading );
 
     connect( dirTree,		       &DirTree::finished,
@@ -227,6 +209,11 @@ void MainWindow::connectSignals()
 
     connect( &_updateTimer,	       &QTimer::timeout,
 	     this,		       &MainWindow::showElapsedTime );
+
+    // Here because DirTreeView doesn't have a selectionModel when it is first constructed
+    connect( selectionModel,	       &SelectionModel::currentBranchChanged,
+	     _ui->dirTreeView,	       &DirTreeView::closeAllExcept );
+
 }
 
 
@@ -236,10 +223,12 @@ void MainWindow::updateSettings( bool urlInWindowTitle,
                                  int longStatusBarTimeout )
 {
     _urlInWindowTitle = urlInWindowTitle;
+    updateWindowTitle( app()->dirTree()->url() );
+
     _ui->treemapView->setUseTreemapHover( useTreemapHover );
+
     _statusBarTimeout = statusBarTimeout;
     _longStatusBarTimeout = longStatusBarTimeout;
-    updateWindowTitle( app()->dirTree()->url() );
 }
 
 
@@ -380,10 +369,6 @@ void MainWindow::busyDisplay()
     SignalBlocker signalBlocker( app()->dirTreeModel() );
     const int sortCol = QDirStat::DataColumns::toViewCol( QDirStat::SizeCol );
     _ui->dirTreeView->sortByColumn( sortCol, Qt::DescendingOrder );
-
-    if ( !PkgInfo::isPkgUrl( app()->dirTree()->url() ) )
-//    expandTreeToLevel( 1 );
-	QTimer::singleShot( 0, [this]() { expandTreeToLevel( 1 ); } );
 }
 
 
@@ -403,12 +388,16 @@ void MainWindow::idleDisplay()
 
     if ( _futureSelection.subtree() )
     {
-	logDebug() << "Using future selection " << _futureSelection.subtree() << Qt::endl;
+	//logDebug() << "Using future selection " << _futureSelection.subtree() << Qt::endl;
         applyFutureSelection();
     }
-    else if ( !app()->selectionModel()->currentBranch() )
+//    else if ( app()->selectionModel()->currentBranch() )
+//    {
+//	logDebug() << "Keep current branch " << app()->selectionModel()->currentBranch() << Qt::endl;
+//    }
+    else
     {
-	//logDebug() << "No current branch - expanding tree to level 1" << Qt::endl;
+	logDebug() << "No future selection - expanding tree to level 1" << Qt::endl;
 	expandTreeToLevel( 1 );
     }
 
@@ -453,22 +442,24 @@ void MainWindow::startingReading()
 {
     _stopWatch.start();
     busyDisplay();
+
+    // Open this here, so it doesn't get done for refresh selected
+    // And don't do it for package reads because so many toplevel packages slow things down
+    if ( !PkgInfo::isPkgUrl( app()->dirTree()->url() ) )
+	// After a short delay so there is a tree to open
+	QTimer::singleShot( 0, [this]() { expandTreeToLevel( 1 ); } );
 }
 
 
 inline static QStringList modelTreeAncestors( const QModelIndex & index )
 {
     QStringList parents;
-    QModelIndex parent = index;
 
-    while ( parent.isValid() )
+    for ( QModelIndex parent = index; parent.isValid(); parent = index.model()->parent( parent ) )
     {
 	const QVariant data = index.model()->data( parent, 0 );
-
 	if ( data.isValid() )
 	    parents.prepend( data.toString() );
-
-	parent = index.model()->parent( parent );
     }
 
     return parents;
@@ -551,11 +542,7 @@ void MainWindow::openDir( const QString & url )
     _enableDirPermissionsWarning = true;
     try
     {
-//	if ( url.startsWith( "/" ) )
-//            _futureSelection.setUrl( url );
-//        else
-//            _futureSelection.clear();
-
+//	app()->dirTree()->reset();
 	app()->dirTreeModel()->openUrl( url );
 	const QString dirTreeUrl = app()->dirTree()->url();
 	updateWindowTitle( dirTreeUrl );
@@ -655,10 +642,17 @@ void MainWindow::askFindFiles()
 }
 
 
+void MainWindow::setFutureSelection()
+{
+    const FileInfoSet sel = app()->selectionModel()->selectedItems();
+    _futureSelection.set( sel.isEmpty() ? app()->selectionModel()->currentItem() : sel.first() );
+}
+
+
 void MainWindow::refreshAll()
 {
     _enableDirPermissionsWarning = true;
-    _futureSelection.set( app()->selectionModel()->selectedItems().first() );
+    setFutureSelection();
     _ui->treemapView->saveTreemapRoot();
 
     const QString url = app()->dirTree()->url();
@@ -670,10 +664,8 @@ void MainWindow::refreshAll()
 	    //app()->dirTreeModel()->readPkg( url );
 	    readPkg( url );
 	else
-	{
 	    app()->dirTreeModel()->openUrl( url );
 //	    expandTreeToLevel( 1 );
-	}
 
         // No need to check if the URL is an unpkg:/ URL:
         //
@@ -694,10 +686,30 @@ void MainWindow::refreshAll()
 void MainWindow::refreshSelected()
 {
     // logDebug() << "Setting future selection: " << _futureSelection.subtree() << Qt::endl;
-    _futureSelection.set( app()->selectionModel()->selectedItems().first() );
+    setFutureSelection();
     _ui->treemapView->saveTreemapRoot();
     busyDisplay();
-    app()->dirTreeModel()->refreshSelected();
+
+    FileInfo * sel = app()->selectionModel()->selectedItems().first();
+    while ( sel && ( !sel->isDir() || sel->isPseudoDir() ) && sel->parent() )
+	sel = sel->parent();
+
+    if ( sel && sel->isDirInfo() )
+    {
+	// logDebug() << "Refreshing " << sel << Qt::endl;
+	app()->dirTreeModel()->busyDisplay();
+
+	FileInfoSet refreshSet;
+	refreshSet << sel;
+	app()->selectionModel()->prepareRefresh( refreshSet );
+
+	app()->dirTree()->refresh( sel->toDirInfo() );
+    }
+    else
+    {
+	logWarning() << "NOT refreshing " << sel << Qt::endl;
+    }
+
     updateActions();
 }
 
@@ -705,21 +717,26 @@ void MainWindow::refreshSelected()
 void MainWindow::applyFutureSelection()
 {
     FileInfo * sel = _futureSelection.subtree();
-    DirInfo  * branch = _futureSelection.dir();
+//    DirInfo  * branch = _futureSelection.dir();
     _futureSelection.clear();
-
-    // logDebug() << "Using future selection: " << sel << Qt::endl;
 
     if ( sel )
     {
-        if ( branch )
-            app()->selectionModel()->setCurrentBranch( branch );
+	//logDebug() << "Using future selection: " << sel << Qt::endl;
 
+	// The previous branch was actually the same, but it is gone now, so force it to have changed
+//        app()->selectionModel()->setCurrentBranch( nullptr, sel );
+/*
+        if ( branch )
+            app()->selectionModel()->setCurrentBranch( nullptr, branch );
+*/
         app()->selectionModel()->setCurrentItem( sel,
                                                  true);  // select
 
         if ( sel->isMountPoint() || sel->isDirInfo() ) // || app()->dirTree()->isToplevel( sel ) )
             _ui->dirTreeView->setExpanded( sel, true );
+
+	_ui->dirTreeView->scrollToCurrent(); // center the selected item
     }
 }
 
@@ -855,7 +872,7 @@ void MainWindow::startingCleanup( const QString & cleanupName )
     // Notice that this is not called for actions that are not owned by the
     // CleanupCollection such as _ui->actionMoveToTrash().
 
-    _futureSelection.set( app()->selectionModel()->selectedItems().first() );
+    setFutureSelection();
 
     showProgress( tr( "Starting cleanup action " ) + cleanupName );
 }
@@ -894,7 +911,7 @@ void MainWindow::copyCurrentPathToClipboard()
 
 void MainWindow::expandTreeToLevel( int level )
 {
-    //logDebug() << "Expanding tree to level " << level << Qt::endl;
+    logDebug() << "Expanding tree to level " << level << Qt::endl;
 
     if ( level < 1 )
 	_ui->dirTreeView->collapseAll();
@@ -961,7 +978,7 @@ void MainWindow::moveToTrash()
     // Note that _ui->actionMoveToTrash() is not actually a subclass of Cleanup
 
     // Save the selection - at least the first selected item
-    _futureSelection.set( app()->selectionModel()->currentItem() );
+    setFutureSelection();
 
     ActionManager::moveToTrash();
 }
@@ -987,7 +1004,7 @@ void MainWindow::openConfigDialog()
 
 void MainWindow::showFileTypeStats()
 {
-    FileTypeStatsWindow::populateSharedInstance( this, app()->selectedDirInfoOrRoot() );
+    FileTypeStatsWindow::populateSharedInstance( this, app()->selectedDirInfoOrRoot(), app()->selectionModel() );
 }
 
 
@@ -999,8 +1016,7 @@ void MainWindow::showFileSizeStats()
 
 void MainWindow::showFileAgeStats()
 {
-    FileInfo * subtree = app()->selectedDirInfoOrRoot();
-    FileAgeStatsWindow::populateSharedInstance( this, subtree, app()->selectionModel() );
+    FileAgeStatsWindow::populateSharedInstance( this, app()->selectedDirInfoOrRoot(), app()->selectionModel() );
 }
 
 
@@ -1010,13 +1026,18 @@ void MainWindow::showFilesystems()
 
     // Use Qt::UniqueConnection because we call this on a window that may already exist
     connect( sharedInstance, &FilesystemsWindow::readFilesystem,
-	     this,           &MainWindow::openDir, Qt::UniqueConnection );
+	     this,           [this]( const QString & path )
+			     {
+				 // Reset any filters
+				 app()->dirTree()->reset();
+				 openDir( path );
+			     }, Qt::UniqueConnection );
 }
 
 
 void MainWindow::showDirPermissionsWarning()
 {
-    if ( _dirPermissionsWarning || !_enableDirPermissionsWarning )
+//    if ( _dirPermissionsWarning || !_enableDirPermissionsWarning )
 	return; // never display, I know already
 
     _dirPermissionsWarning = PanelMessage::showPermissionsMsg( this, _ui->vBox );

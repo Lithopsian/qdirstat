@@ -15,7 +15,7 @@
 #include "Settings.h"
 #include "Logger.h"
 #include "Exception.h"
-//#include "SignalBlocker.h"
+
 
 using namespace QDirStat;
 
