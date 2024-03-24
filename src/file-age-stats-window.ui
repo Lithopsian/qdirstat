@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>802</width>
-    <height>315</height>
+    <height>366</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,17 +18,37 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="heading">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
+    <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <property name="text">
-      <string>File age</string>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLabel" name="heading">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>File age statistics for </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="headingUrl">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>url</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QTreeWidget" name="treeWidget">
@@ -49,9 +69,15 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,1,0">
+     <property name="spacing">
+      <number>12</number>
+     </property>
      <item>
       <widget class="QPushButton" name="refreshButton">
+       <property name="toolTip">
+        <string>Update the statistics for the same url</string>
+       </property>
        <property name="text">
         <string>&amp;Refresh</string>
        </property>
@@ -60,7 +86,7 @@
      <item>
       <widget class="QPushButton" name="locateButton">
        <property name="toolTip">
-        <string>&lt;p style='white-space:pre'&gt;Locate the files from that year and month&lt;br/&gt;(only if no more than 10,000)&lt;/p&gt;</string>
+        <string>&lt;p style='white-space:pre'&gt;Show a list of the files modified in this year and month&lt;br/&gt;(only if no more than 10,000)&lt;/p&gt;</string>
        </property>
        <property name="text">
         <string>&amp;Locate</string>
@@ -68,30 +94,17 @@
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <property name="leftMargin">
-        <number>16</number>
+      <widget class="QCheckBox" name="syncCheckBox">
+       <property name="toolTip">
+        <string>&lt;p style='white-space:pre'&gt;If checked: when a different directory is selected in the main&lt;br/&gt;window, the content of this window is automatically updated&lt;/p&gt;</string>
        </property>
-       <item>
-        <widget class="QCheckBox" name="syncCheckBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="toolTip">
-          <string>&lt;p style='white-space:pre'&gt;If checked: when a different directory is selected in the main&lt;br/&gt;window, the content of this window is automatically updated&lt;/p&gt;</string>
-         </property>
-         <property name="text">
-          <string>&amp;Sync with main window</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
+       <property name="text">
+        <string>Sync with &amp;main window</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="closeButton">

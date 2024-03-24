@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>540</width>
-    <height>268</height>
+    <width>687</width>
+    <height>302</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
      <item>
       <widget class="QLabel" name="headingIcon">
        <property name="pixmap">
-        <pixmap>:/icons/lock-closed.png</pixmap>
+        <pixmap resource="icons.qrc">:/icons/lock-closed.png</pixmap>
        </property>
       </widget>
      </item>
@@ -49,6 +49,9 @@
      <property name="uniformRowHeights">
       <bool>true</bool>
      </property>
+     <property name="sortingEnabled">
+      <bool>true</bool>
+     </property>
      <attribute name="headerStretchLastSection">
       <bool>false</bool>
      </attribute>
@@ -60,23 +63,11 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="buttonHBox">
-     <property name="leftMargin">
-      <number>5</number>
-     </property>
-     <property name="topMargin">
-      <number>5</number>
-     </property>
+    <layout class="QHBoxLayout" name="buttonHBox" stretch="1,0">
      <item>
       <widget class="QLabel" name="totalLabel">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="text">
-        <string>Total: 0</string>
+        <string>2 directories</string>
        </property>
       </widget>
      </item>

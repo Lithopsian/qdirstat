@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>OpenPkgDialog</class>
  <widget class="QDialog" name="OpenPkgDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>348</width>
+    <height>305</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Select Packages</string>
   </property>

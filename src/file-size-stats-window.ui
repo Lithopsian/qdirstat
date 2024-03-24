@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>799</width>
-    <height>605</height>
+    <width>819</width>
+    <height>648</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,17 +18,37 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="heading">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <property name="text">
-      <string>File size statistics</string>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLabel" name="heading">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>File size statistics for </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="headingUrl">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>url</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QTabWidget" name="tabWidget">
@@ -66,14 +86,8 @@
        <item>
         <widget class="QWidget" name="optionsPanel" native="true">
          <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
+          <item alignment="Qt::AlignLeft">
            <widget class="QPushButton" name="closeOptionsButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="text">
              <string>&lt;&lt; &amp;Options</string>
             </property>
@@ -238,8 +252,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>276</width>
-            <height>658</height>
+            <width>781</width>
+            <height>528</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_7">

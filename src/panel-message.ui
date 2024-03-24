@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>PanelMessage</class>
  <widget class="QWidget" name="PanelMessage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>522</width>
+    <height>91</height>
+   </rect>
+  </property>
   <layout class="QVBoxLayout" name="panelVBox">
    <item>
     <widget class="QFrame" name="frame">
@@ -29,6 +37,9 @@
       </property>
       <item>
        <widget class="QStackedWidget" name="stackedWidget">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
         <widget class="QWidget" name="permissionsPage">
          <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
           <item>
@@ -178,6 +189,12 @@
           <property name="icon">
            <iconset resource="icons.qrc">
             <normaloff>:/icons/window-close.png</normaloff>:/icons/window-close.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>16</width>
+            <height>16</height>
+           </size>
           </property>
           <property name="flat">
            <bool>true</bool>
