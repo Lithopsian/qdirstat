@@ -23,7 +23,7 @@ FileSizeStats::FileSizeStats( FileInfo * subtree ):
     CHECK_PTR( subtree );
 
     // Avoid reallocations for potentially millions of list appends
-    _data.reserve( subtree->totalFiles() );
+    data().reserve( subtree->totalFiles() );
     collect( subtree );
     sort();
 }
@@ -42,7 +42,7 @@ FileSizeStats::FileSizeStats( FileInfo * subtree, const QString & suffix ):
 void FileSizeStats::collect( const FileInfo * subtree )
 {
     if ( subtree->isFile() )
-        _data << subtree->size();
+        data() << subtree->size();
 
     for ( FileInfoIterator it( subtree ); *it; ++it )
 	collect( *it );
@@ -52,7 +52,7 @@ void FileSizeStats::collect( const FileInfo * subtree )
 void FileSizeStats::collect( const FileInfo * subtree, const QString & suffix )
 {
     if ( subtree->isFile() && subtree->name().toLower().endsWith( suffix ) )
-        _data << subtree->size();
+        data() << subtree->size();
 
     for ( FileInfoIterator it( subtree ); *it; ++it )
 	collect( *it, suffix );
@@ -77,7 +77,7 @@ QRealList FileSizeStats::fillBuckets( int bucketCount,
     for ( int i=0; i < bucketCount; ++i )
         buckets << 0.0;
 
-    if ( _data.isEmpty() )
+    if ( data().isEmpty() )
         return buckets;
 
     // The first call to percentile() or quantile() will cause the data to be
@@ -96,11 +96,11 @@ QRealList FileSizeStats::fillBuckets( int bucketCount,
                << Qt::endl;
 #endif
 
-    auto it = _data.cbegin();
-    while ( it != _data.cend() && *it < startVal )
+    auto it = data().cbegin();
+    while ( it != data().cend() && *it < startVal )
 	++it;
 
-    while ( it != _data.cend() && *it <= endVal )
+    while ( it != data().cend() && *it <= endVal )
     {
         // TO DO: Optimize this by taking into account that the data are sorted
         // already. We don't really need that many divisions; just when leaving

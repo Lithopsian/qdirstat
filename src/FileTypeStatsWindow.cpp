@@ -37,9 +37,7 @@ using namespace QDirStat;
 FileTypeStatsWindow::FileTypeStatsWindow( QWidget * parent,
 					  SelectionModel * selectionModel ):
     QDialog ( parent ),
-    _ui { new Ui::FileTypeStatsWindow },
-    _subtree { nullptr },
-    _stats { nullptr }
+    _ui { new Ui::FileTypeStatsWindow }
 {
     // logDebug() << "init" << Qt::endl;
 

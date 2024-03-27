@@ -99,7 +99,7 @@ FileInfo * QDirStatApp::selectedDirInfo() const
     const FileInfoSet selectedItems = _selectionModel->selectedItems();
     FileInfo * sel = selectedItems.first();
 
-    return sel && sel->isDirInfo() ? sel : ( FileInfo * )sel->parent();
+    return !sel || sel->isDirInfo() ? sel : ( FileInfo * )sel->parent();
 }
 
 

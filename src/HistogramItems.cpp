@@ -19,44 +19,41 @@ using namespace QDirStat;
 
 
 HistogramBar::HistogramBar( HistogramView * parent,
-			    int		    number,
-			    const QRectF &  rect,
-			    qreal	    fillHeight ):
+			    int             number,
+			    const QRectF  & rect,
+			    qreal           fillHeight ):
     QGraphicsRectItem ( rect ),
     _parentView { parent },
     _number { number },
     _startVal { _parentView->bucketStart( number ) },
     _endVal { _parentView->bucketEnd  ( number ) }
 {
+    // Setting NoPen so this rectangle remains invisible: This full-height
+    // rectangle is just for the tooltip. For the bar content, we create a visible
+    // separate child item with the correct height.
     setPen( Qt::NoPen );
 
-    // Setting NoPen so this rectangle remains invisible: This full-height
-    // rectangle is just for clicking. For the bar content, we create a visible
-    // separate child item with the correct height.
+    const QString tooltip = QObject::tr( "Bucket #%1:\n%2 Files\n%3...%4" )
+	.arg( _number + 1 )
+	.arg( _parentView->bucket( _number ) )
+	.arg( formatSize( _startVal ) )
+	.arg( formatSize( _endVal ) );
+    setToolTip( tooltip );
 
-    QRectF childRect = rect;
-    childRect.setHeight( -fillHeight );
-
+    // Filled rectangle is relative to its parent
+    QRectF childRect( rect.x(), 0, rect.width(), -fillHeight);
     QGraphicsRectItem * filledRect = new QGraphicsRectItem( childRect, this );
     CHECK_NEW( filledRect );
 
     filledRect->setPen( _parentView->barPen() );
     filledRect->setBrush( _parentView->barBrush() );
-
-    // setFlags( ItemIsSelectable );
-    _parentView->scene()->addItem( this );
-
-    const QString tooltip = QObject::tr( "Bucket #%1:\n%2 Files\n%3 .. %4" )
-	.arg( _number + 1 )
-	.arg( _parentView->bucket( _number ) )
-	.arg( formatSize( _startVal ) )
-	.arg( formatSize( _endVal ) );
-
-    setToolTip( tooltip );
     filledRect->setToolTip( tooltip );
 
     setZValue( HistogramView::InvisibleBarLayer );
     filledRect->setZValue( HistogramView::BarLayer );
+
+    setFlags( ItemIsSelectable );
+    _parentView->scene()->addItem( this );
 }
 
 /* whatever was going on here, it doesn't work
@@ -97,10 +94,10 @@ PercentileMarker::PercentileMarker( HistogramView * parent,
 				    const QString & name,
 				    const QLineF &  zeroLine,
 				    const QPen &    pen ):
-    QGraphicsLineItem( translatedLine( zeroLine, percentileIndex, parent ) ),
-    _parentView( parent ),
-    _name( name ),
-    _percentileIndex( percentileIndex )
+    QGraphicsLineItem ( translatedLine( zeroLine, percentileIndex, parent ) ),
+    _parentView { parent },
+    _name { name },
+    _percentileIndex { percentileIndex }
 {
     if ( _name.isEmpty() )
     {

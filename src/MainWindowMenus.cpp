@@ -6,7 +6,6 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
-#include <QDesktopServices>
 #include <QMouseEvent>
 
 #include "MainWindow.h"
@@ -16,7 +15,6 @@
 #include "HistoryButtons.h"
 #include "QDirStatApp.h"
 #include "SelectionModel.h"
-//#include "SysUtil.h"
 #include "Version.h"
 #include "Logger.h"
 
@@ -157,24 +155,6 @@ void MainWindow::connectHistoryButton( QAction * action, void( HistoryButtons::*
 }
 
 
-void MainWindow::openActionUrl()
-{
-    // Use a QAction that was set up in Qt Designer to just open an URL in an
-    // external web browser.  The url is stored in the status tip, and so
-    // it also appears in the status bar.
-    QAction * action = qobject_cast<QAction *>( sender() );
-    if ( !action )
-	return;
-
-    const QString url = action->statusTip();
-    if ( url.isEmpty() )
-	logError() << "No URL in statusTip() for action " << action->objectName() << Qt::endl;
-    else
-	QDesktopServices::openUrl( url );
-//	SysUtil::openInBrowser( url );
-}
-
-
 void MainWindow::updateActions()
 {
     const bool reading       = app()->dirTree()->isBusy();
@@ -205,9 +185,9 @@ void MainWindow::updateActions()
     const bool pkgSelected       = selectedItems.containsPkg();
     _ui->actionMoveToTrash->setEnabled( !reading && sel && !pseudoDirSelected && !pkgSelected );
 
-    _ui->actionFileSizeStats->setEnabled( firstToplevel );
-    _ui->actionFileTypeStats->setEnabled( firstToplevel );
-    _ui->actionFileAgeStats->setEnabled ( firstToplevel );
+    _ui->actionFileSizeStats->setEnabled( selSizeOne );
+    _ui->actionFileTypeStats->setEnabled( selSizeOne );
+    _ui->actionFileAgeStats->setEnabled ( selSizeOne );
 
     _ui->actionCloseAllTreeLevels->setEnabled( firstToplevel );
     _ui->menuExpandTreeToLevel->setEnabled   ( firstToplevel );

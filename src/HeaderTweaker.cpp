@@ -23,9 +23,7 @@ using namespace QDirStat;
 HeaderTweaker::HeaderTweaker( QHeaderView * header, DirTreeView * parent ):
     QObject ( parent ),
     _treeView { parent },
-    _header { header },
-    _currentSection { -1 },
-    _currentLayout { nullptr }
+    _header { header }
 {
     CHECK_PTR( _header );
 
@@ -109,7 +107,7 @@ void HeaderTweaker::contextMenu( const QPoint & pos )
 //    menu.addAction( tr( "Column \"%1\"" ).arg( colName ) );
 //    menu.addSeparator();
     QAction * autoSizeCurrentCol = createAction( &menu,
-						 tr( "A&uto Size" ),
+						 tr( "Auto &Size" ),
 						 &HeaderTweaker::autoSizeCurrentCol );
     autoSizeCurrentCol->setCheckable( true );
     autoSizeCurrentCol->setChecked( autoSizeCol( _currentSection ) );
@@ -135,7 +133,7 @@ void HeaderTweaker::contextMenu( const QPoint & pos )
 QMenu * HeaderTweaker::createHiddenColMenu( QWidget * parent )
 {
     int actionCount = 0;
-    QMenu * hiddenColMenu = new QMenu( tr( "Hi&dden Columns" ), parent );
+    QMenu * hiddenColMenu = new QMenu( tr( "Hidden &Columns" ), parent );
 
     for ( int section = 0; section < _header->count(); ++section )
     {
@@ -165,12 +163,12 @@ QMenu * HeaderTweaker::createHiddenColMenu( QWidget * parent )
 
 QString HeaderTweaker::colName( int section ) const
 {
-    const DataColumn col = DataColumns::toViewCol( section );
-    const QString name = _treeView->model()->headerData( col, Qt::Horizontal, Qt::DisplayRole ).toString();
-    if ( col == UndefinedCol )
+    if ( !DataColumns::isValidCol( section ) )
 	logError() << "No column at section " << section << Qt::endl;
 
-    return name;
+    const DataColumn col = DataColumns::fromViewCol( section );
+
+    return _treeView->model()->headerData( col, Qt::Horizontal, Qt::DisplayRole ).toString();
 }
 
 
@@ -178,7 +176,7 @@ void HeaderTweaker::hideCurrentCol()
 {
     if ( _currentSection >= 0 )
     {
-	logDebug() << "Hiding column \"" << colName( _currentSection ) << "\"" << Qt::endl;
+	//logDebug() << "Hiding column \"" << colName( _currentSection ) << "\"" << Qt::endl;
 	_header->setSectionHidden( _currentSection, true );
     }
 
@@ -222,7 +220,7 @@ void HeaderTweaker::showHiddenCol()
 {
     QAction * action = qobject_cast<QAction *>( sender() );
 
-    if ( ! action )
+    if ( !action )
     {
 	logError() << "Wrong sender type: " << sender()->metaObject()->className() << Qt::endl;
 	return;
@@ -233,7 +231,7 @@ void HeaderTweaker::showHiddenCol()
 	const int section = action->data().toInt();
 	if ( section >= 0 && section < _header->count() )
 	{
-	    logDebug() << "Showing column \"" << colName( section ) << "\"" << Qt::endl;
+	    //logDebug() << "Showing column \"" << colName( section ) << "\"" << Qt::endl;
 	    _header->setSectionHidden( section, false );
 	}
 	else
@@ -248,7 +246,7 @@ void HeaderTweaker::showHiddenCol()
 
 void HeaderTweaker::showAllHiddenColumns()
 {
-    logDebug() << "Showing all columns" << Qt::endl;
+    //logDebug() << "Showing all columns" << Qt::endl;
 
     for ( int section = 0; section < _header->count(); ++section )
 	_header->setSectionHidden( section, false );
@@ -290,24 +288,25 @@ void HeaderTweaker::readSettings()
     Settings settings;
     settings.beginGroup( "TreeViewColumns" );
 
-    //
-    // Set all column widths that are specified
-    //
-
+    // Set all column widths
     for ( int section = 0; section < _header->count(); ++section )
     {
-	const DataColumn col	= static_cast<DataColumn>( section );
-	const QString colName	= DataColumns::toString( col );
+	if ( DataColumns::isValidCol( section ) )
+	{
+	    const DataColumn col = DataColumns::fromViewCol( section );
 
-	const int width = settings.value( "Width_" + colName, -1 ).toInt();
-	if ( width > 0 )
-	{
-	    setResizeMode( section, QHeaderView::Interactive );
-	    _header->resizeSection( section, width );
-	}
-	else
-	{
-	    setResizeMode( section, QHeaderView::ResizeToContents );
+	    const int width = settings.value( "Width_" + DataColumns::toString( col ), -1 ).toInt();
+	    if ( width > 0 )
+	    {
+		// Fixed width, can be changed by the user
+		setResizeMode( section, QHeaderView::Interactive );
+		_header->resizeSection( section, width );
+	    }
+	    else
+	    {
+		// Auto width
+		setResizeMode( section, QHeaderView::ResizeToContents );
+	    }
 	}
     }
 
@@ -325,8 +324,7 @@ void HeaderTweaker::readLayoutSettings( ColumnLayout * layout )
     Settings settings;
     settings.beginGroup( "TreeViewLayout_" + layout->name );
 
-    QStringList strList = settings.value( "Columns" ).toStringList();
-    layout->columns = DataColumns::fromStringList( strList );
+    layout->columns = DataColumns::fromStringList( settings.value( "Columns" ).toStringList() );
 
     fixupLayout( layout );
 
@@ -346,13 +344,16 @@ void HeaderTweaker::writeSettings()
     for ( int visualIndex = 0; visualIndex < _header->count(); ++visualIndex )
     {
 	const int logicalIndex = _header->logicalIndex( visualIndex );
-	const DataColumn col	 = static_cast<DataColumn>( logicalIndex );
-	const QString widthKey = "Width_" + DataColumns::toString( col );
+	if ( DataColumns::isValidCol( logicalIndex ) )
+	{
+	    const DataColumn col   = DataColumns::fromViewCol( logicalIndex );
+	    const QString widthKey = "Width_" + DataColumns::toString( col );
 
-	if ( autoSizeCol( logicalIndex ) )
-	    settings.setValue( widthKey, "auto" );
-	else
-	    settings.setValue( widthKey, _header->sectionSize( logicalIndex ) );
+	    if ( autoSizeCol( logicalIndex ) )
+		settings.setValue( widthKey, "auto" );
+	    else
+		settings.setValue( widthKey, _header->sectionSize( logicalIndex ) );
+	}
     }
 
     settings.endGroup();
@@ -377,10 +378,7 @@ void HeaderTweaker::writeLayoutSettings( ColumnLayout * layout )
 void HeaderTweaker::setColumnVisibility( const DataColumnList & columns )
 {
     for ( int section = 0; section < _header->count(); ++section )
-    {
-	const DataColumn col = static_cast<DataColumn>( section );
-	_header->setSectionHidden( DataColumns::toViewCol( section ), !columns.contains( col ) );
-    }
+	_header->setSectionHidden( section, !columns.contains( DataColumns::fromViewCol( section ) ) );
 }
 
 
@@ -388,7 +386,7 @@ void HeaderTweaker::addMissingColumns( DataColumnList & colList )
 {
     for ( const DataColumn col : DataColumns::defaultColumns() )
     {
-	if ( ! colList.contains( col ) )
+	if ( !colList.contains( col ) )
 	     colList << col;
     }
 }
@@ -396,7 +394,7 @@ void HeaderTweaker::addMissingColumns( DataColumnList & colList )
 
 void HeaderTweaker::changeLayout( const QString & name )
 {
-    if ( ! _layouts.contains( name ) )
+    if ( !_layouts.contains( name ) )
     {
 	logError() << "No layout " << name << Qt::endl;
 	return;
@@ -421,10 +419,13 @@ void HeaderTweaker::saveLayout( ColumnLayout * layout )
     for ( int visualIndex = 0; visualIndex < _header->count(); ++visualIndex )
     {
 	const int logicalIndex = _header->logicalIndex( visualIndex );
-	const DataColumn col   = static_cast<DataColumn>( logicalIndex );
+	if ( DataColumns::isValidCol( logicalIndex ) )
+	{
+	    const DataColumn col   = DataColumns::fromViewCol( logicalIndex );
 
-	if ( !_header->isSectionHidden( logicalIndex ) )
-	    layout->columns << col;
+	    if ( !_header->isSectionHidden( logicalIndex ) )
+		layout->columns << col;
+	}
     }
 }
 

@@ -300,7 +300,7 @@ void DirTree::childDeletedNotify()
 
 void DirTree::deleteSubtree( FileInfo *subtree )
 {
-    // logDebug() << "Deleting subtree " << subtree << Qt::endl;
+    logDebug() << "Deleting subtree " << subtree << Qt::endl;
     DirInfo * parent = subtree->parent();
 
     // Send notification to anybody interested (e.g., to attached views)

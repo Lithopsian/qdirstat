@@ -22,8 +22,8 @@
 #include "Logger.h"
 #include "Exception.h"
 
-#define LONG_CMD_TIMEOUT_SEC		30
-
+#define LONG_CMD_TIMEOUT_SEC	30
+#define DEFAULT_WARNING_SEC	7
 
 using namespace QDirStat;
 
@@ -32,8 +32,7 @@ using SysUtil::tryRunCommand;
 using SysUtil::haveCommand;
 
 
-RpmPkgManager::RpmPkgManager():
-    _getPkgListWarningSec { 7 }
+RpmPkgManager::RpmPkgManager()
 {
     readSettings();
 
@@ -224,7 +223,7 @@ void RpmPkgManager::readSettings()
 {
     Settings settings;
     settings.beginGroup( "Pkg" );
-    _getPkgListWarningSec = settings.value( "GetRpmPkgListWarningSec", 7 ).toInt();
+    _getPkgListWarningSec = settings.value( "GetRpmPkgListWarningSec", DEFAULT_WARNING_SEC ).toInt();
 
     // Write the value right back to the settings if it isn't there already:
     // Since package manager objects are never really destroyed, this can't

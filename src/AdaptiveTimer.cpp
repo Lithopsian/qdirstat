@@ -20,11 +20,8 @@ using namespace QDirStat;
 
 AdaptiveTimer::AdaptiveTimer( QObject * parent, QList<float> delays, QList<int> cooldowns ):
     QObject ( parent ),
-    _payloadTime { 0 },
-    _delayStage { 0 },
     _delays { delays },
-    _cooldowns { cooldowns },
-    _defaultDelay { 0 }
+    _cooldowns { cooldowns }
 {
     connect( &_deliveryTimer, &QTimer::timeout,
              this,            &AdaptiveTimer::deliveryTimeout );

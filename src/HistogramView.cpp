@@ -38,37 +38,15 @@ using namespace QDirStat;
 
 
 HistogramView::HistogramView( QWidget * parent ):
-    QGraphicsView ( parent ),
-    _showMedian { true },
-    _showQuartiles { true },
-    _percentileStep { 0 },
-    _leftMarginPercentiles { 0 },
-    _rightMarginPercentiles { 5 },
-    _leftBorder { 40.0 },
-    _rightBorder { 10.0 },
-    _topBorder { 30.0 },
-    _bottomBorder { 50.0 },
-    _viewMargin { 10.0 },
-    _markerExtraHeight { 15.0 },
-    _overflowWidth { 150.0 },
-    _overflowLeftBorder { 10.0 },
-    _overflowRightBorder { 10.0 },
-    _overflowSpacing { 15.0 },
-    _pieDiameter { 60.0 },
-    _pieSliceOffset { 10.0 }
+    QGraphicsView ( parent )
 {
     init();
 }
 
 
-HistogramView::~HistogramView()
-{
-}
-
-
 void HistogramView::init()
 {
-    _histogramPanel = 0;
+    _histogramPanel = nullptr;
     _geometryDirty  = true;
 
     _bucketMaxValue	    = 0;
@@ -320,9 +298,6 @@ qreal HistogramView::bucketsTotalSum() const
     for ( const qreal bucket : _buckets )
 	sum += bucket;
 
-//    for ( int i=0; i < _buckets.size(); ++i )
-//	sum += _buckets[i];
-
     return sum;
 }
 
@@ -466,19 +441,13 @@ void HistogramView::fitToViewport()
     // This is the black magic that everybody hates from the bottom of his
     // heart about that drawing stuff: Making sure the graphics actually is
     // visible on the screen without unnecessary scrolling.
-    //
-    // You would think that a widget as sophisticated as QGraphicsView does
-    // this all by itself, but no: Everybody has to waste hours upon hours of
-    // life time with this crap.
-
     QRectF rect = scene()->sceneRect().normalized();
-
-    scene()->setSceneRect( rect );
-
+//    rect.setX( 0 );
+//    rect.setY( 0 );
+//    scene()->setSceneRect( rect );
     rect.adjust( -_viewMargin, -_viewMargin, _viewMargin, _viewMargin );
 
     const QSize visibleSize = viewport()->size();
-
     if ( rect.width()  <= visibleSize.width() && rect.height() <= visibleSize.height() )
     {
 #if VERBOSE_HISTOGRAM
@@ -579,7 +548,7 @@ void HistogramView::addHistogramBackground()
 {
     const QRectF rect(	-_leftBorder,
 			_bottomBorder,
-			_histogramWidth   + _leftBorder + _rightBorder,
+			_histogramWidth + _leftBorder + _rightBorder,
 			-( _histogramHeight + _topBorder  + _bottomBorder ) );
 
     _histogramPanel = scene()->addRect( rect, QPen( Qt::NoPen ), _panelBackground );
@@ -630,9 +599,9 @@ void HistogramView::addXAxisLabel()
     QGraphicsTextItem * item = scene()->addText( labelText );
     setBold( item );
 
-    const qreal   textWidth	= item->boundingRect().width();
-    const qreal   textHeight	= item->boundingRect().height();
-    const QPointF labelCenter	= QPoint( _histogramWidth / 2, _bottomBorder );
+    const qreal   textWidth   = item->boundingRect().width();
+    const qreal   textHeight  = item->boundingRect().height();
+    const QPointF labelCenter = QPoint( _histogramWidth / 2, _bottomBorder );
     item->setPos( labelCenter.x() - textWidth / 2, labelCenter.y() - textHeight ); // Align bottom
 
     item->setZValue( TextLayer );
@@ -692,13 +661,16 @@ void HistogramView::addQuartileText()
 
 	y -= medianItem->boundingRect().height();
 
-	const qreal q1Width	  = q1Item->boundingRect().width();
-	const qreal q3Width	  = q3Item->boundingRect().width();
+	const qreal q1Width     = q1Item->boundingRect().width();
+	const qreal q3Width     = q3Item->boundingRect().width();
 	const qreal medianWidth = medianItem->boundingRect().width();
 
-	q1Item->setPos( x, y );	     x += q1Width     + textSpacing;
-	medianItem->setPos( x, y );  x += medianWidth + textSpacing;
-	q3Item->setPos( x, y );	     x += q3Width     + textSpacing;
+	q1Item->setPos( x, y );
+	x += q1Width + textSpacing;
+	medianItem->setPos( x, y );
+	x += medianWidth + textSpacing;
+	q3Item->setPos( x, y );
+	x += q3Width + textSpacing;
 
 	q1Item->setZValue( TextLayer );
 	q3Item->setZValue( TextLayer );
@@ -730,7 +702,7 @@ void HistogramView::addHistogramBars()
     for ( int i=0; i < _buckets.size(); ++i )
     {
 	// logDebug() << "Adding bar #" << i << " with value " << _buckets[ i ] << Qt::endl;
-	const QRectF rect( i * barWidth, 0, barWidth, -_histogramHeight );
+	const QRectF rect( i * barWidth, -_histogramHeight, barWidth, _histogramHeight );
 
 	qreal val = _buckets[i];
 	if ( _useLogHeightScale && val > 1.0 )
@@ -745,7 +717,7 @@ void HistogramView::addHistogramBars()
 
 void HistogramView::addMarkers()
 {
-    const qreal totalWidth = _percentiles[ _endPercentile   ] - _percentiles[ _startPercentile ];
+    const qreal totalWidth = _percentiles[ _endPercentile ] - _percentiles[ _startPercentile ];
 
     if ( totalWidth < 1 )
 	return;

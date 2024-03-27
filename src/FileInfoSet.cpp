@@ -69,15 +69,6 @@ FileInfoSet FileInfoSet::invalidRemoved() const
 }
 
 
-FileInfo * FileInfoSet::first() const
-{
-    if ( isEmpty() )
-	return nullptr;
-    else
-	return *begin();
-}
-
-
 bool FileInfoSet::containsPseudoDir() const
 {
     for ( const FileInfo * item : *this )

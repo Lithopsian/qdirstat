@@ -6,6 +6,7 @@
  *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
+#include <QDesktopServices>
 #include <QMessageBox>
 
 #include "MainWindow.h"
@@ -72,4 +73,22 @@ void MainWindow::showDonateDialog()
 void MainWindow::showAboutQtDialog()
 {
     QApplication::aboutQt();
+}
+
+
+void MainWindow::openActionUrl()
+{
+    // Use a QAction that was set up in Qt Designer to just open an URL in an
+    // external web browser.  The url is stored in the status tip, and so
+    // it also appears in the status bar.
+    QAction * action = qobject_cast<QAction *>( sender() );
+    if ( !action )
+	return;
+
+    const QString url = action->statusTip();
+    if ( url.isEmpty() )
+	logError() << "No URL in statusTip() for action " << action->objectName() << Qt::endl;
+    else
+	QDesktopServices::openUrl( url );
+//	SysUtil::openInBrowser( url );
 }

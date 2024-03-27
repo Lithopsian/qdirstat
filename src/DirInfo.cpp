@@ -12,13 +12,12 @@
 #include <math.h>
 
 #include "DirInfo.h"
+#include "Attic.h"
 #include "DirTree.h"
 #include "DotEntry.h"
-#include "Attic.h"
 #include "FileInfoIterator.h"
 #include "FileInfoSorter.h"
 #include "FormatUtil.h"
-//#include "DebugHelpers.h"
 #include "Exception.h"
 #include "Logger.h"
 
@@ -34,7 +33,7 @@
 using namespace QDirStat;
 
 
-inline static void dumpChildrenList( const FileInfo     * dir,
+[[gnu::unused]] static void dumpChildrenList( const FileInfo     * dir,
 			      const FileInfoList & children )
 {
     logDebug() << "Children of " << dir << Qt::endl;
@@ -49,7 +48,7 @@ DirInfo::DirInfo( DirInfo	* parent,
 		  DirTree	* tree,
 		  const QString	& name ):
     FileInfo ( parent, tree, name ),
-    _isMountPoint {false },
+    _isMountPoint { false },
     _isExcluded { false },
     _summaryDirty { false },
 //    _deletingAll { false },
@@ -70,7 +69,7 @@ DirInfo::DirInfo( DirInfo	* parent,
 		 tree,
 		 name,
 		 statInfo ),
-    _isMountPoint {false },
+    _isMountPoint { false },
     _isExcluded { false },
     _summaryDirty { false },
 //    _deletingAll { false },
@@ -105,7 +104,7 @@ DirInfo::DirInfo( DirInfo *	  parent,
 		 uid,
 		 gid,
 		 mtime ),
-    _isMountPoint {false },
+    _isMountPoint { false },
     _isExcluded { false },
     _summaryDirty { false },
 //    _deletingAll { false },
@@ -181,12 +180,11 @@ void DirInfo::reset()
     if ( _firstChild || _dotEntry || _attic )
 	clear();
 
-    _readState	     = DirQueued;
+    _readState       = DirQueued;
     _pendingReadJobs = 0;
-    _summaryDirty    = true;
+//    _summaryDirty    = true;
 
     ensureDotEntry();
-
     if ( _tree )
 	_tree->childAddedNotify( _dotEntry );
 
@@ -257,9 +255,7 @@ void DirInfo::recalc()
 
     initCounts();
 
-    FileInfoIterator it( this );
-
-    while ( *it )
+    for ( FileInfoIterator it( this ); *it; ++it )
     {
 	_directChildrenCount++;
 	_totalSize	     += (*it)->totalSize();
@@ -279,35 +275,27 @@ void DirInfo::recalc()
 	    if ( (*it)->readError() )
 		_errSubDirCount++;
 	}
-
-	if ( (*it)->isFile() )
-	    _totalFiles++;
-
-	if ( !(*it)->isDir() )
+	else
 	{
 	    if ( (*it)->isIgnored() )
 		_totalIgnoredItems++;
 	    else
 		_totalUnignoredItems++;
+
+	    if ( (*it)->isFile() )
+		_totalFiles++;
 	}
 
 	time_t childLatestMtime = (*it)->latestMtime();
-
 	if ( childLatestMtime > _latestMtime )
 	    _latestMtime = childLatestMtime;
 
 	time_t childOldestFileMTime = (*it)->oldestFileMtime();
-
 	if ( childOldestFileMTime > 0 )
 	{
-	    if ( _oldestFileMtime == 0 ||
-		 childOldestFileMTime < _oldestFileMtime )
-	    {
+	    if ( _oldestFileMtime == 0 || childOldestFileMTime < _oldestFileMtime )
 		_oldestFileMtime = childOldestFileMTime;
-	    }
 	}
-
-	++it;
     }
 
     if ( _attic )
@@ -502,13 +490,7 @@ void DirInfo::insertChild( FileInfo * newChild )
 	 *
 	 * In any of those cases, insert the new child in the children list.
 	 *
-	 * We don't bother with this list's order - it's explicitly declared to
-	 * be unordered, so be warned! We simply insert this new child at the
-	 * list head since this operation can be performed in constant time
-	 * without the need for any additional lastChild etc. pointers or -
-	 * even worse - seeking the correct place for insertion first. This is
-	 * none of our business; the corresponding "view" object for this tree
-	 * will take care of such niceties.
+	 * The list is unordered so we can always prepend for performance reasons.
 	 **/
 	newChild->setNext( _firstChild );
 	_firstChild = newChild;
@@ -560,53 +542,49 @@ void DirInfo::addToAttic( FileInfo * newChild )
 
 void DirInfo::childAdded( FileInfo * newChild )
 {
-    bool addToTotal = true;
-
     if ( newChild->isIgnored() )
     {
 	if ( newChild->isDir() )
 	    _totalIgnoredItems += newChild->totalIgnoredItems();
 	else
 	    _totalIgnoredItems++;
-
-	// Add ignored items to all the totals only if this directory is also
-	// ignored or if this is the attic.
-	if ( !_isIgnored &&  !isAttic() )
-	    addToTotal = false;
     }
-    else
+    else if ( !newChild->isDir() )
     {
-	if ( !newChild->isDir() )
-	    _totalUnignoredItems++;
+	_totalUnignoredItems++;
     }
 
-    if ( addToTotal )
+    // Add ignored items to all the totals only if this directory is also
+    // ignored or if this is the attic.
+    if ( !newChild->isIgnored() || _isIgnored || isAttic() )
     {
 	if ( !_summaryDirty )
 	{
-	    _totalSize		+= newChild->size();
+	    if ( newChild->mtime() > _latestMtime )
+		_latestMtime = newChild->mtime();
+
+	    _totalSize          += newChild->size();
 	    _totalAllocatedSize += newChild->allocatedSize();
-	    _totalBlocks	+= newChild->blocks();
+	    _totalBlocks        += newChild->blocks();
 	    _totalItems++;
 
 	    if ( newChild->parent() == this )
 		_directChildrenCount++;
 
 	    if ( newChild->isDir() )
+	    {
 		_totalSubDirs++;
-
-	    if ( newChild->isFile() )
+	    }
+	    else if ( newChild->isFile() )
+	    {
 		_totalFiles++;
 
-	    if ( newChild->mtime() > _latestMtime )
-		_latestMtime = newChild->mtime();
-
-	    time_t childOldestFileMTime = newChild->oldestFileMtime();
-
-	    if ( childOldestFileMTime > 0 && newChild->isFile() )
-	    {
-		if ( _oldestFileMtime == 0 || childOldestFileMTime < _oldestFileMtime )
-		    _oldestFileMtime = childOldestFileMTime;
+		time_t childOldestFileMTime = newChild->oldestFileMtime();
+		if ( childOldestFileMTime > 0 )
+		{
+		    if ( _oldestFileMtime == 0 || childOldestFileMTime < _oldestFileMtime )
+			_oldestFileMtime = childOldestFileMTime;
+		}
 	    }
 	}
 	else
@@ -690,16 +668,22 @@ void DirInfo::deletingChild( FileInfo * child )
 
 void DirInfo::unlinkChild( FileInfo * deletedChild )
 {
-/*
-    if ( deletedChild->parent() != this )
-    {
-	logError() << deletedChild << " is not a child of " << this
-		   << " - cannot unlink from children list!" << Qt::endl;
-	return;
-    }
-*/
     dropSortCache();
     _summaryDirty = true;
+
+    if ( deletedChild == _attic )
+    {
+	logDebug() << "Unlinking (ie. deleting) attic " << deletedChild << Qt::endl;
+	_attic = nullptr;
+	return;
+    }
+
+    if ( deletedChild == _dotEntry )
+    {
+	logDebug() << "Unlinking (ie. deleting) dot entry " << deletedChild << Qt::endl;
+	_dotEntry = nullptr;
+	return;
+    }
 
     if ( deletedChild == _firstChild )
     {
@@ -760,22 +744,8 @@ void DirInfo::readJobAborted( DirInfo * dir )
 
 bool DirInfo::readError() const
 {
-    switch ( _readState )
-    {
-	case DirError:
-	case DirPermissionDenied:
-	    return true;
-
-	case DirQueued:
-	case DirReading:
-	case DirFinished:
-	case DirOnRequestOnly:
-//	case DirCached:
-	case DirAborted:
-	    return false;
-
-	// No 'default' branch so the compiler can catch unhandled enum values
-    }
+    if ( _readState == DirError || _readState == DirPermissionDenied )
+	return true;
 
     return false;
 }
@@ -934,7 +904,7 @@ void DirInfo::ignoreEmptySubDirs()
     } */
 }
 
-
+/* nobody needs recursive, so this is inline in the header
 void DirInfo::clearTouched( bool recursive )
 {
     _touched = false;
@@ -957,16 +927,16 @@ void DirInfo::clearTouched( bool recursive )
 	    _attic->clearTouched();
     }
 }
-
+*/
 
 const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
 					      Qt::SortOrder sortOrder,
-					      bool	    includeAttic )
+					      bool          includeAttic )
 {
     if ( _sortedChildren &&
-	 sortCol      == _lastSortCol	   &&
-	 sortOrder    == _lastSortOrder	   &&
-	 includeAttic == _lastIncludeAttic    )
+	 sortCol      == _lastSortCol &&
+	 sortOrder    == _lastSortOrder &&
+	 includeAttic == _lastIncludeAttic )
     {
 	return *_sortedChildren;
     }
@@ -983,19 +953,17 @@ const FileInfoList & DirInfo::sortedChildren( DataColumn    sortCol,
     if ( _dotEntry )
 	_sortedChildren->append( _dotEntry );
 
-    // Sort
-
     // logDebug() << "Sorting children of " << this << " by " << sortCol << Qt::endl;
 
+    // Do secondary sorting by NameCol (always in ascending order)
     if ( sortCol != NameCol )
     {
-	// Do secondary sorting by NameCol (always in ascending order)
 	std::stable_sort( _sortedChildren->begin(),
 			  _sortedChildren->end(),
 			  FileInfoSorter( NameCol, Qt::AscendingOrder ) );
     }
 
-    // Primary sorting by sortCol ascending or descending (as specified in sortOrder)
+    // Primary sorting as requested
     std::stable_sort( _sortedChildren->begin(),
 		      _sortedChildren->end(),
 		      FileInfoSorter( sortCol, sortOrder ) );
@@ -1075,20 +1043,19 @@ const DirInfo * DirInfo::findNearestMountPoint() const
 void DirInfo::takeAllChildren( DirInfo * oldParent )
 {
     FileInfo * child = oldParent->firstChild();
-
     if ( child )
     {
 	// logDebug() << "Reparenting all children of " << oldParent << " to " << this << Qt::endl;
 
 	FileInfo * oldFirstChild = _firstChild;
-	_firstChild = child;
-	FileInfo * lastChild = child;
+	_firstChild              = child;
+	FileInfo * lastChild     = child;
 
 	oldParent->setFirstChild( nullptr );
 	oldParent->recalc();
 
 	_directChildrenCount = -1;
-	_summaryDirty	     = true;
+	_summaryDirty        = true;
 
 	while ( child )
 	{

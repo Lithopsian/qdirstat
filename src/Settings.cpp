@@ -137,8 +137,9 @@ static void fixFileOwner( const QString & filename )
 
 
 Settings::Settings( const QString & name ):
-    QSettings( QCoreApplication::organizationName(), name.isEmpty()? QCoreApplication::applicationName() : name ),
-    _name( name )
+    QSettings ( QCoreApplication::organizationName(),
+		name.isEmpty()? QCoreApplication::applicationName() : name ),
+    _name { name }
 {
     _usedConfigFiles << fileName();
 }
@@ -146,7 +147,6 @@ Settings::Settings( const QString & name ):
 
 Settings::~Settings()
 {
-
 }
 
 
@@ -249,21 +249,15 @@ void Settings::removeGroups( const QString & groupPrefix )
 CleanupSettings::CleanupSettings():
     Settings( QCoreApplication::applicationName() + "-cleanup" )
 {
-    _groupPrefix = "Cleanup_";
+    setGroupPrefix( "Cleanup_" );
     migrate();
-}
-
-
-CleanupSettings::~CleanupSettings()
-{
-
 }
 
 
 void CleanupSettings::migrate()
 {
     Settings commonSettings;
-    moveGroups( _groupPrefix, &commonSettings, this );
+    moveGroups( groupPrefix(), &commonSettings, this );
 }
 
 
@@ -272,21 +266,15 @@ void CleanupSettings::migrate()
 MimeCategorySettings::MimeCategorySettings():
     Settings( QCoreApplication::applicationName() + "-mime" )
 {
-    _groupPrefix = "MimeCategory_";
+    setGroupPrefix( "MimeCategory_" );
     migrate();
-}
-
-
-MimeCategorySettings::~MimeCategorySettings()
-{
-
 }
 
 
 void MimeCategorySettings::migrate()
 {
     Settings commonSettings;
-    moveGroups( _groupPrefix, &commonSettings, this );
+    moveGroups( groupPrefix(), &commonSettings, this );
 }
 
 
@@ -295,19 +283,13 @@ void MimeCategorySettings::migrate()
 ExcludeRuleSettings::ExcludeRuleSettings():
     Settings( QCoreApplication::applicationName() + "-exclude" )
 {
-    _groupPrefix = "ExcludeRule_";
+    setGroupPrefix( "ExcludeRule_" );
     migrate();
-}
-
-
-ExcludeRuleSettings::~ExcludeRuleSettings()
-{
-
 }
 
 
 void ExcludeRuleSettings::migrate()
 {
     Settings commonSettings;
-    moveGroups( _groupPrefix, &commonSettings, this );
+    moveGroups( groupPrefix(), &commonSettings, this );
 }

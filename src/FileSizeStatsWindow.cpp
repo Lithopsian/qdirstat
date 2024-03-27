@@ -107,8 +107,7 @@ static QTableWidgetItem * addItem( QTableWidget	 * table,
 
 FileSizeStatsWindow::FileSizeStatsWindow( QWidget * parent ):
     QDialog ( parent ),
-    _ui { new Ui::FileSizeStatsWindow },
-    _stats { nullptr }
+    _ui { new Ui::FileSizeStatsWindow }
 {
     //logDebug() << "init" << Qt::endl;
 

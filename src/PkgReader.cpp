@@ -25,10 +25,7 @@
 using namespace QDirStat;
 
 PkgReader::PkgReader( DirTree * tree ):
-    _tree { tree },
-    _maxParallelProcesses { DEFAULT_PARALLEL_PROCESSES },
-    _minCachePkgListSize { DEFAULT_CACHE_PKG_LIST_SIZE },
-    _verboseMissingPkgFiles { false }
+    _tree { tree }
 {
     // logInfo() << Qt::endl;
     readSettings();

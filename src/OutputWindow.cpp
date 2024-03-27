@@ -25,12 +25,7 @@ using QDirStat::writeFontEntry;
 
 OutputWindow::OutputWindow( QWidget * parent, bool autoClose ):
     QDialog ( parent ),
-    _ui { new Ui::OutputWindow },
-    _showOnStderr { false },
-    _noMoreProcesses { false },
-    _closed { false },
-    _killedAll { false },
-    _errorCount { 0 }
+    _ui { new Ui::OutputWindow }
 {
     CHECK_NEW( _ui );
     _ui->setupUi( this );

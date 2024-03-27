@@ -32,12 +32,7 @@ using namespace QDirStat;
 FileAgeStatsWindow::FileAgeStatsWindow( QWidget         * parent,
 					SelectionModel  * selectionModel ):
     QDialog ( parent ),
-    _ui { new Ui::FileAgeStatsWindow },
-    _stats { nullptr },
-    _filesPercentBarDelegate { nullptr },
-    _sizePercentBarDelegate { nullptr },
-    _subtree { nullptr },
-    _startGapsWithCurrentYear { true }
+    _ui { new Ui::FileAgeStatsWindow }
 {
     // logDebug() << "init" << Qt::endl;
 

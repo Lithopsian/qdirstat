@@ -22,11 +22,7 @@ using namespace QDirStat;
 
 SelectionModel::SelectionModel( DirTreeModel * dirTreeModel, QObject * parent ):
     QItemSelectionModel ( dirTreeModel, parent ),
-    _dirTreeModel { dirTreeModel },
-    _currentItem { nullptr },
-//    _currentBranch { nullptr },
-    _selectedItemsDirty { false },
-    _verbose { false }
+    _dirTreeModel { dirTreeModel }
 {
     connect( this, &SelectionModel::currentChanged,
 	     this, &SelectionModel::propagateCurrentChanged );

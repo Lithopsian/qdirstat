@@ -8,10 +8,10 @@
 
 
 #include <QApplication>
-#include <QCloseEvent>
-#include <QMessageBox>
-#include <QFileDialog>
 #include <QClipboard>
+#include <QCloseEvent>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "MainWindow.h"
 #include "ActionManager.h"
@@ -19,7 +19,6 @@
 #include "CleanupCollection.h"
 #include "ConfigDialog.h"
 #include "DataColumns.h"
-//#include "DebugHelpers.h"
 #include "DirTree.h"
 #include "DirTreeCache.h"
 #include "DirTreeModel.h"
@@ -240,18 +239,18 @@ void MainWindow::readSettings()
     restoreState(settings.value("State").toByteArray());
 
     _statusBarTimeout		= settings.value( "StatusBarTimeoutMillisec",  3000 ).toInt();
-    _longStatusBarTimeout	= settings.value( "LongStatusBarTimeout"    , 30000 ).toInt();
+    _longStatusBarTimeout	= settings.value( "LongStatusBarTimeout",     30000 ).toInt();
 
-    const bool showTreemap	= settings.value( "ShowTreemap"		      , true  ).toBool();
-    const bool treemapOnSide	= settings.value( "TreemapOnSide"	      , false ).toBool();
+    const bool showTreemap	= settings.value( "ShowTreemap",	      true  ).toBool();
+    const bool treemapOnSide	= settings.value( "TreemapOnSide",	      false ).toBool();
 
-    _verboseSelection		= settings.value( "VerboseSelection"	      , false ).toBool();
-    _urlInWindowTitle		= settings.value( "UrlInWindowTitle"	      , false ).toBool();
-    const bool useTreemapHover  = settings.value( "UseTreemapHover"	      , false ).toBool();
+    _verboseSelection		= settings.value( "VerboseSelection",	      false ).toBool();
+    _urlInWindowTitle		= settings.value( "UrlInWindowTitle",	      false ).toBool();
+    const bool useTreemapHover  = settings.value( "UseTreemapHover",	      false ).toBool();
 
-    const QString layoutName	= settings.value( "Layout"		      , "L2"  ).toString();
-    const bool showMenuBar	= settings.value( "ShowMenuBar"		      , true  ).toBool();
-    const bool showStatusBar	= settings.value( "ShowStatusBar"	      , true  ).toBool();
+    const QString layoutName	= settings.value( "Layout",		      "L2"  ).toString();
+    const bool showMenuBar	= settings.value( "ShowMenuBar",	      true  ).toBool();
+    const bool showStatusBar	= settings.value( "ShowStatusBar",	      true  ).toBool();
 
     settings.endGroup();
 
@@ -299,18 +298,18 @@ void MainWindow::writeSettings()
     QDirStat::Settings settings;
     settings.beginGroup( "MainWindow" );
 
-    settings.setValue( "ShowTreemap"	 , _ui->actionShowTreemap->isChecked() );
-    settings.setValue( "TreemapOnSide"	 , _ui->actionTreemapAsSidePanel->isChecked() );
+    settings.setValue( "ShowTreemap",	   _ui->actionShowTreemap->isChecked() );
+    settings.setValue( "TreemapOnSide",	   _ui->actionTreemapAsSidePanel->isChecked() );
     settings.setValue( "VerboseSelection", _verboseSelection );
 
-    settings.setValue( "Layout"		 , currentLayoutName()                   );
-    settings.setValue( "ShowMenuBar"	 , _ui->actionShowMenuBar->isChecked()   );
-    settings.setValue( "ShowStatusBar"	 , _ui->actionShowStatusBar->isChecked() );
+    settings.setValue( "Layout",	   currentLayoutName()                   );
+    settings.setValue( "ShowMenuBar",	   _ui->actionShowMenuBar->isChecked()   );
+    settings.setValue( "ShowStatusBar",	   _ui->actionShowStatusBar->isChecked() );
 
     settings.setValue( "StatusBarTimeoutMillisec", _statusBarTimeout );
-    settings.setValue( "LongStatusBarTimeout"    , _longStatusBarTimeout );
-    settings.setValue( "UrlInWindowTitle"	 , _urlInWindowTitle );
-    settings.setValue( "UseTreemapHover"	 , _ui->treemapView->useTreemapHover() );
+    settings.setValue( "LongStatusBarTimeout",     _longStatusBarTimeout );
+    settings.setValue( "UrlInWindowTitle",	   _urlInWindowTitle );
+    settings.setValue( "UseTreemapHover",	   _ui->treemapView->useTreemapHover() );
 
     settings.setValue( "State", saveState() );
 
@@ -365,9 +364,9 @@ void MainWindow::busyDisplay()
 
     // It would be nice to sort by read jobs during reading, but this confuses
     // the hell out of the Qt side of the data model; so let's sort by name
-    // instead.  Seems OK in 5.15, so sort by sizeCol just for the read.
+    // instead.  Seems OK in 5.15.
     SignalBlocker signalBlocker( app()->dirTreeModel() );
-    const int sortCol = QDirStat::DataColumns::toViewCol( QDirStat::SizeCol );
+    const int sortCol = QDirStat::DataColumns::toViewCol( QDirStat::ReadJobsCol );
     _ui->dirTreeView->sortByColumn( sortCol, Qt::DescendingOrder );
 }
 
@@ -411,16 +410,12 @@ void MainWindow::updateFileDetailsView()
 	return;
 
     const FileInfoSet sel = app()->selectionModel()->selectedItems();
-
     if ( sel.isEmpty() )
 	_ui->fileDetailsView->showDetails( app()->currentItem() );
+    else if ( sel.count() == 1 )
+	_ui->fileDetailsView->showDetails( sel.first() );
     else
-    {
-	if ( sel.count() == 1 )
-	    _ui->fileDetailsView->showDetails( sel.first() );
-	else
-	    _ui->fileDetailsView->showDetails( sel );
-    }
+	_ui->fileDetailsView->showDetails( sel );
 }
 
 
@@ -542,7 +537,6 @@ void MainWindow::openDir( const QString & url )
     _enableDirPermissionsWarning = true;
     try
     {
-//	app()->dirTree()->reset();
 	app()->dirTreeModel()->openUrl( url );
 	const QString dirTreeUrl = app()->dirTree()->url();
 	updateWindowTitle( dirTreeUrl );
@@ -615,7 +609,6 @@ void MainWindow::readPkg( const PkgFilter & pkgFilter )
     pkgQuerySetup();
     BusyPopup msg( tr( "Reading package database..." ), this );
 
-//    expandTreeToLevel( 0 );   // Performance boost: Down from 25 to 6 sec.
     app()->dirTreeModel()->readPkg( pkgFilter );
     app()->selectionModel()->setCurrentItem( app()->root() );
 }
@@ -624,7 +617,6 @@ void MainWindow::readPkg( const PkgFilter & pkgFilter )
 void MainWindow::pkgQuerySetup()
 {
     delete _dirPermissionsWarning;
-
     _ui->breadcrumbNavigator->clear();
     _ui->fileDetailsView->clear();
     app()->dirTreeModel()->clear();
@@ -656,16 +648,18 @@ void MainWindow::refreshAll()
     _ui->treemapView->saveTreemapRoot();
 
     const QString url = app()->dirTree()->url();
-    if ( !url.isEmpty() )
+    if ( url.isEmpty() )
+    {
+	askOpenDir();
+    }
+    else
     {
 	//logDebug() << "Refreshing " << url << Qt::endl;
 
 	if ( PkgInfo::isPkgUrl( url ) )
-	    //app()->dirTreeModel()->readPkg( url );
 	    readPkg( url );
 	else
 	    app()->dirTreeModel()->openUrl( url );
-//	    expandTreeToLevel( 1 );
 
         // No need to check if the URL is an unpkg:/ URL:
         //
@@ -675,10 +669,6 @@ void MainWindow::refreshAll()
         // again.
 
 	updateActions();
-    }
-    else
-    {
-	askOpenDir();
     }
 }
 
@@ -832,13 +822,13 @@ void MainWindow::showCurrent( FileInfo * item )
 {
     if ( item )
     {
-	QString msg = QString( "%1  (%2%3)  " )
+	QString msg = QString( "%1  (%2%3)" )
 	    .arg( item->debugUrl() )
 	    .arg( item->sizePrefix() )
 	    .arg( formatSize( item->totalSize() ) );
 
 	if ( item->readState() == DirPermissionDenied || item->readState() == DirError )
-	    msg += _ui->fileDetailsView->readStateMsg( item->readState() );
+	    msg += "  " + _ui->fileDetailsView->readStateMsg( item->readState() );
 
 	_ui->statusBar->showMessage( msg );
     }
@@ -855,7 +845,9 @@ void MainWindow::showSummary()
     const int count = sel.size();
 
     if ( count <= 1 )
+    {
 	showCurrent( app()->currentItem() );
+    }
     else
     {
 	sel = sel.normalized();
@@ -886,9 +878,9 @@ void MainWindow::cleanupFinished( int errorCount )
     //logDebug() << "Error count: " << errorCount << Qt::endl;
 
     if ( errorCount == 0 )
-	showProgress( tr( "Cleanup action finished successfully." ) );
+	showProgress( tr( "Cleanup action finished successfully" ) );
     else
-	showProgress( tr( "Cleanup action finished with %1 errors." ).arg( errorCount ) );
+	showProgress( tr( "Cleanup action finished with %1 errors" ).arg( errorCount ) );
 }
 
 
@@ -902,16 +894,12 @@ void MainWindow::copyCurrentPathToClipboard()
 	clipboard->setText( path );
 	showProgress( tr( "Copied to system clipboard: " ) + path );
     }
-    else
-    {
-	showProgress( tr( "No current item" ) );
-    }
 }
 
 
 void MainWindow::expandTreeToLevel( int level )
 {
-    logDebug() << "Expanding tree to level " << level << Qt::endl;
+    //logDebug() << "Expanding tree to level " << level << Qt::endl;
 
     if ( level < 1 )
 	_ui->dirTreeView->collapseAll();

@@ -19,10 +19,9 @@ using namespace QDirStat;
 
 
 BusyPopup::BusyPopup( const QString & text,
-		      QWidget *	      parent,
-		      bool	      autoPost ):
-    QLabel ( text, parent, Qt::SplashScreen ),
-    _posted { false }
+		      QWidget       * parent,
+		      bool            autoPost ):
+    QLabel ( text, parent, Qt::SplashScreen )
 {
     setMargin( 15 );
     setWindowTitle( " " );
@@ -46,8 +45,7 @@ void BusyPopup::post()
 void BusyPopup::processEvents( int millisec )
 {
     QEventLoop eventLoop;
-    eventLoop.processEvents( QEventLoop::ExcludeUserInputEvents,
-			     millisec );
+    eventLoop.processEvents( QEventLoop::ExcludeUserInputEvents, millisec );
 }
 
 

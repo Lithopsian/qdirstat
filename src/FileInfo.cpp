@@ -30,7 +30,7 @@
 // bytes less than the byte size - it may be due to intelligent fragment
 // handling.
 
-#define FRAGMENT_SIZE	2048
+#define FRAGMENT_SIZE 2048
 
 using namespace QDirStat;
 

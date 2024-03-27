@@ -86,7 +86,7 @@ static FileSize squarify( const QRectF & rect,
     return sum;
 }
 
-
+/*
 static QRgb contrastingColor( QRgb col )
 {
     if ( qGray( col ) < 128 )
@@ -150,7 +150,7 @@ static void enforceContrast( QImage & image )
         }
     }
 }
-
+*/
 
 // constructor with no parent tile, only used for the root tile
 TreemapTile::TreemapTile( TreemapView * parentView,
@@ -158,10 +158,8 @@ TreemapTile::TreemapTile( TreemapView * parentView,
                           const QRectF & rect ):
     QGraphicsRectItem ( rect ),
     _parentView { parentView },
-//    _parentTile { nullptr },
     _orig { orig },
     _cushionSurface { _parentView->cushionHeights() }, // initial cushion surface
-    _highlighter { nullptr },
     _firstTile { true },
     _lastTile { false }
 {
@@ -196,7 +194,6 @@ TreemapTile::TreemapTile( TreemapTile * parentTile,
 //    _parentTile { parentTile },
     _orig { orig },
     _cushionSurface { parentTile->_cushionSurface, _parentView->cushionHeights() }, // copy the parent cushion and scale the height
-    _highlighter { nullptr },
     _firstTile { false },
     _lastTile { false }
 {
@@ -205,27 +202,27 @@ TreemapTile::TreemapTile( TreemapTile * parentTile,
     init();
 }
 
-HorizontalTreemapTile::HorizontalTreemapTile( TreemapTile * parentTile,
-                                              FileInfo * orig,
+HorizontalTreemapTile::HorizontalTreemapTile( TreemapTile  * parentTile,
+                                              FileInfo     * orig,
                                               const QRectF & rect ) :
     TreemapTile ( parentTile, orig, rect )
 {
-    if ( orig->isDirInfo() && !_parentView->treemapCancelled() )
+    if ( orig->isDirInfo() )
         createChildrenHorizontal( rect );
 }
 
-VerticalTreemapTile::VerticalTreemapTile( TreemapTile * parentTile,
-                                          FileInfo * orig,
+VerticalTreemapTile::VerticalTreemapTile( TreemapTile  * parentTile,
+                                          FileInfo     * orig,
                                           const QRectF & rect ) :
     TreemapTile ( parentTile, orig, rect )
 {
-    if ( orig->isDirInfo() && !_parentView->treemapCancelled() )
+    if ( orig->isDirInfo() )
         createChildrenVertical( rect );
 }
 
 // constructor for squarified layout, with the cushion specified explicitly to allow for a row cushion
-TreemapTile::TreemapTile( TreemapTile * parentTile,
-                          FileInfo    * orig,
+TreemapTile::TreemapTile( TreemapTile  * parentTile,
+                          FileInfo     * orig,
                           const QRectF & rect,
                           const CushionSurface & cushionSurface ):
     QGraphicsRectItem ( rect, parentTile ),
@@ -233,7 +230,6 @@ TreemapTile::TreemapTile( TreemapTile * parentTile,
 //    _parentTile { parentTile },
     _orig { orig },
     _cushionSurface { cushionSurface }, // uses the default copy constructor on a row cushion
-    _highlighter { nullptr },
     _firstTile ( false ),
     _lastTile { false }
 {
@@ -241,16 +237,10 @@ TreemapTile::TreemapTile( TreemapTile * parentTile,
 
     init();
 
-    if ( orig->isDirInfo() && !_parentView->treemapCancelled() )
+    if ( orig->isDirInfo() )
         createSquarifiedChildren( rect );
 }
 
-TreemapTile::~TreemapTile()
-{
-    // DO NOT try to delete the _highlighter: it is owned by the TreemapView /
-    // QGraphicsScene and deleted together with all other QGraphicsItems
-    // in the TreemapView destructor.
-}
 
 void TreemapTile::init()
 {
@@ -286,7 +276,7 @@ void TreemapTile::createChildrenHorizontal( const QRectF & rect )
     {
         cumulativeSize += itemTotalSize( *it );
         const double newOffset = round( scale * cumulativeSize );
-        if ( newOffset >= nextOffset )
+        if ( newOffset >= nextOffset && !_parentView->treemapCancelled() )
         {
             QRectF childRect = QRectF( rect.left() + offset, rect.top(), newOffset - offset, rect.height() );
             TreemapTile *tile = new VerticalTreemapTile( this, *it, childRect );
@@ -327,7 +317,7 @@ void TreemapTile::createChildrenVertical( const QRectF & rect )
     {
         cumulativeSize += itemTotalSize( *it );
         const double newOffset = round( scale * cumulativeSize );
-        if ( newOffset >= nextOffset )
+        if ( newOffset >= nextOffset && !_parentView->treemapCancelled() )
         {
             QRectF childRect = QRectF( rect.left(), rect.top() + offset, rect.width(), newOffset - offset );
             TreemapTile *tile = new HorizontalTreemapTile( this, *it, childRect );
@@ -440,7 +430,7 @@ void TreemapTile::layoutRow( Orientation dir,
         const double newOffset = round( cumulativeSize * rowScale );
 
         // Drop tiles that don't reach to the minimum pixel size or fill the row
-        if ( newOffset >= nextOffset )
+        if ( newOffset >= nextOffset && !_parentView->treemapCancelled() )
         {
             QRectF childRect = dir == TreemapHorizontal ?
                 QRectF( rectX + offset, rectY, newOffset - offset, height ) :
@@ -631,15 +621,11 @@ QPixmap TreemapTile::renderCushion( const QRectF & rect )
 {
     //logDebug() << rect << Qt::endl;
 
-	static const double _lightX = 0.09759;
-	static const double _lightY = 0.19518;
-	static const double _lightZ = 0.97590;
-
     static const double ambientIntensity = ( double )_parentView->ambientLight() / 255;
     static const double intensityScaling = 1.0 - ambientIntensity;
-    static const double lightX = _lightX * intensityScaling;
-    static const double lightY = _lightY * intensityScaling;
-    static const double lightZ = _lightZ * intensityScaling;
+    static const double lightX = _parentView->lightX() * intensityScaling;
+    static const double lightY = _parentView->lightY() * intensityScaling;
+    static const double lightZ = _parentView->lightZ() * intensityScaling;
 
     const QColor color = tileColor( _orig );
 
@@ -670,8 +656,8 @@ QPixmap TreemapTile::renderCushion( const QRectF & rect )
 //    if (_parentView->forceCushionGrid())
 //        renderOutline(image, width, height, _parentView->cushionGridColor(), color);
 
-    if ( _parentView->enforceContrast() )
-        enforceContrast( image );
+//    if ( _parentView->enforceContrast() )
+//        enforceContrast( image );
 
     return QPixmap::fromImage( image );
 }
@@ -732,14 +718,14 @@ QVariant TreemapTile::itemChange( GraphicsItemChange   change,
         }
         else if ( this != _parentView->rootTile() ) // don't highlight the root tile
         {
-            if ( ! _highlighter )
+            if ( !_highlighter )
             {
                 //logDebug() << "Creating highlighter for " << this << Qt::endl;
                 _highlighter = new SelectedTileHighlighter( _parentView, this );
                 CHECK_NEW( _highlighter );
             }
 
-            if ( ! _highlighter->isVisible() )
+            if ( !_highlighter->isVisible() )
             {
                 //logDebug() << "Showing highlighter for " << this << " (style=" << _highlighter->pen().style() << ")" << Qt::endl;
                 _highlighter->show();
@@ -752,7 +738,7 @@ QVariant TreemapTile::itemChange( GraphicsItemChange   change,
 
 void TreemapTile::mousePressEvent( QGraphicsSceneMouseEvent * event )
 {
-    if ( ! _parentView->selectionModel() )
+    if ( !_parentView->selectionModel() )
         return;
 
     switch ( event->button() )
@@ -782,7 +768,7 @@ void TreemapTile::mousePressEvent( QGraphicsSceneMouseEvent * event )
         if ( ( event->modifiers() & Qt::ControlModifier ) == 0 )
             scene()->clearSelection();
 
-        setSelected( ! isSelected() );
+        setSelected( !isSelected() );
 
         _parentView->toggleParentsHighlight( this );
         _parentView->setCurrentTile( this );
@@ -811,7 +797,7 @@ void TreemapTile::mousePressEvent( QGraphicsSceneMouseEvent * event )
 
 void TreemapTile::mouseReleaseEvent( QGraphicsSceneMouseEvent * event )
 {
-    if ( ! _parentView->selectionModel() )
+    if ( !_parentView->selectionModel() )
         return;
 
     QGraphicsRectItem::mouseReleaseEvent( event );
@@ -835,7 +821,7 @@ void TreemapTile::mouseReleaseEvent( QGraphicsSceneMouseEvent * event )
 
 void TreemapTile::mouseDoubleClickEvent( QGraphicsSceneMouseEvent * event )
 {
-    if ( ! _parentView->selectionModel() )
+    if ( !_parentView->selectionModel() )
         return;
 
     switch ( event->button() )
@@ -862,11 +848,13 @@ void TreemapTile::mouseDoubleClickEvent( QGraphicsSceneMouseEvent * event )
 
 void TreemapTile::wheelEvent( QGraphicsSceneWheelEvent * event )
 {
-    if ( ! _parentView->selectionModel() )
+    if ( !_parentView->selectionModel() )
         return;
 
     if ( event->delta() < 0 )
+    {
         _parentView->zoomOut();
+    }
     else
     {
         // If no current item, or it is the root already, pick a new current item so we can zoom
@@ -881,11 +869,11 @@ void TreemapTile::wheelEvent( QGraphicsSceneWheelEvent * event )
 
 void TreemapTile::contextMenuEvent( QGraphicsSceneContextMenuEvent * event )
 {
-    if ( ! _parentView->selectionModel() )
+    if ( !_parentView->selectionModel() )
         return;
 
     FileInfoSet selectedItems = _parentView->selectionModel()->selectedItems();
-    if ( ! selectedItems.contains( _orig ) )
+    if ( !selectedItems.contains( _orig ) )
     {
         //logDebug() << "Abandoning old selection" << Qt::endl;
         _parentView->selectionModel()->setCurrentItem( _orig, true );

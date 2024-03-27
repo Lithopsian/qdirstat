@@ -16,8 +16,7 @@
 using namespace QDirStat;
 
 
-History::History():
-    _current { -1 }
+History::History()
 {
     _items.reserve( HISTORY_MAX );
 }

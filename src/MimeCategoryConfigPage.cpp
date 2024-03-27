@@ -32,9 +32,7 @@ using namespace QDirStat;
 
 MimeCategoryConfigPage::MimeCategoryConfigPage( ConfigDialog * parent ):
     ListEditor ( parent ),
-    _ui { new Ui::MimeCategoryConfigPage },
-    _dirTree { nullptr },
-    _dirty { false }
+    _ui { new Ui::MimeCategoryConfigPage }
 {
     //logDebug() << "MimeCategoryConfigPage constructor" << Qt::endl;
 

@@ -129,15 +129,18 @@ void FileDetailsView::showFileInfo( FileInfo * file )
 {
     CHECK_PTR( file );
 
+    const bool isSpecial = file->isSpecial();
+    const bool isSymlink = file->isSymLink();
+
     setLabelLimited(_ui->fileNameLabel, file->baseName() );
     _ui->fileTypeLabel->setText( formatFilesystemObjectType( file ) );
+
     _ui->symlinkIcon->setVisible( file->isSymLink() );
     _ui->fileIcon->setVisible( file->isFile() );
     _ui->blockIcon->setVisible( file->isBlockDevice() );
     _ui->charIcon->setVisible( file->isCharDevice() );
     _ui->specialIcon->setVisible( file->isFifo() || file->isSocket() );
 
-    const bool isSymlink = file->isSymLink();
     _ui->fileMimeCaption->setVisible( !isSymlink );
     _ui->fileMimeLabel->setVisible( !isSymlink );
     _ui->fileLinkCaption->setVisible( isSymlink );
@@ -162,13 +165,26 @@ void FileDetailsView::showFileInfo( FileInfo * file )
 	    _ui->fileLinkLabel->setToolTip( fullTarget );
 	}
     }
+    else if ( isSpecial )
+    {
+	_ui->fileMimeCaption->setEnabled( false );
+	_ui->fileMimeLabel->setEnabled( false );
+	_ui->fileMimeLabel->clear();
+	_ui->fileSizeLabel->clear();
+	_ui->fileAllocatedLabel->clear();
+    }
     else // ! isSymLink
     {
 	setMimeCategory( file );
     }
 
-    _ui->fileSizeLabel->setSize( file );
-    _ui->fileAllocatedLabel->setAllocated( file );
+    _ui->fileSizeCaption->setEnabled( !isSpecial );
+    _ui->fileAllocatedCaption->setEnabled( !isSpecial );
+    if ( !isSpecial )
+    {
+	_ui->fileSizeLabel->setSize( file );
+	_ui->fileAllocatedLabel->setAllocated( file );
+    }
 
     _ui->fileUserLabel->setText( file->userName() );
     _ui->fileGroupLabel->setText( file->groupName() );
@@ -182,18 +198,12 @@ void FileDetailsView::showFileInfo( FileInfo * file )
 
 QString FileDetailsView::formatFilesystemObjectType( const FileInfo * file )
 {
-    if ( file->isFile() )
-	return tr( "file" );
-    else if ( file->isSymLink() )
-	return tr( "symbolic link" );
-    else if ( file->isBlockDevice() )
-	return ( "block device"	);
-    else if ( file->isCharDevice() )
-	return tr( "character device" );
-    else if ( file->isFifo() )
-	return ( "named pipe" );
-    else if ( file->isSocket() )
-	return tr( "socket" );
+    if      ( file->isFile() )		return tr( "file"             );
+    else if ( file->isSymLink() )	return tr( "symbolic link"    );
+    else if ( file->isBlockDevice() )	return tr( "block device"     );
+    else if ( file->isCharDevice() )	return tr( "character device" );
+    else if ( file->isFifo() )		return tr( "named pipe"       );
+    else if ( file->isSocket() )	return tr( "socket"           );
 
     logWarning() << " unexpected mode: " << file->mode() << Qt::endl;
     return QString();
@@ -315,21 +325,11 @@ QString FileDetailsView::readStateMsg( int readState )
     switch ( readState )
     {
 	case DirQueued:
-	case DirReading:
-	    return tr( "[reading]" );
-
-	case DirPermissionDenied:
-	    return tr( "[permission denied]" );
-
-	case DirError:
-	    return tr( "[read error]" );
-
-	case DirOnRequestOnly:
-	    return tr( "[not read]" );
-
-	case DirAborted:
-	    return tr( "[aborted]" );
-
+	case DirReading:		return tr( "[reading]" );
+	case DirPermissionDenied:	return tr( "[permission denied]" );
+	case DirError:			return tr( "[read error]" );
+	case DirOnRequestOnly:		return tr( "[not read]" );
+	case DirAborted:		return tr( "[aborted]" );
 //	case DirFinished:
 //	case DirCached:
 //	default:
@@ -426,18 +426,6 @@ void FileDetailsView::setDirBlockVisibility( bool visible )
     _ui->dirSubDirCountLabel->setVisible( visible );
 }
 
-/*
-QString FileDetailsView::pkgMsg( const PkgInfo * pkg )
-{
-    if ( pkg->readState() == DirOnRequestOnly )
-    {
-	logError() << "invalid readState for a Pkg" << Qt::endl;
-	return QString();
-    }
-
-    return subtreeMsg( pkg );
-}
-*/
 
 void FileDetailsView::showDetails( PkgInfo * pkg )
 {
@@ -561,7 +549,6 @@ void FileDetailsView::showDetails( const FileInfoSet & selectedItems )
 	sel.count() == 1 ? tr( "1 Selected Item" ) : tr( "%1 Selected Items" ).arg( sel.count() );
     _ui->selHeading->setText( itemCount );
 
-//    setLabel( _ui->selItemCount,	     sel.count()	      );
     setLabel( _ui->selTotalSizeLabel,	     sel.totalSize()	      );
     setLabel( _ui->selAllocatedLabel,	     sel.totalAllocatedSize() );
     setLabel( _ui->selFileCountLabel,	     fileCount		      );

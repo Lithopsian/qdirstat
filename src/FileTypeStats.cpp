@@ -20,8 +20,7 @@ using namespace QDirStat;
 
 FileTypeStats::FileTypeStats( FileInfo * subtree ):
     _otherCategory { new MimeCategory( QObject::tr( "Other" ) ) },
-    _mimeCategorizer { MimeCategorizer::instance() },
-    _totalSize { 0LL }
+    _mimeCategorizer { MimeCategorizer::instance() }
 {
     CHECK_NEW( _otherCategory );
     CHECK_PTR( _mimeCategorizer );

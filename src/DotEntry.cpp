@@ -37,8 +37,8 @@ void DotEntry::insertChild( FileInfo * newChild )
     // Whatever is added here is added directly to this node; a dot entry
     // cannot have a dot entry itself.
 
-    newChild->setNext( _firstChild );
-    _firstChild = newChild;
+    newChild->setNext( firstChild() );
+    setFirstChild( newChild );
     newChild->setParent( this );	// make sure the parent pointer is correct
 
     childAdded( newChild );		// update summaries

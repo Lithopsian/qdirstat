@@ -26,21 +26,7 @@ using namespace QDirStat;
 
 
 TreemapView::TreemapView( QWidget * parent ):
-    QGraphicsView ( parent ),
-    _tree { nullptr },
-    _selectionModel { nullptr },
-    _selectionModelProxy { nullptr },
-//    _cleanupCollection { nullptr },
-    _rootTile { nullptr },
-//    _currentTile { nullptr },
-    _currentTileHighlighter { nullptr },
-    _sceneMask { nullptr },
-    _newRoot { nullptr },
-//    _highlightedTile { nullptr },
-    _disabled { false },
-//    _useFixedColor(false).
-    _treemapRunning { false },
-    _treemapCancel { TreemapCancelNone }
+    QGraphicsView ( parent )
 {
     // logDebug() << Qt::endl;
 
@@ -163,7 +149,7 @@ void TreemapView::readSettings()
 
     _squarify           = settings.value( "Squarify"         , true  ).toBool();
     _doCushionShading   = settings.value( "CushionShading"   , true  ).toBool();
-    _enforceContrast    = settings.value( "EnforceContrast"  , false ).toBool();
+//    _enforceContrast    = settings.value( "EnforceContrast"  , false ).toBool();
     _forceCushionGrid   = settings.value( "ForceCushionGrid" , false ).toBool();
     _useDirGradient     = settings.value( "UseDirGradient"   , true  ).toBool();
 
@@ -199,7 +185,7 @@ void TreemapView::writeSettings()
 
     settings.setValue( "Squarify"         , _squarify          );
     settings.setValue( "CushionShading"   , _doCushionShading  );
-    settings.setValue( "EnforceContrast"  , _enforceContrast   );
+//    settings.setValue( "EnforceContrast"  , _enforceContrast   );
     settings.setValue( "ForceCushionGrid" , _forceCushionGrid  );
     settings.setValue( "UseDirGradient"   , _useDirGradient    );
 
@@ -895,8 +881,8 @@ HighlightRect::HighlightRect( QGraphicsScene * scene,
                               const QColor & color,
                               int lineWidth,
                               float zValue ):
-    QGraphicsRectItem(),
-    _tile(tile)
+    QGraphicsRectItem (),
+    _tile { tile }
 {
     setPen( QPen( color, lineWidth ) );
     setZValue( zValue );
@@ -911,7 +897,7 @@ HighlightRect::HighlightRect( QGraphicsScene * scene,
                               int lineWidth,
                               float zValue ):
     HighlightRect( scene, nullptr, color, lineWidth, zValue )
-    {}
+{}
 
 
 HighlightRect::HighlightRect( const TreemapTile * tile,
@@ -919,7 +905,7 @@ HighlightRect::HighlightRect( const TreemapTile * tile,
                               int lineWidth,
                               float zValue ):
     HighlightRect( tile->scene(), tile, color, lineWidth, zValue )
-    {}
+{}
 
 
 QPainterPath HighlightRect::shape() const

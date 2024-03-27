@@ -14,7 +14,6 @@
 #include "DirTree.h"
 #include "ExcludeRules.h"
 #include "FileInfoIterator.h"
-#include "DataColumns.h"
 #include "Settings.h"
 #include "SettingsHelpers.h"
 #include "Logger.h"
@@ -188,7 +187,7 @@ void DirTreeModel::updateSettings( bool crossFilesystems,
     _useBoldForDominantItems = useBoldForDominant;
     _treeItemSize = dirTreeItemSize;
     _updateTimerMillisec = updateTimerMillisec;
-    _updateTimer.setInterval( updateTimerMillisec );
+    _updateTimer.setInterval( _slowUpdate ? _slowUpdateMillisec : updateTimerMillisec );
 
     loadIcons();
     setBaseFont( _themeFont );
@@ -310,7 +309,7 @@ void DirTreeModel::clear()
 	// dumpPersistentIndexList( persistentIndexList() );
 
 	_updateTimer.stop();
-	_pendingUpdates.clear();
+	_pendingUpdates.clear(); // these are dangerous if they arrive for a new tree
 	_tree->clear();
 
 	endResetModel();
@@ -324,10 +323,12 @@ void DirTreeModel::openUrl( const QString & url )
 {
     CHECK_PTR( _tree );
 
-    if ( _tree->root() &&  _tree->root()->hasChildren() )
+    // Need to get rid of pending updates even if there are no tree children
+//    if ( _tree->root() && _tree->root()->hasChildren() )
 	clear();
 
     _updateTimer.start();
+
     _tree->startReading( url );
 }
 
@@ -337,10 +338,12 @@ void DirTreeModel::readPkg( const PkgFilter & pkgFilter )
     // logDebug() << "Reading " << pkgFilter << Qt::endl;
     CHECK_PTR( _tree );
 
-    if ( _tree->root() &&  _tree->root()->hasChildren() )
+    // Need to get rid of pending updates even if there are no tree children
+//    if ( _tree->root() && _tree->root()->hasChildren() )
 	clear();
 
     _updateTimer.start();
+
     _tree->readPkg( pkgFilter );
 }
 
@@ -363,14 +366,14 @@ void DirTreeModel::loadIcons()
     _pkgIcon	       = QIcon( iconDir + "folder-pkg.png"     );
 }
 
-
+/*
 void DirTreeModel::setColumns( const DataColumnList & columns )
 {
     beginResetModel();
     DataColumns::setColumns( columns );
     endResetModel();
 }
-
+*/
 
 FileInfo * DirTreeModel::findChild( DirInfo * parent, int childNo ) const
 {
@@ -441,7 +444,7 @@ int DirTreeModel::rowCount( const QModelIndex & parentIndex ) const
     if ( !_tree )
 	return 0;
 
-    FileInfo * item = 0;
+    FileInfo * item = nullptr;
 
     if ( parentIndex.isValid() )
     {
@@ -534,7 +537,7 @@ QVariant DirTreeModel::data( const QModelIndex & index, int role ) const
 	case Qt::TextAlignmentRole:
 	    return columnAlignment( item, col );
 
-	case RawDataRole: // Send raw data to our item delegates PercentBarDelegate and SizeColDelegate
+	case RawDataRole: // Send raw data to item delegates PercentBarDelegate and SizeColDelegate
 	    return columnRawData( item, col );
 
 	case Qt::ToolTipRole:
@@ -560,9 +563,8 @@ QVariant DirTreeModel::data( const QModelIndex & index, int role ) const
 	    return columnFont( item, col );
 
 	case Qt::BackgroundRole:
-	    return col == NameCol && item->isDirInfo() && item->toDirInfo()->isFromCache() ?
-	                  QGuiApplication::palette().color( QPalette::Active, QPalette::AlternateBase ) :
-			  QVariant();
+	    if ( col == NameCol && item->isDirInfo() && item->toDirInfo()->isFromCache() )
+		return QGuiApplication::palette().color( QPalette::Active, QPalette::AlternateBase );
     }
 
     return QVariant();
@@ -592,6 +594,7 @@ QVariant DirTreeModel::headerData( int		   section,
 				   Qt::Orientation orientation,
 				   int		   role ) const
 {
+    // Vertical header should never be visible, but ...
     if ( orientation != Qt::Horizontal )
 	return QVariant();
 
@@ -617,10 +620,12 @@ QVariant DirTreeModel::headerData( int		   section,
 	    }
 
 	case Qt::TextAlignmentRole:
+	    // Default is AlignHCenter, but use align left for the name header
 	    if ( DataColumns::fromViewCol( section ) == NameCol )
 		return QVariant( Qt::AlignVCenter | Qt::AlignLeft );
 	    break;
 
+	// Theme standard font, adjusted for the configured item size
 	case Qt::FontRole:
 	    return _baseFont;
     }
@@ -766,16 +771,18 @@ QVariant DirTreeModel::columnText( FileInfo * item, int col ) const
 {
     CHECK_PTR( item );
 
-    if ( col == _readJobsCol && item->isBusy() )
-	return tr( "[%1 read jobs]" ).arg( item->pendingReadJobs() );
-
     if ( item->isPkgInfo() && item->readState() == DirAborted && !item->firstChild() && col != NameCol )
 	return "?";
 
     switch ( col )
     {
-	case NameCol:		  return item->name();
-	case PercentBarCol:	  return item->isExcluded() ? tr( "[excluded]" ) : QVariant();
+	case PercentBarCol:
+	{
+	    if ( item->isBusy() )     return tr( "[%1 read jobs]" ).arg( item->pendingReadJobs() );
+	    if ( item->isExcluded() ) return tr( "[excluded]" );
+	    return QVariant();
+	}
+
 	case PercentNumCol:
 	{
 	    if ( item->isAttic() || item == _tree->firstToplevel() )
@@ -783,6 +790,8 @@ QVariant DirTreeModel::columnText( FileInfo * item, int col ) const
 
 	    return formatPercent( item->subtreeAllocatedPercent() );
 	}
+
+	case NameCol:		  return item->name();
 	case SizeCol:		  return sizeColText( item );
 	case LatestMTimeCol:	  return formatTime( item->latestMtime() );
 	case UserCol:		  return item->userName();
@@ -936,7 +945,7 @@ int DirTreeModel::directChildrenCount( FileInfo * subtree ) const
 
 QVariant DirTreeModel::sizeColText( FileInfo * item ) const
 {
-    if ( item->isDevice() )
+    if ( item->isSpecial() )
 	return QVariant();
 
     if ( item->isDirInfo() )
@@ -965,7 +974,7 @@ QVariant DirTreeModel::columnIcon( FileInfo * item, int col ) const
     if ( icon.isNull() )
 	return QVariant();
 
-    const bool  useDisabled = item->isIgnored() || item->isAttic();
+    const bool useDisabled = item->isIgnored() || item->isAttic();
     return icon.pixmap( dirTreeIconSize(), useDisabled ? QIcon::Disabled : QIcon::Normal );
 }
 
@@ -983,7 +992,7 @@ QIcon DirTreeModel::itemTypeIcon( FileInfo * item ) const
     if ( item->isExcluded() ) return _excludedIcon;
     if ( item->readError()  ) return _unreadableDirIcon;
     if ( item->isDir()      ) return item->isMountPoint() ? _mountPointIcon : _dirIcon;
-    // else file
+    // else FileInfo
     if ( item->isFile()	       )   return _fileIcon;
     if ( item->isSymLink()     )   return _symlinkIcon;
     if ( item->isBlockDevice() )   return _blockDeviceIcon;
@@ -1022,8 +1031,6 @@ bool DirTreeModel::anyAncestorBusy( FileInfo * item ) const
 
 void DirTreeModel::newChildrenNotify( DirInfo * dir )
 {
-    // logDebug() << dir << Qt::endl;
-
     if ( !dir )
     {
 	logError() << "NULL DirInfo *" << Qt::endl;
@@ -1086,22 +1093,19 @@ void DirTreeModel::sendPendingUpdates()
 
 void DirTreeModel::dataChangedNotify( DirInfo * dir )
 {
-    if ( !dir || dir == _tree->root() || !dir->checkMagicNumber() || !dir->isTouched() )
+    // Could check magic number in case any pending updates survived being cleared, but turns out it
+    // is unreliable as a tree clear and re-read may overwrite the same memory with some new FileInfos
+    if ( !dir || dir == _tree->root() || !dir->isTouched() )
 	return;
 
     const QModelIndex topLeft     = modelIndex( dir );
-    const QModelIndex bottomRight = createIndex( topLeft.row(), DataColumns::colCount() - 1, dir );
+    const QModelIndex bottomRight = createIndex( topLeft.row(), DataColumns::lastCol(), dir );
 
     emit dataChanged( topLeft, bottomRight, { Qt::DisplayRole } );
 
     // logDebug() << "Data changed for " << dir << Qt::endl;
 
-    // If the view is still interested in this dir, it will fetch data, and
-    // then the dir will be touched again. For all we know now, this dir
-    // might easily be out of scope for the view, so let's not bother the
-    // view again about this dir until it's clear that the view still wants
-    // updates about it.
-
+    // If the view is still interested in this dir, it will fetch data, and touch again
     dir->clearTouched();
 }
 
@@ -1119,19 +1123,18 @@ void DirTreeModel::readingFinished()
 
 void DirTreeModel::updatePersistentIndexes()
 {
-    QModelIndexList persistentList = persistentIndexList();
-
-    for ( int i=0; i < persistentList.size(); ++i )
+    const QModelIndexList persistentList = persistentIndexList();
+    for ( const QModelIndex oldIndex : persistentList )
+//    for ( int i=0; i < persistentList.size(); ++i )
     {
-	const QModelIndex oldIndex = persistentList.at(i);
+//	const QModelIndex oldIndex = persistentList.at(i);
 
 	if ( oldIndex.isValid() )
 	{
 	    FileInfo * item = static_cast<FileInfo *>( oldIndex.internalPointer() );
 	    const QModelIndex newIndex = modelIndex( item, oldIndex.column() );
 #if 0
-	    logDebug() << "Updating #" << i
-		       << " " << item
+	    logDebug() << "Updating " << item
 		       << " col " << oldIndex.column()
 		       << " row " << oldIndex.row()
 		       << " --> " << newIndex.row()
@@ -1150,7 +1153,6 @@ void DirTreeModel::beginRemoveRows( const QModelIndex & parent, int first, int l
 	logError() << "Removing rows already in progress" << Qt::endl;
 	return;
     }
-
 
     if ( !parent.isValid() )
     {
@@ -1175,7 +1177,7 @@ void DirTreeModel::endRemoveRows()
 
 void DirTreeModel::deletingChild( FileInfo * child )
 {
-    logDebug() << "Deleting child " << child << Qt::endl;
+    // logDebug() << "Deleting child " << child << Qt::endl;
 
     if ( child->parent() && ( child->parent() == _tree->root() || child->parent()->isTouched() ) )
     {
@@ -1203,7 +1205,6 @@ void DirTreeModel::clearingSubtree( DirInfo * subtree )
     {
 	const QModelIndex subtreeIndex = modelIndex( subtree );
 	const int count = directChildrenCount( subtree );
-
 	if ( count > 0 )
 	{
 	    //logDebug() << "beginRemoveRows for " << subtree << " row 0 to " << count - 1 << Qt::endl;

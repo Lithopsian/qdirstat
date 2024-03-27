@@ -9,112 +9,20 @@
 
 
 #include "DataColumns.h"
-#include "Settings.h"
 #include "Logger.h"
-#include "Exception.h"
+
 
 using namespace QDirStat;
 
 
-DataColumns * DataColumns::instance()
+DataColumnList DataColumns::allColumns()
 {
-    static DataColumns _instance;
+    DataColumnList colList;
 
-    return &_instance;
-}
+    for ( int col = firstCol(); col <= lastCol(); ++col  )
+	colList << static_cast<DataColumn>( col );
 
-
-DataColumns::DataColumns()
-//    QObject()
-{
-    _columns = defaultColumns();
-
-#if 0
-    // Reading and writing settings for the columns has been taken over by the
-    // HeaderTweaker which works with the DirTreeView's QHeaderView. There, the
-    // user can choose the columns interactively, move them around, resize them
-    // etc. without any model->reset() which would be required with the
-    // DataColumns.
-
-
-    readSettings();
-
-    // Write settings immediately back since the destructor of this singleton
-    // is very likely never called.
-    writeSettings();
-#endif
-}
-
-
-const DataColumnList DataColumns::defaultColumns()
-{
-    return { NameCol,
-	     PercentBarCol,
-	     PercentNumCol,
-	     SizeCol,
-	     TotalItemsCol,
-	     TotalFilesCol,
-	     TotalSubDirsCol,
-	     LatestMTimeCol,
-	     OldestFileMTimeCol,
-	     UserCol,
-	     GroupCol,
-	     PermissionsCol,
-	     OctalPermissionsCol
-           };
-}
-
-
-void DataColumns::readSettings()
-{
-    Settings settings;
-    settings.beginGroup( "DataColumns" );
-    const QStringList strColList = settings.value( "Columns" ).toStringList();
-    settings.endGroup();
-
-    _columns = fromStringList( strColList );
-
-    if ( _columns.isEmpty() )
-	_columns = defaultColumns();
-    else
-	ensureNameColFirst( _columns );
-}
-
-
-void DataColumns::writeSettings()
-{
-    Settings settings;
-    settings.beginGroup( "DataColumns" );
-    settings.setValue( "Columns", toStringList( _columns ) );
-    settings.endGroup();
-}
-
-
-void DataColumns::instanceSetColumns( const DataColumnList & newColumns )
-{
-    _columns = newColumns;
-//    emit columnsChanged();
-}
-
-
-DataColumn DataColumns::mappedCol( DataColumn viewCol ) const
-{
-    if ( viewCol < 0 || viewCol >= colCount() )
-    {
-	logError() << "Invalid view column no.: " << (int) viewCol << Qt::endl;
-	return UndefinedCol;
-    }
-
-    return _columns.at( viewCol );
-}
-
-
-DataColumn DataColumns::reverseMappedCol( DataColumn modelCol ) const
-{
-    if ( modelCol < 0 || modelCol >= colCount() )
-	return UndefinedCol;
-
-    return static_cast<DataColumn>( _columns.indexOf( modelCol ) );
+    return colList;
 }
 
 
@@ -135,15 +43,15 @@ QString DataColumns::toString( DataColumn col )
 	case GroupCol:			return "GroupCol";
 	case PermissionsCol:		return "PermissionsCol";
 	case OctalPermissionsCol:	return "OctalPermissionsCol";
-	case ReadJobsCol:		return "ReadJobsCol";
 	case UndefinedCol:		return "UndefinedCol";
+	case ReadJobsCol:		return "ReadJobsCol";
 
 	    // Intentionally omitting 'default' so the compiler
 	    // can catch unhandled enum values
     }
 
-    logError() << "Unknown DataColumn " << (int) col << Qt::endl;
-    return QString( "<Unknown DataColumn %1>" ).arg( (int) col );
+    logError() << "Unknown DataColumn " << (int)col << Qt::endl;
+    return QString();
 }
 
 
@@ -152,15 +60,13 @@ DataColumn DataColumns::fromString( const QString & str )
     if ( str == "TotalSizeCol" ) // Backwards compatibility for settings
         return SizeCol;
 
-    for ( int i = DataColumnBegin; i <= DataColumnEnd; ++i )
+    for ( int col = firstCol(); col <= lastCol(); ++col )
     {
-	const DataColumn col = static_cast<DataColumn>( i );
-
-	if ( str == toString( col ) )
-	    return col;
+	if ( str == toString( static_cast<DataColumn>( col ) ) )
+	    return static_cast<DataColumn>( col );
     }
 
-    logError() << "Undefined DataColumn \"" << str << "\"" << Qt::endl;
+    logError() << "Invalid DataColumn \"" << str << "\"" << Qt::endl;
     return UndefinedCol;
 }
 
@@ -170,7 +76,11 @@ QStringList DataColumns::toStringList( const DataColumnList & colList )
     QStringList strList;
 
     for ( const DataColumn col : colList )
-	strList << toString( col );
+    {
+	const QString str = toString( col );
+	if ( !str.isEmpty() )
+	    strList << str;
+    }
 
     return strList;
 }
@@ -183,7 +93,6 @@ DataColumnList DataColumns::fromStringList( const QStringList & strList )
     for ( const QString & str : strList )
     {
 	DataColumn col = fromString( str );
-
 	if ( col != UndefinedCol )
 	    colList << col;
     }
