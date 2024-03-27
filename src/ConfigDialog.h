@@ -84,7 +84,7 @@ namespace QDirStat
 //	void discardChanges();
 
 
-    protected:
+    private:
 
 	//
 	// Data members

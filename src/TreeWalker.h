@@ -1,9 +1,9 @@
 /*
  *   File name: TreeWalker.h
- *   Summary:	QDirStat helper class to walk a FileInfo tree
- *   License:	GPL V2 - See file LICENSE for details.
+ *   Summary:        QDirStat helper class to walk a FileInfo tree
+ *   License:        GPL V2 - See file LICENSE for details.
  *
- *   Author:	Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
+ *   Author:        Stefan Hundhammer <Stefan.Hundhammer@gmx.de>
  */
 
 
@@ -37,11 +37,15 @@ namespace QDirStat
     {
     public:
 
-        TreeWalker():
-            _overflow { false }
-            {}
+        TreeWalker() = default;
 
-        virtual ~TreeWalker() {}
+        virtual ~TreeWalker() = default;
+
+        /**
+         * Suppress copy and assignment constructors (would slice data members)
+         **/
+        TreeWalker( const TreeWalker & ) = delete;
+        TreeWalker & operator=( const TreeWalker & ) = delete;
 
         /**
          * General preparations before items are checked. This can be used to
@@ -72,6 +76,11 @@ namespace QDirStat
          **/
         bool overflow() const { return _overflow; }
 
+        /**
+         * Flag that an overflow has occurred.
+         **/
+        void setOverflow() { _overflow = true; }
+
 
     protected:
 
@@ -88,11 +97,13 @@ namespace QDirStat
         qreal lowerPercentileThreshold( PercentileStats & stats );
 
 
+    private:
+
         //
         // Data members
         //
 
-        bool _overflow;
+        bool _overflow { false };
 
     };  // class TreeWalker
 
@@ -112,7 +123,7 @@ namespace QDirStat
         bool check( FileInfo * item ) override
             { return item && item->isFile() && item->size() >= _threshold; }
 
-    protected:
+    private:
 
         FileSize _threshold;
     };
@@ -133,7 +144,7 @@ namespace QDirStat
         bool check( FileInfo * item ) override
             { return item && item->isFile() && item->mtime() >= _threshold; }
 
-    protected:
+    private:
 
         time_t _threshold;
     };
@@ -154,7 +165,7 @@ namespace QDirStat
         bool check( FileInfo * item ) override
             { return item && item->isFile() && item->mtime() <= _threshold; }
 
-    protected:
+    private:
 
         time_t _threshold;
     };
@@ -206,12 +217,12 @@ namespace QDirStat
         FilesFromYearTreeWalker( short year ):
             TreeWalker (),
             _year { year }
-            {}
+        {}
 
         bool check( FileInfo * item ) override
             { return item && item->isFile() && item->yearAndMonth().first == _year; }
 
-    protected:
+    private:
 
         short _year;
     };
@@ -228,11 +239,11 @@ namespace QDirStat
             TreeWalker (),
             _year { year },
             _month { month }
-            {}
+        {}
 
         bool check( FileInfo * item ) override;
 
-    protected:
+    private:
 
         short _year;
         short _month;
@@ -247,18 +258,17 @@ namespace QDirStat
     public:
         FindFilesTreeWalker( const FileSearchFilter & filter ):
             TreeWalker (),
-            _filter { filter },
-            _count { 0 }
-            {}
+            _filter { filter }
+        {}
 
-	void prepare( FileInfo * subtree ) override;
+        void prepare( FileInfo * subtree ) override;
 
         bool check( FileInfo * item ) override;
 
-    protected:
+    private:
 
         FileSearchFilter _filter;
-        int              _count;
+        int              _count { 0 };
     };
 
 }       // namespace QDirStat

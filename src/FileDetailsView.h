@@ -194,10 +194,12 @@ namespace QDirStat
 	QString formatFilesystemObjectType( const FileInfo * file );
 
 
+    private:
+
 	// Data members
 
 	Ui::FileDetailsView * _ui;
-	AdaptiveTimer *	      _pkgUpdateTimer;
+	AdaptiveTimer	    * _pkgUpdateTimer;
 	int		      _labelLimit;
 //	QColor		      _dirReadErrColor; // now using the theme-dependant value from the tree model
 

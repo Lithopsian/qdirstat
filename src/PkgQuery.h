@@ -90,6 +90,12 @@ namespace QDirStat
 	~PkgQuery();
 
 	/**
+	 * Suppress copy and assignment constructors (this is a singleton)
+	 **/
+	PkgQuery( const PkgQuery & ) = delete;
+	PkgQuery & operator=( const PkgQuery & ) = delete;
+
+	/**
 	 * Return the singleton instance of this class.
 	 **/
 	static PkgQuery * instance();
@@ -138,6 +144,8 @@ namespace QDirStat
 	 **/
 	void checkPkgManager( const PkgManager * pkgManager );
 
+
+    private:
 
 	// Data members
 

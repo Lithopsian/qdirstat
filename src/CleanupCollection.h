@@ -225,6 +225,9 @@ namespace QDirStat
 	 **/
 	void createRefresher( OutputWindow * outputWindow, const FileInfoSet & refreshSet );
 
+
+    private:
+
 	//
 	// Data members
 	//

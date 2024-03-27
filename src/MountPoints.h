@@ -47,14 +47,19 @@ namespace QDirStat
 	    _device { device },
 	    _path { path },
 	    _filesystemType { filesystemType },
-	    _mountOptions { mountOptions.split( "," ) },
-	    _isDuplicate { false }
+	    _mountOptions { mountOptions.split( "," ) }
 	{}
 
         /**
          * Destructor.
          **/
         ~MountPoint();
+
+	/**
+	 * Suppress copy and assignment constructors (would need deep copies)
+	 **/
+	MountPoint( const MountPoint & ) = delete;
+	MountPoint & operator=( const MountPoint & ) = delete;
 
 	/**
 	 * Return the device that is mounted, something like "/dev/sda3",
@@ -182,7 +187,7 @@ namespace QDirStat
 	FileSize freeSizeForRoot();
 
 
-    protected:
+    private:
 
 #if HAVE_Q_STORAGE_INFO
         /**
@@ -199,7 +204,8 @@ namespace QDirStat
 	QString	    _path;
 	QString	    _filesystemType;
 	QStringList _mountOptions;
-	bool	    _isDuplicate;
+	bool	    _isDuplicate { false };
+
     }; // class MountPoint
 
 
@@ -213,16 +219,18 @@ namespace QDirStat
 	/**
 	 * Constructor. Not for public use. Use the static methods instead.
 	 **/
-	MountPoints():
-	    _isPopulated { false },
-	    _hasBtrfs { false },
-	    _checkedForBtrfs { false }
-	{}
+	MountPoints() {}
 
 	/**
 	 * Destructor.
 	 **/
 	~MountPoints();
+
+	/**
+	 * Suppress copy and assignment constructors (this is a singleton)
+	 **/
+	MountPoints( const MountPoints & ) = delete;
+	MountPoints & operator=( const MountPoints & ) = delete;
 
 	/**
 	 * Return the singleton object for this class. The first use will
@@ -357,6 +365,9 @@ namespace QDirStat
 	 **/
 	static void dump();
 
+
+    private:
+
 	//
 	// Data members
 	//
@@ -364,9 +375,9 @@ namespace QDirStat
 	QList<MountPoint *>	    _mountPointList;
 	QMap<QString, MountPoint *> _mountPointMap;
         QStringList                 _ntfsDevices;
-	bool			    _isPopulated;
-	bool			    _hasBtrfs;
-	bool			    _checkedForBtrfs;
+	bool			    _isPopulated	{ false };
+	bool			    _hasBtrfs		{ false };
+	bool			    _checkedForBtrfs	{ false };
 
     }; // class MountPoints
 

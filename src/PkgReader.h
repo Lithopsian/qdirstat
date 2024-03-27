@@ -50,6 +50,12 @@ namespace QDirStat
 	~PkgReader();
 
 	/**
+	 * Suppress copy and assignment constructors (would need a deep copy)
+	 **/
+	PkgReader( const PkgReader & ) = delete;
+	PkgReader & operator=( const PkgReader & ) = delete;
+
+	/**
 	 * Read installed packages from the system's package manager(s), select
 	 * those that match the specified filter and create a PkgReadJob for
 	 * each one to read its file list.
@@ -292,12 +298,6 @@ namespace QDirStat
                          QProcess  * readFileListProcess );
 
 
-	/**
-	 * Destructor.
-	 **/
-	~AsyncPkgReadJob() override = default;
-
-
     protected slots:
 
         /**
@@ -353,11 +353,6 @@ namespace QDirStat
 	    _fileListCache( fileListCache )
 	{}
 
-        /**
-         * Destructor.
-         **/
-        ~CachePkgReadJob() override = default;
-
 
     protected:
 
@@ -368,6 +363,8 @@ namespace QDirStat
          **/
         QStringList fileList() override;
 
+
+    private:
 
         // Data members
 

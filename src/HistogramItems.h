@@ -50,6 +50,7 @@ namespace QDirStat
 	 **/
 //	void mousePressEvent( QGraphicsSceneMouseEvent * event ) override;
 
+    private:
 	HistogramView * _parentView;
 	int		_number;
 	qreal		_startVal;
@@ -98,6 +99,7 @@ namespace QDirStat
 	 **/
 //	void mousePressEvent( QGraphicsSceneMouseEvent * event ) override;
 
+    private:
 	HistogramView * _parentView;
 	QString		_name;
 	int		_percentileIndex;

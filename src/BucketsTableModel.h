@@ -37,7 +37,7 @@ namespace QDirStat
         /**
          * Constructor.
          **/
-        BucketsTableModel( QObject * parent, HistogramView * histogram ):
+        BucketsTableModel( QObject * parent, const HistogramView * histogram ):
 	    QAbstractTableModel ( parent ),
 	    _histogram { histogram }
 	{}
@@ -50,7 +50,7 @@ namespace QDirStat
         /**
          * Return the associated histogram view.
          **/
-        HistogramView * histogram() const { return _histogram; }
+        const HistogramView * histogram() const { return _histogram; }
 
         /**
          * Notification that data in the histogram have been reset.
@@ -95,8 +95,9 @@ namespace QDirStat
 	    { return QAbstractTableModel::flags( index ) | Qt::ItemIsSelectable; }
 
 
+    private:
 
-        HistogramView * _histogram;
+        const HistogramView * _histogram;
     };
 }
 

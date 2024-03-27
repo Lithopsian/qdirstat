@@ -94,12 +94,12 @@ namespace QDirStat
 //	int count();
 
 
-    protected:
+    private:
 
 	const FileInfo	* _parent;
-	FileInfo	* _current;
-	bool		  _directChildrenProcessed;
-	bool		 _dotEntryProcessed;
+	FileInfo	* _current			{ nullptr };
+	bool		  _directChildrenProcessed	{ false };
+	bool		 _dotEntryProcessed		{ false };
 
     };	// class FileInfoIterator
 
@@ -154,7 +154,8 @@ namespace QDirStat
 	FileInfoListPos currentPos() const { return _currentIt; }
 	void setPos( FileInfoListPos pos ) { _currentIt = pos; }
 
-    protected:
+
+    private:
 
 	FileInfoList     _sortedChildren;
 	FileInfoListPos  _currentIt;

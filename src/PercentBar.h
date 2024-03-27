@@ -72,11 +72,6 @@ namespace QDirStat
 			    int invisibleLevels );
 
 	/**
-	 * Destructor.
-	 **/
-	~PercentBarDelegate() override = default;
-
-	/**
 	 * Paint one cell in the view.
 	 * Inherited from QStyledItemDelegate.
 	 **/
@@ -168,6 +163,8 @@ namespace QDirStat
 	static QColor contrastingColor( const QColor &desiredColor,
 					const QColor &contrastColor );
 
+
+    private:
 
 	//
 	// Data Members

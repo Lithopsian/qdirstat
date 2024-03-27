@@ -173,7 +173,7 @@ namespace QDirStat
 		  struct stat	* statInfo );
 
 	/**
-	 * Suppress copy and assignment constructors.
+	 * Suppress copy and assignment constructors (this is not a QObject)
 	 **/
 	FileInfo( const FileInfo & ) = delete;
 	FileInfo & operator=( const FileInfo & ) = delete;
@@ -701,8 +701,7 @@ namespace QDirStat
 	 * Return 'true' if this is a pseudo directory: A "dot entry" or an
 	 * "attic".
 	 **/
-	virtual bool isPseudoDir() const
-	    { return isDotEntry() || isAttic(); }
+	virtual bool isPseudoDir() const { return isDotEntry() || isAttic(); }
 
 	/**
 	 * Returns true if this is a "Dot Entry".
@@ -715,8 +714,7 @@ namespace QDirStat
 	/**
 	 * (Translated) user-visible string for a "Dot Entry" ("<Files>").
 	 **/
-	static QString dotEntryName()
-	    { return QObject::tr( "<Files>" ); }
+	static QString dotEntryName() { return QObject::tr( "<Files>" ); }
 
 	/**
 	 * Return the "Attic" entry for this node if there is one (or 0
@@ -739,8 +737,7 @@ namespace QDirStat
 	/**
 	 * (Translated) user-visible string for the "Attic" ("<Ignored>").
 	 **/
-	static QString atticName()
-	    { return QObject::tr( "<Ignored>" ); }
+	static QString atticName() { return QObject::tr( "<Ignored>" ); }
 
 	/**
 	 * Returns the tree level (depth) of this item.
@@ -894,23 +891,22 @@ namespace QDirStat
 	/**
 	 * Returns true if this is a directory.
 	 **/
-	bool isDir()		const { return S_ISDIR( _mode ) ? true : false; }
+	bool isDir()		const { return S_ISDIR ( _mode ) ? true : false; }
 
 	/**
 	 * Returns true if this is a regular file.
 	 **/
-	bool isFile()		const { return S_ISREG( _mode ) ? true : false; }
+	bool isFile()		const { return S_ISREG ( _mode ) ? true : false; }
 
 	/**
 	 * Returns true if this is a symbolic link.
 	 **/
-	bool isSymLink()	const { return S_ISLNK( _mode ) ? true : false; }
+	bool isSymLink()	const { return S_ISLNK ( _mode ) ? true : false; }
 
 	/**
 	 * Returns true if this is a (block or character) device.
 	 **/
-	bool isDevice()		const { return ( S_ISBLK ( _mode ) ||
-						 S_ISCHR ( _mode )   ) ? true : false; }
+	bool isDevice()		const { return S_ISBLK ( _mode ) || S_ISCHR( _mode ) ? true : false; }
 
 	/**
 	 * Returns true if this is a block device.
@@ -925,21 +921,21 @@ namespace QDirStat
 	/**
 	 * Returns true if this is a FIFO.
 	 **/
-	bool isFifo()		const { return S_ISFIFO ( _mode ) ? true : false; }
+	bool isFifo()		const { return S_ISFIFO( _mode ) ? true : false; }
 
 	/**
 	 * Returns true if this is a socket.
 	 **/
-	bool isSocket()		const { return S_ISSOCK ( _mode ) ? true : false; }
+	bool isSocket()		const { return S_ISSOCK( _mode ) ? true : false; }
 
 	/**
 	 * Returns true if this is a "special" file, i.e. a (block or character)
 	 * device, a FIFO (named pipe) or a socket.
 	 **/
-	bool isSpecial()	const { return ( S_ISBLK ( _mode ) ||
-						 S_ISCHR ( _mode ) ||
-						 S_ISFIFO( _mode ) ||
-						 S_ISSOCK( _mode )   ) ? true : false; }
+	bool isSpecial()	const { return  S_ISBLK ( _mode ) ||
+						S_ISCHR ( _mode ) ||
+						S_ISFIFO( _mode ) ||
+						S_ISSOCK( _mode ) ? true : false; }
 
         /**
          * Returns true if this is a symlink, but the (direct) link target does
@@ -973,7 +969,7 @@ namespace QDirStat
 	short	 _magic { FileInfoMagic };	// magic number to detect if this object is valid
 	QString	 _name;			// the file name (without path!)
 	bool	 _isLocalFile   :1;	// flag: local or remote file?
-	bool	 _isSparseFile  :1;	// (cache) flag: sparse file (file with "holes")?
+	bool	 _isSparseFile  :1;	// flag: sparse file (file with "holes")?
 	bool	 _isIgnored     :1;	// flag: ignored by rule?
 	bool	 _hasUidGidPerm :1;	// flag: was this constructed with uid/guid/ and permissions
 	dev_t	 _device;		// device this object resides on

@@ -46,10 +46,31 @@ namespace QDirStat
          * Constructor.
          **/
         Subtree( DirTree * tree = nullptr ):
-	     _tree { tree },
-	     _useRootFallback { true },
-	     _useParentFallback { false }
+	     _tree { tree }
         {}
+
+        /**
+         * Destructor, just for rule of three.
+         **/
+        ~Subtree() = default;
+
+        /**
+         * Copy constructor.
+         **/
+        Subtree( const Subtree & other ) { clone( other ); }
+
+        /**
+         * Assignment Operator for a FileInfo pointer. This is an alias for
+         * set().
+         **/
+        Subtree & operator=( FileInfo * subtree )
+            { set( subtree ); return *this; }
+
+        /**
+         * Normal assignment operator.
+         **/
+        Subtree & operator=( const Subtree & other )
+            { clone( other ); return *this; }
 
         /**
          * Return the DirTree.
@@ -139,24 +160,6 @@ namespace QDirStat
         bool isEmpty() { return _url.isEmpty(); }
 
         /**
-         * Assignment Operator for a FileInfo pointer. This is an alias for
-         * set().
-         **/
-        Subtree & operator=( FileInfo * subtree )
-            { set( subtree ); return *this; }
-
-        /**
-         * Normal assignment operator.
-         **/
-        Subtree & operator=( const Subtree & other )
-            { clone( other ); return *this; }
-
-        /**
-         * Copy constructor.
-         **/
-        Subtree( const Subtree & other ) { clone( other ); }
-
-        /**
          * Set the DirTree.
          *
          * This is typically not necessary; it is implicitly done in set().
@@ -184,6 +187,8 @@ namespace QDirStat
         void clone( const Subtree & other );
 
 
+    private:
+
         //
         // Data members
         //
@@ -192,8 +197,8 @@ namespace QDirStat
         QString   _url;
         QString   _parentUrl;
 
-        bool      _useRootFallback;
-        bool      _useParentFallback;
+        bool      _useRootFallback      { true };
+        bool      _useParentFallback    { false };
 
     };	// class Subtree
 

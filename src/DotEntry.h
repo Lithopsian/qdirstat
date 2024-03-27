@@ -84,7 +84,7 @@ namespace QDirStat
 	 * Reimplemented - inherited from DirInfo.
 	 **/
 	DirReadState readState() const override
-		{ return _parent ? _parent->readState() : _readState; }
+		{ return _parent ? _parent->readState() : readState(); }
 
 	/**
 	 * Reset to the same status like just after construction in preparation

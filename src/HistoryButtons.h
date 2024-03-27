@@ -109,6 +109,8 @@ namespace QDirStat
 	void initHistoryButtons();
 
 
+    private:
+
 	//
 	// Data members
 	//

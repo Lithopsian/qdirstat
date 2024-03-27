@@ -61,6 +61,12 @@ namespace QDirStat
 	~FileTypeStats();
 
 	/**
+	 * Suppress copy and assignment constructors (would need a deep copy)
+	 **/
+	FileTypeStats( const FileTypeStats & ) = delete;
+	FileTypeStats & operator=( const FileTypeStats & ) = delete;
+
+	/**
 	 * Return the number of files in the tree with the specified suffix.
 	 **/
 	int suffixCount( const QString & suffix, const MimeCategory * category ) const
@@ -180,6 +186,8 @@ namespace QDirStat
 	void sanityCheck();
 
 
+    private:
+
 	//
 	// Data members
 	//
@@ -194,7 +202,7 @@ namespace QDirStat
 	CategoryFileSizeMap	_categoryNonSuffixRuleSum;
 	CategoryIntMap		_categoryNonSuffixRuleCount;
 
-        FileSize                _totalSize;
+        FileSize                _totalSize { 0LL };
     };
 }
 

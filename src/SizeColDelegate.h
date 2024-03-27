@@ -36,11 +36,6 @@ namespace QDirStat
 	    QStyledItemDelegate { treeView }
 	{}
 
-        /**
-         * Destructor.
-         **/
-        ~SizeColDelegate() override = default;
-
 	/**
 	 * Paint one cell in the view.
 	 * Inherited from QStyledItemDelegate.

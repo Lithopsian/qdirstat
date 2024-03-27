@@ -90,24 +90,10 @@ namespace QDirStat
 	static QPointer<PanelMessage> showRpmMsg( QWidget * parent, QVBoxLayout * vBox );
 
 
-    protected slots:
 
-        /**
-         * Open the URL set with setDetailsUrl() in an external browser.
-         **/
-//        void openDetailsUrl( const QString & url ) const;
-
-
-    protected:
-
-        /**
-         * Override the HTML on the "Details..." label
-         * to sanitize it from undesired styling (GitHub issue #213)
-         */
-//        void initDetailsLinkLabel();
+    private:
 
 	Ui::PanelMessage * _ui;
-//        QString            _detailsUrl;
 
     };	// class PanelMessage
 

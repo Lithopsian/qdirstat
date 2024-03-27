@@ -31,8 +31,6 @@ namespace QDirStat
 
 	CleanupConfigPage( ConfigDialog * parent );
 	~CleanupConfigPage() override;
-	CleanupConfigPage( CleanupConfigPage & ) = delete;
-	CleanupConfigPage & operator=( CleanupConfigPage & ) = delete;
 
 
     protected slots:
@@ -114,6 +112,9 @@ namespace QDirStat
 	 * the configuration dialog.
 	 **/
 	bool equal( const Cleanup * cleanup1, const Cleanup * cleanup2 ) const;
+
+
+    private:
 
 	//
 	// Data members

@@ -38,7 +38,7 @@ namespace QDirStat
 	 * otherwise it would be completely random which item would be
 	 * returned as the first.
 	 **/
-	FileInfo * first() const;
+	FileInfo * first() const { return isEmpty() ? nullptr : *begin(); }
 
 	/**
 	 * Return 'true' if the set contains any directory item.

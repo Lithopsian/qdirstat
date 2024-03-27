@@ -37,11 +37,6 @@ namespace QDirStat
 	PathSelector( QWidget * parent = nullptr );
 
 	/**
-	 * Destructor.
-	 **/
-	~PathSelector() override = default;
-
-	/**
 	 * Add a path with the specified icon.
 	 *
 	 * Don't use this for mount points; use addMountPoint() instead which
@@ -118,6 +113,8 @@ namespace QDirStat
 //					  const QIcon & icon );
 
 
+    private:
+
 	QFileIconProvider _iconProvider;
 
     };	// class PathSelector
@@ -146,11 +143,6 @@ namespace QDirStat
 			  PathSelector * parent = nullptr );
 
 	/**
-	 * Destructor.
-	 **/
-	~PathSelectorItem() override = default;
-
-	/**
 	 * Return the path for this item.
 	 **/
 	QString path() const { return _path; }
@@ -162,7 +154,7 @@ namespace QDirStat
 	MountPoint * mountPoint() { return _mountPoint; }
 
 
-    protected:
+    private:
 
 	QString	     _path;
 	MountPoint * _mountPoint;

@@ -508,6 +508,8 @@ namespace QDirStat
 	void clearTmpExcludeRules() { setTmpExcludeRules( nullptr ); }
 
 
+    private:
+
 	// Data members
 
 	DirInfo *		_root;

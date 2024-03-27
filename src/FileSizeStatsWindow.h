@@ -155,13 +155,15 @@ namespace QDirStat
 	void fillBuckets();
 
 
+    private:
+
 	//
 	// Data members
 	//
 
 	Ui::FileSizeStatsWindow * _ui;
-	FileSizeStats		* _stats;
-	BucketsTableModel	* _bucketsTableModel;
+	FileSizeStats		* _stats		{ nullptr };
+	BucketsTableModel	* _bucketsTableModel	{ nullptr };
 
     };
 

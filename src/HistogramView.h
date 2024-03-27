@@ -80,11 +80,6 @@ namespace QDirStat
 	HistogramView( QWidget * parent = nullptr );
 
 	/**
-	 * Destructor.
-	 **/
-	~HistogramView() override;
-
-	/**
 	 * Clear all data and all displayed graphics.
 	 **/
 	void clear();
@@ -442,11 +437,13 @@ namespace QDirStat
 	void setBold( QGraphicsTextItem * item ) { setBold<QGraphicsTextItem>( item ); }
 	void setBold( QGraphicsSimpleTextItem * item ) { setBold<QGraphicsSimpleTextItem>( item ); }
 
+
+    private:
+
 	//
 	// Data Members
 	//
 
-//	AdaptiveTimer	 * _rebuilder;
 	QGraphicsItem	 * _histogramPanel;
         bool               _geometryDirty;
 
@@ -464,45 +461,45 @@ namespace QDirStat
 
 	// Flags and Settings
 
-	bool	  _showMedian;
-	bool	  _showQuartiles;
-	int	  _percentileStep;
-	int	  _leftMarginPercentiles;
-	int	  _rightMarginPercentiles;
+	const bool	_showMedian	{ true };
+	const bool	_showQuartiles	{ true };
+
+	const int	_percentileStep		{ 0 };
+	const int	_leftMarginPercentiles	{ 0 };
+	const int	_rightMarginPercentiles	{ 5 };
 
 	// Brushes and Pens
 
-	QBrush	  _panelBackground;
-	QBrush	  _barBrush;
-	QPen	  _barPen;
+	QBrush	_panelBackground;
+	QBrush	_barBrush;
+	QPen	_barPen;
 
-	QPen	  _medianPen;
-	QPen	  _quartilePen;
-	QPen	  _percentilePen;
-	QPen	  _decilePen;
+	QPen	_medianPen;
+	QPen	_quartilePen;
+	QPen	_percentilePen;
+	QPen	_decilePen;
 
-	QPen	  _piePen;
-	QBrush	  _overflowSliceBrush;
+	QPen	_piePen;
+	QBrush	_overflowSliceBrush;
 
 	// Geometry
 
-	qreal	  _histogramWidth;
-	qreal	  _histogramHeight;
+	qreal	_histogramWidth;
+	qreal	_histogramHeight;
 
-	qreal	  _leftBorder;		// left of histogram
-	qreal	  _rightBorder;
-	qreal	  _topBorder;
-	qreal	  _bottomBorder;
-	qreal	  _viewMargin;		// around all elements of the view
+	const qreal	_leftBorder	{ 40.0 };
+	const qreal	_rightBorder	{ 10.0 };
+	const qreal	_topBorder	{ 30.0 };
+	const qreal	_bottomBorder	{ 50.0 };
+	const qreal	_viewMargin	{ 10.0 };
 
-	qreal	  _markerExtraHeight;
-
-	qreal	  _overflowWidth;
-	qreal	  _overflowLeftBorder;
-	qreal	  _overflowRightBorder;
-	qreal	  _overflowSpacing; // between histogram and overflow area
-	qreal	  _pieDiameter;
-	qreal	  _pieSliceOffset;
+	const qreal	_markerExtraHeight	{ 15.0 };
+	const qreal	_overflowWidth		{ 150.0 };
+	const qreal	_overflowLeftBorder	{ 10.0 };
+	const qreal	_overflowRightBorder	{ 10.0 };
+	const qreal	_overflowSpacing	{ 15.0 }; // between histogram and overflow area
+	const qreal	_pieDiameter		{ 60.0 };
+	const qreal	_pieSliceOffset		{ 10.0 };
 
     };
 

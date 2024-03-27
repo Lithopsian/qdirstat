@@ -74,12 +74,7 @@ namespace QDirStat
          * only as a hack workaround for trying to set the histogram geometry before
          * the window was visible).
          **/
-        AdaptiveTimer( QObject * parent, int defaultDelay = 0 );
-
-        /**
-         * Destructor.
-         **/
-        ~AdaptiveTimer() override = default;
+//        AdaptiveTimer( QObject * parent, int defaultDelay = 0 );
 
         /**
          * Return the current delay stage.
@@ -126,17 +121,19 @@ namespace QDirStat
         void deliveryTimeout();
 
 
+    private:
+
         // Data members
 
         Payload       _payload;
 
         QElapsedTimer _payloadStopwatch;
-        int           _payloadTime;
+        int           _payloadTime      { 0 };
 
-        int           _delayStage;
+        int           _delayStage       { 0 };
         Delays        _delays;
         Cooldowns     _cooldowns;
-        int           _defaultDelay;
+        int           _defaultDelay     { 0 };
 
         QTimer        _deliveryTimer;
         QTimer        _cooldownTimer;

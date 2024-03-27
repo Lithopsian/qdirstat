@@ -23,14 +23,7 @@ namespace QDirStat
 
     public:
 
-        /**
-         * Constructor.
-         **/
         GeneralConfigPage( ConfigDialog * parent );
-
-        /**
-         * Destructor.
-         **/
         ~GeneralConfigPage() override;
 
 
@@ -50,6 +43,8 @@ namespace QDirStat
 	 **/
 	void setup();
 
+
+    private:
 
 	//
 	// Data members

@@ -57,6 +57,11 @@ namespace QDirStat
 	const QString & groupPrefix() const { return _groupPrefix; }
 
 	/**
+	 * The
+	 **/
+	void setGroupPrefix( const QString & prefix ) { _groupPrefix = prefix; }
+
+	/**
 	 * Overwritten version of beginGroup( const QString & groupName ):
 	 *
 	 * Begin a settings group with a name with a prefix and a numeric part,
@@ -121,6 +126,8 @@ namespace QDirStat
 //	void moveGroups( const QString & groupPrefix, Settings * from, Settings * to );
 
 
+    private:
+
 	// Data members
 
 	QString _name;
@@ -147,10 +154,6 @@ namespace QDirStat
 	 **/
 	CleanupSettings();
 
-	/**
-	 * Destructor.
-	 **/
-	~CleanupSettings() override;
 
     protected:
 	/**
@@ -178,10 +181,6 @@ namespace QDirStat
 	 **/
 	MimeCategorySettings();
 
-	/**
-	 * Destructor.
-	 **/
-	~MimeCategorySettings() override;
 
     protected:
 	/**
@@ -209,10 +208,6 @@ namespace QDirStat
 	 **/
 	ExcludeRuleSettings();
 
-	/**
-	 * Destructor.
-	 **/
-	~ExcludeRuleSettings() override;
 
     protected:
 	/**

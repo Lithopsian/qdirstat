@@ -177,11 +177,11 @@ namespace QDirStat
 	//
 
 	Ui::FileAgeStatsWindow * _ui;
-	FileAgeStats *		 _stats;
-        PercentBarDelegate *     _filesPercentBarDelegate;
-        PercentBarDelegate *     _sizePercentBarDelegate;
-	Subtree			 _subtree;
-        bool                     _startGapsWithCurrentYear;
+	FileAgeStats *		 _stats 			{ nullptr };
+        PercentBarDelegate *     _filesPercentBarDelegate	{ nullptr };
+        PercentBarDelegate *     _sizePercentBarDelegate	{ nullptr };
+	Subtree			 _subtree			{ nullptr };
+        bool                     _startGapsWithCurrentYear	{ true };
 
     };	// class FileAgeStatsWindow
 
@@ -240,6 +240,8 @@ namespace QDirStat
 
 	void set( YearListColumns col, Qt::Alignment alignment, const QString & text );
 
+
+    private:
 
 	const YearStats _stats;
 

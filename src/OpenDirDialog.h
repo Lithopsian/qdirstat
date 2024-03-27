@@ -132,11 +132,13 @@ namespace QDirStat
         void populatePathComboBox( const QString & path );
 
 
+    private:
+
 	Ui::OpenDirDialog *     _ui;
         QFileSystemModel *      _filesystemModel;
 	QPushButton *           _okButton;
         ExistingDirValidator *  _validator;
-        bool                    _settingPath;
+        bool                    _settingPath { false };
         QString                 _lastPath;
 
     };	// class OpenDirDialog

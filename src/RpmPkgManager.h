@@ -169,6 +169,8 @@ namespace QDirStat
 	void rebuildRpmDbWarning() const;
 
 
+    private:
+
 	// Data members
 
 	QString _rpmCommand;

@@ -150,6 +150,8 @@ namespace QDirStat
 	void keyPressEvent( QKeyEvent * event ) override;
 
 
+    private:
+
 	//
 	// Data members
 	//
@@ -212,7 +214,7 @@ namespace QDirStat
 	bool operator<( const QTreeWidgetItem & rawOther ) const;
 
 
-    protected:
+    private:
 
 	QString	 _device;
 	QString	 _mountPath;

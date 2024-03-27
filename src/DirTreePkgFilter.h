@@ -45,7 +45,7 @@ namespace QDirStat
 	bool ignore( const QString & path ) const override;
 
 
-    protected:
+    private:
 
 	PkgFileListCache * _fileListCache;
 

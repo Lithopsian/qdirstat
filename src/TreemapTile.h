@@ -42,8 +42,8 @@ namespace QDirStat
     {
     public:
 	CushionHeightSequence():
-	    QVector<double>( 10 ),
-	    _constLast ( constEnd() - 1 )
+	    QVector<double> ( 10 ),
+	    _constLast { constEnd() - 1 }
 	{}
 
 	/**
@@ -189,9 +189,10 @@ namespace QDirStat
 		     const QRectF & rect );
 
 	/**
-	 * Destructor.
+	 * Destructor.  Note that the highlighter is owned by the scene/view
+	 * so nothing to do here.
 	 **/
-	~TreemapTile() override;
+//	~TreemapTile() override = default;
 
 
     protected:
@@ -286,17 +287,12 @@ namespace QDirStat
 	 * created, they complete quickly enough that there are only generally a small
 	 * number running in parallel.
 	 **/
-	void addRenderThread( TreemapTile *tile, int minThreadTileSize );
+	void addRenderThread( TreemapTile * tile, int minThreadTileSize );
 
 	/**
 	 * Returns a pointer to the parent TreemapView.
 	 **/
 //	TreemapView * parentView() const { return _parentView; }
-
-	/**
-	 * Just a helper for an unwieldy common term
-	 **/
-//	inline static FileSize itemTotalSize( FileInfo *it );
 
 	/**
 	 * Create children using the "squarified treemaps" algorithm as
@@ -325,15 +321,6 @@ namespace QDirStat
 	 * cost of O(n*ln(n)) in the best case, so reducing n helps a lot).
 	 **/
 	void createSquarifiedChildren( const QRectF & rect );
-
-	/**
-	 * Squarify as many children as possible: Try to squeeze members
-	 * referred to by 'it' into 'rect' until the aspect ratio doesn't get
-	 * better any more. Returns the total size of the items for the row.
-	 **/
-//	static FileSize squarify( const QRectF & rect,
-//				  FileInfoSortedBySizeIterator & it,
-//				  FileSize remainingTotal );
 
 	/**
 	 * Lay out all members of 'row' within 'rect' along its longer side.
@@ -370,8 +357,8 @@ namespace QDirStat
 	 *
 	 * Reimplemented from QGraphicsItem.
 	 **/
-	QVariant itemChange( GraphicsItemChange	change,
-			     const QVariant	& value ) override;
+	QVariant itemChange( GraphicsItemChange   change,
+			     const QVariant     & value ) override;
 
 	/**
 	 * Mouse press event: Handle setting the current item.
@@ -467,18 +454,17 @@ namespace QDirStat
 	void init();
 
 
-    protected:
+    private:
 
 	// Data members
 
-	TreemapView *		_parentView;
-//	const TreemapTile *	_parentTile;
-	FileInfo *		_orig;
+	TreemapView		* _parentView;
+	FileInfo		* _orig;
 
-	CushionSurface		_cushionSurface;
-	QPixmap			_cushion;
+	CushionSurface		  _cushionSurface;
+	QPixmap			  _cushion;
 
-	SelectedTileHighlighter * _highlighter;
+	SelectedTileHighlighter * _highlighter { nullptr };
 
 	bool _firstTile;
 	bool _lastTile;
@@ -526,12 +512,12 @@ namespace QDirStat
 
     static inline QTextStream & operator<< ( QTextStream & stream, TreemapTile * tile )
     {
-	    if ( tile )
-		    stream << tile->orig();
-	    else
-		    stream << "<NULL TreemapTile *>";
+	if ( tile )
+	    stream << tile->orig();
+	else
+	    stream << "<NULL TreemapTile *>";
 
-	    return stream;
+	return stream;
     }
 
 }	// namespace QDirStat

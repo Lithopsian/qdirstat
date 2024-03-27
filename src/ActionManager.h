@@ -47,6 +47,12 @@ namespace QDirStat
 	~ActionManager();
 
 	/**
+	 * Suppress copy and assignment constructors (this is a singleton)
+	 **/
+	ActionManager( const ActionManager & ) = delete;
+	ActionManager & operator=( const ActionManager & ) = delete;
+
+	/**
 	 * Return the singleton instance of this class.  Orivate, use
 	 * the static methods for access.
 	 **/
@@ -145,6 +151,8 @@ namespace QDirStat
 			 const QStringList & actionNames,
 			 bool                enabledOnly);
 
+
+    private:
 
 	//
 	// Data members

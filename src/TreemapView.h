@@ -50,17 +50,17 @@ namespace QDirStat
     typedef QList<HighlightRect *> HighlightRectList;
 
     // Treemap layers (Z values)
-    const double TileLayer             = 0.0;
-    const double SceneMaskLayer        = 1e5;
-    const double TileHighlightLayer    = 1e6;
-    const double CurrentHighlightLayer = 1e8;
-    const double SceneHighlightLayer   = 1e10;
+    constexpr double TileLayer             = 0.0;
+    constexpr double SceneMaskLayer        = 1e5;
+    constexpr double TileHighlightLayer    = 1e6;
+    constexpr double CurrentHighlightLayer = 1e8;
+    constexpr double SceneHighlightLayer   = 1e10;
 
 
     /**
      * View widget that displays a DirTree as a treemap.
      **/
-    class TreemapView:	public QGraphicsView
+    class TreemapView: public QGraphicsView
     {
 	Q_OBJECT
 
@@ -205,7 +205,7 @@ namespace QDirStat
 	 * Iterators for the tile future list.
 	 **/
 	const auto tileFuturesBegin() { return _tileFutures.begin(); }
-	const auto tileFuturesEnd() const { return _tileFutures.end(); }
+	const auto tileFuturesEnd() const { return _tileFutures.cend(); }
 
 	/**
 	 * Returns true if it is possible to zoom in with the currently
@@ -220,9 +220,8 @@ namespace QDirStat
 	bool canZoomOut() const;
 
 	/**
-	 * Make a treemap tile this treemap's current item.
-	 * 'ti	le' may be 0. In this case, only the previous selection is
-	 * deselected.
+	 * Make a treemap tile this treemap's current item. 'tile' may be 0 and
+	 * in this case the previous selection is deselected.
 	 **/
 	void setCurrentTile( const TreemapTile * tile );
 
@@ -302,7 +301,7 @@ namespace QDirStat
 	 * Returns 'true' if tile boundary lines should be drawn for cushion
 	 * treemaps, 'false'  if not.
 	 **/
-	bool enforceContrast() const { return _enforceContrast; }
+//	bool enforceContrast() const { return _enforceContrast; }
 
 	/**
 	 * Returns the minimum tile size in pixels. No treemap tiles less than
@@ -379,9 +378,9 @@ namespace QDirStat
 	 * smaller tiles to the bottom and right are still illuminated and the
 	 * highlight is reasonably centered.
 	 **/
-//	double lightX() const { return _lightX; }
-//	double lightY() const { return _lightY; }
-//	double lightZ() const { return _lightZ; }
+	double lightX() const { return _lightX; }
+	double lightY() const { return _lightY; }
+	double lightZ() const { return _lightZ; }
 
 	/**
 	 * Returns cushion ridge height degradation factor (0 .. 1.0) for each
@@ -624,19 +623,17 @@ namespace QDirStat
 	void treemapFinished();
 
 
-    protected:
+    private:
 
 	// Data members
-	const DirTree		* _tree;
-	SelectionModel		* _selectionModel;
-	SelectionModelProxy	* _selectionModelProxy;
+	const DirTree		* _tree			{ nullptr };
+	SelectionModel		* _selectionModel	{ nullptr };
+	SelectionModelProxy	* _selectionModelProxy	{ nullptr };
 
-	TreemapTile	* _rootTile;
-//	TreemapTile	* _currentTile;
-	HighlightRect	* _currentTileHighlighter;
-        SceneMask       * _sceneMask;
-	FileInfo	* _newRoot;
-//	TreemapTile     * _highlightedTile;
+	TreemapTile	* _rootTile			{ nullptr };
+	HighlightRect	* _currentTileHighlighter	{ nullptr };
+        SceneMask       * _sceneMask			{ nullptr };
+	FileInfo	* _newRoot			{ nullptr };
         HighlightRectList _parentHighlightList;
 	QString		  _savedRootUrl;
 
@@ -644,7 +641,7 @@ namespace QDirStat
 	bool   _squarify;
 	bool   _doCushionShading;
 	bool   _forceCushionGrid;
-	bool   _enforceContrast;
+//	bool   _enforceContrast;
 //	bool   _useFixedColor;
         bool   _useDirGradient;
         bool   _useTreemapHover;
@@ -661,21 +658,26 @@ namespace QDirStat
         QColor _dirGradientEnd;
 	QLinearGradient _dirGradient;
 
+	const double _lightX { 0.09759 };
+	const double _lightY { 0.19518 };
+	const double _lightZ { 0.97590 };
+
 	int    _ambientLight;
 	double _heightScaleFactor;
 	double _cushionHeight;
 	double _minTileSize;
 	double _minSquarifiedTileHeight;
-	int _maxTileThreshold; // largest sub-tree size at which to spawn a rendering thread
+	int    _maxTileThreshold; // largest sub-tree size at which to spawn a rendering thread
 	const CushionHeightSequence * _cushionHeights;
 
-	bool _disabled; // flag to disable all treemap builds even though the view may still be visible
-	bool _treemapRunning; // internal flag to avoid race conditions when cancelling builds
-	std::atomic<TreemapCancel>	_treemapCancel; // flag to the treemap build thread
+	bool _disabled		{ false }; // flag to disable all treemap builds even though the view may still be visible
+	bool _treemapRunning	{ false }; // internal flag to avoid race conditions when cancelling builds
+	std::atomic<TreemapCancel>	_treemapCancel { TreemapCancelNone }; // flag to the treemap build thread
 	QFuture<TreemapTile *>		_future;
 	QFutureWatcher<TreemapTile *>	_watcher;
 	QVector<QFuture<void>>		_tileFutures;
 
+	// just for logging
 	QElapsedTimer _stopwatch;
 	TreemapTile * _lastTile;
 
@@ -749,6 +751,8 @@ namespace QDirStat
          **/
         QPainterPath shape() const override;
 
+
+    protected:
 
 	// Data members
         const TreemapTile * _tile;

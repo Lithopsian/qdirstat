@@ -141,6 +141,9 @@ namespace QDirStat
         void selectFirstItem()
 	    { _ui->treeWidget->setCurrentItem( _ui->treeWidget->topLevelItem( 0 ) ); }
 
+
+    private:
+
 	//
 	// Data members
 	//
@@ -213,7 +216,7 @@ namespace QDirStat
 	bool operator<( const QTreeWidgetItem & other ) const override;
 
 
-    protected:
+    private:
 
 	QString		_path;
 	int		_count;

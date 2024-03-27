@@ -63,7 +63,7 @@ namespace QDirStat
 	void textEdited();
 
 
-    protected:
+    private:
 
 	Ui::OpenPkgDialog * _ui;
 

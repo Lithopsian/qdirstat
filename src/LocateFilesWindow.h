@@ -164,6 +164,8 @@ namespace QDirStat
 	void populateRecursive( FileInfo * dir );
 
 
+    private:
+
 	//
 	// Data members
 	//
@@ -233,7 +235,7 @@ namespace QDirStat
 	bool operator<( const QTreeWidgetItem & other ) const override;
 
 
-    protected:
+    private:
 
 	QString		_path;
 	FileSize	_size;

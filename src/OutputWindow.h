@@ -335,17 +335,19 @@ protected:
     bool autoClose() const { return _ui->autoCloseCheckBox->isChecked(); }
 
 
+private:
+
     //
     // Data members
     //
 
     Ui::OutputWindow  * _ui;
     QList<QProcess *>	_processList;
-    bool		_showOnStderr;
-    bool		_noMoreProcesses;
-    bool		_closed;
-    bool		_killedAll;
-    int			_errorCount;
+    bool		_showOnStderr		{ false };
+    bool		_noMoreProcesses	{ false };
+    bool		_closed			{ false };
+    bool		_killedAll		{ false };
+    int			_errorCount		{ 0 };
     QString		_lastWorkingDir;
     QColor		_terminalBackground;
     QColor		_commandTextColor;

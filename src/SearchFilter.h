@@ -98,6 +98,8 @@ namespace QDirStat
         void guessFilterMode();
 
 
+    private:
+
         // Data members
 
         QString             _pattern;

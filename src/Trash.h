@@ -78,7 +78,7 @@ namespace QDirStat
     //    static dev_t device( const QString & path );
 
 
-    protected:
+    private:
 
         /**
          * Find the toplevel directory (the mount point) for the device that 'path'
@@ -96,7 +96,7 @@ namespace QDirStat
         // Data members
         //
 
-        TrashDir	* _homeTrashDir;
+        TrashDir	* _homeTrashDir { nullptr };
         TrashDirMap   _trashDirs;
 
     };	// class Trash

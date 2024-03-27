@@ -18,8 +18,15 @@
 
 namespace QDirStat
 {
+// For use in loops
+#define DataColumnBegin NameCol
+#define DataColumnEnd	UndefinedCol
+
     /**
-     * Data columns for data model, view and sorting.
+     * Data columns for data model, view, and sorting.  Most of the work
+     * is now done in HeaderTweaker.  There are just a few convenience functions
+     * and the enum.  The mappings are kept although they are now just casts
+     * to the enum type.
      **/
     enum DataColumn
     {
@@ -36,168 +43,88 @@ namespace QDirStat
         GroupCol,               // Group
         PermissionsCol,         // Permissions (symbolic; -rwxrxxrwx)
         OctalPermissionsCol,    // Permissions (octal; 0644)
-	ReadJobsCol,		// Number of pending read jobs in subtree
-	UndefinedCol
+	UndefinedCol,
+	ReadJobsCol,		// Dummy column only for sorting by pending read jobs
     };
-
-    // For use in loops
-#define DataColumnBegin NameCol
-#define DataColumnEnd	UndefinedCol
 
 
     typedef QList<DataColumn> DataColumnList;
 
 
-    /**
-     * Singleton class for data columns.
-     *
-     * This class keeps track what columns should be displayed and in what
-     * order and how to map view columns to model columns and vice versa.
-     *
-     * The model uses the DataColumn enum internally. For the view, however,
-     * the columns may be rearranged, and any column may be omitted (not
-     * displayed at all). This class handles that mapping.
-     **/
-    class DataColumns
+    namespace DataColumns
     {
-
 	/**
-	 * Constructor. This is not meant for general use; use
-	 * the static methods instead.
+	 * Map a view column to the corresponding model column
 	 **/
-	DataColumns();
+	inline DataColumn fromViewCol( int viewCol )
+	    { return static_cast<DataColumn>( viewCol ); }
 
 	/**
-	 * Return the singleton instance for this class. This will create the
-	 * singleton upon the first call.  Provate, use the static methods.
+	 * Map a model column to the corresponding view column
 	 **/
-	static DataColumns * instance();
-
-    public:
-
-	/**
-	 * Map a view column to the corresponding model column.
-	 * (static version)
-	 **/
-	static DataColumn fromViewCol( int viewCol )
-	    { return instance()->mappedCol( static_cast<DataColumn>( viewCol ) ); }
-
-	/**
-	 * Map a model column to the corresponding view column.
-	 * (static version)
-	 **/
-	static DataColumn toViewCol( int modelCol )
-	    { return instance()->reverseMappedCol( static_cast<DataColumn>( modelCol ) ); }
-
-	/**
-	 * Return the number of columns that are currently displayed.
-	 **/
-	static int colCount()
-	    { return instance()->_columns.size(); }
-
-	/**
-	 * Set the column order and what columns to display.
-	 *
-	 * Example:
-	 *
-	 *   DataColumnList col;
-	 *   col << QDirStat::NameCol,
-	 *	 << QDirStat::PercentBarCol,
-	 *	 << QDirStat::PercentNumCol,
-	 *	 << QDirStat::SizeCol;
-	 *   DataColumns::setColumns( col );
-	 *
-	 * NOTICE: If a data view is active, use DirTreeModel::setColumns()
-	 * instead (which will call this function in turn) so the view is
-	 * correctly notified about this change.
-	 *
-	 * This will emit a columnsChanged() signal.
-	 */
-	static void setColumns( const DataColumnList & columns )
-	    { instance()->instanceSetColumns( columns ); }
-
-	/**
-	 * Return the model columns that are currently being displayed.
-	 **/
-//	const DataColumnList & columns() const { return _columns; }
-
-	/**
-	 * Return the default model columns.
-	 **/
-	static const DataColumnList defaultColumns();
+	inline int toViewCol( DataColumn modelCol ) { return static_cast<int>( modelCol ); }
 
         /**
-         * Return all model columns in default order.
+         * Return all model columns in default order
          **/
-	static const DataColumnList allColumns() { return defaultColumns(); }
+	DataColumnList allColumns();
 
 	/**
-	 * Convert a column to string.
+	 * Return the default model columns
 	 **/
-	static QString toString( DataColumn col );
+	inline DataColumnList defaultColumns() { return allColumns(); }
 
 	/**
-	 * Convert string to column.
+	 * Return the number of (real, not read jobs) columns
 	 **/
-	static DataColumn fromString( const QString & str );
+	inline int colCount() { return UndefinedCol; }
 
 	/**
-	 * Convert a list of columns to a string list.
+	 * Return the first column
 	 **/
-	static QStringList toStringList( const DataColumnList & colList );
+	inline int firstCol() { return 0; }
 
 	/**
-	 * convert a string list to a list of columns.
+	 * Return the last column
 	 **/
-	static DataColumnList fromStringList( const QStringList & strList );
+	inline int lastCol() { return colCount() - 1; }
 
 	/**
-	 * Ensure that NameCol at the first position of colList.
+	 * Return whether the given model column (int) represents a valid
+	 * header column enum, nopt including ReadJobsCol and UndefinedCol
 	 **/
-	static void ensureNameColFirst( DataColumnList & colList );
-
-
-    public slots:
+	inline bool isValidCol( int modelCol ) { return modelCol >= firstCol() && modelCol <= lastCol(); }
 
 	/**
-	 * Read parameters from the settings file.
+	 * Convert a column to string
 	 **/
-	void readSettings();
+	QString toString( DataColumn col );
 
 	/**
-	 * Write parameters to the settings file.
+	 * Convert string to column
 	 **/
-	void writeSettings();
-
-
-    protected:
+	DataColumn fromString( const QString & str );
 
 	/**
-	 * Set the columns.  This is protected, use the static function
-	 * setColumns() instead.
+	 * Convert a list of columns to a string list
 	 **/
-	void instanceSetColumns( const DataColumnList & columns );
+	QStringList toStringList( const DataColumnList & colList );
 
 	/**
-	 * Map a view column to the corresponding model column.
+	 * convert a string list to a list of columns
 	 **/
-	DataColumn mappedCol( DataColumn viewCol ) const;
+	DataColumnList fromStringList( const QStringList & strList );
 
 	/**
-	 * Map a model column to the corresponding view column.
+	 * Ensure that NameCol at the first position of colList
 	 **/
-	DataColumn reverseMappedCol( DataColumn modelCol ) const;
+	void ensureNameColFirst( DataColumnList & colList );
 
-
-	// Data members
-
-	DataColumnList _columns;
-
-    };	// class DataColumns
+    };	// DataColumns namespace
 
 
     /**
-     * Print a DataColumn in text form to a debug stream.
+     * Print a DataColumn in text form to a debug stream
      **/
     inline QTextStream & operator<< ( QTextStream & stream, DataColumn col )
     {
@@ -208,7 +135,7 @@ namespace QDirStat
 
 
     /**
-     * Print a DataColumn in text form to a debug stream.
+     * Print a DataColumnList in text form to a debug stream
      **/
     inline QTextStream & operator<< ( QTextStream &          stream,
                                       const DataColumnList & colList )

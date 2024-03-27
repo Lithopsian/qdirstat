@@ -231,15 +231,18 @@ namespace QDirStat
 	 **/
 	void writeLayoutSettings( ColumnLayout * layout );
 
+
+    private:
+
 	//
 	// Data members
 	//
 
 	DirTreeView		      * _treeView;
 	QHeaderView		      * _header;
-	int				_currentSection;
+	int				_currentSection	{ -1 };
 	QMap<QString, ColumnLayout *>	_layouts;
-	ColumnLayout *			_currentLayout;
+	ColumnLayout *			_currentLayout	{ nullptr };
 
     };	// class HeaderTweaker
 
@@ -251,8 +254,8 @@ namespace QDirStat
     {
     public:
 	ColumnLayout( const QString name ):
-	    name( name )
-	    {}
+	    name { name }
+	{}
 
 	QString	       name;
 	DataColumnList columns;

@@ -70,11 +70,6 @@ namespace QDirStat
 	{}
 
 	/**
-	 * Destructor.
-	 **/
-	~ExcludeRule() = default;
-
-	/**
 	 * Check a file name with or without its full path against this exclude
 	 * rule: If useFullPath() is 'true', the 'fullPath' parameter is used
 	 * for matching, if it is 'false', 'fileName' is used.
@@ -233,6 +228,12 @@ namespace QDirStat
 	 * Destructor.
 	 **/
 	~ExcludeRules();
+
+	/**
+	 * Suppress copy and assignment constructors (wouldn't do a deep copy)
+	 **/
+	ExcludeRules( const ExcludeRules & ) = delete;
+	ExcludeRules & operator=( const ExcludeRules & ) = delete;
 
 	/**
 	 * Check a file name against the exclude rules. Each exclude rule

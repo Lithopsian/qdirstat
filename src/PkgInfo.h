@@ -179,7 +179,7 @@ namespace QDirStat
         FileInfo * locate( DirInfo *           subtree,
                            const QStringList & pathComponents );
 
-    protected:
+    private:
 
         // Data members
 

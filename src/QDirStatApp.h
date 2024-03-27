@@ -57,6 +57,12 @@ namespace QDirStat
          **/
         ~QDirStatApp();
 
+        /**
+         * Suppress copy and assignment constructors (this is a singleton)
+         **/
+        QDirStatApp( const QDirStatApp & ) = delete;
+	QDirStatApp & operator=( const QDirStatApp & ) = delete;
+
 
     public:
 
@@ -157,7 +163,7 @@ namespace QDirStat
 	void setWidgetFontSize( QWidget * widget );
 
 
-    protected:
+    private:
 
         //
         // Data members

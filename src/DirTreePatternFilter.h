@@ -60,7 +60,7 @@ namespace QDirStat
 	bool ignore( const QString & path ) const override;
 
 
-    protected:
+    private:
 
         Wildcard _wildcard;
 
@@ -104,7 +104,7 @@ namespace QDirStat
 	QString suffix() const { return _suffix; }
 
 
-    protected:
+    private:
 
 	QString _suffix;
 

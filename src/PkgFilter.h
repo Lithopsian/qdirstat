@@ -58,12 +58,12 @@ namespace QDirStat
         /**
          * Return the pattern without the leading "Pkg:/".
          **/
-        const QString & pattern() const { return _pattern; }
+        const QString & pattern() const { return SearchFilter::pattern(); }
 
         /**
          * Return the package URL including the leading "Pkg:/".
          **/
-        QString url() const { return QString( "Pkg:/%1" ).arg( _pattern ); }
+        QString url() const { return QString( "Pkg:/%1" ).arg( pattern() ); }
 
 
     protected:

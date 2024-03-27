@@ -37,16 +37,14 @@ namespace QDirStat
 	 * Create a MimeCategory with the specified name and default color.
 	 **/
 	MimeCategory():
-		_name { "" },
-		_color { Qt::white }
+		_name { "" }
 	{}
 
 	/**
 	 * Create a MimeCategory with the specified name and default color.
 	 **/
 	MimeCategory( const QString & name ):
-	    _name { name },
-	    _color { Qt::white }
+	    _name { name }
 	{}
 
 	/**
@@ -56,11 +54,6 @@ namespace QDirStat
 	    _name { name },
 	    _color { color.isValid() ? color : Qt::white }
 	{}
-
-	/**
-	 * Destructor.
-	 **/
-	~MimeCategory() = default;
 
 	/**
 	 * Return the color for this category.
@@ -223,12 +216,15 @@ namespace QDirStat
 	 **/
 	void addPattern( const QString & pattern, Qt::CaseSensitivity caseSensitivity );
 
+
+    private:
+
 	//
 	// Data members
 	//
 
 	QString		_name;
-	QColor		_color;
+	QColor		_color { Qt::white };
 
 	/**
 	 * The raw patterns are categorised into different lists for the convenience of the

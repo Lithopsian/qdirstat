@@ -127,6 +127,8 @@ namespace QDirStat
         void mousePressEvent( QMouseEvent * event ) override;
 
 
+    private:
+
 	// Data members
 
 	PercentBarDelegate * _percentBarDelegate;

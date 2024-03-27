@@ -87,6 +87,11 @@ namespace QDirStat
 	     **/
 	    ~MimeCategorizer() override;
 
+	    /**
+	     * Suppress copy and assignment constructors (this is a singleton)
+	     **/
+	    MimeCategorizer( const MimeCategorizer & ) = delete;
+	    MimeCategorizer & operator=( const MimeCategorizer & ) = delete;
 
     public:
 

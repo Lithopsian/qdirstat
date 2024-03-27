@@ -36,11 +36,6 @@ namespace QDirStat
 	{}
 
 	/**
-	 * Destructor.
-	 **/
-	~ExistingDirValidator() override = default;
-
-	/**
 	 * Validate the input string.
 	 **/
 	QValidator::State validate( QString & input, int &) const override;
@@ -69,11 +64,6 @@ namespace QDirStat
          * Constructor.
          **/
         ExistingDirCompleter( QObject * parent );
-
-        /**
-         * Destructor.
-         **/
-        ~ExistingDirCompleter() override = default;
 
     };  // class ExistingDirCompleter
 

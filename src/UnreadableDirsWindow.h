@@ -134,6 +134,8 @@ namespace QDirStat
 	void populateRecursive( FileInfo * subtree );
 
 
+    private:
+
 	//
 	// Data members
 	//
@@ -198,7 +200,7 @@ namespace QDirStat
 	 **/
 	bool operator<( const QTreeWidgetItem & other ) const override;
 
-    protected:
+    private:
 
 	DirInfo * _dir;
     };

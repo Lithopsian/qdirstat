@@ -84,7 +84,7 @@ namespace QDirStat
 	 *	 << QDirStat::SizeCol;
 	 *   dirTreeModel->setColumns( col );
 	 */
-	void setColumns( const DataColumnList & columns );
+//	void setColumns( const DataColumnList & columns );
 
 	/**
 	 * This is protected in the base class, but it's the only reasonable
@@ -590,6 +590,8 @@ namespace QDirStat
 	    { return DataColumns::colCount(); }
 
 
+    private:
+
 	//
 	// Data members
 	//
@@ -597,13 +599,13 @@ namespace QDirStat
 	bool		 _crossFilesystems;
 //	QString		 _treeIconDir;
 	DirTreeItemSize	 _treeItemSize;
-	int		 _readJobsCol		{ PercentBarCol };
+//	int		 _readJobsCol		{ PercentBarCol };
 	QSet<DirInfo *>	 _pendingUpdates;
 	QTimer		 _updateTimer;
 	int		 _updateTimerMillisec;
 	int		 _slowUpdateMillisec;
 	bool		 _slowUpdate		{ false };
-	DataColumn	 _sortCol		{ SizeCol };
+	DataColumn	 _sortCol		{ ReadJobsCol };
 	Qt::SortOrder	 _sortOrder		{ Qt::DescendingOrder };
 	bool		 _removingRows		{ false };
 	bool		 _useBoldForDominantItems;

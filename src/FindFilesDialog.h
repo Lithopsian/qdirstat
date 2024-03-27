@@ -90,6 +90,8 @@ namespace QDirStat
         DirInfo * currentSubtree();
 
 
+    private:
+
         //
         // Data members
         //

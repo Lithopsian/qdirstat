@@ -54,16 +54,7 @@ namespace QDirStat
 	 * Constructor.
 	 **/
 	ListEditor( QWidget * parent ):
-	    QWidget ( parent ),
-	    _listWidget { nullptr },
-	    _firstRow { 0 },
-	    _updatesLocked {false },
-	    _moveUpButton { nullptr },
-	    _moveDownButton { nullptr },
-	    _moveToTopButton { nullptr },
-	    _moveToBottomButton { nullptr },
-	    _addButton { nullptr },
-	    _removeButton { nullptr }
+	    QWidget ( parent )
 	{}
 
 	/**
@@ -241,15 +232,15 @@ namespace QDirStat
 	// Data members
 	//
 
-	QListWidget	* _listWidget;
-	int		  _firstRow;
-	bool		  _updatesLocked;
-	QAbstractButton * _moveUpButton;
-	QAbstractButton * _moveDownButton;
-	QAbstractButton * _moveToTopButton;
-	QAbstractButton * _moveToBottomButton;
-	QAbstractButton * _addButton;
-	QAbstractButton * _removeButton;
+	QListWidget	* _listWidget		{ nullptr };
+	int		  _firstRow		{ 0 };
+	bool		  _updatesLocked	{ false };
+	QAbstractButton * _moveUpButton		{ nullptr };
+	QAbstractButton * _moveDownButton	{ nullptr };
+	QAbstractButton * _moveToTopButton	{ nullptr };
+	QAbstractButton * _moveToBottomButton	{ nullptr };
+	QAbstractButton * _addButton		{ nullptr };
+	QAbstractButton * _removeButton		{ nullptr };
 
     };	// class ListEditor
 
@@ -274,7 +265,7 @@ namespace QDirStat
 	 **/
 	void * value() const { return _value; }
 
-    protected:
+    private:
 	void * _value;
     };
 

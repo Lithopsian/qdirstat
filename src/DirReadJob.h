@@ -52,19 +52,19 @@ namespace QDirStat
     public:
 
 	/**
-	 * Constructor.
+	 * Constructor
 	 *
 	 * This does not read anything yet. Call read() for that.
 	 **/
 	DirReadJob( DirTree *tree, DirInfo *dir );
 
 	/**
-	 * Destructor.
+	 * Destructor
 	 **/
 	virtual ~DirReadJob();
 
 	/**
-	 * Suppress copy and assignment constructors.
+	 * Suppress copy and assignment constructors (this is not a QObject)
 	 **/
 	DirReadJob( const DirReadJob & ) = delete;
 	DirReadJob & operator=( const DirReadJob & ) = delete;
@@ -162,6 +162,8 @@ namespace QDirStat
 //	static bool shouldCrossIntoFilesystem( const DirInfo * dir ) const;
 
 
+    protected:
+
 	DirTree *	   _tree;
 	DirInfo *	   _dir;
 	DirReadJobQueue *  _queue;
@@ -182,7 +184,6 @@ namespace QDirStat
 
 	ObjDirReadJob( DirTree *tree, DirInfo *dir = nullptr )
 	    : QObject(), DirReadJob( tree, dir ) {};
-	~ObjDirReadJob() override = default;
 
     protected slots:
 

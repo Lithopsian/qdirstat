@@ -481,7 +481,7 @@ namespace QDirStat
 	/**
 	 * Recursively clear the 'touched' flag.
 	 **/
-	void clearTouched( bool recursive = false );
+	void clearTouched() { _touched = false; }
 
 	/**
 	 * Sets a flag that this is the root directory of a cache file read.
@@ -629,6 +629,13 @@ namespace QDirStat
 	 **/
 	void findDominantChildren();
 
+	/**
+	 * Set the latest file modification times on the child and this DirInfo.
+	 **/
+//	void updateLatestMTime( FileInfo * child );
+
+
+    private:
 
 	//
 	// Data members

@@ -229,12 +229,14 @@ namespace QDirStat
 	void contextMenuEvent( QContextMenuEvent * event ) override;
 
 
+    private:
+
 	// Data
 
 	Ui::MimeCategoryConfigPage * _ui;
-	DirTree			   * _dirTree;
+	DirTree			   * _dirTree { nullptr };
 
-	bool _dirty;
+	bool _dirty { false };
 
     };	// class MimeCategoryConfigPage
 

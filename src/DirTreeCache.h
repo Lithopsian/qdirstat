@@ -44,11 +44,6 @@ namespace QDirStat
 	{}
 
 	/**
-	 * Destructor
-	 **/
-//	~CacheWriter() {}
-
-	/**
 	 * Returns true if writing the cache file went OK.
 	 **/
 	bool ok() const { return _ok; }
@@ -62,11 +57,15 @@ namespace QDirStat
 	 **/
 	static bool writeCache( const QString & fileName, const DirTree *tree );
 
+
+    private:
+
 	//
 	// Data members
 	//
 
 	bool _ok;
+
     };
 
 
@@ -109,6 +108,12 @@ namespace QDirStat
 	 * Destructor
 	 **/
 	~CacheReader();
+
+	/**
+	 * Suppress copy and assignment constructors (would not do anything sensible)
+	 **/
+	CacheReader( const CacheReader & ) = delete;
+	CacheReader & operator=( const CacheReader & ) = delete;
 
 	/**
 	 * Read at most maxLines from the cache file (check with eof() if the

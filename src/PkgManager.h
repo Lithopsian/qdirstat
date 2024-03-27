@@ -38,12 +38,12 @@ namespace QDirStat
 	/**
 	 * Constructor.
 	 **/
-	PkgManager() {}
+	PkgManager() = default;
 
 	/**
 	 * Destructor.
 	 **/
-	virtual ~PkgManager() {}
+	virtual ~PkgManager() = default;
 
 	/**
 	 * Return the name of this package manager.

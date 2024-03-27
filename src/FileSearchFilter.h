@@ -83,7 +83,7 @@ namespace QDirStat
         void setSubtree( DirInfo * subtree ) { _subtree = subtree; }
 
 
-    protected:
+    private:
 
         DirInfo * _subtree;
         bool      _findFiles;

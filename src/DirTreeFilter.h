@@ -34,7 +34,7 @@ namespace QDirStat
 	virtual ~DirTreeFilter() = default;
 
 	/**
-	 * Suppress copy and assignment constructors.
+	 * Suppress copy and assignment constructors (this is not a QObject)
 	 **/
 	DirTreeFilter( const DirTreeFilter & ) = delete;
 	DirTreeFilter & operator=( const DirTreeFilter & ) = delete;

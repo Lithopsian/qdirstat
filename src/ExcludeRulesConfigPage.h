@@ -113,6 +113,8 @@ namespace QDirStat
 	static bool equal ( const ExcludeRule * rule1, const ExcludeRule * rule2 );
 
 
+    private:
+
 	//
 	// Data members
 	//

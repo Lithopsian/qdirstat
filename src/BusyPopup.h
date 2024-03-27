@@ -19,8 +19,8 @@ namespace QDirStat
     /**
      * Simple popup dialog to show a message just prior to a lengthy operation.
      * The popup does some event handling to make sure that it really appears
-     * before that lengthy operation starts: It processes events for some
-     * milliseconds so its own show, resize, move and paint events are
+     * before that lengthy operation starts: it processes events for some
+     * milliseconds so that its own show, resize, move and paint events are
      * processed.
      *
      * Usage:
@@ -73,9 +73,9 @@ namespace QDirStat
 	void showEvent( QShowEvent * event ) override;
 
 
-    protected:
+    private:
 
-	bool _posted;
+	bool _posted { false };
 
     };	// BusyPopup
 

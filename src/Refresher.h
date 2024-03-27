@@ -59,13 +59,7 @@ namespace QDirStat
 	void refresh();
 
 
-    protected:
-
-	/**
-	 * Convert the items to string for logging.
-	 **/
-//	QString itemsToString() const;
-
+    private:
 
 	FileInfoSet _items;
     };

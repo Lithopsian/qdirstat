@@ -37,11 +37,6 @@ namespace QDirStat
         History();
 
         /**
-         * Destructor.
-         **/
-        ~History() = default;
-
-        /**
          * Add an item to the history stack. If the stack's capacity is
          * reached, the oldest item is removed.
          *
@@ -157,9 +152,9 @@ namespace QDirStat
         void dump() const;
 
 
-    protected:
+    private:
 
-        int             _current;
+        int             _current { -1 };
         QStringList     _items;
 
     };  // class History

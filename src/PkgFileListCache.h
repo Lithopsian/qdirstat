@@ -54,11 +54,6 @@ namespace QDirStat
 	{}
 
 	/**
-	 * Destructor.
-	 **/
-	~PkgFileListCache() = default;
-
-	/**
 	 * Return the sorted file list for a package.
 	 **/
 	QStringList fileList( const QString & pkgName );
@@ -107,7 +102,7 @@ namespace QDirStat
 	LookupType lookupType() const { return _lookupType; }
 
 
-    protected:
+    private:
 
 	const PkgManager *	    _pkgManager;
 	LookupType		    _lookupType;

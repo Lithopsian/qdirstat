@@ -143,6 +143,8 @@ namespace QDirStat
         void logBreadcrumbs() const;
 
 
+    private:
+
         //
         // Data members
         //

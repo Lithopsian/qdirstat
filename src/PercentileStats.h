@@ -34,18 +34,8 @@ namespace QDirStat
      **/
     class PercentileStats
     {
-    public:
-	/**
-	 * Constructor.
-	 **/
-	PercentileStats():
-	    _sorted { false }
-	{}
 
-	/**
-	 * Destructor.
-	 **/
-	~PercentileStats() = default;
+    public:
 
 	/**
 	 * Clear the collected data and shrink the list.
@@ -132,10 +122,10 @@ namespace QDirStat
 	PercentileSums percentileSums();
 
 
-    protected:
+    private:
 
 	QRealList _data;
-	bool	  _sorted;
+	bool	  _sorted { false };
     };
 
     /**

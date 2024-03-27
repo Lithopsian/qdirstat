@@ -65,11 +65,6 @@ namespace QDirStat
         FileAgeStats( const FileInfo * subtree );
 
         /**
-         * Destructor.
-         **/
-        ~FileAgeStats() = default;
-
-        /**
          * Return a sorted list of the years where files with that modification
          * year were found after collecting data.
          **/
@@ -149,6 +144,8 @@ namespace QDirStat
          **/
         void collectYears();
 
+
+    private:
 
         //
         // Data Members

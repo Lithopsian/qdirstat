@@ -43,11 +43,6 @@ namespace QDirStat
 	SelectionModel( DirTreeModel * dirTreeModel, QObject * parent = nullptr );
 
 	/**
-	 * Destructor.
-	 **/
-	~SelectionModel() override = default;
-
-	/**
 	 * Return all currently selected items as a set.
 	 **/
 	FileInfoSet selectedItems();
@@ -206,16 +201,16 @@ namespace QDirStat
 	void deletingChildNotify( FileInfo *deletedChild );
 
 
-    protected:
+    private:
 
 	// Data members
 
 	DirTreeModel	* _dirTreeModel;
-	FileInfo	* _currentItem;
-//	FileInfo	* _currentBranch;
+	FileInfo	* _currentItem		{ nullptr };
+//	FileInfo	* _currentBranch	{ nullptr };
 	FileInfoSet	  _selectedItems;
-	bool		  _selectedItemsDirty;
-	bool		  _verbose;
+	bool		  _selectedItemsDirty	{ false };
+	bool		  _verbose		{ false };
 
     };	// class SelectionModel
 

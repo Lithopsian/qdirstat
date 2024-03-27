@@ -468,6 +468,8 @@ namespace QDirStat
 			 OutputWindow	* outputWindow) const;
 
 
+    private:
+
 	//
 	// Data members
 	//

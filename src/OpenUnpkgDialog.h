@@ -119,6 +119,8 @@ namespace QDirStat
 	QStringList cleanedLines( QPlainTextEdit * widget ) const;
 
 
+    private:
+
 	// Data members
 
 	Ui::OpenUnpkgDialog * _ui;

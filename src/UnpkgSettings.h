@@ -97,6 +97,8 @@ namespace QDirStat
 	void read();
 
 
+    private:
+
         //
         // Data members
         //

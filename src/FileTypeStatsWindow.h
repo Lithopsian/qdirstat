@@ -25,7 +25,6 @@ namespace QDirStat
     class MimeCategory;
     class LocateFileTypeWindow;
     class FileTypeItem;
-//    class CategoryFileTypeItem;
     class SelectionModel;
     class SuffixFileTypeItem;
 
@@ -185,13 +184,16 @@ namespace QDirStat
 	 **/
 	void keyPressEvent( QKeyEvent * event ) override;
 
+
+    private:
+
 	//
 	// Data members
 	//
 
 	Ui::FileTypeStatsWindow *   _ui;
-        Subtree                     _subtree;
-	FileTypeStats *		    _stats;
+        Subtree                     _subtree	{ nullptr };
+	FileTypeStats *		    _stats	{ nullptr };
 
     };
 
@@ -245,7 +247,8 @@ namespace QDirStat
 	 **/
 	 bool operator<(const QTreeWidgetItem & other) const override;
 
-    protected:
+
+    private:
 
 	QString		_name;
 	int		_count;
@@ -268,14 +271,14 @@ namespace QDirStat
 			      int	      count,
 			      FileSize	      totalSize,
 			      float	      percentage ):
-	    FileTypeItem( name,
-			  count,
-			  totalSize,
-			  percentage )
+	    FileTypeItem ( name,
+			   count,
+			   totalSize,
+			   percentage )
 	{}
 
 
-    protected:
+    private:
 
 //	const MimeCategory * _category;
     };
@@ -301,7 +304,7 @@ namespace QDirStat
 	 **/
 	QString suffix() const { return _suffix; }
 
-    protected:
+    private:
 
 	QString _suffix;
     };

@@ -102,6 +102,11 @@ public:
      */
     ~Logger();
 
+    /**
+     * Suppress copy and assignment constructors (wouldn't work)
+     **/
+    Logger( const Logger & ) = delete;
+    Logger & operator=( const Logger & ) = delete;
 
     /**
      * Internal logging function. In most cases, better use the logDebug(),
