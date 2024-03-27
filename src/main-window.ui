@@ -209,8 +209,9 @@
      <string>&amp;Edit</string>
     </property>
     <addaction name="actionCopyPath"/>
-    <addaction name="actionMoveToTrash"/>
     <addaction name="actionFindFiles"/>
+    <addaction name="separator"/>
+    <addaction name="actionMoveToTrash"/>
     <addaction name="separator"/>
     <addaction name="actionConfigure"/>
    </widget>
