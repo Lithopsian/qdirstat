@@ -16,12 +16,9 @@
 #include <QList>
 
 
-class QGraphicsSceneMouseEvent;
-
-
 namespace QDirStat
 {
-    typedef QList<qreal> QRealList;
+    typedef QVector<qreal> QRealList;
 
     /**
      * Histogram widget.
@@ -61,16 +58,16 @@ namespace QDirStat
         /**
          * zValue (altitude) for the different graphics elements
          **/
-        enum GraphicsItemLayers
+        enum GraphicsItemLayer
         {
             PanelBackgroundLayer = -100,
             MiscLayer = 0, // Default if no zValue specified
-            InvisibleBarLayer,
             BarLayer,
             AxisLayer,
+            HoverBarLayer,
             MarkerLayer,
             SpecialMarkerLayer,
-            TextLayer
+            TextLayer,
         };
 
 
@@ -80,7 +77,7 @@ namespace QDirStat
 	HistogramView( QWidget * parent = nullptr );
 
 	/**
-	 * Clear all data and all displayed graphics.
+	 * Clear all data and all displayed graphics
 	 **/
 	void clear();
 
@@ -106,7 +103,7 @@ namespace QDirStat
 	void setPercentile( int index, qreal value );
 
 	/**
-	 * Return the stored value for percentile no. 'index' (0..100).
+	 * Return the stored value for percentile no. 'index' (0..100)
 	 **/
 	qreal percentile( int index ) const;
 
@@ -139,7 +136,7 @@ namespace QDirStat
 	int endPercentile() const { return _endPercentile; }
 
 	/**
-	 * Automatically determine the best start and end percentile.
+	 * Automatically determine the best start and end percentile
 	 **/
 	void autoStartEndPercentiles();
 
@@ -171,12 +168,12 @@ namespace QDirStat
 
 	/**
 	 * Return the current number of data buckets, i.e. the number of
-	 * histogram bars.
+	 * histogram bars
 	 **/
 	int bucketCount() const { return _buckets.size(); }
 
 	/**
-	 * Return the number of data points in bucket no. 'index'.
+	 * Return the number of data points in bucket no. 'index'
 	 **/
 	qreal bucket( int index ) const;
 
@@ -189,22 +186,22 @@ namespace QDirStat
 	qreal bucketWidth() const;
 
         /**
-         * Return the start value of bucket no. 'index'.
+         * Return the start value of bucket no. 'index'
          **/
         qreal bucketStart( int index ) const;
 
         /**
-         * Return the end value of bucket no. 'index'.
+         * Return the end value of bucket no. 'index'
          **/
         qreal bucketEnd( int index ) const;
 
 	/**
-	 * Return the total sum of all buckets.
+	 * Return the total sum of all buckets
 	 **/
 	qreal bucketsTotalSum() const;
 
 	/**
-	 * Set the percentile sums.
+	 * Set the percentile sums
 	 **/
 	void setPercentileSums( const QRealList & newPercentileSums );
 
@@ -215,41 +212,41 @@ namespace QDirStat
 	qreal percentileSum( int index ) const;
 
 	/**
-	 * Return the percentile sums from 'fromIndex' including to 'toIndex'.
+	 * Return the percentile sums from 'fromIndex' including to 'toIndex'
 	 **/
 	qreal percentileSum( int fromIndex, int toIndex ) const;
 
 	/**
 	 * Enable or disable showing the median (percentile 50) as an overlay
-	 * over the histogram.
+	 * over the histogram
 	 **/
 //	void setShowMedian( bool show = true ) { _showMedian = show; }
 
 	/**
-	 * Return 'true' if the median is shown as an overlay, 'false' if not.
+	 * Return 'true' if the median is shown as an overlay, 'false' if not
 	 **/
 //	bool showMedian() const { return _showMedian; }
 
 	/**
 	 * Enable or disable showing the 1st and 3rd quartiles (Q1 and Q3,
 	 * percentile 25 and 75, respectively) as an overlay over the
-	 * histogram.
+	 * histogram
 	 **/
 //	void setShowQuartiles( bool show = true ) { _showQuartiles = show; }
 
 	/**
 	 * Return 'true' if the 1st and 3rd quartiles are shown as an overlay,
-	 * 'false' if not.
+	 * 'false' if not
 	 **/
 //	bool showQuartiles() const { return _showQuartiles; }
 
 	/**
 	 * Enable or disable showing percentiles as an overlay over the
-	 * histogram. 'step' specifies how many of them to display; with the
-	 * default '5' it will display P5, P10, P15 etc.; step = 0 disables
+	 * histogram: 'step' specifies how many of them to display; for
+	 * example, '5' will display P5, P10, P15 etc.; step = 0 disables
 	 * them completely.
 	 **/
-//	void setPercentileStep( int step = 5 ) { _percentileStep = step; }
+	void setPercentileStep( int step ) { _percentileStep = step; }
 
 	/**
 	 * Return the percentile step or 0 if no percentiles are shown.
@@ -323,6 +320,7 @@ namespace QDirStat
 	// Pens and brushes for the various elements of the histograms
 
 	QBrush barBrush()      const { return _barBrush;      }
+	QBrush overflowSliceBrush()      const { return _overflowSliceBrush;      }
 	QPen   barPen()	       const { return _barPen;	      }
 	QPen   medianPen()     const { return _medianPen;     }
 	QPen   quartilePen()   const { return _quartilePen;   }
@@ -387,6 +385,13 @@ namespace QDirStat
 	QPointF addBoldText( const QPointF & pos, const QString & text );
 
 	/**
+	 * Add a line.
+	 **/
+	void addLine( int             percentileIndex,
+		      const QString & name,
+		      const QPen    & pen );
+
+	/**
 	 * Add a pie diagram with two values val1 and val2.
          * Return the bottom left of the bounding rect.
 	 **/
@@ -414,11 +419,6 @@ namespace QDirStat
         void calcGeometry( const QSize & newSize );
 
         /**
-         * Resize the widget content to the current window size.
-         **/
-        void autoResize();
-
-        /**
          * Return 'true' if an overflow ("cutoff") panel is needed.
          **/
         bool needOverflowPanel() const { return _startPercentile > 0 || _endPercentile < 100; }
@@ -437,6 +437,7 @@ namespace QDirStat
 	void setBold( QGraphicsTextItem * item ) { setBold<QGraphicsTextItem>( item ); }
 	void setBold( QGraphicsSimpleTextItem * item ) { setBold<QGraphicsSimpleTextItem>( item ); }
 
+//	void mouseMoveEvent( QMouseEvent * event ) override;
 
     private:
 
@@ -464,7 +465,7 @@ namespace QDirStat
 	const bool	_showMedian	{ true };
 	const bool	_showQuartiles	{ true };
 
-	const int	_percentileStep		{ 0 };
+	int		_percentileStep		{ 0 };
 	const int	_leftMarginPercentiles	{ 0 };
 	const int	_rightMarginPercentiles	{ 5 };
 
@@ -487,19 +488,21 @@ namespace QDirStat
 	qreal	_histogramWidth;
 	qreal	_histogramHeight;
 
+	// Not static since there will only ever be one HistogramView and most of the time none
 	const qreal	_leftBorder	{ 40.0 };
 	const qreal	_rightBorder	{ 10.0 };
 	const qreal	_topBorder	{ 30.0 };
 	const qreal	_bottomBorder	{ 50.0 };
 	const qreal	_viewMargin	{ 10.0 };
 
-	const qreal	_markerExtraHeight	{ 15.0 };
-	const qreal	_overflowWidth		{ 150.0 };
-	const qreal	_overflowLeftBorder	{ 10.0 };
-	const qreal	_overflowRightBorder	{ 10.0 };
-	const qreal	_overflowSpacing	{ 15.0 }; // between histogram and overflow area
-	const qreal	_pieDiameter		{ 60.0 };
-	const qreal	_pieSliceOffset		{ 10.0 };
+	const qreal	_axisExtraLength	{   5.0 };
+	const qreal	_markerExtraHeight	{  15.0 };
+	const qreal	_overflowWidth		{ 140.0 };
+	const qreal	_overflowLeftBorder	{  10.0 };
+	const qreal	_overflowRightBorder	{  10.0 };
+	const qreal	_overflowSpacing	{  15.0 }; // between histogram and overflow area
+	const qreal	_pieDiameter		{  60.0 };
+	const qreal	_pieSliceOffset		{  10.0 };
 
     };
 

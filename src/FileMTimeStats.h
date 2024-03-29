@@ -44,7 +44,7 @@ namespace QDirStat
 
 	/**
 	 * Recurse through all file elements in the subtree and append the
-	 * mtime for each file to the data collection. Notice that the data are
+	 * mtime for each file to the data collection. Note that the data is
 	 * unsorted after this.
 	 **/
 	void collect( FileInfo * subtree );

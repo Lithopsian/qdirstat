@@ -81,13 +81,6 @@ namespace QDirStat
 	void addPatterns( const QStringList & patterns, Qt::CaseSensitivity caseSensitivity );
 
 	/**
-	 * Add a list of filename suffixes (extensions), without any leading "." or "*", to
-		 * this category.  Just a convenience function for the categorizer to quickly fill in
-	 * the default category patterns.
-	 **/
-	void addSuffixes( const QStringList & suffixes, Qt::CaseSensitivity caseSensitivity );
-
-	/**
 	 * Clear any suffixes or patterns for this category.
 	 **/
 	void clear();

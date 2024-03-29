@@ -422,6 +422,11 @@ namespace QDirStat
 	void startingReading();
 
 	/**
+	 * Emitted when a refresh has started reading (or is about to).
+	 **/
+	void startingRefresh();
+
+	/**
 	 * Emitted when reading this directory tree is completely finished.
 	 **/
 	void finished();

@@ -13,7 +13,7 @@
 #include <QList>
 
 
-typedef QList<qreal> QRealList;
+typedef QVector<qreal> QRealList;
 
 
 namespace QDirStat
@@ -32,7 +32,7 @@ namespace QDirStat
      * sorted for those calculations and sorting has at least logarithmic cost
      * O( n * log(n) ), this also has heavy performance impact.
      **/
-    class PercentileStats
+    class PercentileStats: public QRealList
     {
 
     public:
@@ -40,7 +40,7 @@ namespace QDirStat
 	/**
 	 * Clear the collected data and shrink the list.
 	 **/
-	void clear();
+//	void clear();
 
 	/**
 	 * Sort the collected data in ascending order.
@@ -56,12 +56,12 @@ namespace QDirStat
 	 * Return the size of the collected data, i.e. the number of data
 	 * points.
 	 **/
-	int dataSize() const { return _data.size(); }
+	int dataSize() const { return size(); }
 
 	/**
 	 * Return a reference to the collected data.
 	 **/
-	QRealList & data() { return _data; }
+//	QRealList & data() { return _data; }
 
 
 	// All calculation functions below will sort the internal data first if
@@ -79,17 +79,17 @@ namespace QDirStat
 	 * The FileInfo class already collected sums and counts during
 	 * directory reading that might also be used.
 	 **/
-	qreal average();
+//	qreal average();
 
 	/**
 	 * Find the minimum value.
 	 **/
-	qreal min();
+//	qreal min();
 
 	/**
 	 * Find the maximum value.
 	 **/
-	qreal max();
+//	qreal max();
 
 	/**
 	 * Calculate a quantile: Find the quantile no. 'number' of order
@@ -124,7 +124,7 @@ namespace QDirStat
 
     private:
 
-	QRealList _data;
+//	QRealList _data;
 	bool	  _sorted { false };
     };
 
@@ -134,10 +134,6 @@ namespace QDirStat
     class PercentileSums
     {
     public:
-	/**
-	 * Constructor.
-	 **/
-	PercentileSums() {}
 
 	/**
 	 * Returns the size of the sums.
@@ -162,8 +158,9 @@ namespace QDirStat
 	const QRealList & cumulative() const { return _cumulative; }
 
     private:
-	QRealList _individual;
-	QRealList _cumulative;
+
+	QRealList _individual { QRealList( 101 ) };
+	QRealList _cumulative { QRealList( 101 ) };
 
 	friend PercentileSums PercentileStats::percentileSums();
     };

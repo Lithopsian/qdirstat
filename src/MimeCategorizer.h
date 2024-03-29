@@ -257,6 +257,10 @@ namespace QDirStat
 	    /**
 	     * Add default categories in case none were read from the settings.
 	     **/
+	    void addDefaultCategory( const QString & name,
+				     const QColor & color,
+				     const QString & caseSensitivePatterns,
+				     const QString & caseInsensitivePatterns );
 	    void addDefaultCategories();
 
 	    /**

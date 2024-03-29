@@ -100,7 +100,16 @@ namespace QDirStat
 	 * provide a copy without being a real action so that the config
 	 * dialog can play about with it.
 	 **/
-	Cleanup( const Cleanup * cleanup );
+	Cleanup( const Cleanup * other ):
+	    Cleanup ( 0, other->_active, other->_title, other->_command,
+		      other->_recurse, other->_askForConfirmation, other->_refreshPolicy,
+		      other->_worksForDir, other->_worksForFile, other->_worksForDotEntry,
+		      other->_outputWindowPolicy, other->_outputWindowTimeout, other->_outputWindowAutoClose,
+		      other->_shell, other->_iconName )
+	{
+	//    setIcon ( other->iconName() ); // not currently editable in the config dialog
+	//    setShortcut( other->shortcut() ); // not currently in the config dialog
+	}
 
 	/**
 	 * Return the command line that will be executed upon calling
@@ -121,7 +130,8 @@ namespace QDirStat
 	 * Return the cleanup action's title without '&' keyboard shortcuts.
 	 * Uses the ID as fallback if the name is empty.
 	 **/
-	QString cleanTitle() const { return _title.isEmpty() ? _command : QString( _title ).remove( '&' ); }
+	QString cleanTitle() const
+	    { return _title.isEmpty() ? _command : QString( _title ).remove( '&' ); }
 
 	/**
 	 * Return the icon name of this cleanup action.
@@ -189,7 +199,7 @@ namespace QDirStat
 	 * The $SHELL environment variable is used to obtain this value.
 	 * If this is empty, this defaults to defaultShells().first().
 	 **/
-	const static QString & loginShell();
+	static const QString & loginShell();
 
 	/**
 	 * Return the full paths to the available (and executable) shells:
@@ -197,7 +207,7 @@ namespace QDirStat
 	 *     /bin/bash
 	 *     /bin/sh
 	 **/
-	const static QStringList & defaultShells();
+	static const QStringList & defaultShells();
 
 	/**
 	 * Return the first default shell or an empty string if there is no
@@ -279,8 +289,7 @@ namespace QDirStat
 	 * cleanup task takes or if there is any amount of error output, or
 	 * even if the cleanup process crashes or could not be started.
 	 **/
-	enum OutputWindowPolicy outputWindowPolicy() const
-	    { return _outputWindowPolicy; }
+	enum OutputWindowPolicy outputWindowPolicy() const { return _outputWindowPolicy; }
 
 	/**
 	 * Return the timeout (in milliseconds) for the ShowAfterTimeout output
@@ -328,20 +337,11 @@ namespace QDirStat
 	 **/
 	static const QMap<QString, QString> & desktopSpecificApps();
 
+
 	/**
-	 * Return a mapping from macros to fallback applications in case the
-	 * current desktop cannot be determined:
-	 *
-	 *   %terminal	   "xterm"
-	 *   %filemanager  "xdg-open"
+	 * Setters (see the corresponding getter for documentation), mainly
+	 * for the config page.
 	 **/
-	static const QMap<QString, QString> & fallbackApps();
-
-
-	//
-	// Setters (see the corresponding getter for documentation)
-	//
-
 	void setActive		     ( bool		  active    ) { _active		       = active;    }
 	void setTitle		     ( const QString	& title	    );
 	void setCommand		     ( const QString	& command   ) { _command	       = command;   }
@@ -387,6 +387,15 @@ namespace QDirStat
 	 * defaultShell(). Return an empty string if no usable shell is found.
 	 **/
 	QString chooseShell( OutputWindow * outputWindow ) const;
+
+	/**
+	 * Return a mapping from macros to fallback applications in case the
+	 * current desktop cannot be determined:
+	 *
+	 *   %terminal	   "xterm"
+	 *   %filemanager  "xdg-open"
+	 **/
+//	static QMap<QString, QString> fallbackApps();
 
 	/**
 	 * Expand some variables in string 'unexpanded' to information from
@@ -453,12 +462,14 @@ namespace QDirStat
 	 * This does not exactly become any prettier with the C compiler requiring
 	 * a backslash for an embedded double quote.
 	 **/
-	QString escaped( const QString & unescaped ) const { return QString( unescaped ).replace( "'", "'\\''" ); }
+	static QString escaped( const QString & unescaped )
+	    { return QString( unescaped ).replace( "'", "'\\''" ); }
 
 	/**
 	 * Return a string in single quotes.
 	 **/
-	QString quoted( const QString & unquoted ) const { return "'" + unquoted + "'"; }
+	static QString quoted( const QString & unquoted )
+	    { return "'" + unquoted + "'"; }
 
 	/**
 	 * Run a command with 'item' as base to expand variables.

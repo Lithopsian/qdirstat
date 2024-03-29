@@ -83,10 +83,11 @@ namespace QDirStat
 	void closeOptions();
 
 	/**
-	 * Check the options widgets for any new values, apply them and rebuild
-	 * the histogram.
+	 * Respond to changes in the slider values or markers combobox.
 	 **/
-	void applyOptions();
+	void startValueChanged( int newStart );
+	void endValueChanged( int newEnd );
+	void markersChanged( int markersIndex );
 
 	/**
 	 * Calculate automatic values for the start and end percentiles, apply
@@ -103,7 +104,7 @@ namespace QDirStat
     protected:
 
 	/**
-	 * One-time initialization of the widgets in this window.
+	 * One-time initialization of the widgets in this window
 	 **/
 	void initWidgets();
 
@@ -114,17 +115,17 @@ namespace QDirStat
 
 	/**
 	 * Update the values for the option widgets from the current ones from
-	 * the histogram.
+	 * the histogram
 	 **/
 	void updateOptions();
 
 	/**
-	 * Return text for all quantiles of 'order' named 'name'.
+	 * Return text for all quantiles of 'order' named 'name'
 	 **/
 	QStringList quantile( int order, const QString & name );
 
 	/**
-	 * Fill a quantile table for 'order' quantiles with content.
+	 * Fill a quantile table for 'order' quantiles with content
 	 *
 	 * 'sums' (if non-empty) is a list of accumulated sums between one
 	 * quantile and its previous one.
@@ -132,25 +133,30 @@ namespace QDirStat
 	 * 'step' is the step width; 'extremesMargin' specifies how far from
 	 * the extremes (min, max) the step width should be 1 instead.
 	 **/
-	void fillQuantileTable( QTableWidget *	       table,
+	void fillQuantileTable( QTableWidget	     * table,
 				int		       order,
-				const QString &	       namePrefix,
+				const QString	     & namePrefix,
 				const PercentileSums & sums,
 				int		       step,
 				int		       extremesMargin );
 
 	/**
-	 * Fill the histogram with content.
+	 * Fill the buckets and histogram, and build the tables.
+	 **/
+	void loadHistogram();
+
+	/**
+	 * Fill the histogram with content
 	 **/
 	void fillHistogram();
 
 	/**
-	 * Fill the buckets table with content.
+	 * Fill the buckets table with content
 	 **/
 	void fillBucketsTable();
 
 	/**
-	 * Provide data for the histogram.
+	 * Provide data for the histogram
 	 **/
 	void fillBuckets();
 

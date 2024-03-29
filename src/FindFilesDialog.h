@@ -51,7 +51,7 @@ namespace QDirStat
 	static FileSearchFilter askFindFiles( bool    * canceled_ret,
                                               QWidget * parent = nullptr   );
 
-    public slots:
+    protected slots:
 
         /**
          * Load values for all widgets from the settings / the config file or

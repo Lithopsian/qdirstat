@@ -141,11 +141,6 @@ namespace QDirStat
          **/
         bool caseSensitive() const { return !( patternOptions() & CaseInsensitiveOption ); }
 
-	/**
-	 * Return the enum mapping for the pattern syntax enum PatternSyntax.
-	 **/
-	static SettingsEnumMapping patternSyntaxMapping();
-
 
     private:
 
@@ -303,6 +298,7 @@ namespace QDirStat
          * Add some default rules.
          **/
         void addDefaultRules();
+
 
     private:
 
