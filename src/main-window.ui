@@ -11,9 +11,6 @@
     <height>687</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>QDirStat</string>
-  </property>
   <property name="windowIcon">
    <iconset resource="icons.qrc">
     <normaloff>:/icons/qdirstat.svg</normaloff>:/icons/qdirstat.svg</iconset>
@@ -612,7 +609,10 @@
      <normaloff>:/icons/qdirstat.png</normaloff>:/icons/qdirstat.png</iconset>
    </property>
    <property name="text">
-    <string>A&amp;bout QDirStat...</string>
+    <string>A&amp;bout Qt6DirStat...</string>
+   </property>
+   <property name="toolTip">
+    <string>About Qt6DirStat</string>
    </property>
   </action>
   <action name="actionAboutQt">

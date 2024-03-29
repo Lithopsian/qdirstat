@@ -37,7 +37,7 @@
         <item>
          <widget class="QCheckBox" name="urlInWindowTitleCheckBox">
           <property name="toolTip">
-           <string>&lt;p style='white-space:pre'&gt;Whether to include the current root directory&lt;br/&gt;in the titlebar (eg. &lt;nobr&gt;&quot;QDirStat /tmp&quot;&lt;/nobr&gt;)&lt;/p&gt;</string>
+           <string>&lt;p style='white-space:pre'&gt;Whether to include the current root directory&lt;br/&gt;in the titlebar (eg. &lt;nobr&gt;&quot;Qt6DirStat /tmp&quot;&lt;/nobr&gt;)&lt;/p&gt;</string>
           </property>
           <property name="text">
            <string>Show URL in &amp;window title</string>
