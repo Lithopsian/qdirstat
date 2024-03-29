@@ -7,7 +7,6 @@
  */
 
 
-#include <QCommandLinkButton>
 #include <QDesktopServices>
 #include <QTableWidget>
 #include <QTableWidgetItem>
@@ -16,12 +15,11 @@
 #include "FileSizeStats.h"
 #include "BucketsTableModel.h"
 #include "DirTree.h"
+#include "FormatUtil.h"
 #include "HeaderTweaker.h"
 #include "HistogramView.h"
 #include "MainWindow.h"
 #include "SettingsHelpers.h"
-//#include "QDirStatApp.h"
-#include "FormatUtil.h"
 #include "Logger.h"
 #include "Exception.h"
 
@@ -147,7 +145,6 @@ FileSizeStatsWindow * FileSizeStatsWindow::sharedInstance( QWidget * mainWindow 
 }
 
 
-
 void FileSizeStatsWindow::initWidgets()
 {
 //    QFont font = _ui->heading->font();
@@ -176,17 +173,15 @@ void FileSizeStatsWindow::initWidgets()
     connect( _ui->autoButton,		    &QPushButton::clicked,
 	     this,			    &FileSizeStatsWindow::autoPercentiles );
 
+    // The spin boxes are linked to the sliders inside the MOC
     connect( _ui->startPercentileSlider,    &QSlider::valueChanged,
-	     this,			    &FileSizeStatsWindow::applyOptions );
-
-    connect( _ui->startPercentileSpinBox,   qOverload<int>( &QSpinBox::valueChanged ),
-	     this,			    &FileSizeStatsWindow::applyOptions );
+	     this,			    &FileSizeStatsWindow::startValueChanged );
 
     connect( _ui->endPercentileSlider,	    &QSlider::valueChanged,
-	     this,			    &FileSizeStatsWindow::applyOptions );
+	     this,			    &FileSizeStatsWindow::endValueChanged );
 
-    connect( _ui->endPercentileSpinBox,	    qOverload<int>( &QSpinBox::valueChanged ),
-	     this,			    &FileSizeStatsWindow::applyOptions );
+    connect( _ui->markersComboBox,	    qOverload<int>( &QComboBox::currentIndexChanged ),
+	     this,			    &FileSizeStatsWindow::markersChanged );
 
     connect( _ui->percentileFilterCheckBox, &QCheckBox::stateChanged,
 	     this,			    &FileSizeStatsWindow::fillPercentileTable );
@@ -227,7 +222,7 @@ void FileSizeStatsWindow::populate( FileInfo * subtree, const QString & suffix )
 
 void FileSizeStatsWindow::fillPercentileTable()
 {
-    int step = _ui->percentileFilterCheckBox->isChecked() ? 1 : 5;
+    const int step = _ui->percentileFilterCheckBox->isChecked() ? 1 : 5;
     fillQuantileTable( _ui->percentileTable, 100, "P", _stats->percentileSums(), step, 2 );
 }
 
@@ -294,8 +289,8 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
     table->setHorizontalHeaderLabels( headers );
 
     const int median = order / 2;
-    const int quartile_1 = order % 4 == 0 ? order / 4      : -1;
-    const int quartile_3 = order % 4 == 0 ? quartile_1 * 3 : -1;
+    const int quartile1 = order % 4 == 0 ? order / 4     : -1;
+    const int quartile3 = order % 4 == 0 ? quartile1 * 3 : -1;
 
     int row = 0;
 
@@ -308,31 +303,27 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
 	addItem( table, row, ValueCol, formatSize( _stats->quantile( order, i ) ) );
 	addItem( table, row, SumCol, i > 0 ? formatSize( sums.individual().at( i ) ) : "" );
 	addItem( table, row, CumulativeSumCol, i > 0 ? formatSize( sums.cumulative().at( i ) ) : "" );
-/*
-	if ( i > 0 && i < sums.size() )
-	{
-	    addItem( table, row, SumCol, formatSize( sums.individual().at( i ) ) );
-	    addItem( table, row, CumulativeSumCol, formatSize( sums.cumulative().at( i ) ) );
-	}
-*/
-	QString text;
-	if 	( i == 0 )		text = tr( "Min" );
-	else if ( i == order  )		text = tr( "Max" );
-	else if ( i == median )		text = tr( "Median" );
-	else if ( i == quartile_1 )	text = tr( "1. Quartile" );
-	else if ( i == quartile_3 )	text = tr( "3. Quartile" );
+
+	const QString text = [=]()
+	    {
+		if ( i == 0 )		return tr( "Min" );
+		if ( i == order  )	return tr( "Max" );
+		if ( i == median )	return tr( "Median" );
+		if ( i == quartile1 )	return tr( "1. Quartile" );
+		if ( i == quartile3 )	return tr( "3. Quartile" );
+
+		return QString();
+	    }();
 
 	if ( !text.isEmpty() )
 	{
 	    addItem( table, row, NameCol, text );
 	    setRowBold( table, row );
-//	    setRowForeground( table, row, QBrush( QColor( Qt::blue ) ) ); // very bad in dark themes
 	}
-//	else if ( order > 20 && i % 10 == 0 && step <= 1 )
-
-	if ( i % 10 == 0 && step <= 1 )
+	else if ( order > 20 && i % 10 == 0 && step <= 1 )
 	{
-	    addItem( table, row, NameCol, "" ); // Fill the empty cell
+	    // Fill the empty cell or the background won't show
+	    addItem( table, row, NameCol, "" );
 
 	    // Derive a color with some contrast in light or dark themes.
 	    QColor base = table->palette().color( QPalette::Base );
@@ -356,6 +347,14 @@ void FileSizeStatsWindow::fillQuantileTable( QTableWidget *	    table,
 }
 
 
+void FileSizeStatsWindow::loadHistogram()
+{
+    fillBuckets();
+    _ui->histogramView->autoLogHeightScale();
+    _ui->histogramView->build();
+}
+
+
 void FileSizeStatsWindow::fillHistogram()
 {
     HistogramView * histogram = _ui->histogramView;
@@ -366,9 +365,7 @@ void FileSizeStatsWindow::fillHistogram()
     histogram->setPercentileSums( _stats->percentileSums().individual() );
     histogram->autoStartEndPercentiles();
     updateOptions();
-    fillBuckets();
-    histogram->autoLogHeightScale();
-    histogram->build();
+    loadHistogram();
 }
 
 
@@ -392,12 +389,6 @@ void FileSizeStatsWindow::fillBucketsTable()
     HeaderTweaker::resizeToContents( _ui->bucketsTable->horizontalHeader() );
 }
 
-/*
-void FileSizeStatsWindow::reject()
-{
-    deleteLater();
-}
-*/
 
 void FileSizeStatsWindow::openOptions()
 {
@@ -414,47 +405,63 @@ void FileSizeStatsWindow::closeOptions()
 }
 
 
-void FileSizeStatsWindow::applyOptions()
+void FileSizeStatsWindow::startValueChanged( int newStart )
 {
-    logDebug() << Qt::endl;
-    HistogramView * histogram = _ui->histogramView;
-
-    const int newStart = _ui->startPercentileSlider->value();
-    const int newEnd   = _ui->endPercentileSlider->value();
-
-    if ( newStart != histogram->startPercentile() || newEnd != histogram->endPercentile() )
+    if ( newStart != _ui->histogramView->startPercentile() )
     {
-	logDebug() << "New start: " << newStart << " new end: " << newEnd << Qt::endl;
+	//logDebug() << "New start: " << newStart << Qt::endl;
 
-	histogram->setStartPercentile( newStart );
-	histogram->setEndPercentile  ( newEnd	);
-	fillBuckets();
-	histogram->autoLogHeightScale(); // FIXME
-	histogram->build();
+	_ui->histogramView->setStartPercentile( newStart );
+	loadHistogram();
     }
+}
+
+
+void FileSizeStatsWindow::endValueChanged( int newEnd )
+{
+    if ( newEnd != _ui->histogramView->endPercentile() )
+    {
+	//logDebug() << "New end: " << newEnd << Qt::endl;
+
+	_ui->histogramView->setEndPercentile( newEnd );
+	loadHistogram();
+    }
+}
+
+
+void FileSizeStatsWindow::markersChanged( int markersIndex )
+{
+    const int step = [markersIndex]()
+    {
+	switch ( markersIndex )
+	{
+	    case 1:  return 20;
+	    case 2:  return 10;
+	    case 3:  return 5;
+	    case 4:  return 2;
+	    case 5:  return 1;
+	    default: return 0;
+	}
+    }();
+
+    _ui->histogramView->setPercentileStep( step );
+    loadHistogram();
 }
 
 
 void FileSizeStatsWindow::autoPercentiles()
 {
     _ui->histogramView->autoStartEndPercentiles();
-
     updateOptions();
-    fillBuckets();
-    _ui->histogramView->autoLogHeightScale(); // FIXME
-    _ui->histogramView->build();
+    loadHistogram();
 }
 
 
 void FileSizeStatsWindow::updateOptions()
 {
-    const HistogramView * histogram = _ui->histogramView;
-
-    _ui->startPercentileSlider->setValue ( histogram->startPercentile() );
-    _ui->startPercentileSpinBox->setValue( histogram->startPercentile() );
-
-    _ui->endPercentileSlider->setValue ( histogram->endPercentile() );
-    _ui->endPercentileSpinBox->setValue( histogram->endPercentile() );
+    // just set the sliders, let signals set the spinboxes
+    _ui->startPercentileSlider->setValue ( _ui->histogramView->startPercentile() );
+    _ui->endPercentileSlider->setValue ( _ui->histogramView->endPercentile() );
 }
 
 

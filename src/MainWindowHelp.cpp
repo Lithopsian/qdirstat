@@ -22,7 +22,7 @@ void MainWindow::showAboutDialog()
     const QString homePage = "https://github.com/shundhammer/qdirstat";
     const QString mailTo   = "qdirstat@gmx.de";
 
-    const QString text = QString( "<h2>QDirStat %1</h2>" ).arg( QDIRSTAT_VERSION ) +
+    const QString text = QString( "<h2>Qt6DirStat %1</h2>" ).arg( QDIRSTAT_VERSION ) +
         "<p>" +
         tr( "Qt-based directory statistics -- showing where all your disk space has gone "
             "and trying to help you to clean it up." ) +
@@ -44,7 +44,7 @@ void MainWindow::showAboutDialog()
             "be held responsible for anything like that. Use this program at your own risk." ) +
         "</p>";
 
-    QMessageBox::about( this, tr( "About QDirStat" ), text );
+    QMessageBox::about( this, tr( "About Qt6DirStat" ), text );
 }
 
 

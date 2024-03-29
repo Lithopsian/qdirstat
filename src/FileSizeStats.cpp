@@ -23,7 +23,7 @@ FileSizeStats::FileSizeStats( FileInfo * subtree ):
     CHECK_PTR( subtree );
 
     // Avoid reallocations for potentially millions of list appends
-    data().reserve( subtree->totalFiles() );
+    reserve( subtree->totalFiles() );
     collect( subtree );
     sort();
 }
@@ -42,7 +42,7 @@ FileSizeStats::FileSizeStats( FileInfo * subtree, const QString & suffix ):
 void FileSizeStats::collect( const FileInfo * subtree )
 {
     if ( subtree->isFile() )
-        data() << subtree->size();
+        append( subtree->size() );
 
     for ( FileInfoIterator it( subtree ); *it; ++it )
 	collect( *it );
@@ -52,7 +52,7 @@ void FileSizeStats::collect( const FileInfo * subtree )
 void FileSizeStats::collect( const FileInfo * subtree, const QString & suffix )
 {
     if ( subtree->isFile() && subtree->name().toLower().endsWith( suffix ) )
-        data() << subtree->size();
+        append( subtree->size() );
 
     for ( FileInfoIterator it( subtree ); *it; ++it )
 	collect( *it, suffix );
@@ -72,22 +72,18 @@ QRealList FileSizeStats::fillBuckets( int bucketCount,
     if ( bucketCount < 1 )
         THROW( Exception( QString( "Invalid bucket count %1" ).arg( bucketCount ) ) );
 
-    QRealList buckets;
-    buckets.reserve( bucketCount );
-    for ( int i=0; i < bucketCount; ++i )
-        buckets << 0.0;
+    QRealList buckets( bucketCount );
 
-    if ( data().isEmpty() )
+    if ( isEmpty() )
         return buckets;
 
     // The first call to percentile() or quantile() will cause the data to be
     // sorted, so there is no need to sort them again here.
-
     qreal startVal = percentile( startPercentile );
     qreal endVal   = percentile( endPercentile );
     qreal bucketWidth = ( endVal - startVal ) / bucketCount;
 
-#if 1
+#if 0
     logDebug() << "startPercentile: " << startPercentile
                << " endPercentile: " << endPercentile
                << " startVal: " << formatSize( startVal )
@@ -96,17 +92,21 @@ QRealList FileSizeStats::fillBuckets( int bucketCount,
                << Qt::endl;
 #endif
 
-    auto it = data().cbegin();
-    while ( it != data().cend() && *it < startVal )
+    auto it = cbegin();
+    while ( it != cend() && *it < startVal )
 	++it;
 
-    while ( it != data().cend() && *it <= endVal )
+    int index = 0;
+    qreal nextBucket = startVal + bucketWidth;
+    while ( it != cend() && *it <= endVal )
     {
-        // TO DO: Optimize this by taking into account that the data are sorted
-        // already. We don't really need that many divisions; just when leaving
-        // the current bucket would be sufficient.
+	// Increment the bucket index when we hit the next bucket boundary
+	while ( *it > nextBucket )
+	{
+	    index = qMin( index + 1, bucketCount - 1 ); // avoid rounding errors tipping us past the last bucket
+	    nextBucket += bucketWidth;
+	}
 
-        const int index = qMin( ( *it - startVal ) / bucketWidth, bucketCount - 1.0 );
         ++buckets[ index ];
 
 	++it;

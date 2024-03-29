@@ -71,9 +71,9 @@ QVariant BucketsTableModel::headerData( int	        section,
             {
                 switch ( section )
                 {
-                    case StartCol:	return tr( "Start" );
-                    case EndCol:	return tr( "End"   );
-                    case ValueCol:	return tr( "Files" );
+                    case StartCol:	return tr( "Start size" );
+                    case EndCol:	return tr( "End size"   );
+                    case ValueCol:	return tr( "Files"      );
                     default: return QVariant();
                 }
             }

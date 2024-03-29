@@ -69,8 +69,7 @@ void MainWindow::showUnpkgFiles( const UnpkgSettings & unpkgSettings )
     // Start reading the directory
     try
     {
-        QString dir = parseUnpkgStartingDir( unpkgSettings );
-
+        const QString dir = parseUnpkgStartingDir( unpkgSettings );
         _futureSelection.setUrl( dir );
 	app()->dirTreeModel()->openUrl( dir );
 	updateWindowTitle( app()->dirTree()->url() );

@@ -175,19 +175,6 @@ void MimeCategory::addPatterns( const QStringList & patterns,
 }
 
 
-void MimeCategory::addSuffixes( const QStringList & suffixes,
-				Qt::CaseSensitivity caseSensitivity )
-{
-    for ( const QString & rawSuffix : suffixes )
-    {
-	QString suffix = rawSuffix.trimmed();
-
-	if ( ! suffix.isEmpty() )
-	    addSuffix( suffix, caseSensitivity );
-    }
-}
-
-
 void MimeCategory::clear()
 {
     _caseInsensitiveExactList.clear();

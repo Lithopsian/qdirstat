@@ -36,16 +36,15 @@ UnpkgSettings::UnpkgSettings()
 
 
 UnpkgSettings::UnpkgSettings( const QString & startingDir ):
-    UnpkgSettings { }
+    UnpkgSettings ()
 {
+    // Override the settings starting dir
     _startingDir = startingDir;
 }
 
 
 void UnpkgSettings::read()
 {
-    // logDebug() << Qt::endl;
-
     QDirStat::Settings settings;
 
     settings.beginGroup( "UnpkgSettings" );
@@ -61,8 +60,6 @@ void UnpkgSettings::read()
 
 void UnpkgSettings::write()
 {
-    // logDebug() << Qt::endl;
-
     QDirStat::Settings settings;
 
     settings.beginGroup( "UnpkgSettings" );
@@ -78,7 +75,10 @@ void UnpkgSettings::write()
 
 UnpkgSettings UnpkgSettings::defaultSettings()
 {
-    return UnpkgSettings( defaultStartingDir(), defaultExcludeDirs(), defaultIgnorePatterns(), defaultCrossFilesystems() );
+    return UnpkgSettings( defaultStartingDir(),
+                          defaultExcludeDirs(),
+                          defaultIgnorePatterns(),
+                          defaultCrossFilesystems() );
 }
 
 

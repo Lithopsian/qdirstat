@@ -102,6 +102,8 @@ void TreemapView::setDirTree( const DirTree * newTree )
     // Also disable, although nobody should trigger us to rebuild until it is safe.
     connect( _tree, &DirTree::clearing,
              this,  &TreemapView::disable );
+    connect( _tree, &DirTree::clearingSubtree,
+             this,  &TreemapView::disable );
 }
 
 

@@ -27,7 +27,7 @@
 using namespace QDirStat;
 
 
-// Debug helpers: inline static so they should disappear if they aren't being used.
+// Debug helpers: static so they should disappear if they aren't being used.
 [[gnu::unused]] static void dumpDirectChildren( const FileInfo * dir )
 {
     if ( ! dir )
@@ -1235,9 +1235,7 @@ void DirTreeModel::invalidatePersistent( FileInfo * subtree,
 	{
 	    if ( item != subtree || includeParent )
 	    {
-#if 0
-		logDebug() << "Invalidating " << index << Qt::endl;
-#endif
+		//logDebug() << "Invalidating " << index << Qt::endl;
 		changePersistentIndex( index, QModelIndex() );
 	    }
 	}

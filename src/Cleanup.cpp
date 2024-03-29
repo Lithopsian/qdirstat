@@ -7,71 +7,19 @@
  */
 
 
-#include <QApplication>
 #include <QRegularExpression>
 #include <QProcess>
 #include <QProcessEnvironment>
 #include <QFileInfo>
 
 #include "Cleanup.h"
-#include "DirTree.h"
 #include "DirInfo.h"
 #include "OutputWindow.h"
 #include "Logger.h"
 #include "Exception.h"
 
 
-#define SIMULATE_COMMAND	1
-#define WAIT_TIMEOUT_MILLISEC	30000
-
 using namespace QDirStat;
-
-/*
-Cleanup::Cleanup( QObject            * parent,
-		  bool                 active,
-		  QString              title,
-		  QString              command,
-		  bool                 recurse,
-		  bool                 askForConfirmation,
-		  RefreshPolicy        refreshPolicy,
-		  bool                 worksForDir,
-		  bool                 worksForFile,
-		  bool                 worksForDotEntry,
-		  OutputWindowPolicy   outputWindowPolicy,
-		  int                  outputWindowTimeout,
-		  bool                 outputWindowAutoClose,
-		  QString              shell,
-		  QString              iconName ):
-    QAction ( title, parent ),
-    _active { active },
-    _title { title },
-    _command { command },
-    _iconName { iconName },
-    _recurse { recurse },
-    _askForConfirmation { askForConfirmation },
-    _refreshPolicy { refreshPolicy },
-    _worksForDir { worksForDir },
-    _worksForFile { worksForFile },
-    _worksForDotEntry { worksForDotEntry },
-    _outputWindowPolicy { outputWindowPolicy },
-    _outputWindowTimeout { outputWindowTimeout },
-    _outputWindowAutoClose { outputWindowAutoClose },
-    _shell { shell }
-{
-//    QAction::setEnabled( true );
-}
-*/
-
-Cleanup::Cleanup( const Cleanup * other ):
-    Cleanup ( 0, other->_active, other->_title, other->_command,
-              other->_recurse, other->_askForConfirmation, other->_refreshPolicy,
-              other->_worksForDir, other->_worksForFile, other->_worksForDotEntry,
-              other->_outputWindowPolicy, other->_outputWindowTimeout, other->_outputWindowAutoClose,
-              other->_shell, other->_iconName )
-{
-//    setIcon ( other->iconName() ); // not currently editable in the config dialog
-//    setShortcut( other->shortcut() ); // not currently in the config dialog
-}
 
 
 void Cleanup::setTitle( const QString &title )
@@ -90,7 +38,7 @@ void Cleanup::setIcon( const QString & iconName )
 
 bool Cleanup::worksFor( FileInfo *item ) const
 {
-    if ( ! _active || ! item )
+    if ( !_active || !item )
 	return false;
 
     if ( item->isPseudoDir() )
@@ -155,17 +103,15 @@ const QString Cleanup::itemDir( const FileInfo *item ) const
 {
     QString dir = item->path();
 
-    if ( ! item->isDir() && ! item->isPseudoDir() )
-    {
+    if ( !item->isDir() && !item->isPseudoDir() )
 	dir.replace( QRegularExpression( "/[^/]*$" ), "" );
-    }
 
     return dir;
 }
 
 
 QString Cleanup::expandVariables( const FileInfo * item,
-				  const QString	 & unexpanded ) const
+				  const QString  & unexpanded ) const
 {
     QString expanded = expandDesktopSpecificApps( unexpanded );
     QString dirName = "";
@@ -178,7 +124,7 @@ QString Cleanup::expandVariables( const FileInfo * item,
     expanded.replace( "%p", quoted( escaped( item->path() ) ) );
     expanded.replace( "%n", quoted( escaped( item->name() ) ) );
 
-    if ( ! dirName.isEmpty() )
+    if ( !dirName.isEmpty() )
 	expanded.replace( "%d", quoted( escaped( dirName ) ) );
 
     // logDebug() << "Expanded: \"" << expanded << "\"" << Qt::endl;
@@ -191,16 +137,16 @@ QString Cleanup::chooseShell( OutputWindow * outputWindow ) const
     QString errMsg;
     QString shell = this->shell();
 
-    if ( ! shell.isEmpty() )
+    if ( !shell.isEmpty() )
     {
-	logDebug() << "Using custom shell " << shell << Qt::endl;
+	//logDebug() << "Using custom shell " << shell << Qt::endl;
 
-	if ( ! isExecutable( shell ) )
+	if ( !isExecutable( shell ) )
 	{
 	    errMsg = tr( "ERROR: Shell %1 is not executable" ).arg( shell );
 	    shell = defaultShell();
 
-	    if ( ! shell.isEmpty() )
+	    if ( !shell.isEmpty() )
 		errMsg += "\n" + tr( "Using fallback %1" ).arg( shell );
 	}
     }
@@ -208,10 +154,10 @@ QString Cleanup::chooseShell( OutputWindow * outputWindow ) const
     if ( shell.isEmpty() )
     {
 	shell = defaultShell();
-	logDebug() << "No custom shell configured - using " << shell << Qt::endl;
+	//logDebug() << "No custom shell configured - using " << shell << Qt::endl;
     }
 
-    if ( ! errMsg.isEmpty() )
+    if ( !errMsg.isEmpty() )
     {
 	outputWindow->show(); // Show error regardless of user settings
 	outputWindow->addStderr( errMsg );
@@ -235,12 +181,11 @@ void Cleanup::runCommand( const FileInfo * item,
 	return;
     }
 
-    QString cleanupCommand( expandVariables( item, command ));
     QProcess * process = new QProcess( parent() );
     CHECK_NEW( process );
 
     process->setProgram( shell );
-    process->setArguments( { "-c", cleanupCommand } );
+    process->setArguments( { "-c", expandVariables( item, command ) } );
     process->setWorkingDirectory( itemDir( item ) );
     // logDebug() << "New process \"" << process << Qt::endl;
 
@@ -253,27 +198,23 @@ void Cleanup::runCommand( const FileInfo * item,
 
 SettingsEnumMapping Cleanup::refreshPolicyMapping()
 {
-    static SettingsEnumMapping mapping;
+    return { { NoRefresh,     "NoRefresh"     },
+	     { RefreshThis,   "RefreshThis"   },
+	     { RefreshParent, "RefreshParent" },
+	     { AssumeDeleted, "AssumeDeleted" },
+	   };
 
-    mapping[ NoRefresh	   ] = "NoRefresh";
-    mapping[ RefreshThis   ] = "RefreshThis";
-    mapping[ RefreshParent ] = "RefreshParent";
-    mapping[ AssumeDeleted ] = "AssumeDeleted";
-
-    return mapping;
 }
 
 
 SettingsEnumMapping Cleanup::outputWindowPolicyMapping()
 {
-    static SettingsEnumMapping mapping;
+    return { { ShowAlways,        "ShowAlways"        },
+	     { ShowIfErrorOutput, "ShowIfErrorOutput" },
+	     { ShowAfterTimeout,  "ShowAfterTimeout"  },
+	     { ShowNever,         "ShowNever"         },
+	   };
 
-    mapping[ ShowAlways	       ] = "ShowAlways";
-    mapping[ ShowIfErrorOutput ] = "ShowIfErrorOutput";
-    mapping[ ShowAfterTimeout  ] = "ShowAfterTimeout";
-    mapping[ ShowNever	       ] = "ShowNever";
-
-    return mapping;
 }
 
 
@@ -282,28 +223,26 @@ bool Cleanup::isExecutable( const QString & programName )
     if ( programName.isEmpty() )
 	return false;
 
-    QFileInfo fileInfo( programName );
+    const QFileInfo fileInfo( programName );
     return fileInfo.isExecutable();
 }
 
 
 const QString & Cleanup::loginShell()
 {
-    static bool cached = false;
-    static QString shell;
-
-    if ( ! cached )
+    static QString shell = []()
     {
-	cached = true;
 	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-	shell = env.value( "SHELL", "" );
+	QString shell = env.value( "SHELL", "" );
 
-	if ( ! isExecutable( shell ) )
+	if ( !isExecutable( shell ) )
 	{
 	    logError() << "ERROR: Shell \"" << shell << "\" is not executable" << Qt::endl;
 	    shell = "";
 	}
-    }
+
+	return shell;
+    }();
 
     return shell;
 }
@@ -311,27 +250,23 @@ const QString & Cleanup::loginShell()
 
 const QStringList & Cleanup::defaultShells()
 {
-    static bool cached = false;
-    static QStringList shells;
-
-    if ( ! cached )
+    static QStringList shells = []()
     {
-	cached = true;
+	QStringList shells;
 	const QStringList candidates = { loginShell(), "/bin/bash", "/bin/sh" };
-
 	for ( const QString & shell : candidates )
 	{
 	    if ( isExecutable( shell ) )
 		 shells << shell;
-	    else if ( ! shell.isEmpty() )
-	    {
+	    else if ( !shell.isEmpty() )
 		logWarning() << "Shell " << shell << " is not executable" << Qt::endl;
-	    }
 	}
 
-	if ( ! shells.isEmpty() )
+	if ( !shells.isEmpty() )
 	    logDebug() << "Default shell: " << shells.first() << Qt::endl;
-    }
+
+	return shells;
+    }();
 
     if ( shells.isEmpty() )
 	logError() << "ERROR: No usable shell" << Qt::endl;
@@ -340,23 +275,41 @@ const QStringList & Cleanup::defaultShells()
 }
 
 
+/**
+ * Return a mapping from macros to fallback applications in case the
+ * current desktop cannot be determined:
+ *
+ *   %terminal	   "xterm"
+ *   %filemanager  "xdg-open"
+ **/
+static QMap<QString, QString> fallbackApps()
+{
+    QMap<QString, QString> apps;
+
+#ifdef Q_OS_MAC
+    apps[ "%terminal"    ] = "open -a Terminal.app .";
+    apps[ "%filemanager" ] = "open";
+#else
+    apps[ "%terminal"    ] = "xterm";
+    apps[ "%filemanager" ] = "xdg-open";
+#endif
+
+    return apps;
+}
+
+
 const QMap<QString, QString> & Cleanup::desktopSpecificApps()
 {
-    static QMap<QString, QString> apps;
-
-    if ( apps.isEmpty() )
+    // Overkill to have a static map with just two entries, but here goes ...
+    static const QMap<QString, QString> apps = []()
     {
-	QString desktop = QString::fromUtf8( qgetenv( "QDIRSTAT_DESKTOP" ) );
+	QMap<QString, QString> apps;
 
-	if ( desktop.isEmpty() )
-	{
-	     desktop = QString::fromUtf8( qgetenv( "XDG_CURRENT_DESKTOP" ) );
-	}
+	QString desktop = QString::fromUtf8( qgetenv( "QDIRSTAT_DESKTOP" ) );
+	if ( !desktop.isEmpty() )
+	    logDebug() << "Overriding $XDG_CURRENT_DESKTOP with $QDIRSTAT_DESKTOP (\"" << desktop << "\")" << Qt::endl;
 	else
-	{
-	    logDebug() << "Overriding $XDG_CURRENT_DESKTOP with $QDIRSTAT_DESKTOP (\""
-		       << desktop << "\")" << Qt::endl;
-	}
+	    desktop = QString::fromUtf8( qgetenv( "XDG_CURRENT_DESKTOP" ) );
 
 	if ( desktop.isEmpty() )
 	{
@@ -366,8 +319,8 @@ const QMap<QString, QString> & Cleanup::desktopSpecificApps()
 	else
 	{
 	    logInfo() << "Detected desktop \"" << desktop << "\"" << Qt::endl;
-	    desktop = desktop.toLower();
 
+	    desktop = desktop.toLower();
 	    if ( desktop == "kde" )
 	    {
 		// KDE konsole misbehaves in every way possible:
@@ -381,16 +334,13 @@ const QMap<QString, QString> & Cleanup::desktopSpecificApps()
 		// the & added here rather than in the cleanup command line
 		// where it would be appropriate. All this just because KDE
 		// konsole doesn't comply with any standards whatsoever.
-
 		apps[ "%terminal"    ] = "konsole --workdir %d";
 
                 // Using xdg-open to enable using konqueror if configured,
                 // falling back to dolphin otherwise.
-
 		apps[ "%filemanager" ] = "xdg-open %d";
 	    }
-	    else if ( desktop == "gnome" ||
-		      desktop == "unity"   )
+	    else if ( desktop == "gnome" || desktop == "unity"   )
 	    {
 		apps[ "%terminal"    ] = "gnome-terminal &";
 		apps[ "%filemanager" ] = "nautilus";
@@ -420,26 +370,9 @@ const QMap<QString, QString> & Cleanup::desktopSpecificApps()
 
 	for ( auto it = apps.constBegin(); it != apps.constEnd(); ++it )
 	    logInfo() << it.key() << " => \"" << it.value() << "\"" << Qt::endl;
-    }
 
-    return apps;
-}
-
-
-const QMap<QString, QString> & Cleanup::fallbackApps()
-{
-    static QMap<QString, QString> apps;
-
-    if ( apps.isEmpty() )
-    {
-#ifdef Q_OS_MAC
-	apps[ "%terminal"    ] = "open -a Terminal.app .";
-	apps[ "%filemanager" ] = "open";
-#else
-	apps[ "%terminal"    ] = "xterm";
-	apps[ "%filemanager" ] = "xdg-open";
-#endif
-    }
+	return apps;
+    }();
 
     return apps;
 }

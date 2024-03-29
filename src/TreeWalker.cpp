@@ -37,11 +37,9 @@ qreal TreeWalker::upperPercentileThreshold( PercentileStats & stats )
         //logDebug() << "Threshold: " << percentile << ". percentile" << Qt::endl;
         return stats.percentile( percentile );
     }
-    else
-    {
-        //logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
-        return stats.data().at( stats.dataSize() - MAX_RESULTS );
-    }
+
+    //logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
+    return stats.at( stats.dataSize() - MAX_RESULTS );
 }
 
 
@@ -61,11 +59,9 @@ qreal TreeWalker::lowerPercentileThreshold( PercentileStats & stats )
         //logDebug() << "Threshold: " << percentile << ". percentile" << Qt::endl;
         return stats.percentile( percentile );
     }
-    else
-    {
-        //logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
-        return stats.data().at( MAX_RESULTS );
-    }
+
+    //logDebug() << "Threshold: " << MAX_RESULTS << " items" << Qt::endl;
+    return stats.at( MAX_RESULTS );
 }
 
 
@@ -75,7 +71,7 @@ void LargestFilesTreeWalker::prepare( FileInfo * subtree )
 {
     TreeWalker::prepare( subtree );
     FileSizeStats stats( subtree );
-    _threshold = (FileSize) upperPercentileThreshold( stats );
+    _threshold = ( FileSize )upperPercentileThreshold( stats );
 }
 
 
@@ -83,7 +79,7 @@ void NewFilesTreeWalker::prepare( FileInfo * subtree )
 {
     TreeWalker::prepare( subtree );
     FileMTimeStats stats( subtree );
-    _threshold = (time_t) upperPercentileThreshold( stats );
+    _threshold = ( time_t )upperPercentileThreshold( stats );
 }
 
 
@@ -91,7 +87,7 @@ void OldFilesTreeWalker::prepare( FileInfo * subtree )
 {
     TreeWalker::prepare( subtree );
     FileMTimeStats stats( subtree );
-    _threshold = (time_t) lowerPercentileThreshold( stats );
+    _threshold = ( time_t )lowerPercentileThreshold( stats );
 }
 
 

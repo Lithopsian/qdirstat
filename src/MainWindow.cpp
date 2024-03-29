@@ -161,6 +161,9 @@ void MainWindow::connectSignals()
     connect( dirTree,		       &DirTree::startingReading,
 	     this,		       &MainWindow::startingReading );
 
+    connect( dirTree,		       &DirTree::startingRefresh,
+	     this,		       &MainWindow::busyDisplay );
+
     connect( dirTree,		       &DirTree::finished,
 	     this,		       &MainWindow::readingFinished );
 
@@ -373,7 +376,7 @@ void MainWindow::busyDisplay()
 
 void MainWindow::idleDisplay()
 {
-    //logInfo() << Qt::endl;
+    logInfo() << Qt::endl;
 
     // Safe for the treemap to start work now
     _updateTimer.stop();
@@ -794,7 +797,7 @@ void MainWindow::askWriteCache()
 
 void MainWindow::updateWindowTitle( const QString & url )
 {
-    QString windowTitle = "QDirStat";
+    QString windowTitle = "Qt6DirStat";
 
     if ( SysUtil::runningAsRoot() )
 	windowTitle += tr( " [root]" );

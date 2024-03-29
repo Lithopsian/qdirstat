@@ -19,7 +19,7 @@
 
 using namespace QDirStat;
 
-
+/*
 void PercentileStats::clear()
 {
     // Just _data.clear() does not free any memory; we need to assign an empty
@@ -27,64 +27,59 @@ void PercentileStats::clear()
 
     _data = QRealList();
 }
-
+*/
 
 void PercentileStats::sort()
 {
-    if ( _data.size() > VERBOSE_SORT_THRESHOLD )
-	logDebug() << "Sorting " << _data.size() << " elements" << Qt::endl;
+    if ( size() > VERBOSE_SORT_THRESHOLD )
+	logDebug() << "Sorting " << size() << " elements" << Qt::endl;
 
-    std::sort( _data.begin(), _data.end() );
+    std::sort( begin(), end() );
     _sorted = true;
 
-    if ( _data.size() > VERBOSE_SORT_THRESHOLD )
+    if ( size() > VERBOSE_SORT_THRESHOLD )
 	logDebug() << "Sorting done." << Qt::endl;
 }
 
 
 qreal PercentileStats::median()
 {
-    if ( _data.isEmpty() )
+    if ( isEmpty() )
 	return 0;
 
-    if ( ! _sorted )
+    if ( !_sorted )
 	sort();
 
-    int centerPos = _data.size() / 2;
+    const int centerPos = size() / 2;
 
     // Since we are doing integer division, the center is already rounded down
     // if there is an odd number of data items, so don't use the usual -1 to
     // compensate for the index of the first data element being 0, not 1: if
-    // _data.size() is 5, we get _data[2] which is the center of
+    // size() is 5, we get _data[2] which is the center of
     // [0, 1, 2, 3, 4].
+    const qreal result = at( centerPos );
 
-    qreal result = _data.at( centerPos );
-
-    if ( _data.size() % 2 == 0 ) // Even number of data
+    if ( size() % 2 == 0 ) // Even number of items
     {
 	// Use the average of the two center items. We already accounted for
 	// the upper one with the above integer division, so now we need to
-	// account for the lower one: If _data.size() is 6, we already got
+	// account for the lower one: If size() is 6, we already got
 	// _data[3], and now we need to average this with _data[2] of
 	// [0, 1, 2, 3, 4, 5].
-
-	result = ( result + _data.at( centerPos - 1 ) ) / 2.0;
+	return ( result + at( centerPos - 1 ) ) / 2.0;
     }
 
     return result;
 }
 
-
+/*
 qreal PercentileStats::average()
 {
-    if ( _data.isEmpty() )
+    if ( isEmpty() )
 	return 0.0;
 
-    int count = _data.size();
-    qreal sum = 0.0;
-
-    for ( int i=0; i < count; ++i )
-	sum += _data.at(i);
+    const qreal sum = std::accumulate( cbegin(), cend(), 0.0 );
+    const int count = size();
 
     return sum / count;
 }
@@ -92,37 +87,36 @@ qreal PercentileStats::average()
 
 qreal PercentileStats::min()
 {
-    if ( _data.isEmpty() )
+    if ( isEmpty() )
 	return 0.0;
 
-    if ( ! _sorted )
+    if ( !_sorted )
 	sort();
 
-    return _data.first();
+    return first();
 }
 
 
 qreal PercentileStats::max()
 {
-    if ( _data.isEmpty() )
+    if ( isEmpty() )
 	return 0.0;
 
-    if ( ! _sorted )
+    if ( !_sorted )
 	sort();
 
-    return _data.last();
+    return last();
 }
-
+*/
 
 qreal PercentileStats::quantile( int order, int number )
 {
-    if ( _data.isEmpty() )
+    if ( isEmpty() )
 	return 0.0;
 
     if ( number > order )
     {
-	QString msg = QString( "Cannot determine quantile #%1" ).arg( number );
-	msg += QString( " for %1-quantile" ).arg( order );
+	QString msg = QString( "Cannot determine quantile #%1 for %2-quantile" ).arg( number ).arg( order );
 	THROW( Exception( msg ) );
     }
 
@@ -132,29 +126,29 @@ qreal PercentileStats::quantile( int order, int number )
 	THROW( Exception( msg ) );
     }
 
-    if ( ! _sorted )
+    if ( !_sorted )
 	sort();
 
     if ( number == 0 )
-	return _data.first();
+	return first();
 
     if ( number == order )
-	return _data.last();
+	return last();
 
-    int pos = ( _data.size() * number ) / order;
+    int pos = ( size() * number ) / order;
 
     // Same as in median(): The integer division already cut off any non-zero
     // decimal place, so don't subtract 1 to compensate for starting _data with
     // index 0.
 
-    qreal result = _data.at( pos );
+    qreal result = at( pos );
 
-    if ( ( _data.size() * number ) % order == 0 )
+    if ( ( size() * number ) % order == 0 )
     {
 	// Same as in median: We hit between two elements, so use the average
 	// between them.
 
-	result = ( result + _data.at( pos - 1 ) ) / 2.0;
+	result = ( result + at( pos - 1 ) ) / 2.0;
     }
 
     return result;
@@ -175,31 +169,24 @@ QRealList PercentileStats::percentileList()
 
 PercentileSums PercentileStats::percentileSums()
 {
-    PercentileSums sums;
-    sums._individual.reserve( 100 );
-    sums._cumulative.reserve( 100 );
-
-    for ( int i=0; i <= 100; ++i )
-	sums._individual << 0.0;
-
-    if ( ! _sorted )
+    if ( !_sorted )
 	sort();
 
-    qreal percentileSize = _data.size() / 100.0;
+    PercentileSums sums;
+    const qreal percentileSize = size() / 100.0;
 
-    for ( int i=0; i < _data.size(); ++i )
+    for ( int i=0; i < size(); ++i )
     {
-	int percentile = qMax( 1, (int) ceil( i / percentileSize ) );
-
-	sums._individual[ percentile ] += _data.at(i);
+	int percentile = qMax( 1.0, ceil( i / percentileSize ) );
+	sums._individual[ percentile ] += at(i);
     }
 
-    qreal runningTotal = 0;
+    qreal runningTotal = 0.0;
 
     for ( int i=0; i < sums._individual.size(); i++ )
     {
 	runningTotal	 += sums._individual.at(i);
-	sums._cumulative += runningTotal;
+	sums._cumulative.append( runningTotal );
     }
 
 #if 0

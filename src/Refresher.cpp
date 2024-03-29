@@ -21,10 +21,9 @@ void Refresher::refresh()
 {
     if ( !_items.isEmpty() )
     {
-	DirTree * tree = _items.first()->tree();
-
 	//logDebug() << "Refreshing " << _items.size() << " items" << Qt::endl;
 
+	DirTree * tree = _items.first()->tree();
 	if ( tree )
 	    tree->refresh( _items );
     }

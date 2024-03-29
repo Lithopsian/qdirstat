@@ -491,139 +491,155 @@ void MimeCategorizer::ensureMandatoryCategories()
 }
 
 
+void MimeCategorizer::addDefaultCategory( const QString & name,
+					  const QColor & color,
+					  const QString & caseInsensitivePatterns,
+					  const QString & caseSensitivePatterns )
+{
+    MimeCategory * category = create( name, color);
+    category->addPatterns( caseInsensitivePatterns.split( ',' ), Qt::CaseInsensitive );
+    category->addPatterns( caseSensitivePatterns.split  ( ',' ), Qt::CaseSensitive   );
+}
+
 void MimeCategorizer::addDefaultCategories()
 {
-    MimeCategory * archives = create( tr( "archive (compressed)" ), "#00ff00" );
-    archives->addSuffixes( { "7z", "arj", "bz2", "cab", "cpio.gz", "gz", "jmod", "jsonlz4", "lz",
-	                     "lzo", "rar", "tar.bz2", "tar.gz", "tar.lz", "tar.lzo", "tar.xz",
-			     "tar.zst", "tbz2", "tgz", "txz", "tz2", "tzst", "xz", "zip", "zst" },
-			   Qt::CaseInsensitive );
-    archives->addPatterns( { "pack-*.pack" },
-                           Qt::CaseSensitive );      // Git archive
+    addDefaultCategory( tr( "archive (compressed)" ),
+			"#00ff00",
+			"*.7z, *.arj, *.bz2, *.cab, *.cpio.gz, *.gz, *.jmod, "
+			"*.jsonlz4, *.lz, *.lzo, *.rar, *.tar.bz2, *.tar.gz, "
+			"*.tar.lz, *.tar.lzo, *.tar.xz, *.tar.zst, *.tbz2, "
+			"*.tgz, *.txz, *.tz2, *.tzst, *.xz, *.zip, *.zst",
+			"pack-*.pack" );
 
-    MimeCategory * uncompressedArchives = create( tr( "archive (uncompressed)" ), "#88ff88" );
-    uncompressedArchives->addSuffixes( { "cpio", "tar" },
-				       Qt::CaseInsensitive );
+    addDefaultCategory( tr( "archive (uncompressed)" ),
+			"#88ff88",
+			"*.cpio, *.tar",
+			"" );
 
-    MimeCategory * compressed = create( tr( "configuration file" ), "#aabbff" );
-    compressed->addSuffixes( { "alias", "cfg", "conf", "conffiles", "config", "dep", "desktop",
-	                       "ini", "kmap", "lang", "my", "page", "properties", "rc", "service",
-			       "shlibs", "symbols", "templates", "theme", "triggers", "xcd", "xsl" },
-			     Qt::CaseSensitive );
-    compressed->addPatterns( { ".config", ".gitignore", "Kconfig", "control", "gtkrc" },
-			     Qt::CaseSensitive );
+    addDefaultCategory( tr( "configuration file" ),
+			"#aabbff",
+			"",
+			"*.alias, *.cfg, *.conf, *.conffiles, *.config, *.dep, "
+			"*.desktop, *.ini, *.kmap, *.lang, *.my, *.page, *.properties, "
+			"*.rc, *.service, *.shlibs, *.symbols, *.templates, *.theme, "
+			"*.triggers, *.xcd, *.xsl, .config, .gitignore, Kconfig, "
+			"control, gtkrc" );
 
-    MimeCategory * database = create( tr( "database" ), "#22aaff" );
-    database->addSuffixes( { "alias.bin", "builtin.bin", "dat", "db", "dep.bin", "enc", "hwdb",
-	                       "idx", "lm", "md5sums", "odb", "order", "sbstore", "sqlite",
-			       "sqlite-wal", "symbols.bin", "tablet", "vlpset", "yaml" },
-			   Qt::CaseSensitive );
-    database->addPatterns( { "magic.mgc" },
-			   Qt::CaseSensitive );
+    addDefaultCategory( tr( "database" ),
+			"#22aaff",
+			"",
+			"*.alias.bin, *.builtin.bin, *.dat, *.db, *.dep.bin, *.enc, "
+			"*.hwdb, *.idx, *.lm, *.md5sums, *.odb, *.order, *.sbstore, "
+			"*.sqlite, *.sqlite-wal, *.symbols.bin, *.tablet, *.vlpset, "
+			"*.yaml, magic.mgc" );
 
-    MimeCategory * diskImage = create( tr( "disk image" ), "#aaaaaa" );
-    diskImage->addSuffixes( { "fsa", "iso" },
-			    Qt::CaseSensitive );
-    diskImage->addSuffixes( { "BIN", "img" },
-			    Qt::CaseInsensitive );
+    addDefaultCategory( tr( "disk image" ),
+			"#aaaaaa",
+			"*.fsa, *.iso",
+			"*.BIN, *.img" );
 
-    MimeCategory * doc = create( tr( "document" ), "#66ccff" );
-    doc->addSuffixes( { "list", "log.0", "log.1", "odc", "odg", "odp", "ods", "odt", "otc",
-	                "otp", "ots", "ott" },
-		      Qt::CaseSensitive );
-    doc->addSuffixes( { "css", "csv", "doc", "docbook", "docx", "dotx", "dvi", "dvi.bz2", "epub", "htm",
-	                "html", "json", "latex", "log", "md", "pdf", "pod", "potx", "ppsx", "ppt",
-			"pptx", "ps", "readme", "rst", "sav", "sdc", "sdc.gz", "sdd", "sdp", "sdw",
-			"sla", "sla.gz", "slaz", "sxi", "tex", "txt", "xls", "xlsx", "xlt", "xml" },
-		      Qt::CaseInsensitive );
-    database->addPatterns( { "copyright", "readme.*" },
-			   Qt::CaseInsensitive );
+    addDefaultCategory( tr( "document" ),
+			"#66ccff",
+			"*.css, *.csv, *.doc, *.docbook, *.docx, *.dotx, *.dvi, "
+			"*.dvi.bz2, *.epub, *.htm, *.html, *.json, *.latex, *.log, "
+			"*.md, *.pdf, *.pod, *.potx, *.ppsx, *.ppt, *.pptx, *.ps, "
+			"*.readme, *.rst, *.sav, *.sdc, *.sdc.gz, *.sdd, *.sdp, *.sdw, "
+			"*.sla, *.sla.gz, *.slaz, *.sxi, *.tex, *.txt, *.xls, *.xlsx, "
+			"*.xlt, *.xml, copyright, readme*",
+			"*.list, *.log.0, *.log.1, *.odc, *.odg, *.odp, *.ods, *.odt, "
+			"*.otc, *.otp, *.ots, *.ott" );
 
-    MimeCategory * executable = create( tr( "executable" ), "#ff00ff" );
-    executable->addPatterns( { "lft.db", "traceproto.db", "traceroute.db" },
-			     Qt::CaseSensitive );
-    executable->addSuffixes( { "jsa", "ucode" },
-			     Qt::CaseSensitive );
+    addDefaultCategory( tr( CATEGORY_EXECUTABLE ),
+			Qt::magenta,
+			"",
+			"*.jsa, *.ucode, lft.db, traceproto.db, traceroute.db" );
 
-    MimeCategory * font = create( tr( "font" ), "#44ddff" );
-    font->addSuffixes( { "afm", "bdf", "cache-7", "cache-8", "otf", "pcf", "pcf.gz", "pf1",
-	                 "pf2", "pfa", "pfb", "t1", "ttf" },
-		       Qt::CaseSensitive );
+    addDefaultCategory( tr( "font" ),
+			"#44ddff",
+			"",
+			"*.afm, *.bdf, *.cache-7, *.cache-8, *.otf, *.pcf, *.pcf.gz, "
+			"*.pf1, *.pf2, *.pfa, *.pfb, *.t1, *.ttf" );
 
-    MimeCategory * game = create( tr( "game file" ), "#ff88dd" );
-    game->addSuffixes( { "NHK", "bsp", "mdl", "pak", "wad" },
-		       Qt::CaseSensitive );
+    addDefaultCategory( tr( "game file" ),
+			"#ff88dd",
+			"",
+			"*.MHK, *.bsp, *.mdl, *.pak, *.wad" );
 
-    MimeCategory * image = create( tr( "image" ), "#00ffff" );
-    image->addSuffixes( { "gif", "jpeg", "jpg", "jxl", "mng", "png", "tga", "tif", "tiff",
-	                  "webp", "xcf.bz2", "xcf.gz" },
-			Qt::CaseInsensitive );
+    addDefaultCategory( tr( "icon" ),
+			"#00ddff",
+			"*.icns, *.ico, *.xpm",
+			"" );
 
-    MimeCategory * uncompressedImage = create( tr( "image (uncompressed)" ), "#88ffff" );
-    uncompressedImage->addSuffixes( { "bmp", "pbm", "pgm", "pnm", "ppm", "spr", "svg", "xcf" },
-				    Qt::CaseInsensitive );
+    addDefaultCategory( tr( "image" ),
+			"#00ffff",
+			"*.gif, *.jpeg, *.jpg, *.jxl, *.mng, *.png, *.tga, *.tif, *.tiff, "
+			"*.webp, *.xcf.bz2, *.xcf.gz",
+			"" );
 
-    MimeCategory * junk = create( tr( "junk" ), "#ff0000" );
-    junk->addSuffixes( { "~", "bak", "keep", "old" },
-		       Qt::CaseInsensitive );
-    junk->addPatterns( { "core" },
-		       Qt::CaseSensitive );
+    addDefaultCategory( tr( "image (uncompressed)" ),
+			"#88ffff",
+			"*.bmp, *.pbm, *.pgm, *.pnm, *.ppm, *.spr, *.svg, *.xcf",
+			"" );
 
-    MimeCategory * music = create( tr( "music" ), "#ffff00" );
-    music->addSuffixes( { "aac", "ape", "f4a", "f4b", "flac", "m4a", "m4b", "mid", "mka", "mp3",
-			  "oga", "ogg", "opus", "ra", "rax", "wav", "wma" },
-			Qt::CaseInsensitive );
+    addDefaultCategory( tr( "junk" ),
+			"#ff0000",
+			"*.bak, *.keep, *.old, *.~",
+			"core" );
 
-    MimeCategory * obj = create( tr( "object file" ), "#ee8822" );
-    obj->addSuffixes( { "Po", "a.cmd", "al", "elc", "go", "gresource", "ko", "ko.cmd", "ko.xz",
-	                "ko.zst", "la", "lo", "mo", "moc", "o", "o.cmd", "pyc", "qrc", "typelib" },
-                      Qt::CaseSensitive );
-    obj->addPatterns( { "built-in.a", "vmlinux.a" },
-                      Qt::CaseSensitive );
-    obj->addPatterns( { "lib*.a" },
-                      Qt::CaseInsensitive );
+    addDefaultCategory( tr( "music" ),
+			"#ffff00",
+			"*.aac, *.ape, *.f4a, *.f4b, *.flac, *.m4a, *.m4b, *.mid, *.mka, "
+			"*.mp3, *.oga, *.ogg, *.opus, *.ra, *.rax, *.wav, *.wma",
+			"" );
 
-    MimeCategory * program = create( tr( "packaged program" ), "#88aa66" );
-    program->addSuffixes( { "deb", "ja", "jar", "sfi", "tm" },
-		       Qt::CaseSensitive );
-    program->addSuffixes( { "rpm", "xpi" },
-		       Qt::CaseInsensitive );
+    addDefaultCategory( tr( "object file" ),
+			"#ee8822",
+			"lib*.a",
+			"*.Po, *.a.cmd, *.al, *.elc, *.go, *.gresource, *.ko, *.ko.cmd, "
+			"*.ko.xz, *.ko.zst, *.la, *.lo, *.mo, *.moc, *.o, *.o.cmd, *.pyc, "
+			"*.qrc, *.typelib, built-in.a, vmlinux.a" );
 
-    MimeCategory * script = create( tr( "script" ), "#ff8888" );
-    script->addSuffixes( { "BAT", "bash", "bashrc", "csh", "js", "ksh", "m4", "pl", "pm", "postinst",
-	                   "postrm", "preinst", "prerm", "sh", "tcl", "tmac", "xba", "zsh" },
-		         Qt::CaseSensitive );
+    addDefaultCategory( tr( "packaged program" ),
+			"#88aa66",
+			"*.rpm, *.xpi",
+			"*.deb, *.ja, *.jar, *.sfi, *.tm" );
 
-    MimeCategory * source = create( tr( "source file" ), "#ffbb44" );
-    source->addSuffixes( { "S", "S_shipped", "asm", "c", "cc", "cmake", "cpp", "cxx", "dts",
-	                   "dtsi", "el", "f", "fuc3", "fuc3.h", "fuc5", "fuc5.h", "gir", "h",
-			   "h_shipped", "hpp", "java", "msg", "ph", "php", "po", "pot", "pro",
-			   "pxd", "py", "pyi", "pyx", "rb", "scm" },
-		         Qt::CaseSensitive );
-    source->addPatterns( { "Kbuild", "Makefile" },
-		         Qt::CaseSensitive );
+    addDefaultCategory( tr( "script" ),
+			"#ff8888",
+			"",
+			"*.BAT, *.bash, *.bashrc, *.csh, *.js, *.ksh, *.m4, *.pl, *.pm, "
+			"*.postinst, *.postrm, *.preinst, *.prerm, *.sh, *.tcl, *.tmac, "
+			"*.xba, *.zsh" );
 
-    MimeCategory * generated = create( tr( "source file (generated)" ), "#ffaa22" );
-    generated->addSuffixes( { "f90", "mod.c", "qm", "qml", "ui" },
-			    Qt::CaseSensitive );
-    generated->addPatterns( { "moc_*.cpp", "qrc_*.cpp", "ui_*.h" },
-			    Qt::CaseSensitive );
+    addDefaultCategory( tr( "shared object" ),
+			"#ff7722",
+			"*.dll, *.so",
+			"*.so.*, *.so.0, *.so.1" );
 
-    create( tr( "symlink" ), "#0000ff" );
+    addDefaultCategory( tr( "source file" ),
+			"#ffbb44",
+			"",
+			"*.S, *.S_shipped, *.asm, *.c, *.cc, *.cmake, *.cpp, *.cxx, *.dts, "
+			"*.dtsi, *.el, *.f, *.fuc3, *.fuc3.h, *.fuc5, *.fuc5.h, *.gir, *.h, "
+			"*.h_shipped, *.hpp, *.java, *.msg, *.ph, *.php, *.po, *.pot, *.pro, "
+			"*.pxd, *.py, *.pyi, *.pyx, *.rb, *.scm, Kbuild, Makefile" );
 
-    MimeCategory * shared = create( tr( "shared object" ), "#ff7722" );
-    shared->addSuffixes( { "so.,0", "so.1" },
-		         Qt::CaseSensitive );
-    shared->addSuffixes( { "dll", "so" },
-                         Qt::CaseInsensitive );
-    shared->addPatterns( { "*.so.*" },
-		         Qt::CaseSensitive );
+    addDefaultCategory( tr( "source file (generated)" ),
+			"#ffaa22",
+			"",
+			"*.f90, *.mod.c, *.ui, moc_*.cpp, qrc_*.cpp, ui_*.h" );
 
-    MimeCategory * videos = create( tr( "video" ), "#aa44ff" );
-    videos->addSuffixes( { "asf", "avi", "divx", "flc", "fli", "flv", "m2ts", "m4v", "mk3d",
-			   "mkv", "mov", "mp2", "mp4", "mpeg", "mpg", "ogm", "ogv",
-			   "rm", "vdr", "vob", "webm", "wmp", "wmv" },
-			 Qt::CaseInsensitive );
+    addDefaultCategory( tr( CATEGORY_SYMLINK ),
+			Qt::blue,
+			"",
+			"" );
+
+    addDefaultCategory( tr( "video" ),
+			"#aa44ff",
+			"*.asf, *.avi, *.divx, *.flc, *.fli, *.flv, *.m2ts, *.m4v, *.mk3d, "
+			"*.mkv, *.mov, *.mp2, *.mp4, *.mpeg, *.mpg, *.ogm, *.ogv, *.rm, "
+			"*.vdr, *.vob, *.webm, *.wmp, *.wmv",
+			"" );
 
     writeSettings( _categories );
 }

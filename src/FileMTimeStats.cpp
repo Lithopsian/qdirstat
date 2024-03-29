@@ -34,11 +34,11 @@ void FileMTimeStats::collect( FileInfo * subtree )
 {
     Q_CHECK_PTR( subtree );
 
-    if ( data().isEmpty() )
-        data().reserve( subtree->totalFiles() );
+    if ( isEmpty() )
+        reserve( subtree->totalFiles() );
 
     if ( subtree->isFile() )
-        data() << subtree->mtime();
+        append( subtree->mtime() );
 
     for ( FileInfoIterator it( subtree ); *it; ++it )
     {
@@ -48,6 +48,6 @@ void FileMTimeStats::collect( FileInfo * subtree )
 	if ( item->hasChildren() )
 	    collect( item );
 	else if ( item->isFile() )
-            data() << item->mtime();
+            append( item->mtime() );
     }
 }

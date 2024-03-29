@@ -22,7 +22,7 @@ using namespace QDirStat;
 
 
 OpenUnpkgDialog::OpenUnpkgDialog( QWidget * parent ):
-    QDialog { parent },
+    QDialog ( parent ),
     _ui { new Ui::OpenUnpkgDialog }
 {
     CHECK_NEW( _ui );
@@ -33,12 +33,10 @@ OpenUnpkgDialog::OpenUnpkgDialog( QWidget * parent ):
 
     QCompleter * completer = new ExistingDirCompleter( this );
     CHECK_NEW( completer );
-
     _ui->startingDirComboBox->setCompleter( completer );
 
     ExistingDirValidator * validator = new ExistingDirValidator( this );
     CHECK_NEW( validator );
-
     _ui->startingDirComboBox->setValidator( validator );
 
     QLineEdit * lineEdit = _ui->startingDirComboBox->lineEdit();
@@ -82,7 +80,6 @@ QStringList OpenUnpkgDialog::cleanedLines( QPlainTextEdit *widget ) const
     for ( QString line : lines )
     {
 	line = line.trimmed();
-
 	if ( ! line.isEmpty() )
 	    result << line;
     }
@@ -108,7 +105,7 @@ UnpkgSettings OpenUnpkgDialog::values() const
 
 void OpenUnpkgDialog::setValues( const UnpkgSettings & settings )
 {
-    // settings.dump();
+    settings.dump();
     _ui->startingDirComboBox->setCurrentText( settings.startingDir() );
     _ui->excludeDirsTextEdit->setPlainText( settings.excludeDirs().join( "\n" ) );
     _ui->ignorePatternsTextEdit->setPlainText( settings.ignorePatterns().join( "\n" ) );
@@ -118,17 +115,14 @@ void OpenUnpkgDialog::setValues( const UnpkgSettings & settings )
 
 void OpenUnpkgDialog::readSettings()
 {
-    // logDebug() << Qt::endl;
-
     setValues( UnpkgSettings() );
+
     readWindowSettings( this, "OpenUnkpgDialog" );
 }
 
 
 void OpenUnpkgDialog::writeSettings()
 {
-    // logDebug() << Qt::endl;
-
     UnpkgSettings settings = values();
     settings.write();
 

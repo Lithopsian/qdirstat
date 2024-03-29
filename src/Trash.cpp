@@ -178,7 +178,7 @@ bool Trash::trash( const QString & path )
     catch ( const FileException & ex )
     {
 	CAUGHT( ex );
-	logError() << "Move to trash failed for " << path << Qt::endl;
+//	logError() << "Move to trash failed for " << path << Qt::endl;
 
 	return false;
     }
@@ -298,8 +298,8 @@ void TrashDir::move( const QString & path,
     QFile file( path );
     const QString targetPath = filesPath() + "/" + targetName;
 
+    // QFile::rename will try to move, then try to copy-and-delete, but this will fail for directories
     const bool success = file.rename( targetPath );
-
     if ( ! success )
 	THROW( FileException( path, "Could not move " + path + " to " + targetPath ) );
 }

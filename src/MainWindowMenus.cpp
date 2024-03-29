@@ -185,9 +185,9 @@ void MainWindow::updateActions()
     const bool pkgSelected       = selectedItems.containsPkg();
     _ui->actionMoveToTrash->setEnabled( !reading && sel && !pseudoDirSelected && !pkgSelected );
 
-    _ui->actionFileSizeStats->setEnabled( selSizeOne );
-    _ui->actionFileTypeStats->setEnabled( selSizeOne );
-    _ui->actionFileAgeStats->setEnabled ( selSizeOne );
+    _ui->actionFileSizeStats->setEnabled( isTree );
+    _ui->actionFileTypeStats->setEnabled( isTree );
+    _ui->actionFileAgeStats->setEnabled ( isTree );
 
     _ui->actionCloseAllTreeLevels->setEnabled( firstToplevel );
     _ui->menuExpandTreeToLevel->setEnabled   ( firstToplevel );
@@ -201,7 +201,7 @@ void MainWindow::updateActions()
     _ui->actionTreemapRebuild->setEnabled    ( showingTreemap );
 
     for ( QAction * action : _ui->menuDiscover->actions() )
-	action->setEnabled( firstToplevel );
+	action->setEnabled( isTree );
 
     _historyButtons->updateActions();
 }

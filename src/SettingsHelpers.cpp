@@ -24,7 +24,7 @@ namespace QDirStat
 			   const QColor	   & fallback )
     {
 	const QColor color( settings.value( entryName ).toString() );
-	if ( ! color.isValid() )
+	if ( !color.isValid() )
 	{
 #if 0
 	    logDebug() << "Using fallback for " << entryName << ": " << fallback.name() << Qt::endl;
@@ -114,7 +114,7 @@ namespace QDirStat
 		       int		 fallback,
 		       const SettingsEnumMapping & enumMapping )
     {
-	if ( ! settings.contains( entryName ) )
+	if ( !settings.contains( entryName ) )
 	    return fallback;
 
 	const QString str = settings.value( entryName ).toString();
@@ -135,7 +135,7 @@ namespace QDirStat
 			 int	      enumValue,
 			 const SettingsEnumMapping & enumMapping )
     {
-	if ( ! enumMapping.contains( enumValue ) )
+	if ( !enumMapping.contains( enumValue ) )
 	{
 	    logError() << "No string for enum value " << enumValue << Qt::endl;
 	    return;

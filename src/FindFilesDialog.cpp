@@ -25,14 +25,13 @@ using namespace QDirStat;
 
 // Values that should be persistent for one program run,
 // but not written to the settings / config file
-
 static QString lastPattern;
 static QString lastPath;
 
 
 FindFilesDialog::FindFilesDialog( QWidget * parent ):
-    QDialog( parent ),
-    _ui( new Ui::FindFilesDialog )
+    QDialog ( parent ),
+    _ui { new Ui::FindFilesDialog }
 {
     // logDebug() << "init" << Qt::endl;
 
@@ -92,9 +91,10 @@ FileSearchFilter FindFilesDialog::fileSearchFilter()
 DirInfo * FindFilesDialog::currentSubtree()
 {
     FileInfo * subtree = app()->selectedDirInfo();
-
     if ( subtree )
+    {
         lastPath = subtree->url();
+    }
     else
     {
         subtree = app()->dirTree()->locate( lastPath,
@@ -124,16 +124,13 @@ FileSearchFilter FindFilesDialog::askFindFiles( bool    * canceled_ret,
     const int result = dialog.exec();
 
     FileSearchFilter filter;
-    bool canceled = ( result == QDialog::Rejected );
+    const bool canceled = ( result == QDialog::Rejected );
 
-    if ( ! canceled )
+    if ( !canceled )
         filter = dialog.fileSearchFilter();
 
-    if ( filter.pattern().isEmpty() )
-        canceled = true;
-
     if ( canceled_ret )
-        *canceled_ret = canceled;
+	*canceled_ret = filter.pattern().isEmpty() ? true : canceled;
 
     return filter;
 }
@@ -143,10 +140,7 @@ void FindFilesDialog::loadValues()
 {
     readSettings();
 
-    //
     // Restore those values from static variables
-    //
-
     _ui->patternField->setText( lastPattern );
 
     const FileInfo * sel  = currentSubtree();

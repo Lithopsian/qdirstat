@@ -14,7 +14,7 @@ TEMPLATE	 = app
 
 QT		+= widgets
 # Commented out to get -O2 optimization by default (issue #160)
-# CONFIG	+= debug
+#CONFIG	+= debug
 DEPENDPATH	+= .
 MOC_DIR		 = .moc
 OBJECTS_DIR	 = .obj
@@ -46,7 +46,6 @@ SOURCES	  = main.cpp			\
 	    CleanupConfigPage.cpp	\
 	    ConfigDialog.cpp		\
 	    DataColumns.cpp		\
-#	    DebugHelpers.cpp		\
 	    DirInfo.cpp			\
 	    DirReadJob.cpp		\
 	    DirTree.cpp			\
@@ -70,7 +69,6 @@ SOURCES	  = main.cpp			\
 	    FileInfoSet.cpp		\
 	    FileInfoSorter.cpp		\
 	    FileMTimeStats.cpp		\
-#	    FileSearchFilter.cpp	\
 	    FileSizeLabel.cpp		\
 	    FileSizeStats.cpp		\
 	    FileSizeStatsWindow.cpp	\
@@ -148,7 +146,6 @@ HEADERS	  =				\
 	    CleanupConfigPage.h		\
 	    ConfigDialog.h		\
 	    DataColumns.h		\
-#	    DebugHelpers.h		\
 	    DirInfo.h			\
 	    DirReadJob.h		\
 	    DirTree.h			\

@@ -15,11 +15,11 @@
 #include "StdCleanup.h"
 #include "DirTree.h"
 #include "FormatUtil.h"
-#include "Settings.h"
-#include "SettingsHelpers.h"
-#include "SelectionModel.h"
 #include "OutputWindow.h"
 #include "Refresher.h"
+#include "SelectionModel.h"
+#include "Settings.h"
+#include "SettingsHelpers.h"
 #include "Trash.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -61,11 +61,10 @@ CleanupCollection::CleanupCollection( QObject	     * parent,
     addToToolBar( toolBar );
     addToMenu( menu );
 
-    // Just initialize to show the current status in the log;
-    // the contents are cached anyway.
-
+    // Initialize to show the current status in the log; the map will be cached
     (void)Cleanup::desktopSpecificApps();
 
+    // Available Cleanups depend on the currently-selected items
     connect( selectionModel, qOverload<>( &SelectionModel::selectionChanged ),
 	     this,	     &CleanupCollection::updateActions );
 }
@@ -125,7 +124,6 @@ void CleanupCollection::addStdCleanups()
 int CleanupCollection::indexOf( Cleanup * cleanup ) const
 {
     const int index = _cleanupList.indexOf( cleanup );
-
     if ( index == -1 )
 	logError() << "Cleanup " << cleanup << " is not in this collection" << Qt::endl;
 
@@ -137,8 +135,8 @@ const Cleanup * CleanupCollection::at( int index ) const
 {
     if ( index >= 0 && index < _cleanupList.size() )
 	return _cleanupList.at( index );
-    else
-	return nullptr;
+
+    return nullptr;
 }
 
 
@@ -175,11 +173,11 @@ void CleanupCollection::updateActions()
     for ( Cleanup * cleanup : _cleanupList )
     {
 	const bool enable = canCleanup &&
-	     cleanup->isActive() &&
-	     ( !treeBusy || cleanup->refreshPolicy() == Cleanup::NoRefresh ) &&
-	     ( !dirSelected || cleanup->worksForDir() ) &&
-	     ( !dotEntrySelected || cleanup->worksForDotEntry() ) &&
-	     ( !fileSelected || cleanup->worksForFile() );
+			    cleanup->isActive() &&
+			    ( !treeBusy         || cleanup->refreshPolicy() == Cleanup::NoRefresh ) &&
+			    ( !dirSelected      || cleanup->worksForDir() ) &&
+			    ( !dotEntrySelected || cleanup->worksForDotEntry() ) &&
+			    ( !fileSelected     || cleanup->worksForFile() );
 	cleanup->setEnabled( enable );
     }
 }
@@ -269,9 +267,8 @@ void CleanupCollection::execute()
     if ( cleanup->refreshPolicy() == Cleanup::RefreshThis ||
 	 cleanup->refreshPolicy() == Cleanup::RefreshParent )
     {
-	createRefresher( outputWindow, cleanup->refreshPolicy() == Cleanup::RefreshParent ?
-	    selection.parents() :
-	    selection );
+	createRefresher( outputWindow,
+			 cleanup->refreshPolicy() == Cleanup::RefreshParent ? selection.parents() : selection );
     }
 
     connect( outputWindow, &OutputWindow::lastProcessFinished,
@@ -304,7 +301,6 @@ void CleanupCollection::execute()
         for ( FileInfo * item : selection.invalidRemoved().normalized() )
         {
             DirTree * tree = item->tree();
-
             if ( tree->isBusy() )
                 logWarning() << "Ignoring AssumeDeleted: DirTree is being read" << Qt::endl;
             else
@@ -379,13 +375,13 @@ QStringList CleanupCollection::filteredUrls( const FileInfoSet & items,
 {
     QStringList urls;
 
-    for ( FileInfoSet::const_iterator it = items.begin(); it != items.end(); ++it )
+    for ( auto item : items )
     {
-	if ( ( dirs && (*it)->isDir() ) || ( nonDirs && !(*it)->isDir() ) )
+	if ( ( dirs && item->isDir() ) || ( nonDirs && !item->isDir() ) )
 	{
-	    const QString name = (*it)->url();
+	    const QString name = item->url();
 
-	    if ( (*it)->isDir() )
+	    if ( item->isDir() )
 	    {
 		if ( extraHighlight )
 		    urls << tr( "<b>Directory <font color=blue>%1</font></b>" ).arg( name );
@@ -457,70 +453,69 @@ void CleanupCollection::readSettings()
 {
     clear();
 
+    const SettingsEnumMapping refreshPolicyMapping      = Cleanup::refreshPolicyMapping();
+    const SettingsEnumMapping outputWindowPolicyMapping = Cleanup::outputWindowPolicyMapping();
+
     CleanupSettings settings;
+
+    // Read all settings groups [Cleanup_xx] that were found
     const QStringList cleanupGroups = settings.findGroups( settings.groupPrefix() );
-
-    if ( !cleanupGroups.isEmpty() )
+    for ( const QString & groupName : cleanupGroups )
     {
-	// Read all settings groups [Cleanup_xx] that were found
+	settings.beginGroup( groupName );
 
-	for ( const QString & groupName : cleanupGroups )
+	// Read one cleanup
+
+	const QString title    = settings.value( "Title"	).toString();
+	const QString command  = settings.value( "Command"	).toString();
+	const QString iconName = settings.value( "Icon"	).toString();
+	const QString hotkey   = settings.value( "Hotkey"	).toString();
+	const QString shell    = settings.value( "Shell"	).toString();
+
+	const bool active		     = settings.value( "Active"			, true	).toBool();
+	const bool worksForDir	     = settings.value( "WorksForDir"		, true	).toBool();
+	const bool worksForFile	     = settings.value( "WorksForFile"		, true	).toBool();
+	const bool worksForDotEntry      = settings.value( "WorksForDotEntry"	, true	).toBool();
+	const bool recurse		     = settings.value( "Recurse"		, false ).toBool();
+	const bool askForConfirmation    = settings.value( "AskForConfirmation"	, false ).toBool();
+	const bool outputWindowAutoClose = settings.value( "OutputWindowAutoClose"	, false ).toBool();
+	const int  outputWindowTimeout   = settings.value( "OutputWindowTimeout"	, 0	).toInt();
+
+	const int refreshPolicy	 = readEnumEntry( settings, "RefreshPolicy",
+						      Cleanup::NoRefresh,
+						      refreshPolicyMapping );
+
+	const int outputWindowPolicy = readEnumEntry( settings, "OutputWindowPolicy",
+						      Cleanup::ShowAfterTimeout,
+						      outputWindowPolicyMapping );
+
+	if ( command.isEmpty() || title.isEmpty() )
 	{
-	    settings.beginGroup( groupName );
-
-	    // Read one cleanup
-
-	    const QString title    = settings.value( "Title"	).toString();
-	    const QString command  = settings.value( "Command"	).toString();
-	    const QString iconName = settings.value( "Icon"	).toString();
-	    const QString hotkey   = settings.value( "Hotkey"	).toString();
-	    const QString shell    = settings.value( "Shell"	).toString();
-
-	    const bool active		     = settings.value( "Active"			, true	).toBool();
-	    const bool worksForDir	     = settings.value( "WorksForDir"		, true	).toBool();
-	    const bool worksForFile	     = settings.value( "WorksForFile"		, true	).toBool();
-	    const bool worksForDotEntry      = settings.value( "WorksForDotEntry"	, true	).toBool();
-	    const bool recurse		     = settings.value( "Recurse"		, false ).toBool();
-	    const bool askForConfirmation    = settings.value( "AskForConfirmation"	, false ).toBool();
-	    const bool outputWindowAutoClose = settings.value( "OutputWindowAutoClose"	, false ).toBool();
-	    const int  outputWindowTimeout   = settings.value( "OutputWindowTimeout"	, 0	).toInt();
-
-	    const int refreshPolicy	 = readEnumEntry( settings, "RefreshPolicy",
-							  Cleanup::NoRefresh,
-							  Cleanup::refreshPolicyMapping() );
-
-	    const int outputWindowPolicy = readEnumEntry( settings, "OutputWindowPolicy",
-							  Cleanup::ShowAfterTimeout,
-							  Cleanup::outputWindowPolicyMapping() );
-
-	    if ( command.isEmpty() || title.isEmpty() )
-	    {
-		logError() << "Need at least Command and Title for a cleanup" << Qt::endl;
-	    }
-	    else
-	    {
-		Cleanup * cleanup = new Cleanup( this, active, title, command,
-						 recurse, askForConfirmation,
-						 static_cast<Cleanup::RefreshPolicy>( refreshPolicy ),
-						 worksForDir, worksForFile, worksForDotEntry,
-						 static_cast<Cleanup::OutputWindowPolicy>( outputWindowPolicy ),
-						 outputWindowTimeout, outputWindowAutoClose,
-						 shell );
-		CHECK_NEW( cleanup );
-		add( cleanup );
-
-		if ( !iconName.isEmpty() )
-		    cleanup->setIcon( iconName );
-
-		if ( !hotkey.isEmpty() )
-		    cleanup->setShortcut( hotkey );
-
-		// if ( !shell.isEmpty() )
-		//    logDebug() << "Using custom shell " << shell << " for " << cleanup << Qt::endl;
-	    }
-
-	    settings.endGroup(); // [Cleanup_01], [Cleanup_02], ...
+	    logError() << "Need at least Command and Title for a cleanup" << Qt::endl;
 	}
+	else
+	{
+	    Cleanup * cleanup = new Cleanup( this, active, title, command,
+					     recurse, askForConfirmation,
+					     static_cast<Cleanup::RefreshPolicy>( refreshPolicy ),
+					     worksForDir, worksForFile, worksForDotEntry,
+					     static_cast<Cleanup::OutputWindowPolicy>( outputWindowPolicy ),
+					     outputWindowTimeout, outputWindowAutoClose,
+					     shell );
+	    CHECK_NEW( cleanup );
+	    add( cleanup );
+
+	    if ( !iconName.isEmpty() )
+		cleanup->setIcon( iconName );
+
+	    if ( !hotkey.isEmpty() )
+		cleanup->setShortcut( hotkey );
+
+	    // if ( !shell.isEmpty() )
+	    //    logDebug() << "Using custom shell " << shell << " for " << cleanup << Qt::endl;
+	}
+
+	settings.endGroup(); // [Cleanup_01], [Cleanup_02], ...
     }
 
     if ( _cleanupList.isEmpty() && !settings.value( "StdCleanupsAdded", false ).toBool() )
@@ -536,6 +531,9 @@ void CleanupCollection::writeSettings( const CleanupList & newCleanups)
 
     // Remove all leftover cleanup descriptions
     settings.removeGroups( settings.groupPrefix() );
+
+    const SettingsEnumMapping refreshPolicyMapping = Cleanup::refreshPolicyMapping();
+    const SettingsEnumMapping windowPolicyMapping  = Cleanup::outputWindowPolicyMapping();
 
     // Using a separate group for each cleanup for better readability in the
     // file.
@@ -572,13 +570,8 @@ void CleanupCollection::writeSettings( const CleanupList & newCleanups)
 	if ( cleanup->outputWindowTimeout() > 0 )
 	    settings.setValue( "OutputWindowTimeout", cleanup->outputWindowTimeout() );
 
-	writeEnumEntry( settings, "RefreshPolicy",
-			cleanup->refreshPolicy(),
-			Cleanup::refreshPolicyMapping() );
-
-	writeEnumEntry( settings, "OutputWindowPolicy",
-			cleanup->outputWindowPolicy(),
-			Cleanup::outputWindowPolicyMapping() );
+	writeEnumEntry( settings, "RefreshPolicy",      cleanup->refreshPolicy(),      refreshPolicyMapping );
+	writeEnumEntry( settings, "OutputWindowPolicy", cleanup->outputWindowPolicy(), windowPolicyMapping );
 
 	if ( !cleanup->shell().isEmpty() )
 	     settings.setValue( "Shell", cleanup->shell() );

@@ -228,6 +228,7 @@ void DirTree::refresh( DirInfo * subtree )
 	subtree->setReadState( DirReading );
 
 	// A full startingReading signal would reset all the tree branches to level 1
+	emit startingRefresh();
 	_isBusy = true;
 
 	LocalDirReadJob * job = new LocalDirReadJob( this, subtree, false );
@@ -611,7 +612,7 @@ void DirTree::unatticAll( DirInfo * dir )
 
     if ( dir->attic() )
     {
-	logDebug() << "Moving all attic children to the normal children list for " << dir << Qt::endl;
+	//logDebug() << "Moving all attic children to the normal children list for " << dir << Qt::endl;
 	dir->takeAllChildren( dir->attic() );
 	dir->deleteEmptyAttic();
 	dir->recalc();
